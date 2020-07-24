@@ -5,7 +5,7 @@ set -e
 what_to_test=$1
 if [ "${what_to_test}" != "unit" ] && [ "${what_to_test}" != "acceptance" ] && [ "${what_to_test}" != "acceptance-one" ]
 then
-    if ! [ -e "STITCH/tests/testthat/test-${what_to_test}.R" ] && ! [ -e "STITCH/tests/testthat/test-${what_to_test}.R" ]
+    if ! [ -e "QUILT/tests/testthat/test-${what_to_test}.R" ] && ! [ -e "QUILT/tests/testthat/test-${what_to_test}.R" ]
     then
 	echo Acceptance test either runs all, one, or specify file test-{unit/acceptance}-{argument}.R
 	exit 1
@@ -25,12 +25,12 @@ export PATH=`pwd`/:${PATH}
 # suppressPackageStartupMessages
 # --slave
 # add new load_all step to ensure compilation is printed properly
-R -e 'devtools::document("STITCH"); devtools::load_all("STITCH", quiet = FALSE); devtools::test("STITCH", filter = "'${what_to_test}'", reporter = "summary")' 2>&1 | tee ${logfile}
+R -e 'devtools::document("QUILT"); devtools::load_all("QUILT", quiet = FALSE); devtools::test("QUILT", filter = "'${what_to_test}'", reporter = "summary")' 2>&1 | tee ${logfile}
 
-# print(getwd()); library(devtools); load_all("STITCH", quiet = FALSE);
+# print(getwd()); library(devtools); load_all("QUILT", quiet = FALSE);
 
 # somehow this gives 0 exit code on parse failure
-started_if_1=`cat ${logfile} | grep 'Testing STITCH' | wc -l`
+started_if_1=`cat ${logfile} | grep 'Testing QUILT' | wc -l`
 if [ "$started_if_1" -ne "1" ]
 then
     exit 1

@@ -10,33 +10,26 @@ for(key in c("--file=", "--f=")) {
     }
 }
 
-clean_build <- TRUE
-if (Sys.getenv("DIRTY_BUILD") == "TRUE")
-    clean_build <- FALSE
-
 ## specify package
-pkg <- "STITCH"
-## Sys.setenv(SEQLIB_ROOT = file.path(getwd(), "SeqLib"))
+pkg <- "QUILT"
 root_dir <- getwd()
+
+## if does not exist make releases folder
+dir.create("releases", showWarnings = FALSE)
+
 
 ## documentation
 devtools::document(pkg = pkg)
 
 ## make the tarball
 print("Build")
-if (clean_build == TRUE) {
-    SeqLib_dir <- file.path(pkg, "src", "SeqLib")
-    setwd(SeqLib_dir)
-    system(paste0("make clean"))
-    setwd(root_dir)
-}
 package_tarball <- devtools::build(pkg = pkg, manual = TRUE)
 version <- unlist(
-    strsplit(unlist(strsplit(basename(package_tarball), "STITCH_")), ".tar.gz")
+    strsplit(unlist(strsplit(basename(package_tarball), "QUILT_")), ".tar.gz")
 )
 
 ## move tarball to releases
-release_package_tarball <- file.path("releases", paste0("STITCH_", version, ".tar.gz"))
+release_package_tarball <- file.path("releases", paste0("QUILT_", version, ".tar.gz"))
 system(paste0("mv '", package_tarball, "' ", release_package_tarball))
 package_tarball <- release_package_tarball
 
@@ -49,10 +42,10 @@ result <- tryCatch({
     stop(paste0(pkg, " installation failed"))       
 })
 
-## build PDF
-pdf_name <- file.path("releases", paste0("STITCH_", version, ".pdf"))
-args = c(
-    "CMD", "Rd2pdf", pkg, "--batch", "--force", "--no-preview",
-    paste0("--output=", pdf_name)
-)
-system2("R", args)
+## build PDF - disabled for now, pdflatex broken on rescomp
+## pdf_name <- file.path("releases", paste0("QUILT_", version, ".pdf"))
+## args = c(
+##     "CMD", "Rd2pdf", pkg, "--batch", "--force", "--no-preview",
+##     paste0("--output=", pdf_name)
+## )
+## system2("R", args)
