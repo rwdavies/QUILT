@@ -17,9 +17,105 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// Rcpp_test
+Rcpp::IntegerVector Rcpp_test(int k, int iGrid, arma::imat& rhb_t);
+RcppExport SEXP _QUILT_Rcpp_test(SEXP kSEXP, SEXP iGridSEXP, SEXP rhb_tSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type iGrid(iGridSEXP);
+    Rcpp::traits::input_parameter< arma::imat& >::type rhb_t(rhb_tSEXP);
+    rcpp_result_gen = Rcpp::wrap(Rcpp_test(k, iGrid, rhb_t));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_nth_partial_sort
+Rcpp::NumericVector rcpp_nth_partial_sort(Rcpp::NumericVector x, int nth);
+RcppExport SEXP _QUILT_rcpp_nth_partial_sort(SEXP xSEXP, SEXP nthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type nth(nthSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_nth_partial_sort(x, nth));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Rcpp_build_eMatDH
+arma::mat Rcpp_build_eMatDH(arma::imat& distinctHapsB, const arma::mat& gl, const int nGrids, const int nSNPs, const double ref_error, const double ref_one_minus_error);
+RcppExport SEXP _QUILT_Rcpp_build_eMatDH(SEXP distinctHapsBSEXP, SEXP glSEXP, SEXP nGridsSEXP, SEXP nSNPsSEXP, SEXP ref_errorSEXP, SEXP ref_one_minus_errorSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::imat& >::type distinctHapsB(distinctHapsBSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type gl(glSEXP);
+    Rcpp::traits::input_parameter< const int >::type nGrids(nGridsSEXP);
+    Rcpp::traits::input_parameter< const int >::type nSNPs(nSNPsSEXP);
+    Rcpp::traits::input_parameter< const double >::type ref_error(ref_errorSEXP);
+    Rcpp::traits::input_parameter< const double >::type ref_one_minus_error(ref_one_minus_errorSEXP);
+    rcpp_result_gen = Rcpp::wrap(Rcpp_build_eMatDH(distinctHapsB, gl, nGrids, nSNPs, ref_error, ref_one_minus_error));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_internal_make_eMatRead_t_using_binary
+void rcpp_internal_make_eMatRead_t_using_binary(arma::mat& eMatRead_t, arma::imat& rhb, const int K, const int nSNPs, const Rcpp::NumericVector& u, const Rcpp::NumericMatrix& ps, const int nReads, const Rcpp::NumericVector& start, const Rcpp::NumericVector& end, const Rcpp::NumericVector& nr, const double ref_error, const int ceil_K_n, const int n);
+RcppExport SEXP _QUILT_rcpp_internal_make_eMatRead_t_using_binary(SEXP eMatRead_tSEXP, SEXP rhbSEXP, SEXP KSEXP, SEXP nSNPsSEXP, SEXP uSEXP, SEXP psSEXP, SEXP nReadsSEXP, SEXP startSEXP, SEXP endSEXP, SEXP nrSEXP, SEXP ref_errorSEXP, SEXP ceil_K_nSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type eMatRead_t(eMatRead_tSEXP);
+    Rcpp::traits::input_parameter< arma::imat& >::type rhb(rhbSEXP);
+    Rcpp::traits::input_parameter< const int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< const int >::type nSNPs(nSNPsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type u(uSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type ps(psSEXP);
+    Rcpp::traits::input_parameter< const int >::type nReads(nReadsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type start(startSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type end(endSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type nr(nrSEXP);
+    Rcpp::traits::input_parameter< const double >::type ref_error(ref_errorSEXP);
+    Rcpp::traits::input_parameter< const int >::type ceil_K_n(ceil_K_nSEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    rcpp_internal_make_eMatRead_t_using_binary(eMatRead_t, rhb, K, nSNPs, u, ps, nReads, start, end, nr, ref_error, ceil_K_n, n);
+    return R_NilValue;
+END_RCPP
+}
+// Rcpp_haploid_dosage_versus_refs
+void Rcpp_haploid_dosage_versus_refs(const arma::mat& gl, arma::mat& alphaHat_t, arma::mat& betaHat_t, arma::mat& gamma_t, arma::mat& gammaSmall_t, Rcpp::NumericVector& dosage, const arma::mat& transMatRate_t, const arma::imat& rhb_t, double ref_error, const bool use_eMatDH, arma::imat& distinctHapsB, arma::mat& distinctHapsIE, arma::imat& hapMatcher, Rcpp::IntegerVector& gammaSmall_cols_to_get, const int suppressOutput, bool return_betaHat_t, bool return_dosage, bool return_gamma_t, bool return_gammaSmall_t);
+RcppExport SEXP _QUILT_Rcpp_haploid_dosage_versus_refs(SEXP glSEXP, SEXP alphaHat_tSEXP, SEXP betaHat_tSEXP, SEXP gamma_tSEXP, SEXP gammaSmall_tSEXP, SEXP dosageSEXP, SEXP transMatRate_tSEXP, SEXP rhb_tSEXP, SEXP ref_errorSEXP, SEXP use_eMatDHSEXP, SEXP distinctHapsBSEXP, SEXP distinctHapsIESEXP, SEXP hapMatcherSEXP, SEXP gammaSmall_cols_to_getSEXP, SEXP suppressOutputSEXP, SEXP return_betaHat_tSEXP, SEXP return_dosageSEXP, SEXP return_gamma_tSEXP, SEXP return_gammaSmall_tSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type gl(glSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t(alphaHat_tSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t(betaHat_tSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type gamma_t(gamma_tSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type gammaSmall_t(gammaSmall_tSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type dosage(dosageSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type transMatRate_t(transMatRate_tSEXP);
+    Rcpp::traits::input_parameter< const arma::imat& >::type rhb_t(rhb_tSEXP);
+    Rcpp::traits::input_parameter< double >::type ref_error(ref_errorSEXP);
+    Rcpp::traits::input_parameter< const bool >::type use_eMatDH(use_eMatDHSEXP);
+    Rcpp::traits::input_parameter< arma::imat& >::type distinctHapsB(distinctHapsBSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type distinctHapsIE(distinctHapsIESEXP);
+    Rcpp::traits::input_parameter< arma::imat& >::type hapMatcher(hapMatcherSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type gammaSmall_cols_to_get(gammaSmall_cols_to_getSEXP);
+    Rcpp::traits::input_parameter< const int >::type suppressOutput(suppressOutputSEXP);
+    Rcpp::traits::input_parameter< bool >::type return_betaHat_t(return_betaHat_tSEXP);
+    Rcpp::traits::input_parameter< bool >::type return_dosage(return_dosageSEXP);
+    Rcpp::traits::input_parameter< bool >::type return_gamma_t(return_gamma_tSEXP);
+    Rcpp::traits::input_parameter< bool >::type return_gammaSmall_t(return_gammaSmall_tSEXP);
+    Rcpp_haploid_dosage_versus_refs(gl, alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, hapMatcher, gammaSmall_cols_to_get, suppressOutput, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
+    {"_QUILT_Rcpp_test", (DL_FUNC) &_QUILT_Rcpp_test, 3},
+    {"_QUILT_rcpp_nth_partial_sort", (DL_FUNC) &_QUILT_rcpp_nth_partial_sort, 2},
+    {"_QUILT_Rcpp_build_eMatDH", (DL_FUNC) &_QUILT_Rcpp_build_eMatDH, 6},
+    {"_QUILT_rcpp_internal_make_eMatRead_t_using_binary", (DL_FUNC) &_QUILT_rcpp_internal_make_eMatRead_t_using_binary, 13},
+    {"_QUILT_Rcpp_haploid_dosage_versus_refs", (DL_FUNC) &_QUILT_Rcpp_haploid_dosage_versus_refs, 19},
     {NULL, NULL, 0}
 };
 

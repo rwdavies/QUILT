@@ -6,3 +6,28 @@ Rcpp_quilt_test_doubler <- function(a) {
     .Call('_QUILT_Rcpp_quilt_test_doubler', PACKAGE = 'QUILT', a)
 }
 
+#' @export
+Rcpp_test <- function(k, iGrid, rhb_t) {
+    .Call('_QUILT_Rcpp_test', PACKAGE = 'QUILT', k, iGrid, rhb_t)
+}
+
+#' @export
+rcpp_nth_partial_sort <- function(x, nth) {
+    .Call('_QUILT_rcpp_nth_partial_sort', PACKAGE = 'QUILT', x, nth)
+}
+
+#' @export
+Rcpp_build_eMatDH <- function(distinctHapsB, gl, nGrids, nSNPs, ref_error, ref_one_minus_error) {
+    .Call('_QUILT_Rcpp_build_eMatDH', PACKAGE = 'QUILT', distinctHapsB, gl, nGrids, nSNPs, ref_error, ref_one_minus_error)
+}
+
+#' @export
+rcpp_internal_make_eMatRead_t_using_binary <- function(eMatRead_t, rhb, K, nSNPs, u, ps, nReads, start, end, nr, ref_error, ceil_K_n, n) {
+    invisible(.Call('_QUILT_rcpp_internal_make_eMatRead_t_using_binary', PACKAGE = 'QUILT', eMatRead_t, rhb, K, nSNPs, u, ps, nReads, start, end, nr, ref_error, ceil_K_n, n))
+}
+
+#' @export
+Rcpp_haploid_dosage_versus_refs <- function(gl, alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, hapMatcher, gammaSmall_cols_to_get, suppressOutput = 1L, return_betaHat_t = TRUE, return_dosage = TRUE, return_gamma_t = TRUE, return_gammaSmall_t = FALSE) {
+    invisible(.Call('_QUILT_Rcpp_haploid_dosage_versus_refs', PACKAGE = 'QUILT', gl, alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, hapMatcher, gammaSmall_cols_to_get, suppressOutput, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t))
+}
+
