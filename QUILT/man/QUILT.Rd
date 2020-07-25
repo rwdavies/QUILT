@@ -4,39 +4,17 @@
 \alias{QUILT}
 \title{QUILT}
 \usage{
-QUILT(
-  outputdir,
-  chr,
-  regionStart = NA,
-  regionEnd = NA,
-  buffer = NA,
-  bamlist = "",
-  cramlist = "",
-  sampleNames_file = "",
-  reference = "",
-  nCores = 1,
-  nGibbsSamples = 7,
-  n_seek_its = 3,
-  Ksubset = 400,
-  Knew = 100,
-  K_top_matches = 5,
-  heuristic_match_thin = 0.1,
-  output_filename = NULL,
-  prepared_reference_filename = "",
-  tempdir = NA,
-  bqFilter = as.integer(17),
-  panel_size = NA,
-  posfile = "",
-  genfile = "",
-  phasefile = "",
-  maxDifferenceBetweenReads = 1e+10,
-  make_plots = FALSE,
-  verbose = TRUE,
-  shuffle_bin_radius = 5000,
-  iSizeUpperLimit = 1e+06,
-  record_read_label_usage = TRUE,
-  record_interim_dosages = TRUE
-)
+QUILT(outputdir, chr, regionStart = NA, regionEnd = NA, buffer = NA,
+  bamlist = "", cramlist = "", sampleNames_file = "",
+  reference = "", nCores = 1, nGibbsSamples = 7, n_seek_its = 3,
+  Ksubset = 400, Knew = 100, K_top_matches = 5,
+  heuristic_match_thin = 0.1, output_filename = NULL,
+  prepared_reference_filename = "", tempdir = NA,
+  bqFilter = as.integer(17), panel_size = NA, posfile = "",
+  genfile = "", phasefile = "", maxDifferenceBetweenReads = 1e+10,
+  make_plots = FALSE, verbose = TRUE, shuffle_bin_radius = 5000,
+  iSizeUpperLimit = 1e+06, record_read_label_usage = TRUE,
+  record_interim_dosages = TRUE)
 }
 \arguments{
 \item{outputdir}{What output directory to use}

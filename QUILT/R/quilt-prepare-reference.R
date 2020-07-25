@@ -93,7 +93,12 @@ QUILT_prepare_reference <- function(
     STITCH::validate_regionStart_regionEnd_and_buffer(regionStart, regionEnd, buffer)
     STITCH::validate_tempdir(tempdir)
     STITCH::validate_nGen(nGen)
-    
+    if (genetic_map_file == "") {
+        stop("Please include a genetic map file")
+    }
+    if (!file.exists(genetic_map_file)) {
+        stop(paste0("Cannot find file:", genetic_map_file))
+    }
     
     ##
     ## new validations
