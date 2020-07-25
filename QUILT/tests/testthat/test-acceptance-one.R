@@ -1,5 +1,5 @@
 if ( 1 == 0 ) {
-
+    
     library("testthat")
     library("QUILT")
     dir <- "~/proj/QUILT/"
@@ -10,14 +10,12 @@ if ( 1 == 0 ) {
         a <- a[-b]
     }
     o <- sapply(a, source)
-
-
+    
 }
-
 
 n_snps <- 50
 chr <- 10
-K <- 2 
+K <- 6
 set.seed(919)
 phasemaster <- array(sample(c(0, 1), n_snps * K, replace = TRUE), c(n_snps, K))
 data_package <- STITCH::make_acceptance_test_data_package(
@@ -38,15 +36,12 @@ refpack <- STITCH::make_reference_package(
     phasemaster = phasemaster
 )
 
-
-
-test_that("SEW can phase a sample at high coverage with long reads", {
-
+test_that("QUILT can impute a few samples in a standard way", {
+    
     outputdir <- STITCH::make_unique_tempdir()
     regionStart <- 11
     regionEnd <- 40
     buffer <- 5
-    ##
     QUILT_prepare_reference(
         outputdir = outputdir,
         chr = data_package$chr,
@@ -58,30 +53,72 @@ test_that("SEW can phase a sample at high coverage with long reads", {
         regionEnd = regionEnd,
         buffer = buffer
     )
-
-    ## temporary check
-    expect_true(file.exists(quilt_prepared_reference(outputdir, paste0(data_package$chr, ".", regionStart, ".", regionEnd))))
-
-    ## run QUILT
-    ## 
-    ## library("testthat")
-    ## library("QUILT")
-    ## dir <- "~/proj/QUILT/"
-    ## setwd(paste0(dir, "/QUILT/R"))
-    ## a <- dir(pattern = "*R")
-    ## b <- grep("~", a)
-    ## if (length(b) > 0) {
-    ##     a <- a[-b]
-    ## }
-    ## o <- sapply(a, source)
-    ## ## 
-    ## QUILT(
-    ##     outputdir = outputdir,
-    ##     chr = data_package$chr,
-    ##     regionStart = regionStart,
-    ##     regionEnd = regionEnd,
-    ##     buffer = buffer
-    ##     bamlist = data_package$bamlist
-    ## )
-
+    expect_true(file.exists(file_quilt_prepared_reference(outputdir, paste0(data_package$chr, ".", regionStart, ".", regionEnd))))
+    
+    QUILT(
+        outputdir = outputdir,
+        chr = data_package$chr,
+        regionStart = regionStart,
+        regionEnd = regionEnd,
+        buffer = buffer,
+        bamlist = data_package$bamlist,
+        posfile = data_package$posfile,
+        genfile = data_package$genfile,
+        phasefile = data_package$phasefile,
+        Ksubset = 50,
+        Knew = 10,
+        nGibbsSamples = 3,
+        n_seek_its = 2,
+        nCores = 2
+    )
+    
 })
+
+
+
+if (1 == 0) {
+
+
+    dim(full_alphaHat_t)
+    dim(full_betaHat_t)
+    dim(full_gamma_t)
+    dim(full_transMatRate_t_H)
+    dim(rhb_t)
+    dim(distinctHapsB)
+    dim(distinctHapsIE)
+    dim(hapMatcher)
+    dim(full_gammaSmall_t)
+    full_gammaSmall_cols_to_get
+   
+
+    regionStart = NA
+    regionEnd = NA
+    buffer = NA
+    bamlist = ""
+    cramlist = ""
+    sampleNames_file = ""
+    reference = ""
+    nCores = 1
+    nGibbsSamples = 7
+    n_seek_its = 3
+    Ksubset = 400
+    Knew = 100
+    K_top_matches = 5
+    heuristic_match_thin = 0.1
+    output_filename = NULL
+    prepared_reference_filename = ""
+    tempdir = NA
+    bqFilter = as.integer(17)
+    panel_size = NA
+    posfile = ""
+    genfile = ""
+    phasefile = ""
+    maxDifferenceBetweenReads = 1e10
+    make_plots = FALSE
+    verbose = TRUE
+    shuffle_bin_radius = 5000
+    iSizeUpperLimit = 1e6
+    record_read_label_usage = TRUE
+    record_interim_dosages = TRUE
+    
+}

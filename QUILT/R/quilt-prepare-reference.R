@@ -103,11 +103,14 @@ QUILT_prepare_reference <- function(
     dir.create(outputdir, showWarnings = FALSE)
     dir.create(file.path(outputdir, "RData"), showWarnings = FALSE)
     if (output_file == "") {
-        output_file <- quilt_prepared_reference(outputdir, regionName)
+        output_file <- file_quilt_prepared_reference(outputdir, regionName)
     } else {
         if (!dir.exists(basename(output_file))) {
             dir.create(basename(output_file), showWarnings = FALSE)
         }
+    }
+    if (is.na(tempdir)) {
+        tempdir <- tempdir()
     }
 
 

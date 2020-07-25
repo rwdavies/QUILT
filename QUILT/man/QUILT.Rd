@@ -4,10 +4,100 @@
 \alias{QUILT}
 \title{QUILT}
 \usage{
-QUILT(chr)
+QUILT(
+  outputdir,
+  chr,
+  regionStart = NA,
+  regionEnd = NA,
+  buffer = NA,
+  bamlist = "",
+  cramlist = "",
+  sampleNames_file = "",
+  reference = "",
+  nCores = 1,
+  nGibbsSamples = 7,
+  n_seek_its = 3,
+  Ksubset = 400,
+  Knew = 100,
+  K_top_matches = 5,
+  heuristic_match_thin = 0.1,
+  output_filename = NULL,
+  prepared_reference_filename = "",
+  tempdir = NA,
+  bqFilter = as.integer(17),
+  panel_size = NA,
+  posfile = "",
+  genfile = "",
+  phasefile = "",
+  maxDifferenceBetweenReads = 1e+10,
+  make_plots = FALSE,
+  verbose = TRUE,
+  shuffle_bin_radius = 5000,
+  iSizeUpperLimit = 1e+06,
+  record_read_label_usage = TRUE,
+  record_interim_dosages = TRUE
+)
 }
 \arguments{
+\item{outputdir}{What output directory to use}
+
 \item{chr}{What chromosome to run. Should match BAM headers}
+
+\item{regionStart}{When running imputation, where to start from. The 1-based position x is kept if regionStart <= x <= regionEnd}
+
+\item{regionEnd}{When running imputation, where to stop}
+
+\item{buffer}{Buffer of region to perform imputation over. So imputation is run form regionStart-buffer to regionEnd+buffer, and reported for regionStart to regionEnd, including the bases of regionStart and regionEnd}
+
+\item{bamlist}{Path to file with bam file locations. File is one row per entry, path to bam files. Bam index files should exist in same directory as for each bam, suffixed either .bam.bai or .bai}
+
+\item{cramlist}{Path to file with cram file locations. File is one row per entry, path to cram files. cram files are converted to bam files on the fly for parsing into QUILT}
+
+\item{sampleNames_file}{Optional, if not specified, sampleNames are taken from the SM tag in the header of the BAM / CRAM file. This argument is the path to file with sampleNames for samples. It is used directly to name samples in the order they appear in the bamlist / cramlist}
+
+\item{reference}{Path to reference fasta used for making cram files. Only required if cramlist is defined}
+
+\item{nCores}{How many cores to use}
+
+\item{nGibbsSamples}{How many Gibbs samples to use}
+
+\item{n_seek_its}{How many iterations between first using current haplotypes to update read labels, and using current read labels to get new reference haplotypes, to perform}
+
+\item{Ksubset}{How many haplotypes to use in the faster Gibbs sampling}
+
+\item{Knew}{How many haplotypes to replace per-iteration after doing the full reference panel imputation}
+
+\item{K_top_matches}{How many top haplotypes to store in each grid site when looking for good matches in the full haplotype reference panel. Large values potentially bring in more haplotype diversity, but risk losing haplotypes that are good matches over shorter distances}
+
+\item{heuristic_match_thin}{What fraction of grid sites to use when looking for good matches in the full haplotype reference panel. Smaller values run faster but potentially miss haplotypes}
+
+\item{output_filename}{Override the default bgzip-VCF / bgen output name with this given file name. Please note that this does not change the names of inputs or outputs (e.g. RData, plots), so if outputdir is unchanged and if multiple STITCH runs are processing on the same region then they may over-write each others inputs and outputs. When imputing fetal genomes, if selected, this represents the maternal genome}
+
+\item{tempdir}{What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/}
+
+\item{bqFilter}{Minimum BQ for a SNP in a read. Also, the algorithm uses bq<=mq, so if mapping quality is less than this, the read isnt used}
+
+\item{panel_size}{Integer number of reference haplotypes to use, set to NA to use all of them}
+
+\item{posfile}{Optional, only needed when using genfile. File with positions of where to impute, lining up one-to-one with genfile. File is tab seperated with no header, one row per SNP, with col 1 = chromosome, col 2 = physical position (sorted from smallest to largest), col 3 = reference base, col 4 = alternate base. Bases are capitalized. Example first row: 1<tab>1000<tab>A<tab>G<tab>}
+
+\item{genfile}{Path to gen file with high coverage results. Empty for no genfile. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = hom ref, 1 = het, 2 = hom alt and NA indicating missing genotype, with rows corresponding to rows of the posfile. Note therefore this file has one more row than posfile which has no header}
+
+\item{phasefile}{Path to phase file with truth phasing results. Empty for no phasefile. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = ref and 1 = alt, separated by a vertical bar |, e.g. 0|0 or 0|1. Note therefore this file has one more row than posfile which has no header. For NIPT imputation, there are 3 columns, representing maternal transmitted, maternal untransmitted, and paternal transmitted}
+
+\item{maxDifferenceBetweenReads}{How much of a difference to allow the reads to make in the forward backward probability calculation. For example, if P(read | state 1)=1 and P(read | state 2)=1e-6, re-scale so that their ratio is this value. This helps prevent any individual read as having too much of an influence on state changes, helping prevent against influence by false positive SNPs}
+
+\item{make_plots}{Whether to make some plots of per-sample imputation. Especially nice when truth data. This is pretty slow though so useful more for debugging and understanding and visualizing performance}
+
+\item{verbose}{whether to be more verbose when running}
+
+\item{shuffle_bin_radius}{Parameter that controls how to detect ancestral haplotypes that are shuffled during EM for possible re-setting. If set (not NULL), then recombination rate is calculated around pairs of SNPs in window of twice this value, and those that exceed what should be the maximum (defined by nGen and maxRate) are checked for whether they are shuffled}
+
+\item{iSizeUpperLimit}{Do not use reads with an insert size of more than this value}
+
+\item{record_read_label_usage}{Whether to store what read labels were used during the Gibbs samplings (i.e. whether reads were assigned to arbitrary labelled haplotype 1 or 2)}
+
+\item{record_interim_dosages}{Whether to record interim dosages or not}
 }
 \value{
 Results in properly formatted version
