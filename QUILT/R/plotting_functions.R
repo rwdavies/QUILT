@@ -11,7 +11,6 @@ plot_1_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, s
     diff <- diff / 3
     diff[diff > 1] <- 1
     r2 <- round(cor(dosage2[inRegion2], truth2[inRegion2], method = "pearson", use = "pairwise.complete") ** 2, 3)    
-    print(r2)
     points(x = Ls, y = ybottom + scale * diff, col = col, type = "l")
     text(x = Ls[1], y = ybottom + scale * 1, labels = paste0("r2 = ", r2), pos = 1, cex = 1.5)
     return(r2)
@@ -29,7 +28,6 @@ plot_2_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, s
     diff <- diff / 3
     diff[diff > 1] <- 1
     r2 <- round(cor(dosage2[inRegion2], truth2[inRegion2], method = "pearson", use = "pairwise.complete") ** 2, 3)    
-    print(r2)
     points(x = Ls, y = ybottom + scale * diff, col = col, type = "l")
     text(x = Ls[1], y = ybottom + scale * 1, labels = paste0("r2 = ", r2), pos = 1, cex = 1.5)
     return(r2)
@@ -85,7 +83,6 @@ plot_single_gamma_dosage <- function(
         par(mfrow = c(3, 1))
     }
     par(oma = c(0, 0, 5, 0))
-    print(outname)
     ##
     ##
     ##

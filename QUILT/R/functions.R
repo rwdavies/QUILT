@@ -823,7 +823,7 @@ get_and_impute_one_sample <- function(
 
             if (have_truth_haplotypes) {
                 w <- i_it + n_seek_its * (i_gibbs_sample - 1)
-                x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose =TRUE)
+                x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = FALSE)
                 pse_mat[w, ] <- c(i_gibbs_sample, i_it, as.integer(phasing_it), x)
             }
 
@@ -881,7 +881,7 @@ get_and_impute_one_sample <- function(
         }
 
     }
-
+    
     if(have_truth_haplotypes) {
         imputed_truth_haplotypes <- cbind(truth_all[["dosage1"]], truth_all[["dosage2"]])
     } else {
@@ -890,6 +890,25 @@ get_and_impute_one_sample <- function(
 
     dosage <- dosage / nGibbsSamples
     gp_t <- gp_t / nGibbsSamples
+
+    ##
+    ## print final accuracies
+    ##
+
+    if (have_truth_haplotypes) {
+        w <- (inRegion2)
+        g <- truth_haps[inRegion2, 1] + truth_haps[inRegion2, 2]
+        r2 <-  round(cor((dosage)[inRegion2] - 2 * af[inRegion2], g - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
+        ## 
+        x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = phasing_haps[, 1], hap2 = phasing_haps[, 2], truth_haps = truth_haps, af = af, verbose = FALSE)
+        print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
+        print_message(paste0("Final phasing accuracy for sample ", sample_name, ", pse:", x["pse"], ", disc(%):", x["disc"], "%"))
+    }
+
+
+    ##
+    ## 
+    ##
 
     eij <- round(gp_t[2, ] + 2 * gp_t[3, ], 3) ## prevent weird rounding issues
     fij <- round(gp_t[2, ] + 4 * gp_t[3, ], 3) ##
@@ -1073,7 +1092,7 @@ calculate_pse_and_r2_during_gibbs <- function(inRegion2, hap1, hap2, truth_haps,
     if (verbose) {
         print_message(paste0("r2:", r2, ", PSE:", pse, "%, disc:", disc, "%"))
     }
-    return(c(r2 = r2, pse = pse, disc = disc))
+    return(c(r2 = r2, pse = as.numeric(pse), disc = as.numeric(disc)))
 }
 
 

@@ -30,38 +30,55 @@ if (cli_function_build != "") {
 }
 
 cli_output_file <- "QUILT.R"
-make_STITCH_cli(
+STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt.R",
     cli_output_file = cli_output_file,
-    integer_vectors = c("unwindIterations", "sample_unwindIterations"),
-    other_character_params = c("phasefile", "unwindIterations", "sample_unwindIterations"),
-    other_logical_params = c("outputHaplotypeProbabilities", "very_verbose"),
+    other_character_params = c("phasefile"),
+    other_logical_params = c("make_plots", "verbose", "record_read_label_usage", "record_interim_dosages"),
+    other_integer_params = c("nGibbsSamples", "n_seek_its", "Ksubset", "Knew", "K_top_matches", "panel_size"),
+    other_double_params = c("heuristic_match_thin"),
     function_name = "QUILT",
     library_name = "QUILT"
 )
 system(paste0("chmod +x ", cli_output_file))
 
-message("test that QUILT CLI produces help message")
-## behaviour of optparse changed!
-## now exits code 0 as one would hope on --help
-stdout_file <- tempfile()
-stderr_file <- tempfile()
-out <- system2(
-    cli_output_file,
-    args = c(
-        "--help"
-    ),
-    stdout = stdout_file, stderr = stderr_file
+cli_output_file <- "QUILT_prepare_reference.R"
+STITCH::make_STITCH_cli(
+    function_file = "QUILT/R/quilt-prepare-reference.R",
+    cli_output_file = cli_output_file,
+    other_character_params = c("output_file", "reference_exclude_samplelist_file", "output_sites_filename"),
+    other_logical_params = c("make_fake_vcf_with_sites_list"),
+    other_integer_params = c("nMaxDH"),
+    function_name = "QUILT_prepare_reference",
+    library_name = "QUILT"
 )
-stderr <- system(paste0("cat ", stderr_file), intern = TRUE)
-stdout <- system(paste0("cat ", stdout_file), intern = TRUE)
-if (out > 0) {
-    message("---stderr---")
-    print(stderr)
-    message("---stdout---")
-    print(stdout)
+system(paste0("chmod +x ", cli_output_file))
+
+
+
+for(cli_output_file in c("QUILT.R", "QUILT_prepare_reference.R")) {
+    message(paste0("test that ", cli_output_file, " CLI produces help message"))
+    ## behaviour of optparse changed!
+    ## now exits code 0 as one would hope on --help
+    stdout_file <- tempfile()
+    stderr_file <- tempfile()
+    out <- system2(
+        cli_output_file,
+        args = c(
+            "--help"
+        ),
+        stdout = stdout_file, stderr = stderr_file
+    )
+    stderr <- system(paste0("cat ", stderr_file), intern = TRUE)
+    stdout <- system(paste0("cat ", stdout_file), intern = TRUE)
+    if (out > 0) {
+        message("---stderr---")
+        print(stderr)
+        message("---stdout---")
+        print(stdout)
+    }
+    expect_equal(0, out)
 }
-expect_equal(0, out)
 
 
 

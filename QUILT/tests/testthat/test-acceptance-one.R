@@ -53,7 +53,8 @@ test_that("QUILT can impute a few samples in a standard way", {
         regionEnd = regionEnd,
         buffer = buffer
     )
-    expect_true(file.exists(file_quilt_prepared_reference(outputdir, paste0(data_package$chr, ".", regionStart, ".", regionEnd))))
+    regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
+    expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
     
     QUILT(
         outputdir = outputdir,
@@ -65,12 +66,25 @@ test_that("QUILT can impute a few samples in a standard way", {
         posfile = data_package$posfile,
         genfile = data_package$genfile,
         phasefile = data_package$phasefile,
-        Ksubset = 50,
-        Knew = 10,
+        Ksubset = 100,
+        Knew = 25,
         nGibbsSamples = 3,
         n_seek_its = 2,
         nCores = 2
     )
+
+
+    which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
+    
+    ## now evaluate versus truth!
+    check_quilt_output(
+        file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+        data_package = data_package,
+        which_snps = which_snps,
+        tol = 0.1,
+        min_info = 0.9
+    )
+    
     
 })
 
