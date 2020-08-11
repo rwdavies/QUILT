@@ -33,9 +33,9 @@ cli_output_file <- "QUILT.R"
 STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt.R",
     cli_output_file = cli_output_file,
-    other_character_params = c("phasefile"),
-    other_logical_params = c("make_plots", "verbose", "record_read_label_usage", "record_interim_dosages"),
-    other_integer_params = c("nGibbsSamples", "n_seek_its", "Ksubset", "Knew", "K_top_matches", "panel_size"),
+    other_character_params = c("phasefile", "output_RData_filename"),
+    other_logical_params = c("make_plots", "verbose", "record_read_label_usage", "record_interim_dosages", "use_bx_tag"),
+    other_integer_params = c("nGibbsSamples", "n_seek_its", "Ksubset", "Knew", "K_top_matches", "panel_size", "bxTagUpperLimit"),
     other_double_params = c("heuristic_match_thin"),
     function_name = "QUILT",
     library_name = "QUILT"

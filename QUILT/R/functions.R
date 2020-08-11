@@ -507,7 +507,9 @@ get_and_impute_one_sample <- function(
     hapMatcher,
     inRegion2,
     cM_grid,
-    af
+    af,
+    use_bx_tag,
+    bxTagUpperLimit
 ) {
 
     sample_name <- sampleNames[iSample]
@@ -533,7 +535,9 @@ get_and_impute_one_sample <- function(
         chrStart = regionStart - buffer,
         chrEnd = regionEnd + buffer,
         chrLength = NA,
-        save_sampleReadsInfo = TRUE
+        save_sampleReadsInfo = TRUE,
+        use_bx_tag = use_bx_tag,
+        bxTagUpperLimit = bxTagUpperLimit
     )
 
     load(file_sampleReads(tempdir, iSample, regionName))

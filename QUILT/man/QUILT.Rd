@@ -4,17 +4,42 @@
 \alias{QUILT}
 \title{QUILT}
 \usage{
-QUILT(outputdir, chr, regionStart = NA, regionEnd = NA, buffer = NA,
-  bamlist = "", cramlist = "", sampleNames_file = "",
-  reference = "", nCores = 1, nGibbsSamples = 7, n_seek_its = 3,
-  Ksubset = 400, Knew = 100, K_top_matches = 5,
-  heuristic_match_thin = 0.1, output_filename = NULL,
-  prepared_reference_filename = "", tempdir = NA,
-  bqFilter = as.integer(17), panel_size = NA, posfile = "",
-  genfile = "", phasefile = "", maxDifferenceBetweenReads = 1e+10,
-  make_plots = FALSE, verbose = TRUE, shuffle_bin_radius = 5000,
-  iSizeUpperLimit = 1e+06, record_read_label_usage = TRUE,
-  record_interim_dosages = TRUE)
+QUILT(
+  outputdir,
+  chr,
+  regionStart = NA,
+  regionEnd = NA,
+  buffer = NA,
+  bamlist = "",
+  cramlist = "",
+  sampleNames_file = "",
+  reference = "",
+  nCores = 1,
+  nGibbsSamples = 7,
+  n_seek_its = 3,
+  Ksubset = 400,
+  Knew = 100,
+  K_top_matches = 5,
+  heuristic_match_thin = 0.1,
+  output_filename = NULL,
+  output_RData_filename = NULL,
+  prepared_reference_filename = "",
+  tempdir = NA,
+  bqFilter = as.integer(17),
+  panel_size = NA,
+  posfile = "",
+  genfile = "",
+  phasefile = "",
+  maxDifferenceBetweenReads = 1e+10,
+  make_plots = FALSE,
+  verbose = TRUE,
+  shuffle_bin_radius = 5000,
+  iSizeUpperLimit = 1e+06,
+  record_read_label_usage = TRUE,
+  record_interim_dosages = TRUE,
+  use_bx_tag = TRUE,
+  bxTagUpperLimit = 50000
+)
 }
 \arguments{
 \item{outputdir}{What output directory to use}
@@ -49,7 +74,9 @@ QUILT(outputdir, chr, regionStart = NA, regionEnd = NA, buffer = NA,
 
 \item{heuristic_match_thin}{What fraction of grid sites to use when looking for good matches in the full haplotype reference panel. Smaller values run faster but potentially miss haplotypes}
 
-\item{output_filename}{Override the default bgzip-VCF / bgen output name with this given file name. Please note that this does not change the names of inputs or outputs (e.g. RData, plots), so if outputdir is unchanged and if multiple STITCH runs are processing on the same region then they may over-write each others inputs and outputs. When imputing fetal genomes, if selected, this represents the maternal genome}
+\item{output_filename}{Override the default bgzip-VCF / bgen output name with this given file name. Please note that this does not change the names of inputs or outputs (e.g. RData, plots), so if outputdir is unchanged and if multiple QUILT runs are processing on the same region then they may over-write each others inputs and outputs.}
+
+\item{output_RData_filename}{Override the default location for miscellaneous outputs saved in RData format}
 
 \item{tempdir}{What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/}
 
@@ -76,6 +103,10 @@ QUILT(outputdir, chr, regionStart = NA, regionEnd = NA, buffer = NA,
 \item{record_read_label_usage}{Whether to store what read labels were used during the Gibbs samplings (i.e. whether reads were assigned to arbitrary labelled haplotype 1 or 2)}
 
 \item{record_interim_dosages}{Whether to record interim dosages or not}
+
+\item{use_bx_tag}{Whether to try and use BX tag in same to indicate that reads come from the same underlying molecule}
+
+\item{bxTagUpperLimit}{When using BX tag, at what distance between reads to consider reads with the same BX tag to come from different molecules}
 }
 \value{
 Results in properly formatted version

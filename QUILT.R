@@ -101,7 +101,13 @@ option_list <- list(
     make_option(
         "--output_filename",
         type = "character",
-        help = "Override the default bgzip-VCF / bgen output name with this given file name. Please note that this does not change the names of inputs or outputs (e.g. RData, plots), so if outputdir is unchanged and if multiple STITCH runs are processing on the same region then they may over-write each others inputs and outputs. When imputing fetal genomes, if selected, this represents the maternal genome [default NULL] ",
+        help = "Override the default bgzip-VCF / bgen output name with this given file name. Please note that this does not change the names of inputs or outputs (e.g. RData, plots), so if outputdir is unchanged and if multiple QUILT runs are processing on the same region then they may over-write each others inputs and outputs. [default NULL] ",
+        default = NULL
+    ), 
+    make_option(
+        "--output_RData_filename",
+        type = "character",
+        help = "Override the default location for miscellaneous outputs saved in RData format [default NULL] ",
         default = NULL
     ), 
     make_option(
@@ -181,6 +187,18 @@ option_list <- list(
         type = "logical",
         help = "Whether to record interim dosages or not [default TRUE] ",
         default = TRUE
+    ), 
+    make_option(
+        "--use_bx_tag",
+        type = "logical",
+        help = "Whether to try and use BX tag in same to indicate that reads come from the same underlying molecule [default TRUE] ",
+        default = TRUE
+    ), 
+    make_option(
+        "--bxTagUpperLimit",
+        type = "integer",
+        help = "When using BX tag, at what distance between reads to consider reads with the same BX tag to come from different molecules [default 50000] ",
+        default = 50000
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -204,6 +222,7 @@ QUILT(
     K_top_matches = opt$K_top_matches,
     heuristic_match_thin = opt$heuristic_match_thin,
     output_filename = opt$output_filename,
+    output_RData_filename = opt$output_RData_filename,
     tempdir = opt$tempdir,
     bqFilter = opt$bqFilter,
     panel_size = opt$panel_size,
@@ -216,5 +235,7 @@ QUILT(
     shuffle_bin_radius = opt$shuffle_bin_radius,
     iSizeUpperLimit = opt$iSizeUpperLimit,
     record_read_label_usage = opt$record_read_label_usage,
-    record_interim_dosages = opt$record_interim_dosages
+    record_interim_dosages = opt$record_interim_dosages,
+    use_bx_tag = opt$use_bx_tag,
+    bxTagUpperLimit = opt$bxTagUpperLimit
 )

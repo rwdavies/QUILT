@@ -15,7 +15,8 @@
 #' @param Knew How many haplotypes to replace per-iteration after doing the full reference panel imputation
 #' @param K_top_matches How many top haplotypes to store in each grid site when looking for good matches in the full haplotype reference panel. Large values potentially bring in more haplotype diversity, but risk losing haplotypes that are good matches over shorter distances
 #' @param heuristic_match_thin What fraction of grid sites to use when looking for good matches in the full haplotype reference panel. Smaller values run faster but potentially miss haplotypes
-#' @param output_filename Override the default bgzip-VCF / bgen output name with this given file name. Please note that this does not change the names of inputs or outputs (e.g. RData, plots), so if outputdir is unchanged and if multiple STITCH runs are processing on the same region then they may over-write each others inputs and outputs. When imputing fetal genomes, if selected, this represents the maternal genome
+#' @param output_filename Override the default bgzip-VCF / bgen output name with this given file name. Please note that this does not change the names of inputs or outputs (e.g. RData, plots), so if outputdir is unchanged and if multiple QUILT runs are processing on the same region then they may over-write each others inputs and outputs. 
+#' @param output_RData_filename Override the default location for miscellaneous outputs saved in RData format
 #' @param tempdir What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/
 #' @param bqFilter Minimum BQ for a SNP in a read. Also, the algorithm uses bq<=mq, so if mapping quality is less than this, the read isnt used
 #' @param panel_size Integer number of reference haplotypes to use, set to NA to use all of them
@@ -30,6 +31,8 @@
 #' @param iSizeUpperLimit Do not use reads with an insert size of more than this value
 #' @param record_read_label_usage Whether to store what read labels were used during the Gibbs samplings (i.e. whether reads were assigned to arbitrary labelled haplotype 1 or 2)
 #' @param record_interim_dosages Whether to record interim dosages or not
+#' @param use_bx_tag Whether to try and use BX tag in same to indicate that reads come from the same underlying molecule
+#' @param bxTagUpperLimit When using BX tag, at what distance between reads to consider reads with the same BX tag to come from different molecules
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -51,6 +54,7 @@ QUILT <- function(
     K_top_matches = 5,
     heuristic_match_thin = 0.1,
     output_filename = NULL,
+    output_RData_filename = NULL,
     prepared_reference_filename = "",
     tempdir = NA,
     bqFilter = as.integer(17),
@@ -64,9 +68,10 @@ QUILT <- function(
     shuffle_bin_radius = 5000,
     iSizeUpperLimit = 1e6,
     record_read_label_usage = TRUE,
-    record_interim_dosages = TRUE
+    record_interim_dosages = TRUE,
+    use_bx_tag = TRUE,
+    bxTagUpperLimit = 50000
 ) {
-
 
     ## init_method <- "simple"
     ## use_eMatDH <- TRUE
@@ -117,6 +122,7 @@ QUILT <- function(
     ##
     ## local validate
     ##
+    validate_panel_size(panel_size)
     if (is.na(tempdir)) {
         tempdir <- tempdir()
     }
@@ -132,6 +138,11 @@ QUILT <- function(
         output_format = "bgvcf",
         prefix = "quilt"
     )
+
+    if (is.null(output_RData_filename)) {
+        output_RData_filename <- file_quilt_output_RData(outputdir, regionName)
+    }
+
 
 
     ##print(args)
@@ -221,7 +232,7 @@ QUILT <- function(
     ##
     if (!is.na(panel_size)) {
         rhb_t <- rhb_t[1:as.integer(panel_size), ] ## this is the number of HAPLOTYPES
-        hrc_samples <- hrc_samples[1:as.integer(panel_size), ]
+        reference_samples <- reference_samples[1:as.integer(panel_size), ]
         nMaxDH <- 2 ** 8 - 1
         out <- make_rhb_t_equality(
             rhb_t = rhb_t,
@@ -247,7 +258,9 @@ QUILT <- function(
         outputdir = outputdir,
         regionName = regionName,
         originalRegionName = originalRegionName,
-        sampleNames_file = sampleNames_file
+        sampleNames_file = sampleNames_file,
+        save = FALSE,
+        duplicate_name_behaviour = "warn"
     )
     N <- out$N
     sampleNames <- out$sampleNames
@@ -438,7 +451,9 @@ QUILT <- function(
                 hapMatcher = hapMatcher,
                 inRegion2 = inRegion2,
                 cM_grid = cM_grid,
-                af = af
+                af = af,
+                use_bx_tag = use_bx_tag,
+                bxTagUpperLimit = bxTagUpperLimit
             )
 
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out
@@ -525,8 +540,13 @@ QUILT <- function(
     ##     )
     ## }
 
-    ## write out as VCF here with genotype dosages and phased haplotypes
-    
+    ## not sure what else to save, probably need better format for output
+    save(
+        sampleNames,
+        bam_files,
+        imputed_dosages,
+        file = output_RData_filename
+    )
     print_message("Done QUILT")
     
     return(NULL)

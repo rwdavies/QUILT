@@ -135,7 +135,8 @@ QUILT_prepare_reference <- function(
     ## (optional) make fake vcf with sites list
     ##
     if (make_fake_vcf_with_sites_list) {
-        if (is.na(output_sites_file)) {
+        print_message("Make VCF with sites list")
+        if (is.na(output_sites_filename)) {
             output_sites_filename <- file.path(outputdir, paste0("quilt.sites.", regionName, ".vcf.gz")) 
         } else {
             STITCH::validate_output_filename(output_sites_filename, output_format = "bgvcf")
@@ -165,6 +166,7 @@ QUILT_prepare_reference <- function(
         check_program_dependency("tabix")
         system(paste0("bgzip -f ", gsub(".gz", "", output_sites_filename)))
         system(paste0("tabix -f ", output_sites_filename))
+        print_message("Done making VCF with sites list")        
     }
 
 
@@ -286,6 +288,10 @@ QUILT_prepare_reference <- function(
     ##
     if (reference_sample_file != "") {
         reference_samples <- fread(reference_sample_file, header = TRUE, data.table = FALSE)
+        if (!is.na(reference_populations[1])) {
+            keep_samples <- as.character(reference_samples[, "POP"]) %in% reference_populations
+            reference_samples <- reference_samples[keep_samples, ]
+        }
         if (nrow(rhb_t) != (2 * nrow(reference_samples))) {
             stop(paste0("The number of haplotypes from the reference haplotype file (N = ", nrow(rhb_t), ") does not match the inferred number of entries from the reference samples file (Nrows = ", nrow(reference_samples), ", N = ", 2 * nrow(reference_samples)))
         }
