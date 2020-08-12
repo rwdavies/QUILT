@@ -533,7 +533,7 @@ QUILT <- function(
         parse(text = paste0(
             "save(", 
             paste0(RData_objects_to_save, collapse = ", "),
-            ", file = output_RData_filename"
+            ", file = output_RData_filename)"
         ))
     }
     
