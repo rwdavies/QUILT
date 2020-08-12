@@ -502,28 +502,29 @@ QUILT <- function(
     ##
     ## build a singular set of results
     ##
-    ## final_set_of_results <- as.list(1:N)
-    ## c <- 1
-    ## for(i in 1:length(complete_set_of_results)) {
-    ##     x <- complete_set_of_results[[i]]
-    ##     for(j in 1:length(x)) {
-    ##         final_set_of_results[[c]] <- x[[j]]
-    ##         c <- c + 1
-    ##     }
-    ## }
-
-
-    ## ## also just return final dosages
-    ## imputed_dosages <- array(NA, c(nrow(pos), length(final_set_of_results)))
-    ## for(i in 1:length(final_set_of_results)) {
-    ##     imputed_dosages[, i] <- final_set_of_results[[i]]$dosage
-    ## }
-
     ## write out VCF now!
 
     
     print_message("begin saving")
     if (!is.null(RData_objects_to_save)) {
+
+        final_set_of_results <- as.list(1:N)
+        c <- 1
+        for(i in 1:length(complete_set_of_results)) {
+            x <- complete_set_of_results[[i]]
+            for(j in 1:length(x)) {
+                final_set_of_results[[c]] <- x[[j]]
+                c <- c + 1
+            }
+        }
+        
+        ## these are properly in the VCF
+        ## still could be exported
+        ## imputed_dosages <- array(NA, c(nrow(pos), length(final_set_of_results)))
+        ## for(i in 1:length(final_set_of_results)) {
+        ##     imputed_dosages[, i] <- final_set_of_results[[i]]$dosage
+        ## }
+        
         for(object in RData_objects_to_save) {
             if (!exists(object)) {
                 stop(paste0("You have asked to save object:", object, " as part of RData_objects_to_save but this is not a valid option"))
