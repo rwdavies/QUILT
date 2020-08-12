@@ -105,6 +105,12 @@ option_list <- list(
         default = NULL
     ), 
     make_option(
+        "--RData_objects_to_save",
+        type = "character",
+        help = "Can be used to name interim and misc results from imputation to save an an RData file. Default NULL means do not save such output [default NULL] ",
+        default = NULL
+    ), 
+    make_option(
         "--output_RData_filename",
         type = "character",
         help = "Override the default location for miscellaneous outputs saved in RData format [default NULL] ",
@@ -222,6 +228,7 @@ QUILT(
     K_top_matches = opt$K_top_matches,
     heuristic_match_thin = opt$heuristic_match_thin,
     output_filename = opt$output_filename,
+    RData_objects_to_save = eval(parse(text=opt$RData_objects_to_save)),
     output_RData_filename = opt$output_RData_filename,
     tempdir = opt$tempdir,
     bqFilter = opt$bqFilter,

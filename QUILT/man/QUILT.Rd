@@ -22,6 +22,7 @@ QUILT(
   K_top_matches = 5,
   heuristic_match_thin = 0.1,
   output_filename = NULL,
+  RData_objects_to_save = NULL,
   output_RData_filename = NULL,
   prepared_reference_filename = "",
   tempdir = NA,
@@ -75,6 +76,8 @@ QUILT(
 \item{heuristic_match_thin}{What fraction of grid sites to use when looking for good matches in the full haplotype reference panel. Smaller values run faster but potentially miss haplotypes}
 
 \item{output_filename}{Override the default bgzip-VCF / bgen output name with this given file name. Please note that this does not change the names of inputs or outputs (e.g. RData, plots), so if outputdir is unchanged and if multiple QUILT runs are processing on the same region then they may over-write each others inputs and outputs.}
+
+\item{RData_objects_to_save}{Can be used to name interim and misc results from imputation to save an an RData file. Default NULL means do not save such output}
 
 \item{output_RData_filename}{Override the default location for miscellaneous outputs saved in RData format}
 

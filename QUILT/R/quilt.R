@@ -15,7 +15,8 @@
 #' @param Knew How many haplotypes to replace per-iteration after doing the full reference panel imputation
 #' @param K_top_matches How many top haplotypes to store in each grid site when looking for good matches in the full haplotype reference panel. Large values potentially bring in more haplotype diversity, but risk losing haplotypes that are good matches over shorter distances
 #' @param heuristic_match_thin What fraction of grid sites to use when looking for good matches in the full haplotype reference panel. Smaller values run faster but potentially miss haplotypes
-#' @param output_filename Override the default bgzip-VCF / bgen output name with this given file name. Please note that this does not change the names of inputs or outputs (e.g. RData, plots), so if outputdir is unchanged and if multiple QUILT runs are processing on the same region then they may over-write each others inputs and outputs. 
+#' @param output_filename Override the default bgzip-VCF / bgen output name with this given file name. Please note that this does not change the names of inputs or outputs (e.g. RData, plots), so if outputdir is unchanged and if multiple QUILT runs are processing on the same region then they may over-write each others inputs and outputs.
+#' @param RData_objects_to_save Can be used to name interim and misc results from imputation to save an an RData file. Default NULL means do not save such output
 #' @param output_RData_filename Override the default location for miscellaneous outputs saved in RData format
 #' @param tempdir What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/
 #' @param bqFilter Minimum BQ for a SNP in a read. Also, the algorithm uses bq<=mq, so if mapping quality is less than this, the read isnt used
@@ -54,6 +55,7 @@ QUILT <- function(
     K_top_matches = 5,
     heuristic_match_thin = 0.1,
     output_filename = NULL,
+    RData_objects_to_save = NULL,
     output_RData_filename = NULL,
     prepared_reference_filename = "",
     tempdir = NA,
@@ -520,33 +522,20 @@ QUILT <- function(
     ## write out VCF now!
 
     
-    ## print_message("begin saving")
-    ## if (scenario == "1000G") {
-    ##     save(
-    ##         bam_files,
-    ##         sampleNames,
-    ##         pos,
-    ##         imputed_dosages,
-    ##         file = result_file
-    ##     )
-    ## } else {
-    ##     save(
-    ##         bam_files,
-    ##         sampleNames,
-    ##         pos,
-    ##         imputed_dosages,
-    ##         final_set_of_results,
-    ##         file = result_file
-    ##     )
-    ## }
-
-    ## not sure what else to save, probably need better format for output
-    save(
-        sampleNames,
-        bam_files,
-        imputed_dosages,
-        file = output_RData_filename
-    )
+    print_message("begin saving")
+    if (!is.null(RData_objects_to_save)) {
+        for(object in RData_objects_to_save) {
+            if (!exists(object)) {
+                stop(paste0("You have asked to save object:", object, " as part of RData_objects_to_save but this is not a valid option"))
+            }
+        }
+        parse(text = paste0(
+            "save(", 
+            paste0(RData_objects_to_save, collapse = ", "),
+            ", file = output_RData_filename"
+        ))
+    }
+    
     print_message("Done QUILT")
     
     return(NULL)
