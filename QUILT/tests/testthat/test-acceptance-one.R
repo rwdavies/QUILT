@@ -10,7 +10,7 @@ if ( 1 == 0 ) {
         a <- a[-b]
     }
     o <- sapply(a, source)
-    
+
 }
 
 n_snps <- 50
@@ -71,7 +71,8 @@ test_that("QUILT can impute a few samples in a standard way", {
         nGibbsSamples = 3,
         n_seek_its = 2,
         nCores = 2,
-        RData_objects_to_save = "final_set_of_results"
+        RData_objects_to_save = "final_set_of_results",
+        addOptimalHapsToVCF = TRUE
     )
 
 

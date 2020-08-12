@@ -35,7 +35,7 @@ STITCH::make_STITCH_cli(
     cli_output_file = cli_output_file,
     other_character_params = c("phasefile", "output_RData_filename", "RData_objects_to_save"),
     character_vectors = c("RData_objects_to_save"),
-    other_logical_params = c("make_plots", "verbose", "record_read_label_usage", "record_interim_dosages", "use_bx_tag"),
+    other_logical_params = c("make_plots", "verbose", "record_read_label_usage", "record_interim_dosages", "use_bx_tag", "addOptimalHapsToVCF"),
     other_integer_params = c("nGibbsSamples", "n_seek_its", "Ksubset", "Knew", "K_top_matches", "panel_size", "bxTagUpperLimit"),
     other_double_params = c("heuristic_match_thin"),
     function_name = "QUILT",

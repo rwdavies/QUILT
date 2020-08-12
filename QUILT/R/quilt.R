@@ -34,6 +34,7 @@
 #' @param record_interim_dosages Whether to record interim dosages or not
 #' @param use_bx_tag Whether to try and use BX tag in same to indicate that reads come from the same underlying molecule
 #' @param bxTagUpperLimit When using BX tag, at what distance between reads to consider reads with the same BX tag to come from different molecules
+#' @param addOptimalHapsToVCF Whether to add optimal haplotypes to vcf when phasing information is present, where optimal is imputation done when read label origin is known
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -72,7 +73,8 @@ QUILT <- function(
     record_read_label_usage = TRUE,
     record_interim_dosages = FALSE,
     use_bx_tag = TRUE,
-    bxTagUpperLimit = 50000
+    bxTagUpperLimit = 50000,
+    addOptimalHapsToVCF = FALSE
 ) {
 
     ## init_method <- "simple"
@@ -455,7 +457,8 @@ QUILT <- function(
                 cM_grid = cM_grid,
                 af = af,
                 use_bx_tag = use_bx_tag,
-                bxTagUpperLimit = bxTagUpperLimit
+                bxTagUpperLimit = bxTagUpperLimit,
+                addOptimalHapsToVCF = addOptimalHapsToVCF
             )
 
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out
@@ -495,16 +498,14 @@ QUILT <- function(
         nCores = nCores,
         complete_set_of_results = complete_set_of_results,
         inRegion2 = inRegion2,
-        sampleRanges = sampleRanges
+        sampleRanges = sampleRanges,
+        addOptimalHapsToVCF = addOptimalHapsToVCF
     )    
 
     
     ##
     ## build a singular set of results
     ##
-    ## write out VCF now!
-
-    
     if (!is.null(RData_objects_to_save)) {
 
         print_message("Begin saving extra RData objects to disk")

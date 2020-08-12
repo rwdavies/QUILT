@@ -7,7 +7,8 @@ make_and_write_output_file <- function(
     nCores,
     complete_set_of_results,
     inRegion2,
-    sampleRanges
+    sampleRanges,
+    addOptimalHapsToVCF
 ) {
 
     print_message("Begin making and writing output file")
@@ -17,7 +18,8 @@ make_and_write_output_file <- function(
     ## make header
     make_and_write_quilt_header(
         output_vcf_header_file = output_unbgzipped,
-        sampleNames = sampleNames
+        sampleNames = sampleNames,
+        addOptimalHapsToVCF = addOptimalHapsToVCF
     )
 
     ##
@@ -48,7 +50,11 @@ make_and_write_output_file <- function(
     ##
     ## summarize info bit
     ##
-    FORMAT <- "GT:GP:DS:HD" ## genotypes, posteriors, dosages, haploid-dosages
+    if (addOptimalHapsToVCF) {
+        FORMAT <- "GT:GP:DS:HD:OHD" ## genotypes, posteriors, dosages, haploid-dosages, optimal haploid-dosages
+    } else {
+        FORMAT <- "GT:GP:DS:HD" ## genotypes, posteriors, dosages, haploid-dosages
+    }
     INFO <- paste0(
         "EAF=", round(estimatedAlleleFrequency, 5), ";",
         "INFO_SCORE=", round(info, 5), ";",
@@ -188,7 +194,8 @@ get_per_snp_annot <- function(
 
 make_and_write_quilt_header <- function(
     output_vcf_header_file,
-    sampleNames
+    sampleNames,
+    addOptimalHapsToVCF
 ) {
     ## annotations now constant
     annot_header <- paste0(
@@ -208,6 +215,9 @@ make_and_write_quilt_header <- function(
         '##FORMAT=<ID=DS,Number=1,Type=Float,Description="Diploid dosage">\n',
         '##FORMAT=<ID=HD,Number=2,Type=Float,Description="Haploid dosages">\n'
     )
+    if (addOptimalHapsToVCF) {
+        header <- paste0(header, '##FORMAT=<ID=OHD,Number=2,Type=Float,Description="Optimal haploid dosages">\n')
+    }
     header2 <- paste("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", paste(sampleNames, collapse = "\t", sep="\t"), sep="\t")
     cat(header, header2, "\n", sep="", file = output_vcf_header_file)
     return(NULL)

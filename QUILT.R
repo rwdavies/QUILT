@@ -191,8 +191,8 @@ option_list <- list(
     make_option(
         "--record_interim_dosages",
         type = "logical",
-        help = "Whether to record interim dosages or not [default TRUE] ",
-        default = TRUE
+        help = "Whether to record interim dosages or not [default FALSE] ",
+        default = FALSE
     ), 
     make_option(
         "--use_bx_tag",
@@ -205,6 +205,12 @@ option_list <- list(
         type = "integer",
         help = "When using BX tag, at what distance between reads to consider reads with the same BX tag to come from different molecules [default 50000] ",
         default = 50000
+    ), 
+    make_option(
+        "--addOptimalHapsToVCF",
+        type = "logical",
+        help = "Whether to add optimal haplotypes to vcf when phasing information is present, where optimal is imputation done when read label origin is known [default FALSE] ",
+        default = FALSE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -244,5 +250,6 @@ QUILT(
     record_read_label_usage = opt$record_read_label_usage,
     record_interim_dosages = opt$record_interim_dosages,
     use_bx_tag = opt$use_bx_tag,
-    bxTagUpperLimit = opt$bxTagUpperLimit
+    bxTagUpperLimit = opt$bxTagUpperLimit,
+    addOptimalHapsToVCF = opt$addOptimalHapsToVCF
 )

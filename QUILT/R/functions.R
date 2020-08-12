@@ -509,7 +509,8 @@ get_and_impute_one_sample <- function(
     cM_grid,
     af,
     use_bx_tag,
-    bxTagUpperLimit
+    bxTagUpperLimit,
+    addOptimalHapsToVCF
 ) {
 
     sample_name <- sampleNames[iSample]
@@ -941,12 +942,23 @@ get_and_impute_one_sample <- function(
     per_sample_alleleCount <- cbind(c2, c1 + c2)
 
     ## make vcf character thing - NOTE - this is a HACK of previous one - but works OK here!
+
+    if (addOptimalHapsToVCF & have_truth_haplotypes) {
+        add_x_2_cols <- TRUE
+        x_t <- t(imputed_truth_haplotypes)
+    } else {
+        add_x_2_cols <- FALSE
+        x_t <- matrix()
+    }
+
     per_sample_vcf_col <- STITCH::rcpp_make_column_of_vcf(
         gp_t = gp_t,
         use_read_proportions = FALSE,
         use_state_probabilities = TRUE,
         read_proportions = matrix(),
-        q_t = t(phasing_haps)
+        q_t = t(phasing_haps),
+        add_x_2_cols = add_x_2_cols,
+        x_t = x_t
     )    
     
     ## what to return
@@ -974,7 +986,7 @@ get_and_impute_one_sample <- function(
 }
 
 
-
+#' @export
 modified_calculate_pse <- function(
     test,
     truth,
@@ -1703,6 +1715,8 @@ get_alleleCount <- function(sampleReads , nSNPs) {
     return(alleleCount)
 }
 
+
+#' @export
 r2_by_freq <- function(breaks, af, truthG, testDS, which_snps = NULL, flip = FALSE) {
     if (flip) {
         w <- af > 0.5

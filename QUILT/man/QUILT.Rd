@@ -39,7 +39,8 @@ QUILT(
   record_read_label_usage = TRUE,
   record_interim_dosages = FALSE,
   use_bx_tag = TRUE,
-  bxTagUpperLimit = 50000
+  bxTagUpperLimit = 50000,
+  addOptimalHapsToVCF = FALSE
 )
 }
 \arguments{
@@ -110,6 +111,8 @@ QUILT(
 \item{use_bx_tag}{Whether to try and use BX tag in same to indicate that reads come from the same underlying molecule}
 
 \item{bxTagUpperLimit}{When using BX tag, at what distance between reads to consider reads with the same BX tag to come from different molecules}
+
+\item{addOptimalHapsToVCF}{Whether to add optimal haplotypes to vcf when phasing information is present, where optimal is imputation done when read label origin is known}
 }
 \value{
 Results in properly formatted version
