@@ -505,9 +505,10 @@ QUILT <- function(
     ## write out VCF now!
 
     
-    print_message("begin saving")
     if (!is.null(RData_objects_to_save)) {
 
+        print_message("Begin saving extra RData objects to disk")
+        
         final_set_of_results <- as.list(1:N)
         c <- 1
         for(i in 1:length(complete_set_of_results)) {
@@ -530,11 +531,15 @@ QUILT <- function(
                 stop(paste0("You have asked to save object:", object, " as part of RData_objects_to_save but this is not a valid option"))
             }
         }
-        parse(text = paste0(
+        save_text <- paste0(
             "save(", 
             paste0(RData_objects_to_save, collapse = ", "),
             ", file = output_RData_filename)"
-        ))
+        )
+        print(paste0("Saving using the following:", save_text))
+        eval(parse(text = save_text))
+        print_message("Done saving extra RData objects to disk")
+        
     }
     
     print_message("Done QUILT")
