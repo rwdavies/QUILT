@@ -70,7 +70,8 @@ test_that("QUILT can impute a few samples in a standard way", {
         Knew = 25,
         nGibbsSamples = 3,
         n_seek_its = 2,
-        nCores = 2
+        nCores = 2,
+        RData_objects_to_save = "final_set_of_results"
     )
 
 
@@ -84,7 +85,10 @@ test_that("QUILT can impute a few samples in a standard way", {
         tol = 0.1,
         min_info = 0.9
     )
-    
+
+    ## check loaded stuff
+    load(file_quilt_output_RData(outputdir, regionName))
+    expect_equal(length(final_set_of_results), 3)
     
 })
 

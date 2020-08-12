@@ -70,7 +70,7 @@ QUILT <- function(
     shuffle_bin_radius = 5000,
     iSizeUpperLimit = 1e6,
     record_read_label_usage = TRUE,
-    record_interim_dosages = TRUE,
+    record_interim_dosages = FALSE,
     use_bx_tag = TRUE,
     bxTagUpperLimit = 50000
 ) {
@@ -508,13 +508,13 @@ QUILT <- function(
     if (!is.null(RData_objects_to_save)) {
 
         print_message("Begin saving extra RData objects to disk")
-        
+
         final_set_of_results <- as.list(1:N)
         c <- 1
         for(i in 1:length(complete_set_of_results)) {
             x <- complete_set_of_results[[i]]
-            for(j in 1:length(x)) {
-                final_set_of_results[[c]] <- x[[j]]
+            for(j in 1:length(x[["results_across_samples"]])) {
+                final_set_of_results[[c]] <- x[["results_across_samples"]][[j]]
                 c <- c + 1
             }
         }
@@ -536,7 +536,6 @@ QUILT <- function(
             paste0(RData_objects_to_save, collapse = ", "),
             ", file = output_RData_filename)"
         )
-        print(paste0("Saving using the following:", save_text))
         eval(parse(text = save_text))
         print_message("Done saving extra RData objects to disk")
         
