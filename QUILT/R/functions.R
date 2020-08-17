@@ -679,8 +679,10 @@ get_and_impute_one_sample <- function(
         }
 
         if (record_read_label_usage) {
-            read_label_matrix[, "truth"] <- truth_labels
-            read_label_matrix[, "uncertain"] <- as.numeric(uncertain_truth_labels)
+            if (have_truth_haplotypes) {
+                read_label_matrix[, "truth"] <- truth_labels
+                read_label_matrix[, "uncertain"] <- as.numeric(uncertain_truth_labels)
+            }
         }
         
         ##
@@ -1428,22 +1430,12 @@ impute_using_everything <- function(
         if (i_hap == 2) { dosage2 <- dosageNew}
         ##
         if (return_good_haps) {
-            ## OK, so this is slow, the quantile bit argh
-            ## how can I make this fast?
-            ## can I write c++ to do two passes over this
-            ## otherwise 
-            n <- ncol(full_gammaSmall_t)
-            to_out <- as.list(1:n)
-            for(i in 1:n) {
-                ## for these samples, return them with this
-                x <- full_gammaSmall_t[, i]
-                val <- -rcpp_nth_partial_sort(-x, as.integer(K_top_matches))[K_top_matches]
-                y <- which(x >= val)
-                y <- y[order(-x[y])]
-                to_out[[i]] <- y
-            }
-            ## now choose 
-            new_haps[[i_hap]] <- to_out
+            new_haps <- everything_per_hap_prepare_haps(
+                full_gammaSmall_t = full_gammaSmall_t,
+                K_top_matches = K_top_matches,
+                new_haps = new_haps,
+                i_hap = i_hap
+            )
         }
         if (return_gamma_t | make_plots) {
             ## requires gamma
@@ -1457,33 +1449,13 @@ impute_using_everything <- function(
     if (return_good_haps) {
         ## select some new haplotypes if possible!
         ## try all the depth-up-to-5 ones first, then go on
-        i <- 1
-        to_keep <- NULL
-        left <- Knew
-        done <- FALSE
-        while(!done) {
-            if (i <= K_top_matches) {
-                new <- unique(unlist(sapply(new_haps, function(x) lapply(x, function(y) y[i]))))
-            } else {
-                new <- unique(unlist(new_haps))
-                done <- TRUE
-            }
-            new <- setdiff(new, previously_selected_haplotypes)
-            new <- setdiff(new, to_keep)
-            if (length(new) < Knew) {
-                to_keep <- c(new)
-                i <- i + 1
-            } else {
-                toadd <- Knew - length(to_keep)
-                to_keep <- new[sample(1:length(new), toadd)]
-                done <- TRUE
-            }
-        }
-        new_haps <- to_keep
-        if (length(new_haps) < Knew) {
-            ## if not enough, add some at random
-            new_haps <- c(new_haps, sample(setdiff(1:K, c(to_keep, previously_selected_haplotypes)), Knew - length(to_keep)))
-        }
+        new_haps <- everything_select_good_haps(
+            Knew = Knew,
+            K_top_matches = K_top_matches,
+            new_haps = new_haps,
+            previously_selected_haplotypes = previously_selected_haplotypes,
+            K = K
+        )
     }
     to_return <- list(
         dosage1 = dosage1,
@@ -1516,6 +1488,130 @@ impute_using_everything <- function(
 
 
 
+##
+## todo, make this work within the forward backward bit, then can post-process in R more quickly
+##
+everything_per_hap_prepare_haps <- function(
+    full_gammaSmall_t,
+    K_top_matches,
+    new_haps,
+    i_hap
+) {
+    ## OK, so this is slow, the quantile bit argh
+    ## how can I make this fast?
+    ## can I write c++ to do two passes over this
+    ## otherwise 
+    n <- ncol(full_gammaSmall_t)
+    to_out <- as.list(1:n)
+    for(i in 1:n) {
+        ## for these samples, return them with this
+        x <- full_gammaSmall_t[, i]
+        y <- R_get_top_K_or_more_matches(x, K_top_matches)
+        to_out[[i]] <- y
+    }
+    ## now choose 
+    new_haps[[i_hap]] <- to_out
+    return(new_haps)
+}
+
+R_get_top_K_or_more_matches <- function(x, K_top_matches) {
+    val <- -rcpp_nth_partial_sort(-x, as.integer(K_top_matches))[K_top_matches]
+    y <- which(x >= val) ## surprisingly slow
+    y <- y[order(-x[y])]
+    return(y)
+}
+
+R_get_top_K_or_more_matches_while_building_gamma <- function(
+    alphaHat_t,
+    betaHat_t_col,
+    gamma_t_col,
+    iGrid,
+    K,
+    K_top_matches
+) {
+    ## 
+    top_K_values <- numeric(K_top_matches)
+    beats_value <- 0;
+    num_top_K <- 1
+    for(k in 0:(K - 1)) {
+        gamma_t_col[k + 1] <- alphaHat_t[k + 1, iGrid + 1] * betaHat_t_col[k + 1];
+        if (gamma_t_col[k + 1] == top_K_values[0 + 1]) {
+            num_top_K <- num_top_K + 1;
+        } else if (gamma_t_col[k + 1] > top_K_values[0 + 1]) {
+            num_top_K <- num_top_K + 1;            
+            beats_value <- 0;
+            for(j in 0:(K_top_matches - 1)) {
+                if (gamma_t_col[k + 1] > top_K_values[j + 1]) {
+                    beats_value <- j
+                }
+            }
+            if (beats_value > 0) {
+                for(i in 0:(beats_value)) {
+                    top_K_values[i + 1] = top_K_values[i + 1 + 1]
+                }
+            }
+            top_K_values[beats_value + 1] <- gamma_t_col[k + 1]
+        }
+    }
+    ## 
+    top_matches <- integer(num_top_K)
+    top_matches_values <- numeric(num_top_K)
+    count <- 0
+    for(k in 0:(K - 1)) {
+        if (gamma_t_col[k + 1] >= top_K_values[0 + 1]) {
+            top_matches[count + 1] <- k + 1
+            top_matches_values[count + 1] <- gamma_t_col[k + 1]
+            count <- count + 1;
+        }
+    }
+    ## note, can just leave for R in this way
+    return(
+        list(
+            top_matches = top_matches[1:count] - 1, ## make 0-based
+            top_matches_values = top_matches_values[1:count]
+        )
+    )
+    ##top_matches[order(top_matches_values , decreasing = TRUE)])   
+}
+                
+
+
+everything_select_good_haps <- function(
+    Knew,
+    K_top_matches,
+    new_haps,
+    previously_selected_haplotypes,
+    K
+) {
+    i <- 1
+    to_keep <- NULL
+    left <- Knew
+    done <- FALSE
+    while(!done) {
+        if (i <= K_top_matches) {
+            new <- unique(unlist(sapply(new_haps, function(x) lapply(x, function(y) y[i]))))
+        } else {
+            new <- unique(unlist(new_haps))
+            done <- TRUE
+        }
+        new <- setdiff(new, previously_selected_haplotypes)
+        new <- setdiff(new, to_keep)
+        if (length(new) < Knew) {
+            to_keep <- c(new)
+            i <- i + 1
+        } else {
+            toadd <- Knew - length(to_keep)
+            to_keep <- new[sample(1:length(new), toadd)]
+            done <- TRUE
+        }
+    }
+    new_haps <- to_keep
+    if (length(new_haps) < Knew) {
+        ## if not enough, add some at random
+        new_haps <- c(new_haps, sample(setdiff(1:K, c(to_keep, previously_selected_haplotypes)), Knew - length(to_keep)))
+    }
+    return(new_haps)
+}
 
 
 impute_one_sample <- function(

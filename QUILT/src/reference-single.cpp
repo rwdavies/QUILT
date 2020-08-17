@@ -69,6 +69,81 @@ Rcpp::NumericVector rcpp_nth_partial_sort(
 }
 
 
+
+
+// //' @export
+// // [[Rcpp::export]]
+// Rcpp::NumericVector Rcpp_get_top_K_or_more_matches(
+//     Rcpp::NumericVector& x,
+//     int K_top_matches
+// ) {
+//     val = -rcpp_nth_partial_sort(-x, as.integer(K_top_matches))[K_top_matches]
+//     y <- which(x >= val) ## surprisingly slow
+//     y <- y[order(-x[y])]
+//     return(y)
+// }
+
+
+
+//' @export
+// [[Rcpp::export]]
+Rcpp::List Rcpp_get_top_K_or_more_matches_while_building_gamma(
+    arma::mat& alphaHat_t,
+    arma::colvec& betaHat_t_col,
+    arma::colvec& gamma_t_col,
+    int iGrid,
+    int K,
+    int K_top_matches
+) {
+    // first pass, do gamma, and calculate minimal value for the get
+    // second pass, get those values and store them
+    Rcpp::NumericVector top_K_values(K_top_matches); // reverse order i.e. first is smallest, last is highest
+    top_K_values.fill(0);
+    int beats_value = 0;
+    int num_top_K = 1; //1-based for size
+    for(int k = 0; k < K; k++) {
+        gamma_t_col(k) = alphaHat_t(k, iGrid) * betaHat_t_col(k);
+        if (gamma_t_col(k) == top_K_values(0)) {
+            num_top_K++;
+        } else if (gamma_t_col(k) > top_K_values(0)) {
+            num_top_K++;
+            // start storing procedure
+            beats_value = 0;
+            for(int j = 0; j < K_top_matches; j++) {
+                if (gamma_t_col(k) > top_K_values(j)) {
+                    beats_value = j;
+                }
+            }
+            if (beats_value > 0) {
+                // push back
+                for(int i = 0; i < beats_value; i++) {
+                    top_K_values(i) = top_K_values(i + 1);
+                }
+            }
+            top_K_values(beats_value) = gamma_t_col(k);
+        }
+    }
+    // second pass, get those that meet the threshold
+    Rcpp::IntegerVector top_matches(num_top_K); // num_top_k is upper bound
+    Rcpp::NumericVector top_matches_values(num_top_K);
+    int count = -1;
+    for(int k = 0; k < K; k++) {
+        if (gamma_t_col(k) >= top_K_values(0)) {
+            count++;
+            top_matches(count) = k;
+            top_matches_values(count) = gamma_t_col(k);
+        }
+    }
+    // this is good enough, save the rest for R next time, these should be much much smaller in all but rarest casests
+    Rcpp::List to_return = Rcpp::List::create(
+        Rcpp::Named("top_matches") = top_matches[Rcpp::Range(0, count)],
+        Rcpp::Named("top_matches_values") = top_matches_values[Rcpp::Range(0, count)]
+    );
+    return to_return;
+}
+                
+
+
 //' @export
 // [[Rcpp::export]]
 arma::mat Rcpp_build_eMatDH(
@@ -222,7 +297,6 @@ void Rcpp_haploid_reference_single_forward(
     arma::colvec alphaHat_t_col(K);
     bool grid_has_variant;
     const double double_K = double(K);
-    bool calculate_small_gamma_t_col;
     bool store_alpha_for_this_grid;
     //
     for(iGrid = 1; iGrid < nGrids; iGrid++) {
@@ -329,6 +403,7 @@ void Rcpp_haploid_reference_single_backward(
     arma::mat& betaHat_t,
     arma::mat& gamma_t,
     arma::mat& gammaSmall_t,
+    Rcpp::List& best_haps_stuff_list,
     Rcpp::IntegerVector& gammaSmall_cols_to_get,
     Rcpp::NumericVector& dosage,    
     const int& nGrids,
@@ -347,7 +422,9 @@ void Rcpp_haploid_reference_single_backward(
     bool return_dosage,
     bool return_gamma_t,
     bool return_gammaSmall_t,
-    const int nMaxDH
+    bool get_best_haps_from_thinned_sites,
+    const int nMaxDH,
+    const int K_top_matches
 ) {
     // 
     //
@@ -359,6 +436,7 @@ void Rcpp_haploid_reference_single_backward(
     double dR, dA, prob, val, gk;
     arma::colvec ematcol(K);
     iGrid = nGrids - 1;
+    arma::colvec alphaHat_t_col(K);    
     arma::colvec betaHat_t_col(K);
     arma::colvec gamma_t_col(K);
     bool calculate_small_gamma_t_col, grid_has_variant;
@@ -474,9 +552,15 @@ void Rcpp_haploid_reference_single_backward(
                 calculate_small_gamma_t_col = true;
             }
         }
-        if (return_dosage | return_gamma_t | calculate_small_gamma_t_col) {
-            gamma_t_col = alphaHat_t.col(iGrid) % betaHat_t_col; // betaHat_t_col includes effect of c, so this is accurate and does not need more c
+        if (get_best_haps_from_thinned_sites && (gammaSmall_cols_to_get(iGrid) >= 0)) {
+            best_haps_stuff_list(gammaSmall_cols_to_get(iGrid))= Rcpp_get_top_K_or_more_matches_while_building_gamma(alphaHat_t, betaHat_t_col, gamma_t_col, iGrid, K, K_top_matches);
+        } else {
+            // otherwise, do per-entry, check for kth best value
+            if (return_dosage | return_gamma_t | calculate_small_gamma_t_col) {
+                gamma_t_col = alphaHat_t.col(iGrid) % betaHat_t_col; // betaHat_t_col includes effect of c, so this is accurate and does not need more c
+            }
         }
+        //
         if (return_dosage) {
             s = 32 * (iGrid); // 0-based here
             e = 32 * (iGrid + 1) - 1;
@@ -563,6 +647,7 @@ void Rcpp_haploid_dosage_versus_refs(
     arma::mat& betaHat_t,
     arma::mat& gamma_t,
     arma::mat& gammaSmall_t,
+    Rcpp::List& best_haps_stuff_list,
     Rcpp::NumericVector& dosage,
     const arma::mat& transMatRate_t,
     const arma::imat& rhb_t,
@@ -572,11 +657,13 @@ void Rcpp_haploid_dosage_versus_refs(
     arma::mat& distinctHapsIE,
     arma::imat& hapMatcher,
     Rcpp::IntegerVector& gammaSmall_cols_to_get,
+    const int K_top_matches,
     const int suppressOutput = 1,
     bool return_betaHat_t = true,
     bool return_dosage = true,
     bool return_gamma_t = true,
-    bool return_gammaSmall_t = false
+    bool return_gammaSmall_t = false,
+    bool get_best_haps_from_thinned_sites = false
 ) {
     //
     double prev=clock();
@@ -594,23 +681,20 @@ void Rcpp_haploid_dosage_versus_refs(
         printf("%s%ld\n",buffer,tv.tv_usec);
         //std::cout << "================== " << std::endl;        
     }
-    for(int j = 0; j < 4; j++) {
     std::string prev_section="Null";
     std::string next_section="Initialize variables";
     prev=print_times(prev, suppressOutput, prev_section, next_section);
     prev_section=next_section;
     //
     const int K = rhb_t.n_rows;
-    const double double_K = double(K);
     const int nGrids = alphaHat_t.n_cols;
     const int nSNPs = gl.n_cols;
     double one_over_K = 1 / (double)K;
     double ref_one_minus_error = 1 - ref_error;
     arma::rowvec c = arma::zeros(1, nGrids);
     arma::mat gl_local(2, 32);
-    int i, k, dh, b;
-    double prob, dR, dA, jump_prob, gk, one_minus_jump_prob, val;
-    bool calculate_small_gamma_t_col;
+    int i, k, dh;
+    double prob;
     bool only_store_alpha_at_gamma_small;
     if (return_gammaSmall_t & (!return_gamma_t) & (!return_dosage) & (!return_betaHat_t)) {
         only_store_alpha_at_gamma_small = true;
@@ -694,20 +778,18 @@ void Rcpp_haploid_dosage_versus_refs(
     iGrid = nGrids - 1;
     arma::colvec betaHat_t_col(K);
     arma::colvec gamma_t_col(K);
-    double not_jump_prob;
     //
     // run normal backward progression
     //
     next_section="run backward normal";
     prev=print_times(prev, suppressOutput, prev_section, next_section);
     prev_section=next_section;
-    Rcpp_haploid_reference_single_backward(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, gammaSmall_cols_to_get, dosage,     nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, nMaxDH);
-    // done now
+    Rcpp_haploid_reference_single_backward(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage,     nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches);
+    // 
     //
     next_section="done";
     prev=print_times(prev, suppressOutput, prev_section, next_section);
     prev_section=next_section;
-    }
     if (suppressOutput == 0) {
         gettimeofday(&btime, 0);
         //std::cout << "==== end at ==== " << std::endl;

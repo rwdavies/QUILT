@@ -283,6 +283,8 @@ QUILT <- function(
     samples_with_phase <- out$samples_with_phase
     if (length(samples_with_phase) > 0) {
         have_truth_haplotypes <- TRUE
+    } else {
+        have_truth_haplotypes <- FALSE
     }
     
     

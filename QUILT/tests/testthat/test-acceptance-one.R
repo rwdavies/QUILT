@@ -55,26 +55,29 @@ test_that("QUILT can impute a few samples in a standard way", {
     )
     regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
     expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
-    
-    QUILT(
-        outputdir = outputdir,
-        chr = data_package$chr,
-        regionStart = regionStart,
-        regionEnd = regionEnd,
-        buffer = buffer,
-        bamlist = data_package$bamlist,
-        posfile = data_package$posfile,
-        genfile = data_package$genfile,
-        phasefile = data_package$phasefile,
-        Ksubset = 100,
-        Knew = 25,
-        nGibbsSamples = 3,
-        n_seek_its = 2,
-        nCores = 2,
-        RData_objects_to_save = "final_set_of_results",
-        addOptimalHapsToVCF = TRUE
-    )
 
+    for(i in 1:2) {
+        if (i == 1) {phasefile <- "" }
+        if (i == 2) {phasefile <- data_package$phasefile}
+        QUILT(
+            outputdir = outputdir,
+            chr = data_package$chr,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer,
+            bamlist = data_package$bamlist,
+            posfile = data_package$posfile,
+            genfile = data_package$genfile,
+            phasefile = phasefile,
+            Ksubset = 100,
+            Knew = 25,
+            nGibbsSamples = 3,
+            n_seek_its = 2,
+            nCores = 2,
+            RData_objects_to_save = "final_set_of_results",
+            addOptimalHapsToVCF = TRUE
+        )
+    }
 
     which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
     

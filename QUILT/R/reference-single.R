@@ -82,6 +82,7 @@ R_haploid_dosage_versus_refs <- function(
     alphaHat_t,
     betaHat_t,
     gamma_t,
+    gammaSmall_t,    
     dosage,
     transMatRate_t,
     rhb_t,
@@ -90,7 +91,13 @@ R_haploid_dosage_versus_refs <- function(
     distinctHapsB,
     distinctHapsIE,
     hapMatcher,
-    return_extra = FALSE
+    return_extra = FALSE,
+    gammaSmall_cols_to_get = array(-1, c(1)),
+    get_best_haps_from_thinned_sites = FALSE,
+    return_gamma_t = TRUE,
+    return_dosage = TRUE,
+    return_gammaSmall_t = TRUE,
+    K_top_matches = 5
 ) {
     ## run one sample haplotype against potentially very many other haplotypes
     K <- nrow(alphaHat_t)
@@ -103,6 +110,11 @@ R_haploid_dosage_versus_refs <- function(
         nMaxDH <- nrow(distinctHapsB)
     } else {
         nMaxDH <- 1
+    }
+    if (get_best_haps_from_thinned_sites) {
+        best_haps_stuff_list <- as.list(1:sum(gammaSmall_cols_to_get >= 0))
+    } else {
+        best_haps_stuff_list <- NULL
     }
     ##
     ## build emissionGrid container version
@@ -209,7 +221,30 @@ R_haploid_dosage_versus_refs <- function(
         ##
         ## now second bit, store of finish off
         ##
-        gamma_t_col <- (alphaHat_t[, iGrid + 1] * betaHat_t_col)
+        calculate_small_gamma_t_col <- FALSE
+        if (return_gammaSmall_t) {
+            if (gammaSmall_cols_to_get[iGrid + 1] >= 0) {
+                calculate_small_gamma_t_col <- TRUE
+            }
+        }
+        if (get_best_haps_from_thinned_sites & (gammaSmall_cols_to_get[iGrid + 1] >= 0)) {
+            ## do thing here, also gets gamma col in Rcpp version
+            gamma_t_col <- array(0, K)
+            best_haps_stuff_list[[gammaSmall_cols_to_get[iGrid + 1] + 1]] <- R_get_top_K_or_more_matches_while_building_gamma(
+                alphaHat_t = alphaHat_t,
+                betaHat_t_col = betaHat_t_col,
+                gamma_t_col = gamma_t_col,
+                iGrid = iGrid,
+                K = K,
+                K_top_matches = K_top_matches
+            )
+            ## have to do gamma col here, in cpp, done already (here too, but pass by reference)
+            gamma_t_col <- (alphaHat_t[, iGrid + 1] * betaHat_t_col)
+        } else {
+            if (return_dosage | return_gamma_t | calculate_small_gamma_t_col) {
+                gamma_t_col <- (alphaHat_t[, iGrid + 1] * betaHat_t_col)            
+            }
+        }
         ## do this bit here
         s <- 32 * iGrid + 1 ## 1-based start
         e <- min(32 * (iGrid + 1), nSNPs) ## 1-based end
@@ -248,7 +283,10 @@ R_haploid_dosage_versus_refs <- function(
         betaHat_t_col <- betaHat_t_col * c[iGrid + 1]
         if (return_extra) {
             betaHat_t[, iGrid + 1] <- betaHat_t_col
-            gamma_t[, iGrid + 1] <- (alphaHat_t[, iGrid + 1] * betaHat_t[, iGrid + 1]) / c[iGrid + 1]
+            gamma_t[, iGrid + 1] <- gamma_t_col
+        }
+        if (calculate_small_gamma_t_col) {
+            gammaSmall_t[, gammaSmall_cols_to_get[iGrid + 1] + 1] <- gamma_t_col
         }
     }
     ##
@@ -260,7 +298,8 @@ R_haploid_dosage_versus_refs <- function(
             gamma_t = gamma_t,
             dosage = dosage,
             alphaHat_t = alphaHat_t,
-            betaHat_t = betaHat_t
+            betaHat_t = betaHat_t,
+            best_haps_stuff_list = best_haps_stuff_list
         )
     )
 }

@@ -52,7 +52,9 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
     use_eMatDH <- TRUE; i_setup <- 2
 
     gammaSmall_cols_to_get <- c(-1, 0, -1, 1) ## i.e. 0-based, what to put it in
-    nSmallGammaGrids <- 2    
+    nSmallGammaGrids <- 2
+    K_top_matches <- 5
+    get_best_haps_from_thinned_sites <- TRUE
     
     ## build some haplotypes and encode them
     for(use_eMatDH in c(FALSE, TRUE)) {
@@ -145,6 +147,9 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
             gamma_t <- array(0, c(K, nGrids))
             gammaSmall_t <- array(0, c(K, nSmallGammaGrids))
             dosage <- numeric(nSNPs)
+            best_haps_stuff_list <- list()
+            ## eek need to pre-declare
+            best_haps_stuff_list <- as.list(1:sum(gammaSmall_cols_to_get >= 0))
             
             ## so now, want to 
             if (!speed_test) {
@@ -156,6 +161,7 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                         alphaHat_t = alphaHat_t,
                         betaHat_t = betaHat_t,
                         gamma_t = gamma_t,
+                        gammaSmall_t = gammaSmall_t,
                         dosage = dosage,
                         transMatRate_t = transMatRate_t,
                         rhb_t = rhb_t,
@@ -164,7 +170,13 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                         distinctHapsB = distinctHapsB,
                         distinctHapsIE = distinctHapsIE,
                         hapMatcher = hapMatcher,
-                        return_extra = TRUE
+                        return_extra = TRUE,
+                        gammaSmall_cols_to_get = gammaSmall_cols_to_get,
+                        get_best_haps_from_thinned_sites = get_best_haps_from_thinned_sites,
+                        return_dosage = TRUE,
+                        return_gammaSmall_t = TRUE,
+                        return_gamma_t = TRUE,
+                        K_top_matches = K_top_matches
                     )
                 )
 
@@ -172,9 +184,11 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                     print("R speed")
                 }
                 R_gamma_t <- outR[["gamma_t"]]
+                R_gammaSmall_t <- outR[["gammaSmall_t"]]
                 R_dosage <- outR[["dosage"]]
                 R_alphaHat_t <- outR[["alphaHat_t"]]
-                R_betaHat_t <- outR[["betaHat_t"]]    
+                R_betaHat_t <- outR[["betaHat_t"]]
+                R_best_haps_stuff_list <- outR[["best_haps_stuff_list"]]
                 expect_equal(colSums(R_gamma_t), rep(1, 4))
                 expect_true((cor(R_dosage, my_hap) ** 2) > 0.7) ## is better for truer match against reference
                 ## alternate
@@ -182,7 +196,26 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
             }
             
             a <- system.time(
-            Rcpp_haploid_dosage_versus_refs(gl = gl,alphaHat_t = alphaHat_t,betaHat_t = betaHat_t,gamma_t = gamma_t,dosage = dosage,transMatRate_t = transMatRate_t,rhb_t = rhb_t,ref_error = ref_error,use_eMatDH = use_eMatDH,distinctHapsB = distinctHapsB,distinctHapsIE = distinctHapsIE, hapMatcher = hapMatcher,gammaSmall_t = gammaSmall_t,gammaSmall_cols_to_get = gammaSmall_cols_to_get, suppressOutput = suppressOutput)
+                Rcpp_haploid_dosage_versus_refs(
+                    gl = gl,
+                    alphaHat_t = alphaHat_t,
+                    betaHat_t = betaHat_t,
+                    gamma_t = gamma_t,
+                    dosage = dosage,
+                    transMatRate_t = transMatRate_t,
+                    rhb_t = rhb_t,
+                    ref_error = ref_error,
+                    use_eMatDH = use_eMatDH,
+                    distinctHapsB = distinctHapsB,
+                    distinctHapsIE = distinctHapsIE,
+                    hapMatcher = hapMatcher,
+                    gammaSmall_t = gammaSmall_t,
+                    gammaSmall_cols_to_get = gammaSmall_cols_to_get,
+                    suppressOutput = suppressOutput,
+                    K_top_matches = K_top_matches,
+                    best_haps_stuff_list = best_haps_stuff_list,
+                    get_best_haps_from_thinned_sites = get_best_haps_from_thinned_sites
+                )
             )
             if (!suppressOutput) {
                 print("cpp speed")
@@ -192,7 +225,10 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
             ## also check components are the same
             if (use_eMatDH) {
 
+                ## ALSO, check for gamma small results i.e. best haps
+                
                 ## check can just minimally get dosage
+                get_best_haps_from_thinned_sites <- TRUE
                 dosageX <- numeric(nSNPs)
                 Rcpp_haploid_dosage_versus_refs(
                     gl = gl, transMatRate_t = transMatRate_t, rhb_t = rhb_t,ref_error = ref_error,use_eMatDH = use_eMatDH,distinctHapsB = distinctHapsB,distinctHapsIE = distinctHapsIE, hapMatcher = hapMatcher, alphaHat_t = alphaHat_t,
@@ -204,7 +240,10 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                     return_betaHat_t = FALSE,
                     return_gamma_t = FALSE,
                     return_gammaSmall_t = FALSE,
-                    gammaSmall_cols_to_get = array(0, c(1, 1))
+                    gammaSmall_cols_to_get = gammaSmall_cols_to_get,
+                    get_best_haps_from_thinned_sites = get_best_haps_from_thinned_sites,
+                    best_haps_stuff_list = best_haps_stuff_list,
+                    K_top_matches = K_top_matches
                 )
                 expect_equal(dosage, dosageX)
                 ## check can just minimally get small gamma
@@ -219,14 +258,15 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                     return_betaHat_t = FALSE,
                     return_gamma_t = FALSE,
                     return_gammaSmall_t = TRUE,
+                    get_best_haps_from_thinned_sites = get_best_haps_from_thinned_sites,
                     gammaSmall_cols_to_get = gammaSmall_cols_to_get,
-                    suppressOutput = suppressOutput
+                    suppressOutput = suppressOutput,
+                    best_haps_stuff_list = best_haps_stuff_list,
+                    K_top_matches = K_top_matches                    
                 )
                 expect_equal(gammaSmall_tX, R_gamma_t[, gammaSmall_cols_to_get >= 0])
-                
-                
-
             }
+            
             
             if (!speed_test) {
                 if (!suppressOutput) {
@@ -236,6 +276,7 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                 expect_equal(R_betaHat_t, betaHat_t)
                 expect_equal(R_gamma_t, gamma_t)
                 expect_equal(R_dosage, dosage)
+                expect_equal(R_best_haps_stuff_list, best_haps_stuff_list)
             }
 
         }
@@ -836,5 +877,52 @@ test_that("prototype idea of classes for faster alphaHat", {
 
 
 
+
+})
+
+
+
+test_that("can quickly in cpp get positiosn greater than certain value", {
+
+    ## either an equivalency or not
+    K_top_matches <- 10
+    
+    for(i in 1:1) {
+        
+        if (i == 1) {
+            set.seed(100)
+            x <- runif(100) ## so will be distinct
+        } else {
+            x <- seq(0, 1, length.out = 100)
+            x[85:95] <- 0.90 ## so this is the one we need more of
+        }
+
+        K <- 100
+        alphaHat_t <- array(1, c(K, 2))
+        iGrid <- 1
+        betaHat_t_col <- array(x, c(K, 1))
+        gamma_t_col <- array(0, c(K, 1))
+
+        for(j in 1:2) {
+            if (j == 1) { f<- Rcpp_get_top_K_or_more_matches_while_building_gamma }
+            if (j == 2) { f<- R_get_top_K_or_more_matches_while_building_gamma }            
+            out <- f(
+                alphaHat_t = alphaHat_t,
+                betaHat_t_col = betaHat_t_col,
+                gamma_t_col = gamma_t_col,
+                iGrid = iGrid,
+                K = K,
+                K_top_matches = K_top_matches
+            )
+            if (j == 1) {out1 <- out}
+            if (j == 2) {out2 <- out}
+        }
+
+        expect_equal(out1, out2)
+
+    }
+    
+    ## so first pass, can get value, while going over and building
+    ## second pass, can get those that meet value
 
 })
