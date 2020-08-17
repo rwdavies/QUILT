@@ -4,29 +4,14 @@
 \alias{QUILT_prepare_reference}
 \title{QUILT_prepare_reference}
 \usage{
-QUILT_prepare_reference(
-  outputdir,
-  chr,
-  nGen,
-  regionStart = NA,
-  regionEnd = NA,
-  buffer = NA,
-  output_file = "",
-  reference_haplotype_file = "",
-  reference_legend_file = "",
-  reference_sample_file = "",
-  reference_populations = NA,
-  reference_phred = 30,
-  reference_exclude_samplelist_file = "",
-  genetic_map_file = "",
-  nMaxDH = 2^8 - 1,
-  tempdir = NA,
-  make_fake_vcf_with_sites_list = FALSE,
-  output_sites_filename = NA,
-  expRate = 1,
-  maxRate = 100,
-  minRate = 0.1
-)
+QUILT_prepare_reference(outputdir, chr, nGen, regionStart = NA,
+  regionEnd = NA, buffer = NA, output_file = "",
+  reference_haplotype_file = "", reference_legend_file = "",
+  reference_sample_file = "", reference_populations = NA,
+  reference_phred = 30, reference_exclude_samplelist_file = "",
+  genetic_map_file = "", nMaxDH = 2^8 - 1, tempdir = NA,
+  make_fake_vcf_with_sites_list = FALSE, output_sites_filename = NA,
+  expRate = 1, maxRate = 100, minRate = 0.1)
 }
 \arguments{
 \item{outputdir}{What output directory to use}

@@ -148,6 +148,7 @@ R_haploid_dosage_versus_refs <- function(
     for(iGrid in 1:(nGrids - 1)) {
         ## 
         jump_prob <- transMatRate_t[2, iGrid] / K
+        not_jump_prob <- transMatRate_t[1, iGrid]
         s <- 32 * iGrid + 1 ## 1-based start
         e <- min(32 * (iGrid + 1), nSNPs) ## 1-based end
         nSNPsLocal <- e - s + 1
@@ -164,7 +165,7 @@ R_haploid_dosage_versus_refs <- function(
             } else {
                 prob <- get_prob_for_k(rhb_t, k + 1, iGrid + 1, nSNPsLocal, ref_error, ref_one_minus_error, gl_local)
             }
-            alphaHat_t[k + 1, iGrid + 1] <- (jump_prob + (1 - jump_prob) * alphaHat_t[k + 1, iGrid + 1 - 1]) * prob
+            alphaHat_t[k + 1, iGrid + 1] <- (jump_prob + not_jump_prob * alphaHat_t[k + 1, iGrid + 1 - 1]) * prob
         }
         ## normalize
         c[iGrid + 1] <- 1 / sum(alphaHat_t[, iGrid + 1])
@@ -181,6 +182,7 @@ R_haploid_dosage_versus_refs <- function(
         } else {
             ## this is from 
             jump_prob <- transMatRate_t[2, iGrid + 1] / K
+            not_jump_prob <- transMatRate_t[1, iGrid + 1]
             ## I think we want previous emissions?
             s <- 32 * (iGrid + 1) + 1 ## 1-based start
             e <- min(32 * ((iGrid + 1) + 1), nSNPs) ## 1-based end
@@ -202,7 +204,7 @@ R_haploid_dosage_versus_refs <- function(
             ##
             e_times_b <- betaHat_t_col * ematcol
             val <- jump_prob * sum(e_times_b)
-            betaHat_t_col <- ((1 - jump_prob) * e_times_b + val)
+            betaHat_t_col <- ((not_jump_prob) * e_times_b + val)
         }
         ##
         ## now second bit, store of finish off

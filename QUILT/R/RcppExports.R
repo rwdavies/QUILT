@@ -167,21 +167,6 @@ rcpp_forwardBackwardGibbsNIPT <- function(sampleReads, priorCurrent_m, alphaMatC
 }
 
 #' @export
-Rcpp_haploid_reference_single_forward_version2 <- function(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small) {
-    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_forward_version2', PACKAGE = 'QUILT', gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small))
-}
-
-#' @export
-Rcpp_haploid_reference_single_backward_version2 <- function(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, gammaSmall_cols_to_get, dosage, nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, nMaxDH) {
-    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_backward_version2', PACKAGE = 'QUILT', alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, gammaSmall_cols_to_get, dosage, nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, nMaxDH))
-}
-
-#' @export
-Rcpp_haploid_dosage_versus_refs_version2 <- function(gl, alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, hapMatcher, gammaSmall_cols_to_get, suppressOutput = 1L, return_betaHat_t = TRUE, return_dosage = TRUE, return_gamma_t = TRUE, return_gammaSmall_t = FALSE) {
-    invisible(.Call('_QUILT_Rcpp_haploid_dosage_versus_refs_version2', PACKAGE = 'QUILT', gl, alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, hapMatcher, gammaSmall_cols_to_get, suppressOutput, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t))
-}
-
-#' @export
 Rcpp_quilt_test_doubler <- function(a) {
     .Call('_QUILT_Rcpp_quilt_test_doubler', PACKAGE = 'QUILT', a)
 }

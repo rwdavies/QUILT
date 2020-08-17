@@ -191,7 +191,7 @@ void rcpp_internal_make_eMatRead_t_using_binary(
 //' @export
 // [[Rcpp::export]]
 void Rcpp_haploid_reference_single_forward(
-    Rcpp::IntegerVector& gammaSmall_cols_to_get,                                           
+    Rcpp::IntegerVector& gammaSmall_cols_to_get,
     const arma::mat& gl,
     arma::mat& alphaHat_t,
     arma::rowvec& c,
@@ -207,54 +207,91 @@ void Rcpp_haploid_reference_single_forward(
     const bool only_store_alpha_at_gamma_small
 ) {
     double jump_prob, one_minus_jump_prob, not_jump_prob;
-    int s, e, nSNPsLocal, i, iGrid, k, dh;
+    int s, e, nSNPsLocal, i, iGrid, k;
     double ref_one_minus_error = 1 - ref_error;
-    const double double_K = double(K);
+    //const int n_which_hapMatcher_0 = which_hapMatcher_0.n_rows;
+    //int hapMatcher_0_position = 0;
+    //bool continue_hapMatcher_0 = true;
     double dR, dA, prob;
-    arma::mat gl_local(2, 32);    
+    double run_total = 0;
+    arma::mat gl_local(2, 32);
+    arma::icolvec dh_col(K);
+    arma::colvec prob_col(K);
+    arma::colvec eMatDH_col(K);
+    arma::colvec alphaHat_t_col_prev(K);
+    arma::colvec alphaHat_t_col(K);
+    bool grid_has_variant;
+    const double double_K = double(K);
+    bool calculate_small_gamma_t_col;
+    bool store_alpha_for_this_grid;
     //
     for(iGrid = 1; iGrid < nGrids; iGrid++) {
         jump_prob = transMatRate_t(1, iGrid - 1) / double_K;
-        one_minus_jump_prob = (1 - jump_prob);
         not_jump_prob = transMatRate_t(0, iGrid - 1);
+        one_minus_jump_prob = (1 - jump_prob);
         s = 32 * iGrid; // 0-based here
         e = 32 * (iGrid + 1) - 1;
         if (e > (nSNPs - 1)) {
             e = nSNPs - 1;
         }
         nSNPsLocal = e - s + 1;
+        grid_has_variant = false;        
         for(i = 0; i < nSNPsLocal; i++) {
             gl_local(0, i) = gl(0, i + s);
             gl_local(1, i) = gl(1, i + s);
+            if ((gl_local(0, i) != 1) | (gl_local(1, i) != 1)) {
+                grid_has_variant = true;
+            }
         }
+        if (iGrid == 1) {
+            grid_has_variant = true; // make sure re-scaling kicks on properly
+	    alphaHat_t_col = alphaHat_t.col(0); // initialize with previous value
+        }
+	store_alpha_for_this_grid = true;
+	if (only_store_alpha_at_gamma_small) {
+            if (gammaSmall_cols_to_get(iGrid) == 0) {
+	      store_alpha_for_this_grid = false;
+	    }
+	}
         if (use_eMatDH) {
             //
             // yes use eMatDH
             //
-            for(k = 0; k < K; k++) {
-                dh = hapMatcher(k, iGrid);
-                if (dh > 0) {
-                    prob = eMatDH(dh - 1, iGrid);
-                } else {
-                    //
-                    std::uint32_t tmp(rhb_t(k, iGrid));                
-                    //
-                    prob = 1;
-                    for(int b = 0; b < nSNPsLocal; b++) {
-                        dR = gl_local(0, b);
-                        dA = gl_local(1, b);
-                        if (tmp & (1<<b)) {
-                            // alternate
-                            prob *= (dR * ref_error + dA * ref_one_minus_error);
-                        } else {
-                            prob *= (dR * ref_one_minus_error + dA * ref_error);
+            if (grid_has_variant) {
+                dh_col = hapMatcher.col(iGrid);
+                eMatDH_col = eMatDH.col(iGrid);
+		run_total = 0;
+                for(k = 0; k < K; k++) {
+		    // if dh_col is 0 i.e. need to re-do this prob is 0 so we are OK
+                    prob = eMatDH_col(dh_col(k));
+                    if (dh_col(k) == 0) {
+                        //
+                        std::uint32_t tmp(rhb_t(k, iGrid));                
+                        //
+                        prob = 1;
+                        for(int b = 0; b < nSNPsLocal; b++) {
+                            dR = gl_local(0, b);
+                            dA = gl_local(1, b);
+                            if (tmp & (1<<b)) {
+                                // alternate
+                                prob *= (dR * ref_error + dA * ref_one_minus_error);
+                            } else {
+                                prob *= (dR * ref_one_minus_error + dA * ref_error);
+                            }
                         }
                     }
+		    alphaHat_t_col(k) = (jump_prob + not_jump_prob * alphaHat_t_col(k)) * prob;
+                    run_total += alphaHat_t_col(k);
                 }
-                alphaHat_t(k, iGrid) = (jump_prob + not_jump_prob * alphaHat_t(k, iGrid - 1)) * prob;
+                c(iGrid) = 1 / run_total;
+		alphaHat_t_col *= c(iGrid); // argh
+            } else {
+	        alphaHat_t_col = (jump_prob + not_jump_prob * alphaHat_t_col);
+	        c(iGrid) = 1;
             }
-            c(iGrid) = 1 / sum(alphaHat_t.col(iGrid));
-            alphaHat_t.col(iGrid) = alphaHat_t.col(iGrid) * c(iGrid);
+	    if (store_alpha_for_this_grid) {
+	        alphaHat_t.col(iGrid) = alphaHat_t_col;
+	    }
         } else {
             //
             // no to eMatDH
@@ -324,11 +361,16 @@ void Rcpp_haploid_reference_single_backward(
     iGrid = nGrids - 1;
     arma::colvec betaHat_t_col(K);
     arma::colvec gamma_t_col(K);
-    bool calculate_small_gamma_t_col;
-    arma::vec matched_gammas(nMaxDH);
+    bool calculate_small_gamma_t_col, grid_has_variant;
+    arma::vec matched_gammas(nMaxDH + 1);
     arma::colvec e_times_b(K);
     arma::vec dosageL(32);
     dosageL.fill(0);
+    arma::icolvec dh_col(K);
+    arma::colvec eMatDH_col(nMaxDH + 1);
+    arma::colvec prob_col(K);
+    double sum_e_times_b = 0;
+    double prev_val = -1; // argh          
     //
     //
     for(iGrid = nGrids - 1; iGrid >= 0; --iGrid) {
@@ -343,43 +385,88 @@ void Rcpp_haploid_reference_single_backward(
             if (e > (nSNPs - 1)) {
                 e = nSNPs - 1;
             }
+	    grid_has_variant = false;
             nSNPsLocal = e - s + 1;
             for(i = 0; i < nSNPsLocal; i++) {
                 gl_local(0, i) = gl(0, i + s);
-                gl_local(1, i) = gl(1, i + s);      
+                gl_local(1, i) = gl(1, i + s);
+		if ((gl_local(0, i) != 1) | (gl_local(1, i) != 1)) {
+		  grid_has_variant = true;
+		}
             }
-            for(k = 0; k < K; k++) {
-                if (use_eMatDH) {
-                    dh = hapMatcher(k, iGrid + 1);
-                } else {
-                    dh = 0;
+	    //
+	    // use eMatDH
+	    //
+	    if (use_eMatDH) {
+	        if (grid_has_variant) {
+		    dh_col = hapMatcher.col(iGrid + 1);		  
+		    eMatDH_col = eMatDH.col(iGrid + 1);
+		    sum_e_times_b = 0;
+		    for(k = 0; k < K; k++) {
+                        prob = eMatDH_col(dh_col(k));
+			if (dh_col(k) == 0) {
+			    //
+			    std::uint32_t tmp(rhb_t(k, iGrid + 1));                
+			    //
+			    prob = 1;
+			    for(int b = 0; b < nSNPsLocal; b++) {
+			      dR = gl_local(0, b);
+			      dA = gl_local(1, b);
+			      if (tmp & (1<<b)) {
+                                // alternate
+                                prob *= (dR * ref_error + dA * ref_one_minus_error);
+			      } else {
+                                prob *= (dR * ref_one_minus_error + dA * ref_error);
+			      }
+			    }
+			    //prob_col(k) = prob;
+			}
+			//ematcol(k) = prob;		    
+			e_times_b(k) = betaHat_t_col(k) * prob;
+			sum_e_times_b += e_times_b(k);
+		    }
+		    val = jump_prob * sum_e_times_b;
+		    betaHat_t_col = ((not_jump_prob) * e_times_b + val);
+		    prev_val = -1;
+		} else {
+		    // so here prob is uniformly 1, can then super simplify
+		    // also, "val", can work out math, is the same if two consecutive no variants, so avoid another fullsum
+		    if (prev_val == -1) {
+		         val = jump_prob * sum(betaHat_t_col);
+		    } else {
+		     	double J1 = (transMatRate_t(1, iGrid + 1) / double_K);
+		     	double N1 = transMatRate_t(0, iGrid + 1);
+		     	val = prev_val * (N1 * jump_prob / J1 + double_K * jump_prob);
+		    }
+		    betaHat_t_col = ((not_jump_prob) * betaHat_t_col + val);
+		    prev_val = val * c(iGrid); // c should not be relevant though, should be 1, has no variants
                 }
-                if (dh > 0) {
-                    prob = eMatDH(dh - 1, iGrid + 1);
-                } else {
-                    //
-                    std::uint32_t tmp(rhb_t(k, iGrid + 1));
-                    //
-                    prob = 1;
-                    for(b = 0; b < nSNPsLocal; b++) {
-                        dR = gl_local(0, b);
-                        dA = gl_local(1, b);
-                        if (tmp & (1<<b)) {
-                            // alternate
-                            prob *= (dR * ref_error + dA * ref_one_minus_error);
-                        } else {
-                            prob *= (dR * ref_one_minus_error + dA * ref_error);
-                        }
-                    }
-                }
-                ematcol(k) = prob;
-            }
-            e_times_b = betaHat_t_col % ematcol;
-            val = jump_prob * sum(e_times_b);
-            betaHat_t_col = ((not_jump_prob) * e_times_b + val);
+	    } else {
+	        for(k = 0; k < K; k++) {
+		    //
+		  std::uint32_t tmp(rhb_t(k, iGrid + 1));
+		  //
+		  prob = 1;
+		  for(b = 0; b < nSNPsLocal; b++) {
+		      dR = gl_local(0, b);
+		      dA = gl_local(1, b);
+		      if (tmp & (1<<b)) {
+			// alternate
+			prob *= (dR * ref_error + dA * ref_one_minus_error);
+		      } else {
+			prob *= (dR * ref_one_minus_error + dA * ref_error);
+		      }
+		  }
+		  ematcol(k) = prob;
+		}
+		e_times_b = betaHat_t_col % ematcol;
+		val = jump_prob * sum(e_times_b);
+		betaHat_t_col = ((not_jump_prob) * e_times_b + val);
+	    }
         }
-        //
-        // build dosages, possibly save gamma
+	//
+	// all this was to give us the unnormalized beta column that we can now work with
+	// now with build gammas and dosages etc
         //
         calculate_small_gamma_t_col = false;
         if (return_gammaSmall_t) {
@@ -399,13 +486,14 @@ void Rcpp_haploid_reference_single_backward(
             nSNPsLocal = e - s + 1;
             matched_gammas.fill(0);
             dosageL.fill(0);
+	    dh_col = hapMatcher.col(iGrid);
             if (use_eMatDH) {
                 for(k = 0; k < K; k++) {
-                    gk = gamma_t_col(k);
-                    dh = hapMatcher(k, iGrid); // recall 0 means no match else 1-based
-                    if (dh > 0) {
-                        matched_gammas(dh - 1) += gk;
-                    } else {
+                    // some of the dh will be 0 and go to matched_gammas 0th entry, but that is OK we do not use that
+		    // they are dealt with afterwards
+		    matched_gammas(dh_col(k)) += gamma_t_col(k);
+                    if (dh_col(k) == 0) {
+		        gk = gamma_t_col(k);
                         std::uint32_t tmp(rhb_t(k, iGrid));
                         for(b = 0; b < nSNPsLocal; b++) {
                             if (tmp & (1<<b)) {
@@ -418,10 +506,9 @@ void Rcpp_haploid_reference_single_backward(
                         }
                     }
                 }
-                //distinctHapsIE_local = distinctHapsIE.cols(s, e);
                 for(b = 0; b < nSNPsLocal; b++) {
                     for(dh = 0; dh < nMaxDH; dh++) {
-                        dosageL(b) += distinctHapsIE(dh, s + b) * matched_gammas(dh);
+                        dosageL(b) += distinctHapsIE(dh, s + b) * matched_gammas(dh + 1);
                     }
                     dosage(s + b) = dosageL(b);
                 }
@@ -445,8 +532,10 @@ void Rcpp_haploid_reference_single_backward(
                 }
             }
         }
-        // add in c here to betaHat_t_col
-        betaHat_t_col *= c(iGrid);
+        // add in c here to betaHat_t_col (as long as not 1!)
+	if (c(iGrid) != 1) {
+	    betaHat_t_col *= c(iGrid);
+	}
         if (return_betaHat_t) {
             betaHat_t.col(iGrid) = betaHat_t_col;
         }
@@ -480,7 +569,7 @@ void Rcpp_haploid_dosage_versus_refs(
     double ref_error,
     const bool use_eMatDH,
     arma::imat& distinctHapsB,
-    arma::mat& distinctHapsIE,    
+    arma::mat& distinctHapsIE,
     arma::imat& hapMatcher,
     Rcpp::IntegerVector& gammaSmall_cols_to_get,
     const int suppressOutput = 1,
@@ -495,7 +584,7 @@ void Rcpp_haploid_dosage_versus_refs(
     timeval btime;
     if (suppressOutput == 0) {
         gettimeofday(&atime, 0);
-        std::cout << "==== start at ==== " << std::endl;
+        //std::cout << "==== start at ==== " << std::endl;
         char buffer[30];
         struct timeval tv;
         time_t curtime;
@@ -503,7 +592,7 @@ void Rcpp_haploid_dosage_versus_refs(
         curtime=tv.tv_sec;
         strftime(buffer,30,"%m-%d-%Y  %T.",localtime(&curtime));
         printf("%s%ld\n",buffer,tv.tv_usec);
-        std::cout << "================== " << std::endl;        
+        //std::cout << "================== " << std::endl;        
     }
     for(int j = 0; j < 4; j++) {
     std::string prev_section="Null";
@@ -515,8 +604,13 @@ void Rcpp_haploid_dosage_versus_refs(
     const double double_K = double(K);
     const int nGrids = alphaHat_t.n_cols;
     const int nSNPs = gl.n_cols;
-    const int nMaxDH = distinctHapsB.n_rows;
+    double one_over_K = 1 / (double)K;
     double ref_one_minus_error = 1 - ref_error;
+    arma::rowvec c = arma::zeros(1, nGrids);
+    arma::mat gl_local(2, 32);
+    int i, k, dh, b;
+    double prob, dR, dA, jump_prob, gk, one_minus_jump_prob, val;
+    bool calculate_small_gamma_t_col;
     bool only_store_alpha_at_gamma_small;
     if (return_gammaSmall_t & (!return_gamma_t) & (!return_dosage) & (!return_betaHat_t)) {
         only_store_alpha_at_gamma_small = true;
@@ -526,20 +620,19 @@ void Rcpp_haploid_dosage_versus_refs(
     //
     //
     //
-    double one_over_K = 1 / (double)K;
-    arma::rowvec c = arma::zeros(1, nGrids);
-    int i, k, dh, b;
-    arma::mat gl_local(2, 32);
-    double prob;
-    //
-    //
-    //
+    arma::mat distinctHapsIE_local;
+    arma::colvec e_times_b(K);
+    arma::vec dosageL(32);
+    dosageL.fill(0);
+    const int nMaxDH = distinctHapsB.n_rows;
+    arma::vec matched_gammas(nMaxDH);
     arma::mat eMatDH;
     if (use_eMatDH) {
         next_section="make eMatDH";
         prev=print_times(prev, suppressOutput, prev_section, next_section);
         prev_section=next_section;
-        eMatDH = Rcpp_build_eMatDH(distinctHapsB, gl, nGrids, nSNPs, ref_error, ref_one_minus_error);
+        const bool add_zero_row_true = true;
+        eMatDH = Rcpp_build_eMatDH(distinctHapsB, gl, nGrids, nSNPs, ref_error, ref_one_minus_error, add_zero_row_true);
     }
     //
     // initialize alphaHat_t
@@ -566,7 +659,7 @@ void Rcpp_haploid_dosage_versus_refs(
             dh = 0;
         }
         if (dh > 0) {
-            prob = eMatDH(dh - 1, iGrid);
+            prob = eMatDH(dh, iGrid);
         } else {
             //
             std::uint32_t tmp(rhb_t(k, iGrid));            
@@ -595,13 +688,20 @@ void Rcpp_haploid_dosage_versus_refs(
     prev_section=next_section;
     Rcpp_haploid_reference_single_forward(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small);
     //
+    // run backward algorithm
+    //
+    arma::colvec ematcol(K);
+    iGrid = nGrids - 1;
+    arma::colvec betaHat_t_col(K);
+    arma::colvec gamma_t_col(K);
+    double not_jump_prob;
+    //
     // run normal backward progression
     //
     next_section="run backward normal";
     prev=print_times(prev, suppressOutput, prev_section, next_section);
     prev_section=next_section;
     Rcpp_haploid_reference_single_backward(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, gammaSmall_cols_to_get, dosage,     nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, nMaxDH);
-    //
     // done now
     //
     next_section="done";
@@ -610,32 +710,20 @@ void Rcpp_haploid_dosage_versus_refs(
     }
     if (suppressOutput == 0) {
         gettimeofday(&btime, 0);
-        std::cout << "==== end at ==== " << std::endl;
+        //std::cout << "==== end at ==== " << std::endl;
         //std::cout << btime << std::endl;
         long seconds  = btime.tv_sec  - atime.tv_sec;
         long useconds = btime.tv_usec - atime.tv_usec;
         long mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
-        printf("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEElapsed time: %ld milliseconds\n", mtime);
+        printf("Total elapsed time: %ld milliseconds\n", mtime);
         char buffer[30];
         struct timeval tv;
         time_t curtime;
         gettimeofday(&tv, NULL);
         curtime=tv.tv_sec;
         strftime(buffer,30,"%m-%d-%Y  %T.",localtime(&curtime));
-        printf("%s%ld\n",buffer,tv.tv_usec);
-        std::cout << "================ " << std::endl;        
+        //printf("%s%ld\n",buffer,tv.tv_usec);
+        //std::cout << "================ " << std::endl;        
     }
     return;
 }
-
-
-
-
-
-
-
-
-
-
-
-
