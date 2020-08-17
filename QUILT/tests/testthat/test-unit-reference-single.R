@@ -1,17 +1,16 @@
-if (1 == 0) {
-
-    library("testthat"); library("STITCH"); library("rrbgen")
-    dir <- "~/proj/STITCH-private/"
-    setwd(paste0(dir, "/STITCH/R"))
-    a <- dir(pattern = "*.R")
+if ( 1 == 0 ) {
+    
+    library("testthat")
+    library("QUILT")
+    dir <- "~/proj/QUILT/"
+    setwd(paste0(dir, "/QUILT/R"))
+    a <- dir(pattern = "*R")
     b <- grep("~", a)
     if (length(b) > 0) {
         a <- a[-b]
     }
     o <- sapply(a, source)
-    setwd(dir)
-    Sys.setenv(PATH = paste0(getwd(), ":", Sys.getenv("PATH")))
-
+    
 }
 
 test_that("can run a single gl sample through reference haplotypes quickly with grid of 32", {
@@ -394,3 +393,44 @@ test_that("profile", {
     
 
 
+
+
+
+
+
+
+
+test_that("prototype idea of classes for faster alphaHat", {
+
+    ## so have initial class
+    ## and then have prob, some change
+    ## re-make class in efficient way after calc
+    set.seed(1)
+    K <- 1000
+    jump_prob <- 0.01 / K
+    not_jump_prob <- 1 - 0.01
+    ## previous class
+    prev_class <- sample(1:10, K, replace = TRUE)
+    prev_alphaHat_master <- runif(10)
+    prev_alphaHat_master <- prev_alphaHat_master / 10 ## normalized
+    prev_alphaHat_col <- prev_alphaHat_master[prev_class]
+    ## now have 4 options for reference haplotype, ignore 0 value for now
+    dh_col <- sample(1:4, K, replace = TRUE)
+    eMatDH_col <- runif(4) ## and their outputs
+    prob_col <- eMatDH_col[dh_col]
+
+    ##
+    ## original way to do it
+    ##
+    new_alphaHat_col <- (jump_prob + not_jump_prob * prev_alphaHat_col) * prob_col
+
+    ##
+    ## potential new way to do it
+    ##
+    ## so almost all the mass in low values, remember, these are ordered
+
+
+
+
+
+})

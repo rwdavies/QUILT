@@ -14,7 +14,7 @@ then
     what_to_test=acceptance-one
 else
     what_to_test=acceptance-"${1}"
-    if ! [ -e "STITCH/tests/testthat/test-${what_to_test}.R" ]
+    if ! [ -e "QUILT/tests/testthat/test-${what_to_test}.R" ]
     then
 	echo Acceptance test either runs all, one, or specify file test-acceptance-{argument}.R
 	exit 1
