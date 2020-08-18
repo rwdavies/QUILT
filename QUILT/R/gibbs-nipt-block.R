@@ -12,14 +12,16 @@ helper_block_gibbs_resampler <- function(
     sampleReads,
     L_grid,
     shuffle_bin_radius,
+    smooth_cm,
     maxDifferenceBetweenReads = 1000,
     Jmax = 1000,
     language = "Rcpp",
     verbose = FALSE,
     do_checks = FALSE,
     block_approach = 1,
-    quantile_prob = 0.9,
-    class_sum_cutoff = 0.06
+    block_gibbs_quantile_prob = 0.9,
+    class_sum_cutoff = 0.06,
+    use_smooth_cm_in_block_gibbs = FALSE
 ) {
 
     eMatRead_t <- array(1, c(dim(eHapsCurrent_tc)[1], length(sampleReads)))
@@ -93,8 +95,10 @@ helper_block_gibbs_resampler <- function(
         L_grid = L_grid,
         grid = grid,
         s = s,
-        quantile_prob = quantile_prob,
-        verbose = verbose
+        block_gibbs_quantile_prob = block_gibbs_quantile_prob,
+        verbose = verbose,
+        use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
+        smooth_cm = smooth_cm
     )
     attempted_blocked_snps <- out[["blocked_snps"]]
     if (language == "R") {
@@ -141,7 +145,7 @@ helper_block_gibbs_resampler <- function(
     } else {
         stop("not a language!")
     }
-    
+
     block_out <- f(
         alphaHat_t1 = alphaHat_t1,
         alphaHat_t2 = alphaHat_t2,
@@ -389,6 +393,7 @@ R_block_gibbs_resampler <- function(
     sum_H <- numeric(3)
     nReads <- integer(1)
     nReads[1] <- length(H)
+    ff_0_condition <- ff > 0
     ##
     ## begin of serious weirdness
     ##
@@ -639,7 +644,8 @@ R_block_gibbs_resampler <- function(
             ##
             ## total relabelling
             ##
-            if (ff > 0) {                 ## only do if ff > 0
+            ## weird results if use this on the fly, maybe due toe pass by reference? but hard to nail down
+            if (ff_0_condition) {                 ## only do if ff > 0
                 if (use_cpp_bits_in_R) {
                     f <- Rcpp_consider_total_relabelling
                 } else {
@@ -860,7 +866,9 @@ R_define_blocked_snps_using_gamma_on_the_fly <- function(
     L_grid,
     grid,
     s,
-    quantile_prob = 0.9,
+    use_smooth_cm_in_block_gibbs,
+    smooth_cm,
+    block_gibbs_quantile_prob = 0.9,
     verbose = FALSE
 ) {
     nSNPs <- length(grid)
@@ -916,7 +924,7 @@ R_define_blocked_snps_using_gamma_on_the_fly <- function(
     ## break_threshold is at most 1, or max or the 50th break_threshold, or the
     break_thresh <- 1
     ## d <- quantile(smoothed_rate, probs = quantile_prob, na.rm = TRUE)
-    d <- rcpp_simple_quantile(smoothed_rate, quantile_prob);
+    d <- rcpp_simple_quantile(smoothed_rate, block_gibbs_quantile_prob);
     if (d < break_thresh) {
         break_thresh <- d
     }
@@ -1644,36 +1652,43 @@ add_grey_background <- function(L_grid) {
     }
 }
 
-## top = smoothed rate with points
-## bottom = gamma?
+
+
+
 plot_attempt_to_reblock_snps <- function(
-    plot_dir,
+    outname,
     break_thresh,
-    consider_snp_start_0_based,
-    consider_snp_end_0_based,
-    consider_reads_start_0_based,
-    consider_reads_end_0_based,
-    manual_read_labels,
+    considers,
     grid_distances,
     L_grid,
-    fbd_store_before,
-    fbd_store_after,
-    fbd_store_tri,
-    tempdir,
-    outputdir,
-    regionName,
-    iteration,
-    s = 1,
-    S = 1,
-    name = "test.png"
+    gibbs_block_output_list,
+    smoothed_rate,
+    L,
+    block_results,
+    uncertain_truth_labels,
+    truth_labels,
+    have_truth_haplotypes,
+    sampleReads
 ) {
     ##
-    xlim <- c(head(L_grid)[1], tail(L_grid)[1])
-    outname <- file.path(plot_dir, name)
-    ## make a 5 Mbp segment 60 wide. then bound up and down at 20 and 200
-    width <- min(max(20, (L_grid[length(L_grid)] - L_grid[1]) / 1e6 * 36), 200)
-    png(outname, height = 40, width = width, res = 100, units = "in")
-    par(mfrow = c(4, 1))
+    xlim <- range(L_grid)
+    consider_snp_start_0_based <- considers[["consider_snp_start_0_based"]]
+    consider_snp_end_0_based <- considers[["consider_snp_end_0_based"]]
+    consider_reads_start_0_based <- considers[["consider_reads_start_0_based"]]
+    consider_reads_end_0_based <- considers[["consider_reads_end_0_based"]]
+    ##
+    before_gamma1_t <- gibbs_block_output_list[["before_gamma1_t"]]
+    before_gamma2_t <- gibbs_block_output_list[["before_gamma2_t"]]
+    after_gamma1_t <- gibbs_block_output_list[["after_gamma1_t"]]
+    after_gamma2_t <- gibbs_block_output_list[["after_gamma2_t"]]
+    before_read_labels <- gibbs_block_output_list[["before_read_labels"]]        
+    after_read_labels <- gibbs_block_output_list[["after_read_labels"]]
+    ## 
+    ## width <- min(max(20, (L_grid[length(L_grid)] - L_grid[1]) / 1e6 * 36), 200)
+    png(outname, height = 10, width = 20, res = 100, units = "in")
+    par(mfrow = c(7, 1))
+    par(oma = c(0, 0, 5, 0))    
+    grid_distances <- diff(L_grid)
     x <- L_grid[-1] - grid_distances    
     xleft <- L_grid[-length(L_grid)]
     xright <- L_grid[-1]
@@ -1686,30 +1701,33 @@ plot_attempt_to_reblock_snps <- function(
     ##
     ylim <- c(0, max(break_thresh, max(smoothed_rate, na.rm = TRUE)))
     ylim <- c(0, max(break_thresh, quantile(smoothed_rate, probs = c(0.99))))
+    par(mar = c(0, 0, 3, 0))            
     plot(x = 0, y = 0, xlab = "Physical position", ylab = "Rate", main = "Location of shuffles to check", ylim = ylim, xlim = xlim)
     add_grey_background(L_grid)
     y <- smoothed_rate
     y[y > ylim[2]] <- ylim[2]
     lines(x = x, y = y, lwd = 2)
     for(iBlock in 0:(length(consider_snp_start_0_based) - 1)) {
-        l <- L_grid[consider_snp_start_0_based[iBlock + 1] + 1]
-        r <- L_grid[consider_snp_end_0_based[iBlock + 1] + 1]
+        l <- L[consider_snp_start_0_based[iBlock + 1] + 1]
+        r <- L[consider_snp_end_0_based[iBlock + 1] + 1]
         abline(v = l, col = "red")
         abline(v = r, col = "red")
         text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.1, labels = iBlock)
+        text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.25, labels = round(block_results[iBlock + 1, "p1"], 2))
+        text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.4, labels = round(block_results[iBlock + 1, "p3"], 2))
         ## if have (manual) read labels, add them
         rs <- consider_reads_start_0_based[iBlock + 1] + 1
         re <- consider_reads_end_0_based[iBlock + 1] + 1
         ## get counts
-        mrll <- manual_read_labels[rs:re]
+        ## mrll <- manual_read_labels[rs:re]
         ## labels <- sapply(c('v0', 'v3', 'v2', 'v23', 'v1', 'v13', 'v12', 'v123', "other"), function(v) {
         ##     sum(mrll == v, na.rm = TRUE)
         ## })
-        labels <- sapply(0:7, function(v) {
-            sum(mrll == v, na.rm = TRUE)
-        })
-        names(labels) <- c("other", "v1", "v2", "v3", "v12", "v13", "v23", "v123")
-        text(x = (l + r) / 2, y = ylim[1] + diff(ylim) * 0.1 + diff(ylim) * 0.6 * seq(0, 1, length.out = length(labels)), labels = paste0("class", names(labels), "=", labels))
+        ##labels <- sapply(0:7, function(v) {
+        ##    sum(mrll == v, na.rm = TRUE)
+        ##})
+        ##names(labels) <- c("other", "v1", "v2", "v3", "v12", "v13", "v23", "v123")
+        ##text(x = (l + r) / 2, y = ylim[1] + diff(ylim) * 0.1 + diff(ylim) * 0.6 * seq(0, 1, length.out = length(labels)), labels = paste0("class", names(labels), "=", labels))
         ## get col
         changed <- sum(block_results[which(block_results[, "iBlock"] == iBlock), "ir_chosen"] != 1) > 0
         if (changed) {
@@ -1725,22 +1743,97 @@ plot_attempt_to_reblock_snps <- function(
             col = col
         ) ##whichIsBest 0 = no switch
     }
-    abline(h = break_thresh, col = "black", lwd = 2)
-    ##
-    ## 2) plot gammas
-    ##
-    ## argh, make fake
-    for(i in 1:3) {
-        if (i == 1) {  message("before"); fbd_store <- fbd_store_before   }
-        if (i == 2) {  message("after"); fbd_store <- fbd_store_after   }
-        if (i == 3) {  message("tri"); fbd_store <- fbd_store_tri   }        
-        plot_fbd_store(fbd_store = fbd_store, xleft2 = xleft2, xright2 = xright2, xlim = xlim)
-        for(iBlock in 0:(length(consider_snp_start_0_based) - 1)) {
-            l <- L_grid[consider_snp_start_0_based[iBlock + 1] + 1]
-            r <- L_grid[consider_snp_end_0_based[iBlock + 1] + 1]
-            abline(v = l, col = "red")
-            abline(v = r, col = "red")
-            text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.1, labels = iBlock)
+    abline(h = break_thresh, col = "black", lwd = 2)    
+    for(i_before in 1:2) {
+        if (i_before == 1) {
+            read_labels <- before_read_labels
+            gamma1_t <- before_gamma1_t
+            gamma2_t <- before_gamma2_t            
+        } else {
+            read_labels <- after_read_labels
+            gamma1_t <- after_gamma1_t
+            gamma2_t <- after_gamma2_t            
+        }
+        ## 
+        ## 2) add in reads here
+        ##
+        par(mar = c(0, 0, 3, 0))            
+        ylim <- c(0, 1)
+        plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5)
+        if (have_truth_haplotypes) {
+            truth <- truth_labels
+            truth[uncertain_truth_labels] <- 0
+        }
+        y <- 0.1 + (read_labels - 1) / 2 + runif(length(read_labels)) / 4
+        for(iRead in 1:length(sampleReads)) {
+            u <- range(sampleReads[[iRead]][[4]])
+            if (have_truth_haplotypes) {
+                col <- c("black", "blue", "red")[truth[iRead] + 1]
+            } else {
+                col <- "black"
+            }
+            lwd <- 1
+            segments(x0 = L[u[1] + 1], x1 = L[u[2] + 1], y0 = y[iRead], y1 = y[iRead], col = col, lwd = lwd)
+        }
+        ## 
+        ##
+        ## 3) plot gammas
+        ##
+        ## argh, make fake
+        ##
+        ## for now, plot gammas before
+        ## 
+        for(i_which in 1:2) {
+            par(mar = c(0, 0, 3, 0))        
+            scale_dosage <- 0
+            colStore <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+            nCols <- length(colStore)
+            if (i_which == 1) { gammaK_t <- gamma1_t;   main <- "Hap 1"}
+            if (i_which == 2) { gammaK_t <- gamma2_t;   main <- "Hap 2" }
+            ##
+            K <- nrow(gammaK_t)
+            ylim <- c(0, 1 + scale_dosage + scale_dosage)
+            nGrids <- ncol(gammaK_t)
+            backwards <- nGrids:1
+            ##
+            plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, main = main)
+            x <- L_grid ## c(L_grid[1], L_grid) ## , L_grid[length(L_grid):1])
+            xleft <- c(x[1] - (x[2] - x[1]) / 2, x[-length(x)])
+            xright <- c(x[-1], x[length(x)] + (x[length(x)] - x[(length(x) - 1)]) / 2)
+            m <- array(0, c(nGrids, K + 1))
+            ## is this slow...
+            for(i in 1:K) {
+                m[, i + 1] <- m[, i] + gammaK_t[i, ]
+            }
+            ##
+            for(j in 1:2) {
+                for(i in K:1) {
+                    ## can I o
+                    ybottom <- m[, i]
+                    ytop <- m[, i + 1]
+                    if (max(ytop - ybottom) > 0.01) {
+                        if (j == 1) {
+                            rect(
+                                xleft = xleft,
+                                xright = xright,
+                                ybottom = ybottom,
+                                ytop = ytop,
+                                border = NA,
+                                col = colStore[(i %% nCols) + 1]
+                            )
+                        } else {
+                            add_numbers(ytop, ybottom, x, i)
+                        }
+                    }
+                }
+            }
+            for(iBlock in 0:(length(consider_snp_start_0_based) - 1)) {
+                l <- L_grid[consider_snp_start_0_based[iBlock + 1] + 1]
+                r <- L_grid[consider_snp_end_0_based[iBlock + 1] + 1]
+                abline(v = l, col = "red")
+                abline(v = r, col = "red")
+                text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.1, labels = iBlock)
+            }
         }
     }
     dev.off()

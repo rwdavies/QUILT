@@ -511,6 +511,76 @@ get_and_impute_one_sample <- function(
     addOptimalHapsToVCF
 ) {
 
+    save(
+    rhb_t,
+    outputdir,
+    nGibbsSamples,
+    n_seek_its,
+    full_alphaHat_t,
+    full_betaHat_t,
+    full_gamma_t,
+    full_gammaSmall_t,
+    full_gammaSmall_cols_to_get,    
+    full_transMatRate_t_H,
+    small_transMatRate_tc_H,
+    alphaHat_t1,
+    betaHat_t1,
+    alphaHat_t2,
+    betaHat_t2,
+    alphaHat_t3,
+    betaHat_t3,
+    small_alphaMatCurrent_tc,
+    small_priorCurrent_m,
+    small_eHapsCurrent_tc,
+    bam_files,
+    L,
+    pos,
+    chr,
+    tempdir,
+    regionName,
+    regionStart,
+    regionEnd,
+    buffer,
+    gen,
+    phase,
+    iSample,
+    grid,
+    ancAlleleFreqAll,
+    L_grid,
+    verbose,
+    shuffle_bin_radius,
+    Ksubset,
+    Knew,
+    K_top_matches,
+    heuristic_match_thin,
+    record_dosage_each_round,
+    record_interim_dosages,
+    have_truth_haplotypes,
+    bqFilter,
+    record_read_label_usage,
+    sampleNames,
+    smooth_cm,
+    iSizeUpperLimit,
+    maxDifferenceBetweenReads,
+    make_plots,
+    ref_error,
+    distinctHapsB,
+    distinctHapsIE,
+    hapMatcher,
+    inRegion2,
+    cM_grid,
+    af,
+    use_bx_tag,
+    bxTagUpperLimit,
+    addOptimalHapsToVCF,
+    file = "~/temp.RData")
+    
+    stop("WER")
+    
+    load("~/temp.RData")
+    make_plots <- TRUE
+    iSample <- 2
+    
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
     ##
@@ -796,7 +866,7 @@ get_and_impute_one_sample <- function(
                 distinctHapsIE = distinctHapsIE,
                 hapMatcher = hapMatcher,
                 ref_error = ref_error,
-                make_plots = make_plots,
+                make_plots = FALSE, ## these plots are pretty useless? as plots?
                 outplotprefix = outplotprefix,
                 have_truth_haplotypes = have_truth_haplotypes,
                 truth_haps = truth_haps,
@@ -1710,7 +1780,7 @@ impute_one_sample <- function(
     suppressOutput = 1,
     use_smooth_cm_in_block_gibbs = TRUE,
     block_gibbs_quantile_prob = 0.95
- ) {
+) {
     ##
     K <- length(which_haps_to_use)
     S <- 1
@@ -1823,6 +1893,7 @@ impute_one_sample <- function(
             have_truth_haplotypes = have_truth_haplotypes,
             uncertain_truth_labels = uncertain_truth_labels
         )
+        ## would like a plot here
     }
     ## print(paste0("exit = ", Sys.time()))            
     return(out)

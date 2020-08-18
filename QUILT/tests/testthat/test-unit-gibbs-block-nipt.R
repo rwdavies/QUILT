@@ -1,11 +1,9 @@
 if (1 == 0) {
 
-    library("testthat"); library("STITCH"); library("rrbgen")
-    ##    dir <- "/data/smew1/rdavies/stitch_development/STITCH_github_latest/STITCH"
-    ##    dir <- "~/Google Drive/STITCH/"
-    dir <- "/data/smew1/rdavies/stitch_development/STITCH-private/"
-    dir <- "~/proj/STITCH-private/"
-    setwd(paste0(dir, "/STITCH/R"))
+    library("testthat")
+    library("QUILT")
+    dir <- "~/proj/QUILT/"
+    setwd(paste0(dir, "/QUILT/R"))
     a <- dir(pattern = "*.R")
     b <- grep("~", a)
     if (length(b) > 0) {
@@ -89,11 +87,14 @@ test_that("can reconfigure blocked_snps", {
     languages <- c("R", "Rcpp", "R")
     do_checks <- c(FALSE, FALSE, TRUE)
     i_option <- 1
+    verbose <- FALSE
     
     out <- lapply(1:3, function(i_option) {
 
         language <- languages[i_option]
-        print(paste0("---------- ", language, " ---------"))
+        if (verbose) {
+            print(paste0("---------- ", language, " ---------"))
+        }
         
         do_check <- do_checks[i_option]
         do_removal <- !do_check
@@ -171,7 +172,9 @@ test_that("can reconfigure blocked_snps", {
         ## print(what)
         ## print(out[[1]][[what]]) ## R
         ## print(out[[2]][[what]]) ## Rcpp
-        print(what)
+        if (verbose) {
+            print(what)
+        }
         expect_equal(out[[1]][[what]], out[[2]][[what]])
     }
 
@@ -208,7 +211,7 @@ test_that("can perform block gibbs when ff is 0", {
     shuffle_bin_radius <- 2000
     class_sum_cutoff <- 0.06
     ##
-    test_package <- make_fb_test_package(
+    test_package <- make_quilt_fb_test_package(
         K = 4,
         nReads = nSNPs * 4,
         nSNPs = nSNPs,
@@ -220,7 +223,8 @@ test_that("can perform block gibbs when ff is 0", {
         L = L,
         eHapsMin = 0.01, ## make more confident
         bq_mult = 40,
-        randomize_sample_read_length = TRUE
+        randomize_sample_read_length = TRUE,
+        return_eMatGridTri_t = FALSE
     )
     grid <- test_package$grid
     nSNPs <- test_package$nSNPs
@@ -279,18 +283,23 @@ test_that("can perform block gibbs when ff is 0", {
     blocked_snps[20 < grid] <- 1L
     languages_to_test <- c("R", "R_with_Rcpp", "Rcpp")
     block_approach <- 1
-    quantile_prob <- 0.9
+    block_gibbs_quantile_prob <- 0.9
     ## language <- "R_with_Rcpp"
     ## language <- "Rcpp"    
     verbose <- FALSE
+    use_smooth_cm_in_block_gibbs <- FALSE
+    smooth_cm <- numeric(1)
     
     for(block_approach in c(1, 4)) {
 
-        print(paste0("---------- block_approach = ", block_approach, " ----------"))
-        
-        out <- mclapply(languages_to_test, mc.cores = 3, function(language) {
-
-            print(paste0("------------", language, "------------"))
+        if (verbose) {
+            print(paste0("---------- block_approach = ", block_approach, " ----------"))
+        }
+        ## out <- mclapply(languages_to_test, mc.cores = 1, function(language) {
+        for(language in languages_to_test) {
+            if (verbose) {
+                print(paste0("------------", language, "------------"))
+            }
             block_out <- helper_block_gibbs_resampler(
                 H = H,
                 blocked_snps = blocked_snps,
@@ -311,15 +320,15 @@ test_that("can perform block gibbs when ff is 0", {
                 language = language,
                 verbose = verbose,
                 block_approach = block_approach,
-                class_sum_cutoff = class_sum_cutoff
+                class_sum_cutoff = class_sum_cutoff,
+                block_gibbs_quantile_prob = block_gibbs_quantile_prob,
+                smooth_cm = smooth_cm,
+                use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs
             )
-            
             ## expect all jumps to be in 1 or 3
             expect_equal(0, sum(!(block_out$block_results[, "ir_chosen"] %in% c(0, 1, 3)))) ## 0 for skipped
-            
-        })
-        check_mclapply_OK(out)
-        
+        }
+       
     }
 
 
@@ -345,7 +354,7 @@ test_that("can perform block gibbs", {
     shuffle_bin_radius <- 2000
     class_sum_cutoff <- 0.06
     ##
-    test_package <- make_fb_test_package(
+    test_package <- make_quilt_fb_test_package(
         K = 4,
         nReads = nSNPs * 4,
         nSNPs = nSNPs,
@@ -357,8 +366,10 @@ test_that("can perform block gibbs", {
         L = L,
         eHapsMin = 0.01, ## make more confident
         bq_mult = 40,
-        randomize_sample_read_length = TRUE
+        randomize_sample_read_length = TRUE,
+        return_eMatGridTri_t = FALSE
     )
+    
     grid <- test_package$grid
     nSNPs <- test_package$nSNPs
     nGrids <- test_package$nGrids
@@ -374,6 +385,7 @@ test_that("can perform block gibbs", {
     L_grid <- test_package$L_grid
     eMatRead_t <- test_package$list_of_eMatRead_t[[1]]    
     ##
+    block_gibbs_quantile_prob <- 0.9
     sampleReads <- test_package$sampleReads
     ## re-size the reads to feature more random length
     wif0 <- as.integer(sapply(sampleReads, function(x) x[[2]]))
@@ -409,6 +421,8 @@ test_that("can perform block gibbs", {
         H = true_H,
         class_sum_cutoff = class_sum_cutoff
     )
+    use_smooth_cm_in_block_gibbs <- FALSE
+    smooth_cm <- numeric(1)
 
     
 
@@ -422,27 +436,28 @@ test_that("can perform block gibbs", {
     block_approach_options <- rep(c(1, 4), each = 6)
     to_run <- 1:length(ir_test_options)
     to_run <- 1:12
-    
-    out <- mclapply(to_run, mc.cores = 1, function(i_option) {
+
+    ## weirdly runs into problem when not multi-cored
+    ## some very weird stuff going on!
+    out <- mclapply(to_run, mc.cores = 12, function(i_option) {
 
         ## 
         verbose <- FALSE
         do_checks <- FALSE
         ir_test <- ir_test_options[i_option]
         block_approach <- block_approach_options[i_option]
-        ##if (verbose) {
-        print(paste0("---------- ir_test = ", ir_test, " ----------"))
-        print(paste0("---------- block_approach = ", block_approach, " ----------"))
-        ##}
+        if (verbose) {
+            print(paste0("---------- ir_test = ", ir_test, " ----------"))
+            print(paste0("---------- block_approach = ", block_approach, " ----------"))
+        }
         ##
         ## recast blocked_snps
         ## 
         languages_to_test <- c("R", "R_with_Rcpp", "Rcpp")
-        
-        out <- mclapply(languages_to_test, mc.cores = 3, function(language) {
-            ##if (verbose) {
+        out <- mclapply(languages_to_test, mc.cores = 1, function(language) {
+            if (verbose) {
                 print(paste0("------------", language, "------------"))
-            ##}
+            }
             set.seed(4)
             do_checks <- FALSE
             ## if (language == "R_with_Rcpp") {
@@ -498,7 +513,10 @@ test_that("can perform block gibbs", {
                 language = language,
                 verbose = verbose,
                 block_approach = block_approach,
-                class_sum_cutoff = class_sum_cutoff
+                class_sum_cutoff = class_sum_cutoff,
+                smooth_cm = smooth_cm,
+                use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
+                block_gibbs_quantile_prob = block_gibbs_quantile_prob                
             )
             ## check H (class) here
             x <- check_agreements_with_truth_class(true_H, true_H_class, block_out[["H"]], rlc)
@@ -515,10 +533,8 @@ test_that("can perform block gibbs", {
             ## expect_equal(as.integer(block_out[["block_results"]][2, "ir_chosen"]), ir_test)
             return(block_out)
         })
-        
         check_mclapply_OK(out)
         names(out) <- languages_to_test
-
         if (length(out) > 1) {
             for(j in 2:length(out)) {
                 expect_equal(out[[1]]$H, out[[j]]$H)
@@ -536,7 +552,6 @@ test_that("can perform block gibbs", {
             }
         }
         
-
     })
     check_mclapply_OK(out)
     

@@ -1951,6 +1951,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const Rcpp::NumericVector prior_probs = NumericVector::create(0.5, (1 - ff) / 2, (ff / 2));    
     //
     Rcpp::List to_return;
+    Rcpp::List gibbs_block_output_list;
     Rcpp::List list_of_alphaBetaBlocks, double_list_of_alphaBetaBlocks; // store all of them!
     Rcpp::List alphaBetaBlocks_one, alphaBetaBlocks1, alphaBetaBlocks2, alphaBetaBlocks3;
     //
@@ -2047,6 +2048,13 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     if (update_hapSum & !update_in_place) {
         hapSum_tc = arma::zeros(K, nGrids, S);
     }
+    arma::mat gamma1_t, gamma2_t, gamma3_t;
+    if (return_gibbs_block_output) {
+        gamma1_t = arma::zeros(K, nGrids);
+        gamma2_t = arma::zeros(K, nGrids);        
+        gamma3_t = arma::zeros(K, nGrids);
+    }
+    int iGrid;
     //
     //
     //
@@ -2059,6 +2067,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     Rcpp::NumericVector runif_reads;
     Rcpp::IntegerVector H, H_class;
     Rcpp::List list_of_starting_read_labels;
+    Rcpp::List gibbs_block_output_local;
     Rcpp::List double_list_of_ending_read_labels, list_of_ending_read_labels;
     Rcpp::NumericMatrix rlc(7, 3);
     if (record_read_set) {
@@ -2279,7 +2288,26 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                     }
                     // on burn in its, try every 10th iteration, within the first 100
                     if (perform_block_gibbs & to_block_gibbs) {
-                        // define blocks
+                        //
+                        // optionally perform super greedy save for plots
+                        //
+                        if (return_gibbs_block_output) {
+                            // be super greedy with saving, but who cares, this is not normally run
+                            // Rcpp::clone
+                            for(iGrid = 0; iGrid < nGrids; iGrid++) {
+                                gamma1_t.col(iGrid) = (alphaHat_t1.col(iGrid) % betaHat_t1.col(iGrid)) * (1 / c1(iGrid));
+                                gamma2_t.col(iGrid) = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * (1 / c2(iGrid));
+                                gamma3_t.col(iGrid) = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * (1 / c3(iGrid));
+                            }
+                            gibbs_block_output_local = Rcpp::List();
+                            gibbs_block_output_local.push_back(gamma1_t, "before_gamma1_t");
+                            gibbs_block_output_local.push_back(gamma2_t, "before_gamma2_t");
+                            gibbs_block_output_local.push_back(gamma3_t, "before_gamma3_t");
+                            gibbs_block_output_local.push_back(Rcpp::clone(H), "before_read_labels");
+                        }
+                        //
+                        // define sites
+                        //
                         Rcpp::NumericVector temp; //
                         next_section="Block gibbs - define sites";
                         prev=print_times(prev, suppressOutput, prev_section, next_section);
@@ -2295,6 +2323,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         Rcpp::NumericVector runif_block = Rcpp::runif(nReads);
                         Rcpp::NumericVector runif_total = Rcpp::runif(nReads);
                         //
+                        // do actual block gibbs now
+                        //
                         next_section="Block gibbs - sample";
                         prev=print_times(prev, suppressOutput, prev_section, next_section);
                         prev_section=next_section;
@@ -2303,8 +2333,21 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         //std::cout << "remove last three values above me" << std::endl;
                         //
                         if (return_gibbs_block_output) {
-                            to_return.push_back(out2, "gibbs_block_output");
-                            to_return.push_back(out, "block_stuff");
+                            // be super greedy with saving, but who cares, this is not normally run
+                            // Rcpp::clone
+                            for(iGrid = 0; iGrid < nGrids; iGrid++) {
+                                gamma1_t.col(iGrid) = (alphaHat_t1.col(iGrid) % betaHat_t1.col(iGrid)) * (1 / c1(iGrid));
+                                gamma2_t.col(iGrid) = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * (1 / c2(iGrid));
+                                gamma3_t.col(iGrid) = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * (1 / c3(iGrid));
+                            }
+                            gibbs_block_output_local.push_back(gamma1_t, "after_gamma1_t");
+                            gibbs_block_output_local.push_back(gamma2_t, "after_gamma2_t");
+                            gibbs_block_output_local.push_back(gamma3_t, "after_gamma3_t");
+                            gibbs_block_output_local.push_back(Rcpp::clone(H), "after_read_labels");
+                            //
+                            gibbs_block_output_local.push_back(out, "block_defining");
+                            gibbs_block_output_local.push_back(out2, "gibbs_block_output");
+                            gibbs_block_output_list.push_back(gibbs_block_output_local);
                         }
                     }
                     //
@@ -2502,6 +2545,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     }
     if (update_hapSum & !update_in_place) {
         to_return.push_back(hapSum_tc, "hapSum_tc");
+    }
+    if (return_gibbs_block_output) {
+        to_return.push_back(gibbs_block_output_list, "gibbs_block_output_list");
     }
     //
     next_section="Done";

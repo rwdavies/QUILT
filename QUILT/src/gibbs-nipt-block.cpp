@@ -714,6 +714,7 @@ void Rcpp_consider_total_relabelling(
   }
   block_results(ibr, 8) = ir_chosen + 1; // internally 0-based, store 1-based
   // define based on previous ones
+  block_results(ibr, 12) = 0;
   for(i = 0; i < 3; i++) {
     h = rr0(ir_chosen, i);
     block_results(ibr, 9 + h) = block_results(ibr - 1, 9 + i);
