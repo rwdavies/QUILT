@@ -134,6 +134,12 @@ Rcpp::List Rcpp_get_top_K_or_more_matches_while_building_gamma(
             top_matches_values(count) = gamma_t_col(k);
         }
     }
+    if (count == -1) {
+        std::cout << "problem with Rcpp_get_top_K_or_more_matches_while_building_gamma" << std::endl;
+        std::cout << "gamma_t_col(0) = " << gamma_t_col(0) << std::endl;
+        std::cout << "alphaHat_t(0, iGrid) = " << alphaHat_t(0, iGrid) << std::endl;
+        std::cout << "betaHat_t_col(0) = " << betaHat_t_col(0) << std::endl;
+    }
     // this is good enough, save the rest for R next time, these should be much much smaller in all but rarest casests
     Rcpp::List to_return = Rcpp::List::create(
         Rcpp::Named("top_matches") = top_matches[Rcpp::Range(0, count)],
@@ -323,7 +329,7 @@ void Rcpp_haploid_reference_single_forward(
         }
 	store_alpha_for_this_grid = true;
 	if (only_store_alpha_at_gamma_small) {
-            if (gammaSmall_cols_to_get(iGrid) == 0) {
+            if (gammaSmall_cols_to_get(iGrid) < 0) {
 	      store_alpha_for_this_grid = false;
 	    }
 	}
@@ -696,7 +702,7 @@ void Rcpp_haploid_dosage_versus_refs(
     int i, k, dh;
     double prob;
     bool only_store_alpha_at_gamma_small;
-    if (return_gammaSmall_t & (!return_gamma_t) & (!return_dosage) & (!return_betaHat_t)) {
+    if ((get_best_haps_from_thinned_sites | return_gammaSmall_t) & (!return_gamma_t) & (!return_dosage) & (!return_betaHat_t)) {
         only_store_alpha_at_gamma_small = true;
     } else {
         only_store_alpha_at_gamma_small = false;

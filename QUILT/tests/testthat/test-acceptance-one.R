@@ -11,6 +11,7 @@ if ( 1 == 0 ) {
     }
     o <- sapply(a, source)
 
+
 }
 
 n_snps <- 50
@@ -18,11 +19,14 @@ chr <- 10
 K <- 6
 set.seed(919)
 phasemaster <- array(sample(c(0, 1), n_snps * K, replace = TRUE), c(n_snps, K))
+reads_span_n_snps <- 3
+## want about 4X here
+n_reads <- round(4 * n_snps / reads_span_n_snps)
 data_package <- STITCH::make_acceptance_test_data_package(
-    reads_span_n_snps = 3,
+    reads_span_n_snps = reads_span_n_snps,
     n_samples = 3,
     n_snps = n_snps,
-    n_reads = n_snps * 10,
+    n_reads = n_reads,
     seed = 2,
     chr = chr,
     K = K,
@@ -55,10 +59,13 @@ test_that("QUILT can impute a few samples in a standard way", {
     )
     regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
     expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
-
+    i <- 1
+    
     for(i in 1:2) {
+
         if (i == 1) {phasefile <- "" }
         if (i == 2) {phasefile <- data_package$phasefile}
+        
         QUILT(
             outputdir = outputdir,
             chr = data_package$chr,
@@ -71,12 +78,13 @@ test_that("QUILT can impute a few samples in a standard way", {
             phasefile = phasefile,
             Ksubset = 100,
             Knew = 25,
-            nGibbsSamples = 3,
+            nGibbsSamples = 5,
             n_seek_its = 2,
-            nCores = 2,
+            nCores = 1,
             RData_objects_to_save = "final_set_of_results",
             addOptimalHapsToVCF = TRUE
         )
+        
     }
 
     which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)

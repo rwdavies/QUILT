@@ -477,7 +477,6 @@ get_and_impute_one_sample <- function(
     regionStart,
     regionEnd,
     buffer,
-    scenario,
     gen,
     phase,
     iSample,
@@ -496,7 +495,6 @@ get_and_impute_one_sample <- function(
     bqFilter,
     record_read_label_usage,
     sampleNames,
-    truth_gen,
     smooth_cm,
     iSizeUpperLimit,
     maxDifferenceBetweenReads,
@@ -577,6 +575,8 @@ get_and_impute_one_sample <- function(
             stop("Something went wrong with phase naming")
         }
         truth_haps <- cbind(phase[, s, 1], phase[, s, 2])
+    } else {
+        truth_haps <- NULL
     }
 
 
@@ -702,7 +702,8 @@ get_and_impute_one_sample <- function(
                 )
                 gibbs_initialize_iteratively <- TRUE
             } else {
-                ## if phasing it will suck these up! same for "which_haps_to_use"
+                ## if phasing it will suck these up! same for "which_haps_to_use" (though is that bad?)
+                ## which_haps_to_use <- which_haps_to_use
                 double_list_of_starting_read_labels <- list(list(read_labels))                
                 gibbs_initialize_iteratively <- FALSE
             }
@@ -714,6 +715,7 @@ get_and_impute_one_sample <- function(
             if (verbose) {
                 print_message(paste0("i_gibbs=", i_gibbs_sample, ", i_it = ", i_it, " small gibbs"))
             }
+
 
             gibbs_iterate <- impute_one_sample(
                 rhb_t = rhb_t,
@@ -768,7 +770,6 @@ get_and_impute_one_sample <- function(
                 suppressOutput = 1,
                 shuffle_bin_radius = shuffle_bin_radius
             )
-            ## print_message(paste0("Current gibbs final likelihood:", tail(gibbs_iterate$per_it_likelihoods[, "p_H_given_O_L_up_to_C"], 1)))
 
             ## am here
             ## continue to work on this. weird error below hmm...
@@ -779,7 +780,7 @@ get_and_impute_one_sample <- function(
             read_labels <- gibbs_iterate$double_list_of_ending_read_labels[[1]][[1]]
             previously_selected_haplotypes <- sample(which_haps_to_use, Ksubset - Knew)
             return_dosage <- (have_truth_haplotypes | record_interim_dosages | (i_it == n_seek_its))
-            
+
             impute_all <- impute_using_everything(
                 H = read_labels,
                 sampleReads = sampleReads,
@@ -861,9 +862,8 @@ get_and_impute_one_sample <- function(
 
         ## save last
         if (i_gibbs_sample == nGibbsSamples) {
-            ## assess best bit here
             can_hap <- nGibbsSamples
-            out <- determine_best_read_label_so_far(
+            out_best_labels <- determine_best_read_label_so_far(
                 read_label_matrix_all = read_label_matrix_all,
                 read_label_matrix_conf = read_label_matrix_conf,                
                 nReads = length(sampleReads),
@@ -872,12 +872,12 @@ get_and_impute_one_sample <- function(
                 can_hap = can_hap
             )
             if (verbose) {
-                x <- out$flip_matrix[, can_hap]
+                x <- out_best_labels$flip_matrix[, can_hap]
                 if (length(x) > 0) {
                     print_message(paste0("There are ", sum(x), " out of ", length(x), " regions that have been flipped by consensus"))
                 }
             }
-            read_labels <- out$read_labels
+            read_labels <- out_best_labels$read_labels
         }
 
         if (phasing_it) {
@@ -888,6 +888,10 @@ get_and_impute_one_sample <- function(
         }
 
     }
+
+
+
+
     
     if(have_truth_haplotypes) {
         imputed_truth_haplotypes <- cbind(truth_all[["dosage1"]], truth_all[["dosage2"]])
@@ -1183,16 +1187,17 @@ determine_best_read_label_so_far <- function(
         }
         return(default_out)
     }
-    ## consider differences vs first haplotype
-    can_hap <- 1
+    ## consider differences vs can_hap
+    ## can_hap <- 1
     can <- a[, can_hap]
     a <- a - can
     s <- which(diff(rowSums(abs(a))) != 0) ## where they change, e.g. if a 39 here, it switches between 39 and 40
     ## probably some minimum number here
     if (length(s) == 0) {
-        if (verbose) {
-            print_message("Insufficiently many confident reads for aggregating across runs")
-        }
+        ## doesn't really need a message, the runs are the same at confident reads
+        ##if (verbose) {
+        ##    print_message("No differences between runs, Insufficiently many confident reads for aggregating across runs")
+        ## }
         return(default_out)
     }
     ## so, e.g, want majority vote in each? 
@@ -1375,14 +1380,18 @@ impute_using_everything <- function(
     dosage <- numeric(nSNPs)
     nGrids <- ncol(rhb_t)
     if (return_good_haps) {
-        return_gammaSmall_t <- TRUE
+        return_gammaSmall_t <- FALSE
+        get_best_haps_from_thinned_sites <- TRUE
+        best_haps_stuff_list <- as.list(1:sum(full_gammaSmall_cols_to_get >= 0))        
     } else {
         ##gammaSmall_t <-  array(0, c(1, 1))
         ##gammaSmall_cols_to_get <- array(0, 1)
         return_gammaSmall_t <- FALSE
+        get_best_haps_from_thinned_sites <- FALSE
+        best_haps_stuff_list <- list()
     }
     ##
-    new_haps <- NULL
+    new_haps <- as.list(1:2)
     if (make_plots | return_gamma_t) {
         fbsoL <- as.list(1:3)
         fbsoL$list_of_gammas <- as.list(1:2)
@@ -1422,20 +1431,26 @@ impute_using_everything <- function(
             return_gamma_t = return_gamma_t,
             return_gammaSmall_t = return_gammaSmall_t,
             gammaSmall_t = full_gammaSmall_t,
-            gammaSmall_cols_to_get = full_gammaSmall_cols_to_get
+            gammaSmall_cols_to_get = full_gammaSmall_cols_to_get,
+            get_best_haps_from_thinned_sites = get_best_haps_from_thinned_sites,
+            best_haps_stuff_list = best_haps_stuff_list,
+            K_top_matches = K_top_matches
         )
         dosageNew <- numeric(nSNPs)
         dosageNew <- dosage[]
         if (i_hap == 1) { dosage1 <- dosageNew}
         if (i_hap == 2) { dosage2 <- dosageNew}
         ##
+        ## if (return_good_haps) {
+        ##     new_haps <- everything_per_hap_prepare_haps(
+        ##         full_gammaSmall_t = full_gammaSmall_t,
+        ##         K_top_matches = K_top_matches,
+        ##         new_haps = new_haps,
+        ##         i_hap = i_hap
+        ##     )
+        ## }
         if (return_good_haps) {
-            new_haps <- everything_per_hap_prepare_haps(
-                full_gammaSmall_t = full_gammaSmall_t,
-                K_top_matches = K_top_matches,
-                new_haps = new_haps,
-                i_hap = i_hap
-            )
+            new_haps[[i_hap]] <- everything_per_hap_rejig_haps(best_haps_stuff_list)
         }
         if (return_gamma_t | make_plots) {
             ## requires gamma
@@ -1488,6 +1503,20 @@ impute_using_everything <- function(
 
 
 
+## do much less this time
+everything_per_hap_rejig_haps <- function(
+    best_haps_stuff_list
+) {
+    save(best_haps_stuff_list, file = "~/temp.RData")
+    new_haps <- lapply(best_haps_stuff_list, function(x) {
+        top_matches <- x[["top_matches"]] + 1 ## turn from 0 to 1 based for R stuff
+        top_matches_values <- x[["top_matches_values"]]
+        return(top_matches[order(-top_matches_values)])
+    })
+    return(new_haps)
+}
+
+
 ##
 ## todo, make this work within the forward backward bit, then can post-process in R more quickly
 ##
@@ -1516,7 +1545,7 @@ everything_per_hap_prepare_haps <- function(
 
 R_get_top_K_or_more_matches <- function(x, K_top_matches) {
     val <- -rcpp_nth_partial_sort(-x, as.integer(K_top_matches))[K_top_matches]
-    y <- which(x >= val) ## surprisingly slow
+    y <- which(x >= val) ## 1-based, surprisingly slow
     y <- y[order(-x[y])]
     return(y)
 }
@@ -1591,26 +1620,39 @@ everything_select_good_haps <- function(
         if (i <= K_top_matches) {
             new <- unique(unlist(sapply(new_haps, function(x) lapply(x, function(y) y[i]))))
         } else {
+            ## here you just take all because exhausted
             new <- unique(unlist(new_haps))
             done <- TRUE
         }
         new <- setdiff(new, previously_selected_haplotypes)
         new <- setdiff(new, to_keep)
-        if (length(new) < Knew) {
-            to_keep <- c(new)
+        ## if (length(new) == 0) {
+        ##     ## should not happen, have run out! then add some at random
+        ##     print("AA")
+        ##     toadd <- Knew - length(to_keep)
+        ##     done <- TRUE
+        ##     to_keep <- c(to_keep, sample(setdiff(setdiff(1:K, previously_selected_haplotypes), to_keep), toadd))
+        if (length(new) < (Knew - length(to_keep))) {
+            to_keep <- c(to_keep, new)
             i <- i + 1
         } else {
             toadd <- Knew - length(to_keep)
-            to_keep <- new[sample(1:length(new), toadd)]
+            to_keep <- c(to_keep, new[sample(1:length(new), toadd)])
             done <- TRUE
         }
     }
-    new_haps <- to_keep
-    if (length(new_haps) < Knew) {
+    ##     new_haps <- to_keep
+    if (length(to_keep) < Knew) {
         ## if not enough, add some at random
-        new_haps <- c(new_haps, sample(setdiff(1:K, c(to_keep, previously_selected_haplotypes)), Knew - length(to_keep)))
+        to_keep <- c(to_keep, sample(setdiff(1:K, c(to_keep, previously_selected_haplotypes)), Knew - length(to_keep)))
     }
-    return(new_haps)
+    if (length(to_keep) != Knew) {
+        print(paste0("length(to_keep) = ", length(to_keep)))
+        print(paste0("Knew = ", Knew))
+        save(Knew, K_top_matches, new_haps, previously_selected_haplotypes, K, file = "~/temp.RData")
+        stop("Have returned too many haps, see debug file")
+    }
+    return(to_keep)
 }
 
 
@@ -1669,12 +1711,12 @@ impute_one_sample <- function(
     suppressOutput = 1,
     use_smooth_cm_in_block_gibbs = TRUE,
     block_gibbs_quantile_prob = 0.95
-) {
+ ) {
     ##
     K <- length(which_haps_to_use)
     S <- 1
     ## argh
-    ## print(paste0("start = ", Sys.time()))        
+    ## print(paste0("start = ", Sys.time()))
     inflate_fhb_t_in_place(
         rhb_t,
         small_eHapsCurrent_tc,
@@ -1682,6 +1724,9 @@ impute_one_sample <- function(
         nSNPs = nSNPs,
         ref_error = ref_error
     )
+    ## sort(apply(small_eHapsCurrent_tc[, , 1], 2, function(x) paste0(round(x), collapse = "")))
+    ## table(sort(apply(small_eHapsCurrent_tc[, , 1], 1, function(x) paste0(round(x), collapse=  ""))))
+    ## does have all options, so SHOULD be OK
     ##
     ## print(paste0("run = ", Sys.time()))
     out <- rcpp_forwardBackwardGibbsNIPT(
@@ -1743,7 +1788,6 @@ impute_one_sample <- function(
         use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
         block_gibbs_quantile_prob = block_gibbs_quantile_prob
     )
-    ## print(paste0("done = ", Sys.time()))        
     ##
     genProbs_t <- out$genProbsM_t
     hapProbs_t <- out$happrobs_t

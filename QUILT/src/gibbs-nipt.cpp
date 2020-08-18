@@ -172,6 +172,72 @@ Rcpp::List Rcpp_block_gibbs_resampler(
 
 //' @export
 // [[Rcpp::export]]
+void rcpp_make_rescaled_on_fly_eMatGrid_t(
+    arma::mat& eMatGrid_t,
+    const arma::mat& eMatRead_t,
+    const Rcpp::IntegerVector& H,
+    const Rcpp::List sampleReads,
+    const int hap,
+    const int nGrids,
+    double& prev,
+    int suppressOutput,
+    std::string& prev_section,
+    std::string& next_section,
+    const bool rescale
+) {
+    //
+    next_section="Make rescaled eMatGrid_t for gibbs";
+    prev=print_times(prev, suppressOutput, prev_section, next_section);
+    prev_section=next_section;
+    //    
+    int nReads = sampleReads.size(); //
+    const int K = eMatRead_t.n_rows; // traditional K for haplotypes        
+    // arma::mat eMatGrid_t = arma::ones(K, nGrids); // why is this called SNP? 
+    int iRead, k, cur_grid, readSNP;
+    int prev_grid = -1;
+    bool proceed;
+    int count_per_grid = 0;
+    double x, rescale_val;
+    //
+    for(iRead = 0; iRead < nReads; iRead++) {
+        if (H(iRead) == hap) {
+            Rcpp::List readData = as<Rcpp::List>(sampleReads[iRead]);
+            cur_grid = as<int>(readData[1]); // leading SNP from read
+            eMatGrid_t.col(cur_grid) %= eMatRead_t.col(iRead);
+            if (cur_grid == prev_grid) {
+                count_per_grid++;
+            } else {
+                count_per_grid = 0;
+            }
+            prev_grid = cur_grid;
+            if (rescale) {
+                // every 10 or so reads, re-scale, prevent all 0s hopefully
+                if (count_per_grid == 10) {
+                    // get maximum
+                    x = 0;
+                    for (k = 0; k < K; k++) {
+                        if (eMatGrid_t(k, cur_grid) > x) {
+                            x = eMatGrid_t(k, cur_grid);
+                        }
+                    }
+                    // x is the maximum now
+                    rescale_val = 1 / x;        
+                    for (k = 0; k < K; k++) {
+                        eMatGrid_t(k, cur_grid) *= rescale_val;
+                    }
+                    // reset counter
+                    count_per_grid = 0;
+                }
+            }
+        }
+    }
+    return;
+}
+
+
+
+//' @export
+// [[Rcpp::export]]
 void rcpp_initialize_gibbs_forward_backward(
     const arma::cube& alphaMatCurrent_tc,
     const arma::cube& transMatRate_tc_H,
@@ -1196,6 +1262,20 @@ void rcpp_gibbs_nipt_initialize(
         rcpp_make_eMatGrid_t(eMatGrid_t1, eMatRead_t, H, sampleReads, 1, nGrids, prev, suppressOutput, prev_section, next_section, run_fb_grid_offset, use_all_reads, bound_eMatGrid_t, maxEmissionMatrixDifference, rescale_eMatGrid_t);
         rcpp_make_eMatGrid_t(eMatGrid_t2, eMatRead_t, H, sampleReads, 2, nGrids, prev, suppressOutput, prev_section, next_section, run_fb_grid_offset, use_all_reads, bound_eMatGrid_t, maxEmissionMatrixDifference, rescale_eMatGrid_t);
         rcpp_make_eMatGrid_t(eMatGrid_t3, eMatRead_t, H, sampleReads, 3, nGrids, prev, suppressOutput, prev_section, next_section, run_fb_grid_offset, use_all_reads, bound_eMatGrid_t, maxEmissionMatrixDifference, rescale_eMatGrid_t);
+        //
+        // OK, so I spent quite some time debugging and not changing this
+        // note that this needs to have all reads for the calcs that later follow
+        // this is USUALLY not a problem unless read coverage is very high, like 30X or something short read
+        // even then, underflow is not a big problem unless NONE of the haps are a good match
+        // then eMatGrid_t1 or the others can be all 0 for an entire column which will crash the whole thing
+        // the biggest potential problem is with the phasing, with re-setting the reads
+        // particularly if a grid has lots of reads, and there are errant read flips, this might lead to within-grid unlikely combinations or reads
+        // while this would normally get sorted pretty quick in the real algorithm, here it could underflow things
+        // so again if coverage low it is probably fine and if nGibbsSamples high also probably fine
+        //
+        //rcpp_make_rescaled_on_fly_eMatGrid_t(eMatGrid_t1, eMatRead_t, H, sampleReads, 1, nGrids, prev, suppressOutput, prev_section, next_section, rescale_eMatGrid_t);
+        //rcpp_make_rescaled_on_fly_eMatGrid_t(eMatGrid_t2, eMatRead_t, H, sampleReads, 2, nGrids, prev, suppressOutput, prev_section, next_section, rescale_eMatGrid_t);        
+        //rcpp_make_rescaled_on_fly_eMatGrid_t(eMatGrid_t3, eMatRead_t, H, sampleReads, 3, nGrids, prev, suppressOutput, prev_section, next_section, rescale_eMatGrid_t);
     }
     //
     // initialize forward backward
@@ -1841,7 +1921,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     // I think these break the gibbs-ness - disable for now!
     // rescale_eMatRead_t should be fine to reset - will be constant across reads - only the read not per-base input considered
     const bool bound_eMatGrid_t = false;
-    const bool rescale_eMatGrid_t = false;
+    const bool rescale_eMatGrid_t = true; // done safely I think, just multiplied
     double prev=clock();
     std::string prev_section="Null";
     std::string next_section="Initialize variables";
@@ -2072,7 +2152,6 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         prev=print_times(prev, suppressOutput, prev_section, next_section);
         prev_section=next_section;
         rcpp_make_eMatRead_t(eMatRead_t, sampleReads, eHapsCurrent_tc, s, maxDifferenceBetweenReads, Jmax_local, eMatHapOri_t, pRgivenH1, pRgivenH2, prev, suppressOutput, prev_section, next_section, run_pseudo_haploid, rescale_eMatRead_t);
-        
         //
         //
         //

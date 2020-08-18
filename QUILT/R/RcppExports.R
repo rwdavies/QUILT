@@ -87,6 +87,11 @@ Rcpp_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, be
 }
 
 #' @export
+rcpp_make_rescaled_on_fly_eMatGrid_t <- function(eMatGrid_t, eMatRead_t, H, sampleReads, hap, nGrids, prev, suppressOutput, prev_section, next_section, rescale) {
+    invisible(.Call('_QUILT_rcpp_make_rescaled_on_fly_eMatGrid_t', PACKAGE = 'QUILT', eMatGrid_t, eMatRead_t, H, sampleReads, hap, nGrids, prev, suppressOutput, prev_section, next_section, rescale))
+}
+
+#' @export
 rcpp_initialize_gibbs_forward_backward <- function(alphaMatCurrent_tc, transMatRate_tc_H, priorCurrent_m, s, alphaHat_t, betaHat_t, c, eMatGrid_t, run_fb_subset = FALSE, alphaStart = 0L, betaEnd = 0L) {
     invisible(.Call('_QUILT_rcpp_initialize_gibbs_forward_backward', PACKAGE = 'QUILT', alphaMatCurrent_tc, transMatRate_tc_H, priorCurrent_m, s, alphaHat_t, betaHat_t, c, eMatGrid_t, run_fb_subset, alphaStart, betaEnd))
 }
