@@ -1507,7 +1507,6 @@ impute_using_everything <- function(
 everything_per_hap_rejig_haps <- function(
     best_haps_stuff_list
 ) {
-    save(best_haps_stuff_list, file = "~/temp.RData")
     new_haps <- lapply(best_haps_stuff_list, function(x) {
         top_matches <- x[["top_matches"]] + 1 ## turn from 0 to 1 based for R stuff
         top_matches_values <- x[["top_matches_values"]]
