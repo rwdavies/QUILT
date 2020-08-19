@@ -2470,12 +2470,8 @@ R_ff0_shard_block_gibbs_resampler <- function(
     H,
     eMatRead_t,    
     blocked_snps,
-    runif_block,
-    runif_total,
-    runif_proposed,
     grid,
     wif0,
-    ff,
     s,
     alphaMatCurrent_tc,
     priorCurrent_m,
@@ -2483,8 +2479,7 @@ R_ff0_shard_block_gibbs_resampler <- function(
     do_checks = FALSE,
     initial_package = NULL,
     verbose = FALSE,
-    fpp_stuff = NULL,
-    use_cpp_bits_in_R = FALSE
+    fpp_stuff = NULL
 ) {
 
     ##
@@ -2614,12 +2609,11 @@ R_ff0_shard_block_gibbs_resampler <- function(
             ## 
             ## alt
             ## now try to do "on fly"
+            p_original <- -sum(log(c1) + log(c2))
             if (in_flip_mode) {
-                p_original <- -sum(log(c1) + log(c2))
                 x1 <- sum(alphaHat_t1[, split_grid + 1] * betaHat_t1[, split_grid + 1])
                 x2 <- sum(alphaHat_t2[, split_grid + 1] * betaHat_t2[, split_grid + 1])
             } else {
-                p_original <- -sum(log(c1) + log(c2))
                 x1 <- sum(alphaHat_t1[, split_grid + 1] * betaHat_t2[, split_grid + 1])
                 x2 <- sum(alphaHat_t2[, split_grid + 1] * betaHat_t1[, split_grid + 1])
             }
@@ -2643,7 +2637,7 @@ R_ff0_shard_block_gibbs_resampler <- function(
             ## now sample with respect to these
             in_flip_mode <- runif(1) > probs[1]
             ## record stuff now yyyyyyyyyeeeeeeeeeeeeeeeeessssssssssssss
-            shard_block_results[iGridConsider + 1, "iBlock"] <- iGridConsider + 1
+            shard_block_results[iGridConsider + 1, "iBlock"] <- iGridConsider ## 0-based
             shard_block_results[iGridConsider + 1, c("p_stay", "p_flip")] <- probs
             shard_block_results[iGridConsider + 1, "flip_mode"] <- as.integer(in_flip_mode)
             shard_block_results[iGridConsider + 1, c("p_O_stay", "p_O_flip")] <- c(p_original, p_alt)

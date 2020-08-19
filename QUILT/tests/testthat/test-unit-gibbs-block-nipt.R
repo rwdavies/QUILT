@@ -571,7 +571,6 @@ test_that("can perform block gibbs", {
 
 test_that("can perform ff = 0 shard block gibbs", {
 
-    
     set.seed(199)
     do_checks <- TRUE
     verbose <- FALSE
@@ -622,7 +621,6 @@ test_that("can perform ff = 0 shard block gibbs", {
     nReads <- length(sampleReads)
     ##
     initial_package <- for_testing_get_full_package_probabilities(true_H, list( eHapsCurrent_tc = eHapsCurrent_tc, transMatRate_tc_H = transMatRate_tc_H, alphaMatCurrent_tc = alphaMatCurrent_tc,priorCurrent_m = priorCurrent_m ,eMatRead_t = eMatRead_t,s = s,sampleReads = sampleReads))
-    verbose <- FALSE
     
     ##
     ## so here make a 10 blocks
@@ -673,55 +671,62 @@ test_that("can perform ff = 0 shard block gibbs", {
     eMatGrid_t3 <- initial_package[[3]][["eMatGrid_t"]]
     ##
     ##
-    ## 
-    block_out <- R_ff0_shard_block_gibbs_resampler(
-        alphaHat_t1 = alphaHat_t1,
-        alphaHat_t2 = alphaHat_t2,
-        alphaHat_t3 = alphaHat_t3,
-        betaHat_t1 = betaHat_t1,
-        betaHat_t2 = betaHat_t2,
-        betaHat_t3 = betaHat_t3,
-        c1 = c1,
-        c2 = c2,
-        c3 = c3,
-        eMatGrid_t1 = eMatGrid_t1,
-        eMatGrid_t2 = eMatGrid_t2,
-        eMatGrid_t3 = eMatGrid_t3,
-        H = H,
-        eMatRead_t = eMatRead_t,    
-        blocked_snps = blocked_snps,
-        runif_block = runif_block,
-        runif_total = runif_total,
-        runif_proposed = runif_proposed,
-        grid = grid,
-        wif0 = wif0,
-        ff = ff,
-        s = s,
-        alphaMatCurrent_tc = alphaMatCurrent_tc,
-        priorCurrent_m = priorCurrent_m,
-        transMatRate_tc_H = transMatRate_tc_H,
-        do_checks = TRUE,
-        initial_package = initial_package,
-        verbose = verbose,
-        fpp_stuff = fpp_stuff,
-        use_cpp_bits_in_R = FALSE
-    )
-
-    
     ##
-    ## OK, that DID work, neat
-    ##
-    H <- block_out$H
-    expect_true(sum(true_H == H) %in% c(0, length(H)))
-    final_package <- for_testing_get_full_package_probabilities(block_out[["H"]], fpp_stuff)
-    expect_equal(block_out[["eMatGrid_t1"]], final_package[[1]][["eMatGrid_t"]])
-    expect_equal(block_out[["eMatGrid_t2"]], final_package[[2]][["eMatGrid_t"]])
-    expect_equal(block_out[["c1"]], final_package[[1]][["c"]])
-    expect_equal(block_out[["c2"]], final_package[[2]][["c"]])
-    expect_equal(block_out[["alphaHat_t1"]], final_package[[1]][["alphaHat_t"]])
-    expect_equal(block_out[["alphaHat_t2"]], final_package[[2]][["alphaHat_t"]])
-    expect_equal(block_out[["betaHat_t1"]], final_package[[1]][["betaHat_t"]])
-    expect_equal(block_out[["betaHat_t2"]], final_package[[2]][["betaHat_t"]])
-
+    verbose <- FALSE
+    for(language in c("R", "Rcpp")) {
+        if (language == "R") { f <- R_ff0_shard_block_gibbs_resampler; s <- 1}
+        if (language == "Rcpp") { f <- Rcpp_ff0_shard_block_gibbs_resampler; s <- 0}
+        if (verbose) {
+            print(paste0("=======language = ", language, "========="))
+        }
+        set.seed(10)
+        block_out <- f(
+            alphaHat_t1 = alphaHat_t1,
+            alphaHat_t2 = alphaHat_t2,
+            alphaHat_t3 = alphaHat_t3,
+            betaHat_t1 = betaHat_t1,
+            betaHat_t2 = betaHat_t2,
+            betaHat_t3 = betaHat_t3,
+            c1 = c1,
+            c2 = c2,
+            c3 = c3,
+            eMatGrid_t1 = eMatGrid_t1,
+            eMatGrid_t2 = eMatGrid_t2,
+            eMatGrid_t3 = eMatGrid_t3,
+            H = H,
+            eMatRead_t = eMatRead_t,    
+            blocked_snps = blocked_snps,
+            grid = grid,
+            wif0 = wif0,
+            s = s,
+            alphaMatCurrent_tc = alphaMatCurrent_tc,
+            priorCurrent_m = priorCurrent_m,
+            transMatRate_tc_H = transMatRate_tc_H,
+            do_checks = TRUE,
+            initial_package = initial_package,
+            verbose = verbose,
+            fpp_stuff = fpp_stuff
+        )
+        ##
+        ## OK, that DID work, neat
+        ##
+        if (language == "Rcpp") {
+            block_out <- append(block_out, list(eMatGrid_t1 = eMatGrid_t1, eMatGrid_t2 = eMatGrid_t2, eMatGrid_t3 = eMatGrid_t3, c1 = c1, c2 = c2, c3 = c3,H = H, alphaHat_t1 = alphaHat_t1, alphaHat_t2 = alphaHat_t2, alphaHat_t3 = alphaHat_t3, betaHat_t1 = betaHat_t1, betaHat_t2 = betaHat_t2, betaHat_t3 = betaHat_t3))
+        }
+        H <- block_out$H
+        expect_true(sum(true_H == H) %in% c(0, length(H)))
+        final_package <- for_testing_get_full_package_probabilities(block_out[["H"]], fpp_stuff)
+        expect_equal(block_out[["eMatGrid_t1"]], final_package[[1]][["eMatGrid_t"]])
+        expect_equal(block_out[["eMatGrid_t2"]], final_package[[2]][["eMatGrid_t"]])
+        expect_equal(block_out[["c1"]], final_package[[1]][["c"]])
+        expect_equal(block_out[["c2"]], final_package[[2]][["c"]])
+        expect_equal(block_out[["alphaHat_t1"]], final_package[[1]][["alphaHat_t"]])
+        expect_equal(block_out[["alphaHat_t2"]], final_package[[2]][["alphaHat_t"]])
+        expect_equal(block_out[["betaHat_t1"]], final_package[[1]][["betaHat_t"]])
+        expect_equal(block_out[["betaHat_t2"]], final_package[[2]][["betaHat_t"]])
+        if (language == "R") {    block_out_R <- block_out}
+        if (language == "Rcpp") { block_out_Rcpp <- block_out}
+    }
+    expect_equal(block_out_R[["shard_block_results"]], block_out_Rcpp[["shard_block_results"]])
     
 })

@@ -76,6 +76,20 @@ double rcpp_simple_quantile(arma::vec x, double q) {
 }
 
 
+void rcpp_alpha_forward_one(
+    int s,
+    const int iGrid,
+    const int K,
+    arma::mat& alphaHat_t,
+    const arma::cube& transMatRate_tc_H,
+    const arma::mat& eMatGrid_t,
+    const arma::cube& alphaMatCurrent_tc,
+    arma::rowvec& c,
+    double& minus_log_c_sum,
+    const bool normalize = false
+);
+
+
 
 
 //' @export
@@ -1557,4 +1571,215 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     return(to_return);
 
 
+}
+
+
+
+
+
+//' @export
+// [[Rcpp::export]]
+Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
+    arma::mat& alphaHat_t1,
+    arma::mat& alphaHat_t2,
+    arma::mat& alphaHat_t3,
+    arma::mat& betaHat_t1,
+    arma::mat& betaHat_t2,
+    arma::mat& betaHat_t3,    
+    arma::rowvec& c1,
+    arma::rowvec& c2,
+    arma::rowvec& c3,
+    arma::mat& eMatGrid_t1,
+    arma::mat& eMatGrid_t2,
+    arma::mat& eMatGrid_t3,
+    Rcpp::IntegerVector& H,
+    const arma::mat& eMatRead_t,
+    Rcpp::IntegerVector& blocked_snps,
+    const Rcpp::IntegerVector& grid,
+    Rcpp::IntegerVector& wif0,
+    int s, // this is 0-based
+    const arma::cube& alphaMatCurrent_tc,
+    const arma::mat& priorCurrent_m,
+    const arma::cube& transMatRate_tc_H,
+    bool do_checks = false,
+    Rcpp::List initial_package = R_NilValue,
+    bool verbose = false,
+    Rcpp::List fpp_stuff = R_NilValue
+) {
+
+    const int K = alphaMatCurrent_tc.n_rows;
+    const int nGrids = alphaMatCurrent_tc.n_cols + 1;
+    const int nReads = H.length();
+    Rcpp::List to_return;
+    if (verbose) {
+        std::cout << "make considers" << std::endl;
+    }
+    //
+    Rcpp::List out = Rcpp_make_gibbs_considers(
+        blocked_snps,
+        grid,
+        wif0,
+        nGrids
+    );
+    // unset
+    Rcpp::IntegerVector consider_reads_start_0_based = as<Rcpp::IntegerVector>(out["consider_reads_start_0_based"]);
+    Rcpp::IntegerVector consider_reads_end_0_based = as<Rcpp::IntegerVector>(out["consider_reads_end_0_based"]);
+    Rcpp::IntegerVector consider_grid_start_0_based = as<Rcpp::IntegerVector>(out["consider_grid_start_0_based"]);
+    Rcpp::IntegerVector consider_grid_end_0_based = as<Rcpp::IntegerVector>(out["consider_grid_end_0_based"]);
+    Rcpp::IntegerVector consider_snp_start_0_based = as<Rcpp::IntegerVector>(out["consider_snp_start_0_based"]);
+    Rcpp::IntegerVector consider_snp_end_0_based = as<Rcpp::IntegerVector>(out["consider_snp_end_0_based"]);
+    Rcpp::IntegerVector consider_grid_where_0_based = as<Rcpp::IntegerVector>(out["consider_grid_where_0_based"]);
+    const int n_blocks = as<int>(out["n_blocks"]);
+
+    //
+    // make output container
+    //
+    Rcpp::NumericMatrix shard_block_results;
+    Rcpp::CharacterVector shard_block_columns;
+    shard_block_columns = CharacterVector::create("iBlock", "p_stay", "p_flip", "flip_mode", "p_O_stay", "p_O_flip");
+    shard_block_results = Rcpp::NumericMatrix(n_blocks - 1, shard_block_columns.length());
+    shard_block_results.fill(0);
+    colnames(shard_block_results) = shard_block_columns; // neat
+    Rcpp::NumericVector runif_block = Rcpp::runif(n_blocks - 1);
+    
+    double minus_log_c1_sum = 0;// not used here
+    double minus_log_c2_sum = 0;// not used here    
+    bool in_flip_mode = false;
+    int iRead = 0;
+    int iGrid, iGridConsider, split_grid, k;
+    arma::colvec emat_temp_col;
+    bool done_reads = false;
+    double p_original, calculated_difference, p_alt, probs1, probs2, probs_sum, x1, x2;
+
+    if (verbose) {
+        std::cout << "start" << std::endl;
+    }
+    
+    for(int iGrid = 0; iGrid < nGrids; iGrid++) {
+        if (verbose) {
+            std::cout << "iGrid = " << iGrid << std::endl;
+            std::cout << "normal forwardd one" << std::endl;
+        }
+        //
+        // normal forward one (includes initialization)
+        //
+        if (iGrid == 0) {
+            alphaHat_t1.col(iGrid) = priorCurrent_m.col(s) % eMatGrid_t1.col(iGrid);
+            c1(iGrid) = 1 / sum(alphaHat_t1.col(iGrid));
+            alphaHat_t1.col(iGrid) *= c1(iGrid);
+            //
+            alphaHat_t2.col(iGrid) = priorCurrent_m.col(s) % eMatGrid_t2.col(iGrid);
+            c2(iGrid) = 1 / sum(alphaHat_t2.col(iGrid));
+            alphaHat_t2.col(iGrid) *= c2(iGrid);
+        } else {
+            if (in_flip_mode) {
+                emat_temp_col = eMatGrid_t1.col(iGrid);
+                eMatGrid_t1.col(iGrid) = eMatGrid_t2.col(iGrid);
+                eMatGrid_t2.col(iGrid) = emat_temp_col;
+            }
+            rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t1, transMatRate_tc_H, eMatGrid_t1, alphaMatCurrent_tc, c1, minus_log_c1_sum, true);
+            rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t2, transMatRate_tc_H, eMatGrid_t2, alphaMatCurrent_tc, c2, minus_log_c1_sum, true);
+        }
+        //
+        //  go over read labels too, maybe flip them
+        //
+        if (verbose) {
+            std::cout << "check reads" << std::endl;
+        }
+        done_reads = false;
+        while(!done_reads) {
+            if (iRead > (nReads - 1)) {
+                done_reads = true;
+            } else {
+                if (wif0(iRead) == iGrid) {
+                    if (in_flip_mode) {
+                        H(iRead) = 3 - H(iRead);
+                    }
+                    iRead++;
+                }
+                if (iRead > (nReads - 1)) {
+                    done_reads = true;
+                } else {
+                    if (wif0(iRead) > iGrid) {
+                        done_reads = true;
+                    }
+                }
+            }
+        }
+        //
+        // now do this bit
+        //
+        if ((iGrid < (nGrids - 1)) && (-1) < consider_grid_where_0_based(iGrid)) {
+            iGridConsider = consider_grid_where_0_based(iGrid);
+            split_grid = consider_grid_end_0_based(iGridConsider);
+            if (verbose) {
+                std::cout << "Considering split_grid = " << split_grid << std::endl;
+            }
+            //
+            // on the fly version
+            //
+            // potentially decently inefficient? this sum? meh, hopefully checking not too many of these
+            // p_original = 0;
+            // for(int iGrid2 = 0; iGrid2 < nGrids; iGrid2++) {
+            //     p_original -= log(c1(iGrid2)) - log(c2(iGrid2));
+            // }
+            p_original = -sum(log(c1) + log(c2));
+            if (in_flip_mode) {
+                x1 = sum(alphaHat_t1.col(split_grid) % betaHat_t1.col(split_grid));
+                x2 = sum(alphaHat_t2.col(split_grid) % betaHat_t2.col(split_grid));                
+            } else {
+                x1 = sum(alphaHat_t1.col(split_grid) % betaHat_t2.col(split_grid));
+                x2 = sum(alphaHat_t2.col(split_grid) % betaHat_t1.col(split_grid));                
+            }
+            //
+            calculated_difference = log(x1) + log(x2) - log(c1(split_grid)) - log(c2(split_grid));
+            if (in_flip_mode) {
+                calculated_difference *= -1;
+                p_original -= calculated_difference;
+            }
+            p_alt = p_original + calculated_difference;
+            probs1 = 1;
+            probs2 = exp(calculated_difference);
+            probs_sum = probs1 + probs2;
+            probs1 /= probs_sum;
+            probs2 /= probs_sum;
+            in_flip_mode = runif_block(iGridConsider) > probs1;
+            // record stuff now yyyyyyyyyeeeeeeeeeeeeeeeeessssssssssssss
+            shard_block_results(iGridConsider, 0) = iGridConsider;
+            shard_block_results(iGridConsider, 1) = probs1;
+            shard_block_results(iGridConsider, 2) = probs2;
+            if (in_flip_mode) {
+                shard_block_results(iGridConsider, 3) = 1;
+            } else {
+                shard_block_results(iGridConsider, 3) = 0;
+            }
+            shard_block_results(iGridConsider, 4) = p_original;
+            shard_block_results(iGridConsider, 5) = p_alt;
+            if (verbose) {
+                if (in_flip_mode) {
+                    std::cout << "FLIP ME UP BRO" << std::endl;
+                } else {
+                    std::cout << "no no no flip thanks" << std::endl;
+                }
+            }
+        }
+    }
+    //
+    // re-run backward
+    //
+    if (verbose) {
+        std::cout << "finalize by re-running backward" << std::endl;
+    }
+    betaHat_t1.col(nGrids - 1).fill(c1(nGrids-1));
+    betaHat_t2.col(nGrids - 1).fill(c2(nGrids-1));
+    betaHat_t3.col(nGrids - 1).fill(c3(nGrids-1));
+    //
+    Rcpp_run_backward_haploid(betaHat_t1, c1, eMatGrid_t1, alphaMatCurrent_tc, transMatRate_tc_H, s);
+    Rcpp_run_backward_haploid(betaHat_t2, c2, eMatGrid_t2, alphaMatCurrent_tc, transMatRate_tc_H, s);
+    Rcpp_run_backward_haploid(betaHat_t3, c3, eMatGrid_t3, alphaMatCurrent_tc, transMatRate_tc_H, s);
+    if (verbose) {
+        std::cout << "done rcpp block gibbs sampling" << std::endl;
+    }
+    to_return.push_back(shard_block_results, "shard_block_results");
+    return(to_return);
 }

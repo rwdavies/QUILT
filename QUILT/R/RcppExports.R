@@ -87,6 +87,11 @@ Rcpp_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, be
 }
 
 #' @export
+Rcpp_ff0_shard_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, do_checks = FALSE, initial_package = NULL, verbose = FALSE, fpp_stuff = NULL) {
+    .Call('_QUILT_Rcpp_ff0_shard_block_gibbs_resampler', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, do_checks, initial_package, verbose, fpp_stuff)
+}
+
+#' @export
 rcpp_make_rescaled_on_fly_eMatGrid_t <- function(eMatGrid_t, eMatRead_t, H, sampleReads, hap, nGrids, prev, suppressOutput, prev_section, next_section, rescale) {
     invisible(.Call('_QUILT_rcpp_make_rescaled_on_fly_eMatGrid_t', PACKAGE = 'QUILT', eMatGrid_t, eMatRead_t, H, sampleReads, hap, nGrids, prev, suppressOutput, prev_section, next_section, rescale))
 }

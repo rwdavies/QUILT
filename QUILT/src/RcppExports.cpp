@@ -404,6 +404,41 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// Rcpp_ff0_shard_block_gibbs_resampler
+Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(arma::mat& alphaHat_t1, arma::mat& alphaHat_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t1, arma::mat& betaHat_t2, arma::mat& betaHat_t3, arma::rowvec& c1, arma::rowvec& c2, arma::rowvec& c3, arma::mat& eMatGrid_t1, arma::mat& eMatGrid_t2, arma::mat& eMatGrid_t3, Rcpp::IntegerVector& H, const arma::mat& eMatRead_t, Rcpp::IntegerVector& blocked_snps, const Rcpp::IntegerVector& grid, Rcpp::IntegerVector& wif0, int s, const arma::cube& alphaMatCurrent_tc, const arma::mat& priorCurrent_m, const arma::cube& transMatRate_tc_H, bool do_checks, Rcpp::List initial_package, bool verbose, Rcpp::List fpp_stuff);
+RcppExport SEXP _QUILT_Rcpp_ff0_shard_block_gibbs_resampler(SEXP alphaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t1SEXP, SEXP betaHat_t2SEXP, SEXP betaHat_t3SEXP, SEXP c1SEXP, SEXP c2SEXP, SEXP c3SEXP, SEXP eMatGrid_t1SEXP, SEXP eMatGrid_t2SEXP, SEXP eMatGrid_t3SEXP, SEXP HSEXP, SEXP eMatRead_tSEXP, SEXP blocked_snpsSEXP, SEXP gridSEXP, SEXP wif0SEXP, SEXP sSEXP, SEXP alphaMatCurrent_tcSEXP, SEXP priorCurrent_mSEXP, SEXP transMatRate_tc_HSEXP, SEXP do_checksSEXP, SEXP initial_packageSEXP, SEXP verboseSEXP, SEXP fpp_stuffSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t1(alphaHat_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t2(alphaHat_t2SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t3(alphaHat_t3SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t1(betaHat_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t2(betaHat_t2SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t3(betaHat_t3SEXP);
+    Rcpp::traits::input_parameter< arma::rowvec& >::type c1(c1SEXP);
+    Rcpp::traits::input_parameter< arma::rowvec& >::type c2(c2SEXP);
+    Rcpp::traits::input_parameter< arma::rowvec& >::type c3(c3SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type eMatGrid_t1(eMatGrid_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type eMatGrid_t2(eMatGrid_t2SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type eMatGrid_t3(eMatGrid_t3SEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type H(HSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type eMatRead_t(eMatRead_tSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type blocked_snps(blocked_snpsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type grid(gridSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type wif0(wif0SEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type alphaMatCurrent_tc(alphaMatCurrent_tcSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type priorCurrent_m(priorCurrent_mSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type transMatRate_tc_H(transMatRate_tc_HSEXP);
+    Rcpp::traits::input_parameter< bool >::type do_checks(do_checksSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type initial_package(initial_packageSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type fpp_stuff(fpp_stuffSEXP);
+    rcpp_result_gen = Rcpp::wrap(Rcpp_ff0_shard_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, do_checks, initial_package, verbose, fpp_stuff));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_make_rescaled_on_fly_eMatGrid_t
 void rcpp_make_rescaled_on_fly_eMatGrid_t(arma::mat& eMatGrid_t, const arma::mat& eMatRead_t, const Rcpp::IntegerVector& H, const Rcpp::List sampleReads, const int hap, const int nGrids, double& prev, int suppressOutput, std::string& prev_section, std::string& next_section, const bool rescale);
 RcppExport SEXP _QUILT_rcpp_make_rescaled_on_fly_eMatGrid_t(SEXP eMatGrid_tSEXP, SEXP eMatRead_tSEXP, SEXP HSEXP, SEXP sampleReadsSEXP, SEXP hapSEXP, SEXP nGridsSEXP, SEXP prevSEXP, SEXP suppressOutputSEXP, SEXP prev_sectionSEXP, SEXP next_sectionSEXP, SEXP rescaleSEXP) {
@@ -1033,6 +1068,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_Rcpp_make_gibbs_considers", (DL_FUNC) &_QUILT_Rcpp_make_gibbs_considers, 6},
     {"_QUILT_Rcpp_fill_rlcM", (DL_FUNC) &_QUILT_Rcpp_fill_rlcM, 3},
     {"_QUILT_Rcpp_block_gibbs_resampler", (DL_FUNC) &_QUILT_Rcpp_block_gibbs_resampler, 34},
+    {"_QUILT_Rcpp_ff0_shard_block_gibbs_resampler", (DL_FUNC) &_QUILT_Rcpp_ff0_shard_block_gibbs_resampler, 25},
     {"_QUILT_rcpp_make_rescaled_on_fly_eMatGrid_t", (DL_FUNC) &_QUILT_rcpp_make_rescaled_on_fly_eMatGrid_t, 11},
     {"_QUILT_rcpp_initialize_gibbs_forward_backward", (DL_FUNC) &_QUILT_rcpp_initialize_gibbs_forward_backward, 11},
     {"_QUILT_rcpp_calculate_gn_genProbs_and_hapProbs", (DL_FUNC) &_QUILT_rcpp_calculate_gn_genProbs_and_hapProbs, 12},
