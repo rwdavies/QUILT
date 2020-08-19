@@ -224,6 +224,131 @@ helper_block_gibbs_resampler <- function(
 
 
 
+R_gibbs_block_forward_one_master <- function(
+    approach2_iRead,
+    iGrid,
+    s,
+    alphaStore,
+    log_cStore,
+    rr,
+    rr0,
+    eMatGridLocal,
+    eMatGridLocalc,
+    transMatRate_tc_H,
+    alphaMatCurrent_tc,
+    priorCurrent_m,
+    read_is_uninformative,
+    block_approach,
+    wif0,
+    eMatRead_t,
+    nReads,
+    H,
+    proposed_H,
+    H_class,
+    rlc,
+    rlcM,
+    runif_proposed,
+    use_cpp_bits_in_R,
+    do_checks,
+    all_packages,
+    cur_package,
+    fpp_stuff,
+    read_end_0_based
+) {
+    if (use_cpp_bits_in_R) {
+        f <- Rcpp_gibbs_block_forward_one
+        iGrid <- iGrid - 1
+        s <- s - 1
+        approach2_iRead[1] <- approach2_iRead[1] - 1L
+    } else {
+        f <- R_gibbs_block_forward_one
+    }
+    out <- f(
+        approach2_iRead = approach2_iRead,
+        iGrid = iGrid,
+        s = s,
+        alphaStore = alphaStore,
+        log_cStore = log_cStore,
+        rr = rr,
+        rr0 = rr0,
+        eMatGridLocal = eMatGridLocal,
+        eMatGridLocalc = eMatGridLocalc,
+        transMatRate_tc_H = transMatRate_tc_H,
+        alphaMatCurrent_tc = alphaMatCurrent_tc,
+        priorCurrent_m = priorCurrent_m,
+        read_is_uninformative = read_is_uninformative,
+        block_approach = block_approach,
+        wif0 = wif0,
+        eMatRead_t = eMatRead_t,
+        nReads = nReads,
+        H = H,
+        proposed_H = proposed_H,
+        H_class = H_class,
+        rlc = rlc,
+        rlcM = rlcM,
+        runif_proposed = runif_proposed
+    )
+    if (use_cpp_bits_in_R) {
+        iGrid <- iGrid + 1
+        s <- s + 1
+        approach2_iRead[1] <- approach2_iRead[1] + 1L
+    } else {
+        alphaStore <- out[["alphaStore"]]
+        log_cStore <- out[["log_cStore"]]
+        approach2_iRead <- out[["approach2_iRead"]]
+        proposed_H <- out[["proposed_H"]]
+        eMatGridLocalc <- out[["eMatGridLocalc"]]
+    }
+    ##
+    ##
+    ##
+    if (do_checks && (block_approach == 1)) {
+        for(ir in 1:6) {
+            for(i in 1:3) {
+                h <- rr[ir, i]
+                expect_equal(all_packages[[ir]][[h]]$alphaHat_t[, iGrid], alphaStore[, h, ir])
+                expect_equal(log(all_packages[[ir]][[h]]$c[iGrid]), log_cStore[iGrid, h, ir])
+            }
+        }
+    }
+    if (do_checks & (block_approach == 4)) {
+        ## if (verbose) {
+        ##     print_message("Check alpha for proposed H")
+        ## }
+        ## check alphaStores
+        ## 2 and 5 breaking? after a 3
+        rs <- (read_end_0_based + 2)
+        re <- approach2_iRead[1] - 1
+        w <- rs:re
+        for(ir in 1:6) {
+            Htemp <- H
+            ## ONLY if change makes sense
+            if (rs <= re) {
+                Htemp[w] <- rr[ir, proposed_H[ir, w]]
+            }
+            cur_package <- for_testing_get_full_package_probabilities(Htemp, fpp_stuff)
+            ## check alphas
+            m <- cbind(cur_package[[rr[ir, 1]]]$eMatGrid_t[, iGrid], cur_package[[rr[ir, 2]]]$eMatGrid_t[, iGrid], cur_package[[rr[ir, 3]]]$eMatGrid_t[, iGrid])
+            expect_equal(eMatGridLocalc[, , ir], m)
+            ## 
+            m <- cbind(cur_package[[1]]$alphaHat_t[, iGrid], cur_package[[2]]$alphaHat_t[, iGrid], cur_package[[3]]$alphaHat_t[, iGrid])
+            expect_equal(alphaStore[, , ir], m)
+        }
+    }
+    return(
+        list(
+            approach2_iRead = approach2_iRead,
+            cur_package = cur_package,
+            alphaStore = alphaStore,
+            log_cStore = log_cStore,
+            approach2_iRead = approach2_iRead,
+            proposed_H = proposed_H,
+            eMatGridLocalc = eMatGridLocalc 
+        )
+    )
+}
+
+
 ## so normally, see below, just implement in the middle of other code
 ## here, for neater testing code, we just give it an initial (possibly messed up) H
 ## make it build the things it needs
@@ -421,6 +546,7 @@ R_block_gibbs_resampler <- function(
     eMatGridLocalc <- array(0, c(K, 3, 6))
     log_cStore <- array(0, c(nGrids, 3, 6))
     read_end_0_based <- -1 ## only matters for checks
+    cur_package <- NULL
     ##
     ## loop!
     ##
@@ -439,86 +565,15 @@ R_block_gibbs_resampler <- function(
         eMatGridLocal[, 2] <- eMatGrid_t2[, iGrid]
         eMatGridLocal[, 3] <- eMatGrid_t3[, iGrid]
         ##
-        if (use_cpp_bits_in_R) {
-            f <- Rcpp_gibbs_block_forward_one
-            iGrid <- iGrid - 1
-            s <- s - 1
-            approach2_iRead[1] <- approach2_iRead[1] - 1L
-        } else {
-            f <- R_gibbs_block_forward_one
-        }
-        out <- f(
-            approach2_iRead = approach2_iRead,
-            iGrid = iGrid,
-            s = s,
-            alphaStore = alphaStore,
-            log_cStore = log_cStore,
-            rr = rr,
-            rr0 = rr0,
-            eMatGridLocal = eMatGridLocal,
-            eMatGridLocalc = eMatGridLocalc,
-            transMatRate_tc_H = transMatRate_tc_H,
-            alphaMatCurrent_tc = alphaMatCurrent_tc,
-            priorCurrent_m = priorCurrent_m,
-            read_is_uninformative = read_is_uninformative,
-            block_approach = block_approach,
-            wif0 = wif0,
-            eMatRead_t = eMatRead_t,
-            nReads = nReads,
-            H = H,
-            proposed_H = proposed_H,
-            H_class = H_class,
-            rlc = rlc,
-            rlcM = rlcM,
-            runif_proposed = runif_proposed
-        )
-        if (use_cpp_bits_in_R) {
-            iGrid <- iGrid + 1
-            s <- s + 1
-            approach2_iRead[1] <- approach2_iRead[1] + 1L
-        } else {
-            alphaStore <- out[["alphaStore"]]
-            log_cStore <- out[["log_cStore"]]
-            approach2_iRead <- out[["approach2_iRead"]]
-            proposed_H <- out[["proposed_H"]]
-            eMatGridLocalc <- out[["eMatGridLocalc"]]
-        }
-        ##
-        ##
-        ##
-        if (do_checks && (block_approach == 1)) {
-            for(ir in 1:6) {
-                for(i in 1:3) {
-                    h <- rr[ir, i]
-                    expect_equal(all_packages[[ir]][[h]]$alphaHat_t[, iGrid], alphaStore[, h, ir])
-                    expect_equal(log(all_packages[[ir]][[h]]$c[iGrid]), log_cStore[iGrid, h, ir])
-                }
-            }
-        }
-        if (do_checks & (block_approach == 4)) {
-            ## if (verbose) {
-            ##     print_message("Check alpha for proposed H")
-            ## }
-            ## check alphaStores
-            ## 2 and 5 breaking? after a 3
-            rs <- (read_end_0_based + 2)
-            re <- approach2_iRead[1] - 1
-            w <- rs:re
-            for(ir in 1:6) {
-                Htemp <- H
-                ## ONLY if change makes sense
-                if (rs <= re) {
-                    Htemp[w] <- rr[ir, proposed_H[ir, w]]
-                }
-                cur_package <- for_testing_get_full_package_probabilities(Htemp, fpp_stuff)
-                ## check alphas
-                m <- cbind(cur_package[[rr[ir, 1]]]$eMatGrid_t[, iGrid], cur_package[[rr[ir, 2]]]$eMatGrid_t[, iGrid], cur_package[[rr[ir, 3]]]$eMatGrid_t[, iGrid])
-                expect_equal(eMatGridLocalc[, , ir], m)
-                ## 
-                m <- cbind(cur_package[[1]]$alphaHat_t[, iGrid], cur_package[[2]]$alphaHat_t[, iGrid], cur_package[[3]]$alphaHat_t[, iGrid])
-                expect_equal(alphaStore[, , ir], m)
-            }
-        }
+        out <- R_gibbs_block_forward_one_master(approach2_iRead = approach2_iRead, iGrid =iGrid, s = s, alphaStore = alphaStore, log_cStore = log_cStore, rr = rr, rr0 = rr0, eMatGridLocal = eMatGridLocal, eMatGridLocalc = eMatGridLocalc, transMatRate_tc_H = transMatRate_tc_H, alphaMatCurrent_tc = alphaMatCurrent_tc, priorCurrent_m = priorCurrent_m, read_is_uninformative = read_is_uninformative, block_approach = block_approach, wif0 = wif0, eMatRead_t = eMatRead_t, nReads = nReads, H = H, proposed_H = proposed_H, H_class = H_class, rlc = rlc, rlcM = rlcM, runif_proposed = runif_proposed, use_cpp_bits_in_R = use_cpp_bits_in_R, do_checks = do_checks, all_packages = all_packages, cur_package = cur_package, read_end_0_based = read_end_0_based, fpp_stuff = fpp_stuff)
+        approach2_iRead <- out[["approach2_iRead"]]
+        cur_package <- out[["cur_package"]]
+        alphaStore <- out[["alphaStore"]]
+        log_cStore <- out[["log_cStore"]]
+        approach2_iRead <- out[["approach2_iRead"]]
+        proposed_H <- out[["proposed_H"]]
+        eMatGridLocalc <- out[["eMatGridLocalc"]]
+        
         ##
         ## if this is when we consider the block change
         ##

@@ -336,6 +336,14 @@ test_that("can perform block gibbs when ff is 0", {
 
 
 
+
+
+
+
+
+
+
+
 test_that("can perform block gibbs", {
 
     ## run a few times to converge
