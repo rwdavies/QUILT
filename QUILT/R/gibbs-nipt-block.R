@@ -2444,3 +2444,274 @@ R_make_gibbs_considers <- function(
     )
 }
 
+
+
+
+
+
+
+
+
+
+
+R_ff0_shard_block_gibbs_resampler <- function(
+    alphaHat_t1,
+    alphaHat_t2,
+    alphaHat_t3,
+    betaHat_t1,
+    betaHat_t2,
+    betaHat_t3,
+    c1,
+    c2,
+    c3,
+    eMatGrid_t1,
+    eMatGrid_t2,
+    eMatGrid_t3,
+    H,
+    eMatRead_t,    
+    blocked_snps,
+    runif_block,
+    runif_total,
+    runif_proposed,
+    grid,
+    wif0,
+    ff,
+    s,
+    alphaMatCurrent_tc,
+    priorCurrent_m,
+    transMatRate_tc_H,
+    do_checks = FALSE,
+    initial_package = NULL,
+    verbose = FALSE,
+    fpp_stuff = NULL,
+    use_cpp_bits_in_R = FALSE
+) {
+
+    ##
+    ##
+    K <- dim(alphaMatCurrent_tc)[1]
+    nSNPs <- length(grid)
+    nGrids <- dim(alphaMatCurrent_tc)[2] + 1    
+    S <- dim(alphaMatCurrent_tc)[3]
+    nReads <- length(wif0)
+
+
+    ##
+    ## compare arbitrary splits
+    ##
+    out <- Rcpp_make_gibbs_considers(
+        blocked_snps = blocked_snps,
+        grid = grid,
+        wif0 = wif0,
+        nGrids = nGrids
+    )
+    ## yes, take out from both
+    consider_reads_start_0_based <- out[["consider_reads_start_0_based"]]
+    consider_reads_end_0_based  <- out[["consider_reads_end_0_based"]]
+    consider_grid_start_0_based <- out[["consider_grid_start_0_based"]]
+    consider_grid_end_0_based <- out[["consider_grid_end_0_based"]]
+    consider_snp_start_0_based <- out[["consider_snp_start_0_based"]]
+    consider_snp_end_0_based <- out[["consider_snp_end_0_based"]]
+    consider_grid_where_0_based <- out[["consider_grid_where_0_based"]]
+    iGridConsider <- 0
+
+    f_get_alt_prob_from_truth <- function(H, split_grid, wif0, fpp_stuff) {
+        H_temp <- H
+        H_temp[wif0 <= split_grid] <- 3 - H_temp[wif0 <= split_grid]
+        alt_package <- for_testing_get_full_package_probabilities(H_temp, fpp_stuff)
+        return(-sum(log(alt_package[[1]][["c"]]) + log(alt_package[[2]][["c"]])))
+    }
+
+    shard_block_columns <- c(
+        "iBlock",
+        "p_stay", "p_flip",
+        "flip_mode",
+        "p_O_stay", "p_O_flip"
+    )
+    shard_block_results <- matrix(0.0, nrow = length(consider_grid_end_0_based) - 1, ncol = length(shard_block_columns))
+    colnames(shard_block_results) <- shard_block_columns
+    ## 
+
+    
+    ##
+    ## now do progression
+    ##
+    ## 
+    minus_log_c1_sum <- 0
+    minus_log_c2_sum <- 0
+    in_flip_mode <- FALSE
+    ## initialize normally
+    iRead <- 0
+    for(iGrid in 0:(nGrids - 1)) {
+        ##
+        ## normal forward one (includes initialization)
+        ##
+        if (iGrid == 0) {
+            ## 
+            alphaHat_t1[, iGrid + 1] <- priorCurrent_m[, s] * eMatGrid_t1[, iGrid + 1]
+            c1[iGrid + 1] <- 1 / sum(alphaHat_t1[, iGrid + 1])
+            alphaHat_t1[, iGrid + 1] <- alphaHat_t1[, iGrid + 1] * c1[iGrid + 1]
+            ##
+            alphaHat_t2[, iGrid + 1] <- priorCurrent_m[, s] * eMatGrid_t2[, iGrid + 1]
+            c2[iGrid + 1] <- 1 / sum(alphaHat_t2[, iGrid + 1])
+            alphaHat_t2[, iGrid + 1] <- alphaHat_t2[, iGrid + 1] * c2[iGrid + 1]
+        } else {
+            if (in_flip_mode) {
+                x <- eMatGrid_t1[, iGrid + 1]
+                eMatGrid_t1[, iGrid + 1] <- eMatGrid_t2[, iGrid + 1]
+                eMatGrid_t2[, iGrid + 1] <- x
+            }
+            ## only thing that changes is eMatGrid_t
+            rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t1, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t1, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c1, minus_log_c_sum = minus_log_c1_sum, normalize = TRUE)
+            rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t2, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t2, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c2, minus_log_c_sum = minus_log_c2_sum, normalize = TRUE)
+        }
+        ##
+        ##  go over read labels too, maybe flip them
+        ##
+        done <- FALSE
+        while(!done) {
+            if (iRead > (nReads - 1)) {
+                done <- TRUE
+            } else {
+                if (wif0[iRead + 1] == iGrid) {
+                    if (in_flip_mode) {
+                        H[iRead + 1] <- 3 - H[iRead + 1]
+                    }
+                    iRead <- iRead + 1
+                }
+                if (iRead > (nReads - 1)) {
+                    done <- TRUE
+                } else {
+                    if (wif0[iRead + 1] > iGrid) {
+                        done <- TRUE
+                    }
+                }
+            }
+        }
+        ##
+        ## now do this bit
+        ##
+        if (consider_grid_where_0_based[iGrid + 1] > (- 1) && (iGrid < (nGrids - 1))) {
+            iGridConsider <- consider_grid_where_0_based[iGrid + 1] ## still 0-based
+            split_grid <- consider_grid_end_0_based[iGridConsider + 1]
+            if (verbose) {
+                print(paste0("Considering split_grid = ", split_grid))
+            }
+            if (do_checks) {
+                ## first, get true current and alternate probs
+                true_cur_prob <- f_get_alt_prob_from_truth(H, split_grid = -1, wif0, fpp_stuff)        
+                true_alt_prob <- f_get_alt_prob_from_truth(H, split_grid, wif0, fpp_stuff)
+                true_difference <- true_alt_prob - true_cur_prob
+                current_package <- for_testing_get_full_package_probabilities(H, fpp_stuff)
+                w <- 1:(iGrid + 1)
+                expect_equal(c1[w], current_package[[1]][["c"]][w])
+                expect_equal(c2[w], current_package[[2]][["c"]][w])
+                expect_equal(alphaHat_t1[, w], current_package[[1]][["alphaHat_t"]][, w])
+                expect_equal(alphaHat_t2[, w], current_package[[2]][["alphaHat_t"]][, w])                
+            }
+            ##
+            ## now do on fly version
+            ## 
+            ## alt
+            ## now try to do "on fly"
+            if (in_flip_mode) {
+                p_original <- -sum(log(c1) + log(c2))
+                x1 <- sum(alphaHat_t1[, split_grid + 1] * betaHat_t1[, split_grid + 1])
+                x2 <- sum(alphaHat_t2[, split_grid + 1] * betaHat_t2[, split_grid + 1])
+            } else {
+                p_original <- -sum(log(c1) + log(c2))
+                x1 <- sum(alphaHat_t1[, split_grid + 1] * betaHat_t2[, split_grid + 1])
+                x2 <- sum(alphaHat_t2[, split_grid + 1] * betaHat_t1[, split_grid + 1])
+            }
+            calculated_difference <- log(x1) + log(x2) - log(c1[split_grid + 1]) - log(c2[split_grid + 1])
+            if (in_flip_mode) {
+                calculated_difference <- calculated_difference * -1
+                p_original <- p_original - calculated_difference
+            }
+            p_alt <- p_original + calculated_difference
+            ## yup, this looks right
+            if (do_checks) {
+                expect_equal(true_cur_prob, p_original)
+                expect_equal(true_alt_prob, p_alt)
+                expect_equal(true_difference, calculated_difference)
+            }
+            probs <- c(1, exp(calculated_difference))
+            probs <- probs / sum(probs)
+            if (verbose) {
+                print(paste0("Remain the same prob is :", probs[1]))
+            }
+            ## now sample with respect to these
+            in_flip_mode <- runif(1) > probs[1]
+            ## record stuff now yyyyyyyyyeeeeeeeeeeeeeeeeessssssssssssss
+            shard_block_results[iGridConsider + 1, "iBlock"] <- iGridConsider + 1
+            shard_block_results[iGridConsider + 1, c("p_stay", "p_flip")] <- probs
+            shard_block_results[iGridConsider + 1, "flip_mode"] <- as.integer(in_flip_mode)
+            shard_block_results[iGridConsider + 1, c("p_O_stay", "p_O_flip")] <- c(p_original, p_alt)
+            ##block_results[iGridConsider + 1, "p_O1_given_H1_L"]
+            ##
+            if (verbose) {
+                if (in_flip_mode) {
+                    print(paste0("FLIP ME UP BRO"))
+                } else {
+                    print("no flipping for me thanks")
+                }
+            }
+        }
+    }
+    
+    ##
+    ## re-run backward
+    ## 
+    betaHat_t1[, nGrids] <- c1[nGrids]
+    Rcpp_run_backward_haploid(        
+        betaHat_t1,
+        c = c1,
+        eMatGrid_t = eMatGrid_t1,
+        alphaMatCurrent_tc = alphaMatCurrent_tc,
+        transMatRate_tc = transMatRate_tc_H,
+        s = s - 1
+    )
+    betaHat_t2[, nGrids] <- c2[nGrids]
+    Rcpp_run_backward_haploid(        
+        betaHat_t2,
+        c = c2,
+        eMatGrid_t = eMatGrid_t2,
+        alphaMatCurrent_tc = alphaMatCurrent_tc,
+        transMatRate_tc = transMatRate_tc_H,
+        s = s - 1
+    )
+    betaHat_t3[, nGrids] <- c3[nGrids]
+    Rcpp_run_backward_haploid(        
+        betaHat_t3,
+        c = c3,
+        eMatGrid_t = eMatGrid_t3,
+        alphaMatCurrent_tc = alphaMatCurrent_tc,
+        transMatRate_tc = transMatRate_tc_H,
+        s = s - 1
+    )
+    return(
+        list(
+            eMatGrid_t1 = eMatGrid_t1,
+            eMatGrid_t2 = eMatGrid_t2,
+            eMatGrid_t3 = eMatGrid_t3,
+            c1 = c1,
+            c2 = c2,
+            c3 = c3,
+            alphaHat_t1 = alphaHat_t1,
+            alphaHat_t2 = alphaHat_t2,
+            alphaHat_t3 = alphaHat_t3,            
+            betaHat_t1 = betaHat_t1,
+            betaHat_t2 = betaHat_t2,
+            betaHat_t3 = betaHat_t3,
+            H = H,
+            fpp_stuff = fpp_stuff,
+            shard_block_results = shard_block_results,
+            consider_snp_start_0_based = consider_snp_start_0_based,            
+            consider_snp_end_0_based = consider_snp_end_0_based,
+            consider_reads_start_0_based = consider_reads_start_0_based,
+            consider_reads_end_0_based = consider_reads_end_0_based
+        )
+    )
+}
+
+

@@ -566,3 +566,162 @@ test_that("can perform block gibbs", {
 })
 
 
+
+
+
+test_that("can perform ff = 0 shard block gibbs", {
+
+    
+    set.seed(199)
+    do_checks <- TRUE
+    verbose <- FALSE
+    s <- 1
+    S <- 1
+    ff <- 0
+    n_gibbs_starts <- 1
+    nSNPs <- 1000
+    gridWindowSize <- 2000
+    L <- sort(sample(200000, nSNPs))
+    shuffle_bin_radius <- 2000
+    class_sum_cutoff <- 0.06
+    ##
+    test_package <- make_quilt_fb_test_package(
+        K = 4,
+        nReads = nSNPs * 4,
+        nSNPs = nSNPs,
+        gridWindowSize = gridWindowSize,
+        method = "triploid-nipt",
+        ff = ff,
+        seed = 101,
+        S = 1,
+        L = L,
+        eHapsMin = 0.01, ## make more confident
+        bq_mult = 40,
+        randomize_sample_read_length = TRUE,
+        return_eMatGridTri_t = FALSE
+    )
+    grid <- test_package$grid
+    nSNPs <- test_package$nSNPs
+    nGrids <- test_package$nGrids
+    K <- test_package$K
+    transMatRate_tc_H <- test_package$transMatRate_tc_H
+    alphaMatCurrent_tc <- test_package$alphaMatCurrent_tc
+    priorCurrent_m <- test_package$priorCurrent_m
+    eHapsCurrent_tc <- test_package$eHapsCurrent_tc
+    true_H <- as.integer(test_package$true_H) ## always keep as 1-based integer, EVEN in cpp
+    maxDifferenceBetweenReads <- 1000
+    Jmax <- 1000
+    grid_distances <- test_package$grid_distances
+    L_grid <- test_package$L_grid
+    eMatRead_t <- test_package$list_of_eMatRead_t[[1]]
+    
+    ##
+    sampleReads <- test_package$sampleReads
+    ## re-size the reads to feature more random length
+    wif0 <- as.integer(sapply(sampleReads, function(x) x[[2]]))
+    nReads <- length(sampleReads)
+    ##
+    initial_package <- for_testing_get_full_package_probabilities(true_H, list( eHapsCurrent_tc = eHapsCurrent_tc, transMatRate_tc_H = transMatRate_tc_H, alphaMatCurrent_tc = alphaMatCurrent_tc,priorCurrent_m = priorCurrent_m ,eMatRead_t = eMatRead_t,s = s,sampleReads = sampleReads))
+    verbose <- FALSE
+    
+    ##
+    ## so here make a 10 blocks
+    ## blocks are 0-3, 3-6, 6-8, 8-9
+    ## 
+    ## so can't easily be caught by entire block version
+    ## 
+    H <- integer(length(true_H))
+    H[] <- true_H[] ## make clone not copy by reference
+    blocked_snps <- integer(nSNPs)
+    for(i in 0:9) {
+        blocked_snps[(10 * i < grid) & (grid <= (10 * (i + 1)))] <- as.integer(i)
+    }
+    ## introduce artificial split between grids 1 and 2
+    for(i in c(8, 6, 3)) {
+        H[wif0 <= (10 * i)] <- 3 - H[wif0 <= (10 * i)]
+    }
+    languages_to_test <- c("R", "R_with_Rcpp", "Rcpp")
+    block_approach <- 1
+    block_gibbs_quantile_prob <- 0.9
+    ## language <- "R_with_Rcpp"
+    ## language <- "Rcpp"    
+    use_smooth_cm_in_block_gibbs <- FALSE
+    smooth_cm <- numeric(1)
+    ## 
+    ## do not need block approaches
+    ## 
+    fpp_stuff <- list(
+        transMatRate_tc_H = transMatRate_tc_H,
+        alphaMatCurrent_tc = alphaMatCurrent_tc,
+        priorCurrent_m = priorCurrent_m ,
+        eMatRead_t = eMatRead_t,
+        s = s,
+        sampleReads = sampleReads
+    )
+    initial_package <- for_testing_get_full_package_probabilities(H, fpp_stuff)
+    alphaHat_t1 <- initial_package[[1]][["alphaHat_t"]]
+    alphaHat_t2 <- initial_package[[2]][["alphaHat_t"]]
+    alphaHat_t3 <- initial_package[[3]][["alphaHat_t"]]
+    betaHat_t1 <- initial_package[[1]][["betaHat_t"]]
+    betaHat_t2 <- initial_package[[2]][["betaHat_t"]]
+    betaHat_t3 <- initial_package[[3]][["betaHat_t"]]
+    c1 <- initial_package[[1]][["c"]]
+    c2 <- initial_package[[2]][["c"]]
+    c3 <- initial_package[[3]][["c"]]
+    eMatGrid_t1 <- initial_package[[1]][["eMatGrid_t"]]
+    eMatGrid_t2 <- initial_package[[2]][["eMatGrid_t"]]
+    eMatGrid_t3 <- initial_package[[3]][["eMatGrid_t"]]
+    ##
+    ##
+    ## 
+    block_out <- R_ff0_shard_block_gibbs_resampler(
+        alphaHat_t1 = alphaHat_t1,
+        alphaHat_t2 = alphaHat_t2,
+        alphaHat_t3 = alphaHat_t3,
+        betaHat_t1 = betaHat_t1,
+        betaHat_t2 = betaHat_t2,
+        betaHat_t3 = betaHat_t3,
+        c1 = c1,
+        c2 = c2,
+        c3 = c3,
+        eMatGrid_t1 = eMatGrid_t1,
+        eMatGrid_t2 = eMatGrid_t2,
+        eMatGrid_t3 = eMatGrid_t3,
+        H = H,
+        eMatRead_t = eMatRead_t,    
+        blocked_snps = blocked_snps,
+        runif_block = runif_block,
+        runif_total = runif_total,
+        runif_proposed = runif_proposed,
+        grid = grid,
+        wif0 = wif0,
+        ff = ff,
+        s = s,
+        alphaMatCurrent_tc = alphaMatCurrent_tc,
+        priorCurrent_m = priorCurrent_m,
+        transMatRate_tc_H = transMatRate_tc_H,
+        do_checks = TRUE,
+        initial_package = initial_package,
+        verbose = verbose,
+        fpp_stuff = fpp_stuff,
+        use_cpp_bits_in_R = FALSE
+    )
+
+    
+    ##
+    ## OK, that DID work, neat
+    ##
+    H <- block_out$H
+    expect_true(sum(true_H == H) %in% c(0, length(H)))
+    final_package <- for_testing_get_full_package_probabilities(block_out[["H"]], fpp_stuff)
+    expect_equal(block_out[["eMatGrid_t1"]], final_package[[1]][["eMatGrid_t"]])
+    expect_equal(block_out[["eMatGrid_t2"]], final_package[[2]][["eMatGrid_t"]])
+    expect_equal(block_out[["c1"]], final_package[[1]][["c"]])
+    expect_equal(block_out[["c2"]], final_package[[2]][["c"]])
+    expect_equal(block_out[["alphaHat_t1"]], final_package[[1]][["alphaHat_t"]])
+    expect_equal(block_out[["alphaHat_t2"]], final_package[[2]][["alphaHat_t"]])
+    expect_equal(block_out[["betaHat_t1"]], final_package[[1]][["betaHat_t"]])
+    expect_equal(block_out[["betaHat_t2"]], final_package[[2]][["betaHat_t"]])
+
+    
+})
