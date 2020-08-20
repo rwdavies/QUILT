@@ -13,10 +13,11 @@ QUILT(outputdir, chr, regionStart = NA, regionEnd = NA, buffer = NA,
   prepared_reference_filename = "", tempdir = NA,
   bqFilter = as.integer(17), panel_size = NA, posfile = "",
   genfile = "", phasefile = "", maxDifferenceBetweenReads = 1e+10,
-  make_plots = FALSE, verbose = TRUE, shuffle_bin_radius = 5000,
-  iSizeUpperLimit = 1e+06, record_read_label_usage = TRUE,
-  record_interim_dosages = FALSE, use_bx_tag = TRUE,
-  bxTagUpperLimit = 50000, addOptimalHapsToVCF = FALSE)
+  make_plots = FALSE, make_plots_block_gibbs = FALSE, verbose = TRUE,
+  shuffle_bin_radius = 5000, iSizeUpperLimit = 1e+06,
+  record_read_label_usage = TRUE, record_interim_dosages = FALSE,
+  use_bx_tag = TRUE, bxTagUpperLimit = 50000,
+  addOptimalHapsToVCF = FALSE)
 }
 \arguments{
 \item{outputdir}{What output directory to use}
@@ -72,6 +73,8 @@ QUILT(outputdir, chr, regionStart = NA, regionEnd = NA, buffer = NA,
 \item{maxDifferenceBetweenReads}{How much of a difference to allow the reads to make in the forward backward probability calculation. For example, if P(read | state 1)=1 and P(read | state 2)=1e-6, re-scale so that their ratio is this value. This helps prevent any individual read as having too much of an influence on state changes, helping prevent against influence by false positive SNPs}
 
 \item{make_plots}{Whether to make some plots of per-sample imputation. Especially nice when truth data. This is pretty slow though so useful more for debugging and understanding and visualizing performance}
+
+\item{make_plots_block_gibbs}{Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs}
 
 \item{verbose}{whether to be more verbose when running}
 

@@ -27,6 +27,7 @@
 #' @param phasefile Path to phase file with truth phasing results. Empty for no phasefile. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = ref and 1 = alt, separated by a vertical bar |, e.g. 0|0 or 0|1. Note therefore this file has one more row than posfile which has no header. For NIPT imputation, there are 3 columns, representing maternal transmitted, maternal untransmitted, and paternal transmitted
 #' @param maxDifferenceBetweenReads How much of a difference to allow the reads to make in the forward backward probability calculation. For example, if P(read | state 1)=1 and P(read | state 2)=1e-6, re-scale so that their ratio is this value. This helps prevent any individual read as having too much of an influence on state changes, helping prevent against influence by false positive SNPs
 #' @param make_plots Whether to make some plots of per-sample imputation. Especially nice when truth data. This is pretty slow though so useful more for debugging and understanding and visualizing performance
+#' @param make_plots_block_gibbs Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs
 #' @param verbose whether to be more verbose when running
 #' @param shuffle_bin_radius Parameter that controls how to detect ancestral haplotypes that are shuffled during EM for possible re-setting. If set (not NULL), then recombination rate is calculated around pairs of SNPs in window of twice this value, and those that exceed what should be the maximum (defined by nGen and maxRate) are checked for whether they are shuffled
 #' @param iSizeUpperLimit Do not use reads with an insert size of more than this value
@@ -67,6 +68,7 @@ QUILT <- function(
     phasefile = "",
     maxDifferenceBetweenReads = 1e10,
     make_plots = FALSE,
+    make_plots_block_gibbs = FALSE,
     verbose = TRUE,
     shuffle_bin_radius = 5000,
     iSizeUpperLimit = 1e6,
@@ -458,7 +460,8 @@ QUILT <- function(
                 af = af,
                 use_bx_tag = use_bx_tag,
                 bxTagUpperLimit = bxTagUpperLimit,
-                addOptimalHapsToVCF = addOptimalHapsToVCF
+                addOptimalHapsToVCF = addOptimalHapsToVCF,
+                make_plots_block_gibbs = make_plots_block_gibbs
             )
 
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out

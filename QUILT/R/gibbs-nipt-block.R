@@ -1711,6 +1711,9 @@ add_grey_background <- function(L_grid) {
 
 
 plot_attempt_to_reblock_snps <- function(
+    out,
+    nGrids,
+    block_gibbs_iterations,
     outname,
     break_thresh,
     considers,
@@ -1720,11 +1723,34 @@ plot_attempt_to_reblock_snps <- function(
     smoothed_rate,
     L,
     block_results,
+    shard_block_results,
     uncertain_truth_labels,
     truth_labels,
     have_truth_haplotypes,
     sampleReads
 ) {
+    n <- length(block_gibbs_iterations)
+    x <- out$gibbs_block_output_list[[n]][["block_defining"]]
+    blocked_snps <- x[["blocked_snps"]]
+    break_thresh <- x[["break_thresh"]]
+    smoothed_rate <- x[["smoothed_rate"]]
+    ## just re-do in R here
+    considers <- Rcpp_make_gibbs_considers(
+        blocked_snps = blocked_snps,
+        grid = grid,
+        wif0 = wif0,
+        nGrids = nGrids
+    )
+    gibbs_block_output_list <- out[["gibbs_block_output_list"]][[n]]
+    block_results <- gibbs_block_output_list$gibbs_block_output[["block_results"]]
+    shard_block_results <- gibbs_block_output_list[["shard_block_output"]][["shard_block_results"]]
+    block_results <- block_results[block_results[, "p1"] != 0, ] ## not sure why!
+    ##
+    ##
+    ##
+    read_labels <- out$H
+    s <- 1
+    S <- 1
     ##
     xlim <- range(L_grid)
     consider_snp_start_0_based <- considers[["consider_snp_start_0_based"]]
@@ -1736,12 +1762,18 @@ plot_attempt_to_reblock_snps <- function(
     before_gamma2_t <- gibbs_block_output_list[["before_gamma2_t"]]
     after_gamma1_t <- gibbs_block_output_list[["after_gamma1_t"]]
     after_gamma2_t <- gibbs_block_output_list[["after_gamma2_t"]]
+    after_shard_gamma1_t <- gibbs_block_output_list[["after_shard_gamma1_t"]]
+    after_shard_gamma2_t <- gibbs_block_output_list[["after_shard_gamma2_t"]]
+    ## 
     before_read_labels <- gibbs_block_output_list[["before_read_labels"]]        
     after_read_labels <- gibbs_block_output_list[["after_read_labels"]]
+    after_shard_read_labels <- gibbs_block_output_list[["after_shard_read_labels"]]
+    ##
+    ##
     ## 
     ## width <- min(max(20, (L_grid[length(L_grid)] - L_grid[1]) / 1e6 * 36), 200)
-    png(outname, height = 10, width = 20, res = 100, units = "in")
-    par(mfrow = c(7, 1))
+    png(outname, height = 15, width = 20, res = 100, units = "in")
+    par(mfrow = c(11, 1))
     par(oma = c(0, 0, 5, 0))    
     grid_distances <- diff(L_grid)
     x <- L_grid[-1] - grid_distances    
@@ -1754,60 +1786,73 @@ plot_attempt_to_reblock_snps <- function(
     ##
     ## 1) find peaks to check
     ##
-    ylim <- c(0, max(break_thresh, max(smoothed_rate, na.rm = TRUE)))
-    ylim <- c(0, max(break_thresh, quantile(smoothed_rate, probs = c(0.99))))
-    par(mar = c(0, 0, 3, 0))            
-    plot(x = 0, y = 0, xlab = "Physical position", ylab = "Rate", main = "Location of shuffles to check", ylim = ylim, xlim = xlim)
-    add_grey_background(L_grid)
-    y <- smoothed_rate
-    y[y > ylim[2]] <- ylim[2]
-    lines(x = x, y = y, lwd = 2)
-    for(iBlock in 0:(length(consider_snp_start_0_based) - 1)) {
-        l <- L[consider_snp_start_0_based[iBlock + 1] + 1]
-        r <- L[consider_snp_end_0_based[iBlock + 1] + 1]
-        abline(v = l, col = "red")
-        abline(v = r, col = "red")
-        text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.1, labels = iBlock)
-        text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.25, labels = round(block_results[iBlock + 1, "p1"], 2))
-        text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.4, labels = round(block_results[iBlock + 1, "p3"], 2))
-        ## if have (manual) read labels, add them
-        rs <- consider_reads_start_0_based[iBlock + 1] + 1
-        re <- consider_reads_end_0_based[iBlock + 1] + 1
-        ## get counts
-        ## mrll <- manual_read_labels[rs:re]
-        ## labels <- sapply(c('v0', 'v3', 'v2', 'v23', 'v1', 'v13', 'v12', 'v123', "other"), function(v) {
-        ##     sum(mrll == v, na.rm = TRUE)
-        ## })
-        ##labels <- sapply(0:7, function(v) {
-        ##    sum(mrll == v, na.rm = TRUE)
-        ##})
-        ##names(labels) <- c("other", "v1", "v2", "v3", "v12", "v13", "v23", "v123")
-        ##text(x = (l + r) / 2, y = ylim[1] + diff(ylim) * 0.1 + diff(ylim) * 0.6 * seq(0, 1, length.out = length(labels)), labels = paste0("class", names(labels), "=", labels))
-        ## get col
-        changed <- sum(block_results[which(block_results[, "iBlock"] == iBlock), "ir_chosen"] != 1) > 0
-        if (changed) {
-            col <- "green"
+    for(i_block_type in 1:2) {
+        ylim <- c(0, max(break_thresh, max(smoothed_rate, na.rm = TRUE)))
+        ylim <- c(0, max(break_thresh, quantile(smoothed_rate, probs = c(0.99))))
+        par(mar = c(0, 0, 3, 0))            
+        plot(x = 0, y = 0, xlab = "Physical position", ylab = "Rate", main = "Location of shuffles to check", ylim = ylim, xlim = xlim)
+        add_grey_background(L_grid)
+        y <- smoothed_rate
+        y[y > ylim[2]] <- ylim[2]
+        lines(x = x, y = y, lwd = 2)
+        if (i_block_type == 1) {
+            n <- length(consider_snp_start_0_based) - 1
         } else {
-            col <- "red"
+            n <- length(consider_snp_start_0_based) - 1 - 1
         }
-        ## rectangle underneath as well
-        rect(
-            xleft = l,
-            xright = r,
-            ybottom = -1, ytop = 0,
-            col = col
-        ) ##whichIsBest 0 = no switch
+        for(iBlock in 0:n) {
+            l <- L[consider_snp_start_0_based[iBlock + 1] + 1]
+            r <- L[consider_snp_end_0_based[iBlock + 1] + 1]
+            abline(v = l, col = "red")
+            abline(v = r, col = "red")
+            text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.1, labels = iBlock)
+            if (i_block_type == 1) {
+                text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.25, labels = round(block_results[iBlock + 1, "p1"], 2))
+                text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.4, labels = round(block_results[iBlock + 1, "p3"], 2))
+            } else {
+                if (iBlock > 0) {
+                    text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.25, labels = round(shard_block_results[iBlock + 1 - 1, "p_stay"], 2))
+                    text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.4, labels = round(shard_block_results[iBlock + 1 - 1, "p_flip"], 2))
+                }
+            }
+            ## if have (manual) read labels, add them
+            rs <- consider_reads_start_0_based[iBlock + 1] + 1
+            re <- consider_reads_end_0_based[iBlock + 1] + 1
+            if (i_block_type == 1) {
+                changed <- sum(block_results[which(block_results[, "iBlock"] == iBlock), "ir_chosen"] != 1) > 0
+                if (changed) {
+                    col <- "green"
+                } else {
+                    col <- "red"
+                }
+                rect(xleft = l, xright = r, ybottom = -1, ytop = 0, col = col)
+            } else {
+                if (iBlock == 0) {
+                    col <- "red"
+                } else {
+                    col <- c("red", "green")[as.integer(shard_block_results[iBlock + 1 - 1, "flip_mode"]) + 1]
+                }
+                rect(xleft = l, xright = r, ybottom = -1, ytop = 0, col = col)
+            }
+        }
+        abline(h = break_thresh, col = "black", lwd = 2)
     }
-    abline(h = break_thresh, col = "black", lwd = 2)    
-    for(i_before in 1:2) {
+    ##
+    ##
+    ##
+    for(i_before in 1:3) {
         if (i_before == 1) {
             read_labels <- before_read_labels
             gamma1_t <- before_gamma1_t
             gamma2_t <- before_gamma2_t            
-        } else {
+        } else if (i_before == 2) {
             read_labels <- after_read_labels
             gamma1_t <- after_gamma1_t
             gamma2_t <- after_gamma2_t            
+        } else {
+            read_labels <- after_shard_read_labels
+            gamma1_t <- after_shard_gamma1_t
+            gamma2_t <- after_shard_gamma2_t            
         }
         ## 
         ## 2) add in reads here
@@ -1892,6 +1937,7 @@ plot_attempt_to_reblock_snps <- function(
         }
     }
     dev.off()
+    
 }
 
 
@@ -2489,54 +2535,59 @@ R_ff0_shard_block_gibbs_resampler <- function(
     nGrids <- dim(alphaMatCurrent_tc)[2] + 1    
     S <- dim(alphaMatCurrent_tc)[3]
     nReads <- length(wif0)
-
-
     ##
     ## compare arbitrary splits
     ##
-    out <- Rcpp_make_gibbs_considers(
+    considers <- Rcpp_make_gibbs_considers(
         blocked_snps = blocked_snps,
         grid = grid,
         wif0 = wif0,
         nGrids = nGrids
     )
     ## yes, take out from both
-    consider_reads_start_0_based <- out[["consider_reads_start_0_based"]]
-    consider_reads_end_0_based  <- out[["consider_reads_end_0_based"]]
-    consider_grid_start_0_based <- out[["consider_grid_start_0_based"]]
-    consider_grid_end_0_based <- out[["consider_grid_end_0_based"]]
-    consider_snp_start_0_based <- out[["consider_snp_start_0_based"]]
-    consider_snp_end_0_based <- out[["consider_snp_end_0_based"]]
-    consider_grid_where_0_based <- out[["consider_grid_where_0_based"]]
+    consider_reads_start_0_based <- considers[["consider_reads_start_0_based"]]
+    consider_reads_end_0_based  <- considers[["consider_reads_end_0_based"]]
+    consider_grid_start_0_based <- considers[["consider_grid_start_0_based"]]
+    consider_grid_end_0_based <- considers[["consider_grid_end_0_based"]]
+    consider_snp_start_0_based <- considers[["consider_snp_start_0_based"]]
+    consider_snp_end_0_based <- considers[["consider_snp_end_0_based"]]
+    consider_grid_where_0_based <- considers[["consider_grid_where_0_based"]]
     iGridConsider <- 0
-
+    ##
+    ##
+    ##
     f_get_alt_prob_from_truth <- function(H, split_grid, wif0, fpp_stuff) {
         H_temp <- H
         H_temp[wif0 <= split_grid] <- 3 - H_temp[wif0 <= split_grid]
         alt_package <- for_testing_get_full_package_probabilities(H_temp, fpp_stuff)
-        return(-sum(log(alt_package[[1]][["c"]]) + log(alt_package[[2]][["c"]])))
+        return(c(-sum(log(alt_package[[1]][["c"]])), -sum(log(alt_package[[2]][["c"]]))))
     }
-
     shard_block_columns <- c(
         "iBlock",
         "p_stay", "p_flip",
+        "pA1", "pA2", "pB1", "pB2",
         "flip_mode",
         "p_O_stay", "p_O_flip"
     )
     shard_block_results <- matrix(0.0, nrow = length(consider_grid_end_0_based) - 1, ncol = length(shard_block_columns))
     colnames(shard_block_results) <- shard_block_columns
     ## 
-
-    
     ##
     ## now do progression
     ##
     ## 
     minus_log_c1_sum <- 0
     minus_log_c2_sum <- 0
+    minus_log_original_c1_sum <- -sum(log(c1))
+    minus_log_original_c2_sum <- -sum(log(c2))
+    original_c1 <- c1 + 1
+    original_c1 <- original_c1 - 1
+    original_c2 <- c2 + 1
+    original_c2 <- original_c2 - 1
     in_flip_mode <- FALSE
     ## initialize normally
     iRead <- 0
+    have_flipped_read <- array(NA, nReads)
     for(iGrid in 0:(nGrids - 1)) {
         ##
         ## normal forward one (includes initialization)
@@ -2546,10 +2597,12 @@ R_ff0_shard_block_gibbs_resampler <- function(
             alphaHat_t1[, iGrid + 1] <- priorCurrent_m[, s] * eMatGrid_t1[, iGrid + 1]
             c1[iGrid + 1] <- 1 / sum(alphaHat_t1[, iGrid + 1])
             alphaHat_t1[, iGrid + 1] <- alphaHat_t1[, iGrid + 1] * c1[iGrid + 1]
+            minus_log_c1_sum <- minus_log_c1_sum - log(c1[iGrid + 1])
             ##
             alphaHat_t2[, iGrid + 1] <- priorCurrent_m[, s] * eMatGrid_t2[, iGrid + 1]
             c2[iGrid + 1] <- 1 / sum(alphaHat_t2[, iGrid + 1])
             alphaHat_t2[, iGrid + 1] <- alphaHat_t2[, iGrid + 1] * c2[iGrid + 1]
+            minus_log_c2_sum <- minus_log_c2_sum - log(c2[iGrid + 1])
         } else {
             if (in_flip_mode) {
                 x <- eMatGrid_t1[, iGrid + 1]
@@ -2557,8 +2610,12 @@ R_ff0_shard_block_gibbs_resampler <- function(
                 eMatGrid_t2[, iGrid + 1] <- x
             }
             ## only thing that changes is eMatGrid_t
-            rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t1, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t1, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c1, minus_log_c_sum = minus_log_c1_sum, normalize = TRUE)
-            rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t2, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t2, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c2, minus_log_c_sum = minus_log_c2_sum, normalize = TRUE)
+            minus_log_c_sum <- 0
+            rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t1, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t1, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c1, minus_log_c_sum = minus_log_c_sum, normalize = TRUE)
+            ## double does not seem to work in R as pass by reference argh
+            minus_log_c1_sum <- minus_log_c1_sum - log(c1[iGrid + 1])            
+            rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t2, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t2, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c2, minus_log_c_sum = minus_log_c_sum, normalize = TRUE)
+            minus_log_c2_sum <- minus_log_c2_sum - log(c2[iGrid + 1])
         }
         ##
         ##  go over read labels too, maybe flip them
@@ -2569,8 +2626,14 @@ R_ff0_shard_block_gibbs_resampler <- function(
                 done <- TRUE
             } else {
                 if (wif0[iRead + 1] == iGrid) {
+                    if (!is.na(have_flipped_read[iRead + 1])) {
+                        stop(paste0("over ", iRead + 1))
+                    }
                     if (in_flip_mode) {
                         H[iRead + 1] <- 3 - H[iRead + 1]
+                        have_flipped_read[iRead + 1] <- TRUE
+                    } else {
+                        have_flipped_read[iRead + 1] <- FALSE
                     }
                     iRead <- iRead + 1
                 }
@@ -2592,41 +2655,43 @@ R_ff0_shard_block_gibbs_resampler <- function(
             if (verbose) {
                 print(paste0("Considering split_grid = ", split_grid))
             }
+            w1 <- 1:(split_grid + 1)
+            w2 <- (split_grid + 1):nGrids
             if (do_checks) {
                 ## first, get true current and alternate probs
-                true_cur_prob <- f_get_alt_prob_from_truth(H, split_grid = -1, wif0, fpp_stuff)        
-                true_alt_prob <- f_get_alt_prob_from_truth(H, split_grid, wif0, fpp_stuff)
-                true_difference <- true_alt_prob - true_cur_prob
+                true_cur_probs <- f_get_alt_prob_from_truth(H, split_grid = -1, wif0, fpp_stuff)
+                true_alt_probs <- f_get_alt_prob_from_truth(H, split_grid, wif0, fpp_stuff)
+                true_difference <- sum(true_alt_probs) - sum(true_cur_probs)
                 current_package <- for_testing_get_full_package_probabilities(H, fpp_stuff)
-                w <- 1:(iGrid + 1)
-                expect_equal(c1[w], current_package[[1]][["c"]][w])
-                expect_equal(c2[w], current_package[[2]][["c"]][w])
-                expect_equal(alphaHat_t1[, w], current_package[[1]][["alphaHat_t"]][, w])
-                expect_equal(alphaHat_t2[, w], current_package[[2]][["alphaHat_t"]][, w])                
+                expect_equal(as.numeric(c1[w1]), as.numeric(current_package[[1]][["c"]][w1]))
+                expect_equal(as.numeric(c2[w1]), as.numeric(current_package[[2]][["c"]][w1]))
+                expect_equal(alphaHat_t1[, w1], current_package[[1]][["alphaHat_t"]][, w1])
+                expect_equal(alphaHat_t2[, w1], current_package[[2]][["alphaHat_t"]][, w1])
+                ## I think this is true!
             }
             ##
             ## now do on fly version
             ## 
             ## alt
             ## now try to do "on fly"
-            p_original <- -sum(log(c1) + log(c2))
-            if (in_flip_mode) {
-                x1 <- sum(alphaHat_t1[, split_grid + 1] * betaHat_t1[, split_grid + 1])
-                x2 <- sum(alphaHat_t2[, split_grid + 1] * betaHat_t2[, split_grid + 1])
-            } else {
-                x1 <- sum(alphaHat_t1[, split_grid + 1] * betaHat_t2[, split_grid + 1])
-                x2 <- sum(alphaHat_t2[, split_grid + 1] * betaHat_t1[, split_grid + 1])
-            }
-            calculated_difference <- log(x1) + log(x2) - log(c1[split_grid + 1]) - log(c2[split_grid + 1])
-            if (in_flip_mode) {
-                calculated_difference <- calculated_difference * -1
-                p_original <- p_original - calculated_difference
-            }
-            p_alt <- p_original + calculated_difference
-            ## yup, this looks right
             if (do_checks) {
-                expect_equal(true_cur_prob, p_original)
-                expect_equal(true_alt_prob, p_alt)
+                expect_equal(-sum(log(c1[w1])), minus_log_c1_sum)
+                expect_equal(-sum(log(c2[w1])), minus_log_c2_sum)
+                expect_equal(-sum(log(original_c1[w2])), minus_log_original_c1_sum)
+                expect_equal(-sum(log(original_c2[w2])), minus_log_original_c2_sum)                
+            }
+            pA1 <- minus_log_c1_sum + minus_log_original_c1_sum + log(sum(alphaHat_t1[, iGrid + 1] * betaHat_t1[, iGrid + 1]))
+            pA2 <- - sum(log(c2[w1])) - sum(log(original_c2[w2])) + log(sum(alphaHat_t2[, iGrid + 1] * betaHat_t2[, iGrid + 1]))
+            p_stays <- c(pA1, pA2)
+            pB1 <- - sum(log(c2[w1])) - sum(log(original_c1[w2])) + log(sum(alphaHat_t2[, iGrid + 1] * betaHat_t1[, iGrid + 1]))
+            pB2 <- - sum(log(c1[w1])) - sum(log(original_c2[w2])) + log(sum(alphaHat_t1[, iGrid + 1] * betaHat_t2[, iGrid + 1]))
+            p_flips <- c(pB1, pB2)
+            ##
+            ## yup, this looks right
+            calculated_difference <- sum(p_flips) - sum(p_stays) 
+            if (do_checks) {
+                expect_equal(true_cur_probs, p_stays)
+                expect_equal(true_alt_probs, p_flips)
                 expect_equal(true_difference, calculated_difference)
             }
             probs <- c(1, exp(calculated_difference))
@@ -2638,9 +2703,14 @@ R_ff0_shard_block_gibbs_resampler <- function(
             in_flip_mode <- runif(1) > probs[1]
             ## record stuff now yyyyyyyyyeeeeeeeeeeeeeeeeessssssssssssss
             shard_block_results[iGridConsider + 1, "iBlock"] <- iGridConsider ## 0-based
-            shard_block_results[iGridConsider + 1, c("p_stay", "p_flip")] <- probs
+            shard_block_results[iGridConsider + 1, "p_stay"] <- probs[1]
+            shard_block_results[iGridConsider + 1, "p_flip"] <- probs[2]
+            shard_block_results[iGridConsider + 1, "pA1"] <- pA1
+            shard_block_results[iGridConsider + 1, "pA2"] <- pA2
+            shard_block_results[iGridConsider + 1, "pB1"] <- pB1
+            shard_block_results[iGridConsider + 1, "pB2"] <- pB2
             shard_block_results[iGridConsider + 1, "flip_mode"] <- as.integer(in_flip_mode)
-            shard_block_results[iGridConsider + 1, c("p_O_stay", "p_O_flip")] <- c(p_original, p_alt)
+            shard_block_results[iGridConsider + 1, c("p_O_stay", "p_O_flip")] <- c(pA1 + pA2, pB1 + pB2)
             ##block_results[iGridConsider + 1, "p_O1_given_H1_L"]
             ##
             if (verbose) {
@@ -2651,8 +2721,19 @@ R_ff0_shard_block_gibbs_resampler <- function(
                 }
             }
         }
+        minus_log_original_c1_sum <- minus_log_original_c1_sum + log(original_c1[iGrid + 1])
+        minus_log_original_c2_sum <- minus_log_original_c2_sum + log(original_c2[iGrid + 1])        
     }
-    
+    if (do_checks) {
+        for(i in 1:(nrow(shard_block_results) - 1)) {
+            flip_mode <- shard_block_results[i, "flip_mode"]
+            if (flip_mode == 0) {
+                expect_equal(shard_block_results[i, "p_O_stay"],shard_block_results[i + 1, "p_O_stay"])
+            } else {
+                expect_equal(shard_block_results[i, "p_O_flip"],shard_block_results[i + 1, "p_O_flip"])
+            }
+        }
+    }
     ##
     ## re-run backward
     ## 

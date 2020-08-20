@@ -508,76 +508,10 @@ get_and_impute_one_sample <- function(
     af,
     use_bx_tag,
     bxTagUpperLimit,
-    addOptimalHapsToVCF
+    addOptimalHapsToVCF,
+    make_plots_block_gibbs
 ) {
 
-    save(
-    rhb_t,
-    outputdir,
-    nGibbsSamples,
-    n_seek_its,
-    full_alphaHat_t,
-    full_betaHat_t,
-    full_gamma_t,
-    full_gammaSmall_t,
-    full_gammaSmall_cols_to_get,    
-    full_transMatRate_t_H,
-    small_transMatRate_tc_H,
-    alphaHat_t1,
-    betaHat_t1,
-    alphaHat_t2,
-    betaHat_t2,
-    alphaHat_t3,
-    betaHat_t3,
-    small_alphaMatCurrent_tc,
-    small_priorCurrent_m,
-    small_eHapsCurrent_tc,
-    bam_files,
-    L,
-    pos,
-    chr,
-    tempdir,
-    regionName,
-    regionStart,
-    regionEnd,
-    buffer,
-    gen,
-    phase,
-    iSample,
-    grid,
-    ancAlleleFreqAll,
-    L_grid,
-    verbose,
-    shuffle_bin_radius,
-    Ksubset,
-    Knew,
-    K_top_matches,
-    heuristic_match_thin,
-    record_dosage_each_round,
-    record_interim_dosages,
-    have_truth_haplotypes,
-    bqFilter,
-    record_read_label_usage,
-    sampleNames,
-    smooth_cm,
-    iSizeUpperLimit,
-    maxDifferenceBetweenReads,
-    make_plots,
-    ref_error,
-    distinctHapsB,
-    distinctHapsIE,
-    hapMatcher,
-    inRegion2,
-    cM_grid,
-    af,
-    use_bx_tag,
-    bxTagUpperLimit,
-    addOptimalHapsToVCF,
-    file = "~/temp.RData")
-    
-    stop("WER")
-    
-    load("~/temp.RData")
     make_plots <- TRUE
     iSample <- 2
     
@@ -838,7 +772,8 @@ get_and_impute_one_sample <- function(
                 rescale_eMatGrid_t = FALSE,
                 Jmax = 10000,
                 suppressOutput = 1,
-                shuffle_bin_radius = shuffle_bin_radius
+                shuffle_bin_radius = shuffle_bin_radius,
+                make_plots_block_gibbs = make_plots_block_gibbs
             )
 
             ## am here
@@ -1770,7 +1705,7 @@ impute_one_sample <- function(
     return_genProbs = TRUE,
     return_hapProbs = TRUE,
     return_gamma = FALSE,
-    return_gibbs_block_output = TRUE,
+    return_gibbs_block_output = FALSE,
     gibbs_initialize_iteratively = FALSE,
     gibbs_initialize_at_first_read = FALSE,
     maxEmissionMatrixDifference = 1e100,
@@ -1779,7 +1714,8 @@ impute_one_sample <- function(
     Jmax = 10000,
     suppressOutput = 1,
     use_smooth_cm_in_block_gibbs = TRUE,
-    block_gibbs_quantile_prob = 0.95
+    block_gibbs_quantile_prob = 0.95,
+    make_plots_block_gibbs = FALSE
 ) {
     ##
     K <- length(which_haps_to_use)
@@ -1793,6 +1729,10 @@ impute_one_sample <- function(
         nSNPs = nSNPs,
         ref_error = ref_error
     )
+    if (make_plots_block_gibbs) {
+        return_gibbs_block_output <- TRUE
+        return_advanced_gibbs_block_output <- TRUE
+    }
     ## sort(apply(small_eHapsCurrent_tc[, , 1], 2, function(x) paste0(round(x), collapse = "")))
     ## table(sort(apply(small_eHapsCurrent_tc[, , 1], 1, function(x) paste0(round(x), collapse=  ""))))
     ## does have all options, so SHOULD be OK
@@ -1863,20 +1803,6 @@ impute_one_sample <- function(
     dosage <- genProbs_t[2, ] + 2 * genProbs_t[3, ]
     out$dosage <- out
     ##
-    ## if (have_truth_haplotypes) {
-    ##     r2s <- c(
-    ##         regular = cor(round(dosage, 1), truth_g) ** 2,
-    ##         norm = cor(round(dosage, 1) - 2 * af, truth_g - 2 * af) ** 2
-    ##     )
-    ##     out$r2s <- r2s
-    ##     ## print(paste0("r2 = ", out$r2, ", norm r2 = ", out$r2_norm))
-    ##     breaks <- sort(unique(c(
-    ##         seq(0, 1, length.out = 11)
-    ##     )))
-    ##     r2sb <- r2_by_freq(breaks, af, truth_g, dosage, flip = TRUE)
-    ##     out$r2sb <- r2sb
-    ##     out$dosage <- dosage
-    ## }
     if (make_plots) {
         plot_single_gamma_dosage(
             sampleReads = sampleReads,
@@ -1894,6 +1820,29 @@ impute_one_sample <- function(
             uncertain_truth_labels = uncertain_truth_labels
         )
         ## would like a plot here
+    }
+    if (make_plots_block_gibbs) {
+        nGrids <- ncol(alphaHat_t1)
+        outname <- paste0(outplotprefix, "block", plot_description, ".png")
+        plot_attempt_to_reblock_snps(
+            out = out,
+            nGrids = nGrids,
+            block_gibbs_iterations = block_gibbs_iterations,
+            outname = outname,
+            break_thresh = break_thresh,
+            considers = considers,
+            grid_distances = grid_distances,
+            L_grid = L_grid,
+            gibbs_block_output_list = gibbs_block_output_list,
+            smoothed_rate = smoothed_rate,
+            L = L,
+            block_results = block_results,
+            shard_block_results = shard_block_results,        
+            uncertain_truth_labels = uncertain_truth_labels,
+            truth_labels = truth_labels,
+            have_truth_haplotypes = have_truth_haplotypes,
+            sampleReads = sampleReads
+        )
     }
     ## print(paste0("exit = ", Sys.time()))            
     return(out)

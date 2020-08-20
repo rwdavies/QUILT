@@ -1636,20 +1636,29 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
     //
     Rcpp::NumericMatrix shard_block_results;
     Rcpp::CharacterVector shard_block_columns;
-    shard_block_columns = CharacterVector::create("iBlock", "p_stay", "p_flip", "flip_mode", "p_O_stay", "p_O_flip");
+    shard_block_columns = CharacterVector::create("iBlock", "p_stay", "p_flip", "pA1", "pA2", "pB1", "pB2", "flip_mode", "p_O_stay", "p_O_flip");
     shard_block_results = Rcpp::NumericMatrix(n_blocks - 1, shard_block_columns.length());
     shard_block_results.fill(0);
     colnames(shard_block_results) = shard_block_columns; // neat
     Rcpp::NumericVector runif_block = Rcpp::runif(n_blocks - 1);
+
+    double minus_log_c_sum = 0; // forward_one does something different here
+    double minus_log_c1_sum = 0;
+    double minus_log_c2_sum = 0;
+    double minus_log_original_c1_sum = 0;
+    double minus_log_original_c2_sum = 0;
+    double original_c1_this_grid, original_c2_this_grid, pA1, pA2, pB1, pB2;
+    for(int iGrid2 = 0; iGrid2 < nGrids; iGrid2++) {
+        minus_log_original_c1_sum -= log(c1(iGrid2));
+        minus_log_original_c2_sum -= log(c2(iGrid2));        
+    }
     
-    double minus_log_c1_sum = 0;// not used here
-    double minus_log_c2_sum = 0;// not used here    
     bool in_flip_mode = false;
     int iRead = 0;
     int iGrid, iGridConsider, split_grid, k;
     arma::colvec emat_temp_col;
     bool done_reads = false;
-    double p_original, calculated_difference, p_alt, probs1, probs2, probs_sum, x1, x2;
+    double calculated_difference, probs1, probs2, probs_sum, x1, x2;
 
     if (verbose) {
         std::cout << "start" << std::endl;
@@ -1660,6 +1669,9 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
             std::cout << "iGrid = " << iGrid << std::endl;
             std::cout << "normal forwardd one" << std::endl;
         }
+        //
+        original_c1_this_grid = c1(iGrid);
+        original_c2_this_grid = c2(iGrid);        
         //
         // normal forward one (includes initialization)
         //
@@ -1677,9 +1689,12 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
                 eMatGrid_t1.col(iGrid) = eMatGrid_t2.col(iGrid);
                 eMatGrid_t2.col(iGrid) = emat_temp_col;
             }
-            rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t1, transMatRate_tc_H, eMatGrid_t1, alphaMatCurrent_tc, c1, minus_log_c1_sum, true);
-            rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t2, transMatRate_tc_H, eMatGrid_t2, alphaMatCurrent_tc, c2, minus_log_c1_sum, true);
+            rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t1, transMatRate_tc_H, eMatGrid_t1, alphaMatCurrent_tc, c1, minus_log_c_sum, true);
+            rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t2, transMatRate_tc_H, eMatGrid_t2, alphaMatCurrent_tc, c2, minus_log_c_sum, true);
         }
+        // note, forward_one does something different, this is what we want here, we are over-writing c
+        minus_log_c1_sum -= log(c1(iGrid));
+        minus_log_c2_sum -= log(c2(iGrid));            
         //
         //  go over read labels too, maybe flip them
         //
@@ -1718,26 +1733,12 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
             //
             // on the fly version
             //
-            // potentially decently inefficient? this sum? meh, hopefully checking not too many of these
-            // p_original = 0;
-            // for(int iGrid2 = 0; iGrid2 < nGrids; iGrid2++) {
-            //     p_original -= log(c1(iGrid2)) - log(c2(iGrid2));
-            // }
-            p_original = -sum(log(c1) + log(c2));
-            if (in_flip_mode) {
-                x1 = sum(alphaHat_t1.col(split_grid) % betaHat_t1.col(split_grid));
-                x2 = sum(alphaHat_t2.col(split_grid) % betaHat_t2.col(split_grid));                
-            } else {
-                x1 = sum(alphaHat_t1.col(split_grid) % betaHat_t2.col(split_grid));
-                x2 = sum(alphaHat_t2.col(split_grid) % betaHat_t1.col(split_grid));                
-            }
+            pA1 = minus_log_c1_sum + minus_log_original_c1_sum + log(sum(alphaHat_t1.col(iGrid) % betaHat_t1.col(iGrid)));
+            pA2 = minus_log_c2_sum + minus_log_original_c2_sum + log(sum(alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)));
+            pB1 = minus_log_c2_sum + minus_log_original_c1_sum + log(sum(alphaHat_t2.col(iGrid) % betaHat_t1.col(iGrid)));
+            pB2 = minus_log_c1_sum + minus_log_original_c2_sum + log(sum(alphaHat_t1.col(iGrid) % betaHat_t2.col(iGrid)));
             //
-            calculated_difference = log(x1) + log(x2) - log(c1(split_grid)) - log(c2(split_grid));
-            if (in_flip_mode) {
-                calculated_difference *= -1;
-                p_original -= calculated_difference;
-            }
-            p_alt = p_original + calculated_difference;
+            calculated_difference = pB1 + pB2 - pA1 - pA2;
             probs1 = 1;
             probs2 = exp(calculated_difference);
             probs_sum = probs1 + probs2;
@@ -1748,13 +1749,17 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
             shard_block_results(iGridConsider, 0) = iGridConsider;
             shard_block_results(iGridConsider, 1) = probs1;
             shard_block_results(iGridConsider, 2) = probs2;
+            shard_block_results(iGridConsider, 3) = pA1;
+            shard_block_results(iGridConsider, 4) = pA2;
+            shard_block_results(iGridConsider, 5) = pB1;
+            shard_block_results(iGridConsider, 6) = pB2;
             if (in_flip_mode) {
-                shard_block_results(iGridConsider, 3) = 1;
+                shard_block_results(iGridConsider, 7) = 1;
             } else {
-                shard_block_results(iGridConsider, 3) = 0;
+                shard_block_results(iGridConsider, 7) = 0;
             }
-            shard_block_results(iGridConsider, 4) = p_original;
-            shard_block_results(iGridConsider, 5) = p_alt;
+            shard_block_results(iGridConsider, 8) = pA1 + pA2;
+            shard_block_results(iGridConsider, 9) = pB1 + pB2;
             if (verbose) {
                 if (in_flip_mode) {
                     std::cout << "FLIP ME UP BRO" << std::endl;
@@ -1763,6 +1768,8 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
                 }
             }
         }
+        minus_log_original_c1_sum += log(original_c1_this_grid);
+        minus_log_original_c2_sum += log(original_c2_this_grid);
     }
     //
     // re-run backward

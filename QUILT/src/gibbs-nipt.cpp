@@ -170,6 +170,40 @@ Rcpp::List Rcpp_block_gibbs_resampler(
 
 
 
+
+
+
+Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
+    arma::mat& alphaHat_t1,
+    arma::mat& alphaHat_t2,
+    arma::mat& alphaHat_t3,
+    arma::mat& betaHat_t1,
+    arma::mat& betaHat_t2,
+    arma::mat& betaHat_t3,    
+    arma::rowvec& c1,
+    arma::rowvec& c2,
+    arma::rowvec& c3,
+    arma::mat& eMatGrid_t1,
+    arma::mat& eMatGrid_t2,
+    arma::mat& eMatGrid_t3,
+    Rcpp::IntegerVector& H,
+    const arma::mat& eMatRead_t,
+    Rcpp::IntegerVector& blocked_snps,
+    const Rcpp::IntegerVector& grid,
+    Rcpp::IntegerVector& wif0,
+    int s, // this is 0-based
+    const arma::cube& alphaMatCurrent_tc,
+    const arma::mat& priorCurrent_m,
+    const arma::cube& transMatRate_tc_H,
+    bool do_checks = false,
+    Rcpp::List initial_package = R_NilValue,
+    bool verbose = false,
+    Rcpp::List fpp_stuff = R_NilValue
+);
+
+
+
+
 //' @export
 // [[Rcpp::export]]
 void rcpp_make_rescaled_on_fly_eMatGrid_t(
@@ -1914,9 +1948,11 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const int shuffle_bin_radius = 5000,
     const Rcpp::IntegerVector block_gibbs_iterations = Rcpp::IntegerVector::create(0),
     const bool return_gibbs_block_output = false,
+    const bool return_advanced_gibbs_block_output = false,
     const bool rescale_eMatRead_t = true,
     const bool use_smooth_cm_in_block_gibbs = false,
-    const double block_gibbs_quantile_prob = 0.9
+    const double block_gibbs_quantile_prob = 0.9,
+    const bool do_shard_ff0_block_gibbs = true
 ) {
     // I think these break the gibbs-ness - disable for now!
     // rescale_eMatRead_t should be fine to reset - will be constant across reads - only the read not per-base input considered
@@ -2291,7 +2327,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         //
                         // optionally perform super greedy save for plots
                         //
-                        if (return_gibbs_block_output) {
+                        gibbs_block_output_local = Rcpp::List();
+                        if (return_gibbs_block_output & return_advanced_gibbs_block_output) {
                             // be super greedy with saving, but who cares, this is not normally run
                             // Rcpp::clone
                             for(iGrid = 0; iGrid < nGrids; iGrid++) {
@@ -2299,7 +2336,6 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                                 gamma2_t.col(iGrid) = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * (1 / c2(iGrid));
                                 gamma3_t.col(iGrid) = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * (1 / c3(iGrid));
                             }
-                            gibbs_block_output_local = Rcpp::List();
                             gibbs_block_output_local.push_back(gamma1_t, "before_gamma1_t");
                             gibbs_block_output_local.push_back(gamma2_t, "before_gamma2_t");
                             gibbs_block_output_local.push_back(gamma3_t, "before_gamma3_t");
@@ -2329,10 +2365,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         prev=print_times(prev, suppressOutput, prev_section, next_section);
                         prev_section=next_section;
                         Rcpp::List out2 = Rcpp_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax_local);
-                        // , false, R_NilValue, true
-                        //std::cout << "remove last three values above me" << std::endl;
                         //
-                        if (return_gibbs_block_output) {
+                        if (return_gibbs_block_output & return_advanced_gibbs_block_output) {
                             // be super greedy with saving, but who cares, this is not normally run
                             // Rcpp::clone
                             for(iGrid = 0; iGrid < nGrids; iGrid++) {
@@ -2344,9 +2378,33 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             gibbs_block_output_local.push_back(gamma2_t, "after_gamma2_t");
                             gibbs_block_output_local.push_back(gamma3_t, "after_gamma3_t");
                             gibbs_block_output_local.push_back(Rcpp::clone(H), "after_read_labels");
+                        }
+                        Rcpp::List out3;
+                        if (do_shard_ff0_block_gibbs & (ff == 0)) {
+                            out3 = Rcpp_ff0_shard_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H);
+                        }
+                        //
+                        //
+                        if (return_gibbs_block_output) {
+                            // be super greedy with saving, but who cares, this is not normally run
+                            // Rcpp::clone
+                            if (return_advanced_gibbs_block_output) {
+                                for(iGrid = 0; iGrid < nGrids; iGrid++) {
+                                    gamma1_t.col(iGrid) = (alphaHat_t1.col(iGrid) % betaHat_t1.col(iGrid)) * (1 / c1(iGrid));
+                                    gamma2_t.col(iGrid) = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * (1 / c2(iGrid));
+                                    gamma3_t.col(iGrid) = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * (1 / c3(iGrid));
+                                }
+                                gibbs_block_output_local.push_back(gamma1_t, "after_shard_gamma1_t");
+                                gibbs_block_output_local.push_back(gamma2_t, "after_shard_gamma2_t");
+                                gibbs_block_output_local.push_back(gamma3_t, "after_shard_gamma3_t");
+                                gibbs_block_output_local.push_back(Rcpp::clone(H), "after_shard_read_labels");
+                            }
                             //
                             gibbs_block_output_local.push_back(out, "block_defining");
                             gibbs_block_output_local.push_back(out2, "gibbs_block_output");
+                            if (do_shard_ff0_block_gibbs & (ff == 0)) {
+                                gibbs_block_output_local.push_back(out3, "shard_block_output");
+                            }
                             gibbs_block_output_list.push_back(gibbs_block_output_local);
                         }
                     }
