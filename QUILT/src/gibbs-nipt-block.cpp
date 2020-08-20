@@ -1666,7 +1666,7 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
     
     for(int iGrid = 0; iGrid < nGrids; iGrid++) {
         if (verbose) {
-            std::cout << "iGrid = " << iGrid << std::endl;
+            std::cout << "iGrid = " << iGrid << ", nGrids = " << nGrids << std::endl;
             std::cout << "normal forwardd one" << std::endl;
         }
         //
@@ -1724,11 +1724,13 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
         //
         // now do this bit
         //
-        if ((iGrid < (nGrids - 1)) && (-1) < consider_grid_where_0_based(iGrid)) {
-            iGridConsider = consider_grid_where_0_based(iGrid);
+        iGridConsider = consider_grid_where_0_based(iGrid);
+        // do not do last one
+        if ((-1 < iGridConsider) & (iGridConsider < (n_blocks - 1))) {
             split_grid = consider_grid_end_0_based(iGridConsider);
             if (verbose) {
                 std::cout << "Considering split_grid = " << split_grid << std::endl;
+                std::cout << "iGridConsider = " << iGridConsider << std::endl;
             }
             //
             // on the fly version

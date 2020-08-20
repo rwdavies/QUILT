@@ -891,10 +891,6 @@ get_and_impute_one_sample <- function(
 
     }
 
-
-
-
-    
     if(have_truth_haplotypes) {
         imputed_truth_haplotypes <- cbind(truth_all[["dosage1"]], truth_all[["dosage2"]])
     } else {
@@ -1715,6 +1711,7 @@ impute_one_sample <- function(
     block_gibbs_quantile_prob = 0.95,
     make_plots_block_gibbs = FALSE
 ) {
+
     ##
     K <- length(which_haps_to_use)
     S <- 1
