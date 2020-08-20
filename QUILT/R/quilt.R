@@ -133,8 +133,8 @@ QUILT <- function(
         tempdir <- tempdir()
     }
     if (!is.null(output_filename)) {
-        if (!dir.exists(basename(output_filename))) {
-            dir.create(basename(output_filename), showWarnings = FALSE)
+        if (!dir.exists(dirname(output_filename))) {
+            dir.create(dirname(output_filename), showWarnings = FALSE)
         }
     }
     output_filename <- STITCH::get_output_filename(
