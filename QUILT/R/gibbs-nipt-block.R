@@ -1727,10 +1727,10 @@ plot_attempt_to_reblock_snps <- function(
     uncertain_truth_labels,
     truth_labels,
     have_truth_haplotypes,
-    sampleReads
+    sampleReads,
+    n_block_it_to_plot
 ) {
-    n <- length(block_gibbs_iterations)
-    x <- out$gibbs_block_output_list[[n]][["block_defining"]]
+    x <- out$gibbs_block_output_list[[n_block_it_to_plot]][["block_defining"]]
     blocked_snps <- x[["blocked_snps"]]
     break_thresh <- x[["break_thresh"]]
     smoothed_rate <- x[["smoothed_rate"]]
@@ -1741,7 +1741,7 @@ plot_attempt_to_reblock_snps <- function(
         wif0 = wif0,
         nGrids = nGrids
     )
-    gibbs_block_output_list <- out[["gibbs_block_output_list"]][[n]]
+    gibbs_block_output_list <- out[["gibbs_block_output_list"]][[n_block_it_to_plot]]
     block_results <- gibbs_block_output_list$gibbs_block_output[["block_results"]]
     shard_block_results <- gibbs_block_output_list[["shard_block_output"]][["shard_block_results"]]
     block_results <- block_results[block_results[, "p1"] != 0, ] ## not sure why!
@@ -1937,7 +1937,6 @@ plot_attempt_to_reblock_snps <- function(
         }
     }
     dev.off()
-    
 }
 
 

@@ -511,9 +511,6 @@ get_and_impute_one_sample <- function(
     addOptimalHapsToVCF,
     make_plots_block_gibbs
 ) {
-
-    make_plots <- TRUE
-    iSample <- 2
     
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
@@ -1823,28 +1820,32 @@ impute_one_sample <- function(
     }
     if (make_plots_block_gibbs) {
         nGrids <- ncol(alphaHat_t1)
-        outname <- paste0(outplotprefix, "block", plot_description, ".png")
-        plot_attempt_to_reblock_snps(
-            out = out,
-            nGrids = nGrids,
-            block_gibbs_iterations = block_gibbs_iterations,
-            outname = outname,
-            break_thresh = break_thresh,
-            considers = considers,
-            grid_distances = grid_distances,
-            L_grid = L_grid,
-            gibbs_block_output_list = gibbs_block_output_list,
-            smoothed_rate = smoothed_rate,
-            L = L,
-            block_results = block_results,
-            shard_block_results = shard_block_results,        
-            uncertain_truth_labels = uncertain_truth_labels,
-            truth_labels = truth_labels,
-            have_truth_haplotypes = have_truth_haplotypes,
-            sampleReads = sampleReads
-        )
+        for(n_block_it_to_plot in 1:length(block_gibbs_iterations)) {
+            outname <- paste0(outplotprefix, "block", plot_description, ".n", n_block_it_to_plot, ".png")            
+            n_block_it_to_plot = n_block_it_to_plot
+            plot_attempt_to_reblock_snps(
+                out = out,
+                nGrids = nGrids,
+                block_gibbs_iterations = block_gibbs_iterations,
+                outname = outname,
+                break_thresh = break_thresh,
+                considers = considers,
+                grid_distances = grid_distances,
+                L_grid = L_grid,
+                gibbs_block_output_list = gibbs_block_output_list,
+                smoothed_rate = smoothed_rate,
+                L = L,
+                block_results = block_results,
+                shard_block_results = shard_block_results,        
+                uncertain_truth_labels = uncertain_truth_labels,
+                truth_labels = truth_labels,
+                have_truth_haplotypes = have_truth_haplotypes,
+                sampleReads = sampleReads,
+                n_block_it_to_plot = n_block_it_to_plot
+            )
+        }
     }
-    ## print(paste0("exit = ", Sys.time()))            
+    ## 
     return(out)
 }
 
