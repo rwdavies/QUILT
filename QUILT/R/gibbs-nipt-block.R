@@ -1728,7 +1728,9 @@ plot_attempt_to_reblock_snps <- function(
     truth_labels,
     have_truth_haplotypes,
     sampleReads,
-    n_block_it_to_plot
+    n_block_it_to_plot,
+    wif0,
+    grid
 ) {
     x <- out$gibbs_block_output_list[[n_block_it_to_plot]][["block_defining"]]
     blocked_snps <- x[["blocked_snps"]]

@@ -1703,6 +1703,7 @@ impute_one_sample <- function(
     return_hapProbs = TRUE,
     return_gamma = FALSE,
     return_gibbs_block_output = FALSE,
+    return_advanced_gibbs_block_output = FALSE,
     gibbs_initialize_iteratively = FALSE,
     gibbs_initialize_at_first_read = FALSE,
     maxEmissionMatrixDifference = 1e100,
@@ -1789,6 +1790,7 @@ impute_one_sample <- function(
         L_grid = L_grid,
         block_gibbs_iterations = block_gibbs_iterations,
         return_gibbs_block_output = return_gibbs_block_output,
+        return_advanced_gibbs_block_output = return_advanced_gibbs_block_output,
         rescale_eMatRead_t = rescale_eMatRead_t,
         smooth_cm = smooth_cm,
         use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
@@ -1841,7 +1843,9 @@ impute_one_sample <- function(
                 truth_labels = truth_labels,
                 have_truth_haplotypes = have_truth_haplotypes,
                 sampleReads = sampleReads,
-                n_block_it_to_plot = n_block_it_to_plot
+                n_block_it_to_plot = n_block_it_to_plot,
+                wif0 = wif0,
+                grid = grid
             )
         }
     }
