@@ -165,6 +165,12 @@ option_list <- list(
         default = FALSE
     ), 
     make_option(
+        "--make_plots_block_gibbs",
+        type = "logical",
+        help = "Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
         "--verbose",
         type = "logical",
         help = "whether to be more verbose when running [default TRUE] ",
@@ -211,6 +217,12 @@ option_list <- list(
         type = "logical",
         help = "Whether to add optimal haplotypes to vcf when phasing information is present, where optimal is imputation done when read label origin is known [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--estimate_bq_using_truth_read_labels",
+        type = "logical",
+        help = "When using phasefile with known truth haplotypes, infer truth read labels, and use them to infer the real base quality against the bam recorded base qualities [default FALSE] ",
+        default = FALSE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -244,6 +256,7 @@ QUILT(
     phasefile = opt$phasefile,
     maxDifferenceBetweenReads = opt$maxDifferenceBetweenReads,
     make_plots = opt$make_plots,
+    make_plots_block_gibbs = opt$make_plots_block_gibbs,
     verbose = opt$verbose,
     shuffle_bin_radius = opt$shuffle_bin_radius,
     iSizeUpperLimit = opt$iSizeUpperLimit,
@@ -251,5 +264,6 @@ QUILT(
     record_interim_dosages = opt$record_interim_dosages,
     use_bx_tag = opt$use_bx_tag,
     bxTagUpperLimit = opt$bxTagUpperLimit,
-    addOptimalHapsToVCF = opt$addOptimalHapsToVCF
+    addOptimalHapsToVCF = opt$addOptimalHapsToVCF,
+    estimate_bq_using_truth_read_labels = opt$estimate_bq_using_truth_read_labels
 )

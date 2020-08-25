@@ -36,6 +36,7 @@
 #' @param use_bx_tag Whether to try and use BX tag in same to indicate that reads come from the same underlying molecule
 #' @param bxTagUpperLimit When using BX tag, at what distance between reads to consider reads with the same BX tag to come from different molecules
 #' @param addOptimalHapsToVCF Whether to add optimal haplotypes to vcf when phasing information is present, where optimal is imputation done when read label origin is known
+#' @param estimate_bq_using_truth_read_labels When using phasefile with known truth haplotypes, infer truth read labels, and use them to infer the real base quality against the bam recorded base qualities
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -76,7 +77,8 @@ QUILT <- function(
     record_interim_dosages = FALSE,
     use_bx_tag = TRUE,
     bxTagUpperLimit = 50000,
-    addOptimalHapsToVCF = FALSE
+    addOptimalHapsToVCF = FALSE,
+    estimate_bq_using_truth_read_labels = FALSE
 ) {
 
     ## init_method <- "simple"
@@ -461,7 +463,8 @@ QUILT <- function(
                 use_bx_tag = use_bx_tag,
                 bxTagUpperLimit = bxTagUpperLimit,
                 addOptimalHapsToVCF = addOptimalHapsToVCF,
-                make_plots_block_gibbs = make_plots_block_gibbs
+                make_plots_block_gibbs = make_plots_block_gibbs,
+                estimate_bq_using_truth_read_labels = estimate_bq_using_truth_read_labels
             )
 
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out

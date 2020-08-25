@@ -509,8 +509,11 @@ get_and_impute_one_sample <- function(
     use_bx_tag,
     bxTagUpperLimit,
     addOptimalHapsToVCF,
-    make_plots_block_gibbs
+    make_plots_block_gibbs,
+    estimate_bq_using_truth_read_labels
 ) {
+
+    ## load("~/temp.RData")
     
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
@@ -625,7 +628,11 @@ get_and_impute_one_sample <- function(
             )
             truth_labels <- truth_label_set[["truth_labels"]]
             uncertain_truth_labels <- truth_label_set[["uncertain_truth_labels"]]
-            ##
+
+            if ((i_gibbs_sample == 1) && estimate_bq_using_truth_read_labels) {
+                bq_result <- estimate_bq(truth_labels = truth_labels, sampleReads = sampleReads, truth_haps = truth_haps)
+                print(bq_result)
+            }
             
             truth_all <- impute_using_everything(
                 H = truth_labels,
@@ -2415,8 +2422,6 @@ if (1 == 0) {
                  
 
     i_hap <- 1
-        u <- unlist(sapply(sampleReads[H == i_hap], function(x) x[[4]])) + 1
-        bq <- unlist(sapply(sampleReads[H == i_hap], function(x) x[[3]]))
         print("check me - is this right about bq")
         w <- bq != 0
         bq <- bq[w]
@@ -2433,3 +2438,34 @@ if (1 == 0) {
 
 
 }
+
+estimate_bq <- function(truth_labels, sampleReads, truth_haps) {
+    ## do my own bqsr versus truth
+    H <- truth_labels
+    i_hap <- 1
+    u1 <- unlist(sapply(sampleReads[H == i_hap], function(x) x[[4]])) + 1
+    bq1 <- unlist(sapply(sampleReads[H == i_hap], function(x) x[[3]]))
+    i_hap <- 2
+    u2 <- unlist(sapply(sampleReads[H == i_hap], function(x) x[[4]])) + 1
+    bq2 <- unlist(sapply(sampleReads[H == i_hap], function(x) x[[3]]))
+    ##
+    bqs <- c(bq1, bq2)
+    vals <- c(truth_haps[u1, 1], truth_haps[u2, 2])
+    ##
+    cut_bqs <- cut(bqs, breaks = c(-Inf, -30, -20, -1, 0, 19, 29, Inf))
+    results <- t(sapply(c("(-Inf,-30]", "(-30,-20]", "(-20,-1]", "(0,19]", "(19,29]", "(29, Inf]"), function(bqlevel) {
+        w <- cut_bqs == bqlevel
+        w0 <- cut_bqs == bqlevel & vals == 0
+        w1 <- cut_bqs == bqlevel & vals == 1
+        phred_stated <- round(exp(1 / sum(w) * sum(sum(log(abs(bqs[w]))))), 1)
+        return(c(sum(w0), sum(w1), phred_stated))
+    }))
+    colnames(results)[1:3] <- c("N_ref", "N_alt", "phred_stated")    
+    rownames(results) <- c("(-Inf,-30]", "[-29,-20]", "[-19, 1]", "[1, 19]", "[20, 29]", "[30, Inf)")
+    results <- cbind(results, accuracy = c(results[1:3, 1] / rowSums(results[1:3, 1:2]), results[4:6, 2] / rowSums(results[4:6, 1:2])))
+    results <- cbind(results, phred_obs = -round(log10(1 - results[, "accuracy"]) * 10, 1))
+    results <- results[, colnames(results) != "accuracy"]
+    return(results)
+}
+
+    
