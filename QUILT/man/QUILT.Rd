@@ -4,45 +4,21 @@
 \alias{QUILT}
 \title{QUILT}
 \usage{
-QUILT(
-  outputdir,
-  chr,
-  regionStart = NA,
-  regionEnd = NA,
-  buffer = NA,
-  bamlist = "",
-  cramlist = "",
-  sampleNames_file = "",
-  reference = "",
-  nCores = 1,
-  nGibbsSamples = 7,
-  n_seek_its = 3,
-  Ksubset = 400,
-  Knew = 100,
-  K_top_matches = 5,
-  heuristic_match_thin = 0.1,
-  output_filename = NULL,
-  RData_objects_to_save = NULL,
-  output_RData_filename = NULL,
-  prepared_reference_filename = "",
-  tempdir = NA,
-  bqFilter = as.integer(17),
-  panel_size = NA,
-  posfile = "",
-  genfile = "",
-  phasefile = "",
-  maxDifferenceBetweenReads = 1e+10,
-  make_plots = FALSE,
-  make_plots_block_gibbs = FALSE,
-  verbose = TRUE,
-  shuffle_bin_radius = 5000,
-  iSizeUpperLimit = 1e+06,
-  record_read_label_usage = TRUE,
-  record_interim_dosages = FALSE,
-  use_bx_tag = TRUE,
-  bxTagUpperLimit = 50000,
-  addOptimalHapsToVCF = FALSE
-)
+QUILT(outputdir, chr, regionStart = NA, regionEnd = NA, buffer = NA,
+  bamlist = "", cramlist = "", sampleNames_file = "",
+  reference = "", nCores = 1, nGibbsSamples = 7, n_seek_its = 3,
+  Ksubset = 400, Knew = 100, K_top_matches = 5,
+  heuristic_match_thin = 0.1, output_filename = NULL,
+  RData_objects_to_save = NULL, output_RData_filename = NULL,
+  prepared_reference_filename = "", tempdir = NA,
+  bqFilter = as.integer(17), panel_size = NA, posfile = "",
+  genfile = "", phasefile = "", maxDifferenceBetweenReads = 1e+10,
+  make_plots = FALSE, make_plots_block_gibbs = FALSE, verbose = TRUE,
+  shuffle_bin_radius = 5000, iSizeUpperLimit = 1e+06,
+  record_read_label_usage = TRUE, record_interim_dosages = FALSE,
+  use_bx_tag = TRUE, bxTagUpperLimit = 50000,
+  addOptimalHapsToVCF = FALSE,
+  estimate_bq_using_truth_read_labels = FALSE)
 }
 \arguments{
 \item{outputdir}{What output directory to use}
@@ -116,6 +92,8 @@ QUILT(
 \item{bxTagUpperLimit}{When using BX tag, at what distance between reads to consider reads with the same BX tag to come from different molecules}
 
 \item{addOptimalHapsToVCF}{Whether to add optimal haplotypes to vcf when phasing information is present, where optimal is imputation done when read label origin is known}
+
+\item{estimate_bq_using_truth_read_labels}{When using phasefile with known truth haplotypes, infer truth read labels, and use them to infer the real base quality against the bam recorded base qualities}
 }
 \value{
 Results in properly formatted version

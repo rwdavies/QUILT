@@ -1,10 +1,8 @@
 if (1 == 0) {
 
     library("testthat"); library("STITCH"); library("rrbgen")
-    ##    dir <- "/data/smew1/rdavies/stitch_development/STITCH_github_latest/STITCH"
-    ##    dir <- "~/Google Drive/STITCH/"
-    dir <- "~/proj/STITCH-private/"
-    setwd(paste0(dir, "/STITCH/R"))
+    dir <- "~/proj/QUILT/"
+    setwd(paste0(dir, "/QUILT/R"))
     a <- dir(pattern = "*R")
     b <- grep("~", a)
     if (length(b) > 0) {
@@ -22,6 +20,8 @@ if (1 == 0) {
 
 test_that("read set probabilities agree", {
 
+    skip("to restore in future")
+    
     H <- sample(c(1, 2, 3), 100, replace = TRUE, prob = c(0.5, 0.25, 0.25))
     ff <- 0.25
     rc <- c(sum(H == 1), sum(H == 2), sum(H == 3))
@@ -53,6 +53,8 @@ test_that("read set probabilities agree", {
 
 test_that("can re-label read labels where entirely changing is much better", {
 
+    skip("to restore in future")
+    
     ## so e.g. we have our labelling of 1, 2, 3
     ## but compared to truth, mt = 3, mu = 2, p = 1
     ## given f, we should be able to switch that easily
@@ -154,6 +156,8 @@ test_that("can re-label read labels where entirely changing is much better", {
 
 test_that("gibbs-nipt normalization scheme makes sense", {
 
+    skip("to restore in future")
+    
     ## so idea is that say the likelihhods are, in e space,
     for(i_l in 1:13) {
         set.seed(i_l * 100)
@@ -205,6 +209,8 @@ test_that("gibbs-nipt normalization scheme makes sense", {
 
 test_that("gibbs-nipt works in R and CPP and gives the same thing", {
 
+    skip("to restore in future")
+    
     ##skip("wip")
     verbose <- FALSE
     ff <- 0.2
@@ -472,6 +478,8 @@ test_that("gibbs-nipt works in R and CPP and gives the same thing", {
 
 test_that("gibbs-nipt initializing iteratively produces same alpha and beta, and same in R as Rcpp", {
 
+    skip("to restore in future")
+    
     ## need this as Rcpp uses older version. eventually this will break I imagine when Rcpp is updated
     suppressWarnings(RNGversion("3.5.0"))
 
@@ -662,6 +670,7 @@ test_that("speed X", {
 
 test_that("can do multiple gibbs samplings", {
 
+    skip("to restore in future")    
     run_speed_test <- FALSE
 
     if (run_speed_test) {
@@ -895,6 +904,7 @@ test_that("can do multiple gibbs samplings", {
 
 test_that("can determine labels", {
 
+    skip("to restore in future")    
     return_neutral <- FALSE
     rc <- c(14, 17, 19)
     ff <- 0.2
@@ -907,6 +917,7 @@ test_that("can determine labels", {
 
 test_that("label values do not suck", {
 
+    skip("to restore in future")    
     return_neutral <- FALSE
     rc <- c(13733, 12944, 10095)
     ff <- 0.2
@@ -918,7 +929,7 @@ test_that("label values do not suck", {
 
 test_that("averaging logic makes sense", {
 
-
+    skip("to restore in future")
     ## so idea is Gibbs sampling
     ## like P(G | O, \lambda)
     ## = \sum_{h in \scrict{H}} P(G, H | O, \lambda)
@@ -1324,6 +1335,7 @@ test_that("properly simplified gibbs-nipt forward and backward", {
 
 test_that("gibbs-nipt works with S > 1", {
 
+    skip("to restore in future")    
     S <- 3
     verbose <- FALSE
     ff <- 0.2

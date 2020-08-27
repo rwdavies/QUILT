@@ -448,7 +448,6 @@ test_that("can perform block gibbs", {
     ## weirdly runs into problem when not multi-cored
     ## some very weird stuff going on!
     out <- mclapply(to_run, mc.cores = 12, function(i_option) {
-
         ## 
         verbose <- FALSE
         do_checks <- FALSE
@@ -559,8 +558,8 @@ test_that("can perform block gibbs", {
                 }
             }
         }
-        
     })
+    
     check_mclapply_OK(out)
     
 })

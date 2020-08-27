@@ -1414,7 +1414,6 @@ impute_using_everything <- function(
         if (length(u) == 0) {
             print_message(paste0("Read label assignment includes no reads for haplotype ", i_hap))
         }
-        ## werwer probably here!
         gl <- make_gl_from_u_bq(u, bq, nSNPs)
         use_eMatDH <- TRUE
         Rcpp_haploid_dosage_versus_refs(
