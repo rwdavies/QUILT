@@ -47,24 +47,6 @@ QUILT_prepare_reference <- function(
     minRate = 0.1
 ) {
 
-
-
-    
-    ## reference_haplotype_file <- commandArgs(trailingOnly = TRUE)[1]
-    ## reference_legend_file <- commandArgs(trailingOnly = TRUE)[2]
-    ## chr <- commandArgs(trailingOnly = TRUE)[3]
-    ## regionStart <- as.numeric(commandArgs(trailingOnly = TRUE)[4])
-    ## regionEnd <- as.numeric(commandArgs(trailingOnly = TRUE)[5])
-    ## buffer <-  as.numeric(commandArgs(trailingOnly = TRUE)[6])
-    ## output_file <- commandArgs(trailingOnly = TRUE)[7]
-    ## output_sites_filename <- commandArgs(trailingOnly = TRUE)[8]
-    ## reference_sample_file <- commandArgs(trailingOnly = TRUE)[9]
-    ## genetic_map_file <- commandArgs(trailingOnly = TRUE)[10]
-    ## fivePopExcludeFile <- commandArgs(trailingOnly = TRUE)[11]
-    ## output_file_no5pops <- commandArgs(trailingOnly = TRUE)[12]
-    ## gbrExcludeFile <- commandArgs(trailingOnly = TRUE)[13]
-    ## output_file_noGBR <- commandArgs(trailingOnly = TRUE)[14]
-    
     x <- as.list(environment())
     command_line <- paste0(
         "QUILT_prepare_reference(",
@@ -122,13 +104,17 @@ QUILT_prepare_reference <- function(
     ##
     ## work on legend and identify SNPs to keep
     ##
-    hrc_legend <- fread(cmd = paste0("gunzip -c ", shQuote(reference_legend_file)), data.table = FALSE)
-    colnames(hrc_legend) <- c("CHR", "POS", "REF", "ALT")
-    hrc_legend[, 1] <- chr
-    a <- unique(hrc_legend[
-    (hrc_legend[, "POS"] >= (regionStart - buffer)) &
-    (hrc_legend[, "POS"] <= (regionEnd   + buffer)), "POS"])
-    pos_to_use <- hrc_legend[match(a, hrc_legend[, "POS"]), ]
+    ref_legend <- fread(cmd = paste0("gunzip -c ", shQuote(reference_legend_file)), data.table = FALSE)
+    colnames(ref_legend) <- c("CHR", "POS", "REF", "ALT")
+    ref_legend[, 1] <- chr
+    if (!is.na(regionStart)) {
+        a <- unique(ref_legend[
+        (ref_legend[, "POS"] >= (regionStart - buffer)) &
+        (ref_legend[, "POS"] <= (regionEnd   + buffer)), "POS"])
+        pos_to_use <- ref_legend[match(a, ref_legend[, "POS"]), ]
+    } else {
+        pos_to_use <- ref_legend
+    }
 
 
     ##
@@ -214,7 +200,11 @@ QUILT_prepare_reference <- function(
     ##
     ##
     ##
-    inRegion2 <- (regionStart <= L) & (L <= regionEnd)
+    if (is.na(regionStart)) {
+        inRegion2 <- array(TRUE, length(L))
+    } else {
+        inRegion2 <- (regionStart <= L) & (L <= regionEnd)
+    }
     out2 <- assign_positions_to_grid(
         L = pos[, 2],
         grid32 = TRUE,
@@ -353,6 +343,10 @@ QUILT_prepare_reference <- function(
         cM,
         cM_grid,
         sigmaCurrent_m,
+        regionStart,
+        regionEnd,
+        buffer,
+        chr,
         file = output_file,
         compress = FALSE
     )

@@ -11,7 +11,6 @@ if ( 1 == 0 ) {
     }
     o <- sapply(a, source)
 
-
 }
 
 n_snps <- 50
@@ -34,13 +33,14 @@ data_package <- STITCH::make_acceptance_test_data_package(
 )
 refpack <- STITCH::make_reference_package(
     n_snps = n_snps,
-    n_samples_per_pop = 50,
+    n_samples_per_pop = 500,
     reference_populations = c("CEU", "GBR"),
     chr = chr,
     phasemaster = phasemaster
 )
+set.seed(010)
 
-test_that("QUILT can impute a few samples in a standard way", {
+test_that("QUILT can impute a few samples in a standard way, using a large panel", {
     
     outputdir <- STITCH::make_unique_tempdir()
     regionStart <- 11
@@ -76,79 +76,33 @@ test_that("QUILT can impute a few samples in a standard way", {
             posfile = data_package$posfile,
             genfile = data_package$genfile,
             phasefile = phasefile,
-            Ksubset = 100,
-            Knew = 25,
             nGibbsSamples = 5,
             n_seek_its = 2,
             nCores = 1,
             RData_objects_to_save = "final_set_of_results",
             addOptimalHapsToVCF = TRUE
         )
+
+        ## Ksubset = 100,
+        ## Knew = 25,
+        
+        which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
+    
+        ## now evaluate versus truth!
+        check_quilt_output(
+            file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+            data_package = data_package,
+            which_snps = which_snps,
+            tol = 0.1,
+            min_info = 0.9
+        )
+        
+        ## check loaded stuff
+        load(file_quilt_output_RData(outputdir, regionName))
+        expect_equal(length(final_set_of_results), 3)
+        unlink(file_quilt_output_RData(outputdir, regionName))
         
     }
-
-    which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
-    
-    ## now evaluate versus truth!
-    check_quilt_output(
-        file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
-        data_package = data_package,
-        which_snps = which_snps,
-        tol = 0.1,
-        min_info = 0.9
-    )
-
-    ## check loaded stuff
-    load(file_quilt_output_RData(outputdir, regionName))
-    expect_equal(length(final_set_of_results), 3)
     
 })
 
-
-
-if (1 == 0) {
-
-
-    dim(full_alphaHat_t)
-    dim(full_betaHat_t)
-    dim(full_gamma_t)
-    dim(full_transMatRate_t_H)
-    dim(rhb_t)
-    dim(distinctHapsB)
-    dim(distinctHapsIE)
-    dim(hapMatcher)
-    dim(full_gammaSmall_t)
-    full_gammaSmall_cols_to_get
-   
-
-    regionStart = NA
-    regionEnd = NA
-    buffer = NA
-    bamlist = ""
-    cramlist = ""
-    sampleNames_file = ""
-    reference = ""
-    nCores = 1
-    nGibbsSamples = 7
-    n_seek_its = 3
-    Ksubset = 400
-    Knew = 100
-    K_top_matches = 5
-    heuristic_match_thin = 0.1
-    output_filename = NULL
-    prepared_reference_filename = ""
-    tempdir = NA
-    bqFilter = as.integer(17)
-    panel_size = NA
-    posfile = ""
-    genfile = ""
-    phasefile = ""
-    maxDifferenceBetweenReads = 1e10
-    make_plots = FALSE
-    verbose = TRUE
-    shuffle_bin_radius = 5000
-    iSizeUpperLimit = 1e6
-    record_read_label_usage = TRUE
-    record_interim_dosages = TRUE
-    
-}

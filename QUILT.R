@@ -137,19 +137,19 @@ option_list <- list(
     make_option(
         "--posfile",
         type = "character",
-        help = "Optional, only needed when using genfile. File with positions of where to impute, lining up one-to-one with genfile. File is tab seperated with no header, one row per SNP, with col 1 = chromosome, col 2 = physical position (sorted from smallest to largest), col 3 = reference base, col 4 = alternate base. Bases are capitalized. Example first row: 1<tab>1000<tab>A<tab>G<tab> [default \"\"] ",
+        help = "Optional, only needed when using genfile or phasefile. File with positions of where to impute, lining up one-to-one with genfile. File is tab seperated with no header, one row per SNP, with col 1 = chromosome, col 2 = physical position (sorted from smallest to largest), col 3 = reference base, col 4 = alternate base. Bases are capitalized. Example first row: 1<tab>1000<tab>A<tab>G<tab> [default \"\"] ",
         default = ""
     ), 
     make_option(
         "--genfile",
         type = "character",
-        help = "Path to gen file with high coverage results. Empty for no genfile. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = hom ref, 1 = het, 2 = hom alt and NA indicating missing genotype, with rows corresponding to rows of the posfile. Note therefore this file has one more row than posfile which has no header [default \"\"] ",
+        help = "Path to gen file with high coverage results. Empty for no genfile. If both genfile and phasefile are given, only phasefile is used, as genfile (unphased genotypes) is derivative to phasefile (phased genotypes). File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = hom ref, 1 = het, 2 = hom alt and NA indicating missing genotype, with rows corresponding to rows of the posfile. Note therefore this file has one more row than posfile which has no header [default \"\"] ",
         default = ""
     ), 
     make_option(
         "--phasefile",
         type = "character",
-        help = "Path to phase file with truth phasing results. Empty for no phasefile. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = ref and 1 = alt, separated by a vertical bar |, e.g. 0|0 or 0|1. Note therefore this file has one more row than posfile which has no header. For NIPT imputation, there are 3 columns, representing maternal transmitted, maternal untransmitted, and paternal transmitted [default \"\"] ",
+        help = "Path to phase file with truth phasing results. Empty for no phasefile. Supercedes genfile if both options given. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = ref and 1 = alt, separated by a vertical bar |, e.g. 0|0 or 0|1. Note therefore this file has one more row than posfile which has no header. [default \"\"] ",
         default = ""
     ), 
     make_option(
@@ -223,6 +223,12 @@ option_list <- list(
         type = "logical",
         help = "When using phasefile with known truth haplotypes, infer truth read labels, and use them to infer the real base quality against the bam recorded base qualities [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--override_default_params_for_small_ref_panel",
+        type = "logical",
+        help = "When set to TRUE, then when using a smaller reference panel size (fewer haplotypes than Ksubset), parameter choices are reset appropriately. When set to FALSE, original values are used, which might crash QUILT [default TRUE] ",
+        default = TRUE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -265,5 +271,6 @@ QUILT(
     use_bx_tag = opt$use_bx_tag,
     bxTagUpperLimit = opt$bxTagUpperLimit,
     addOptimalHapsToVCF = opt$addOptimalHapsToVCF,
-    estimate_bq_using_truth_read_labels = opt$estimate_bq_using_truth_read_labels
+    estimate_bq_using_truth_read_labels = opt$estimate_bq_using_truth_read_labels,
+    override_default_params_for_small_ref_panel = opt$override_default_params_for_small_ref_panel
 )

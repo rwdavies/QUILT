@@ -22,9 +22,9 @@
 #' @param bqFilter Minimum BQ for a SNP in a read. Also, the algorithm uses bq<=mq, so if mapping quality is less than this, the read isnt used
 #' @param panel_size Integer number of reference haplotypes to use, set to NA to use all of them
 #'
-#' @param posfile Optional, only needed when using genfile. File with positions of where to impute, lining up one-to-one with genfile. File is tab seperated with no header, one row per SNP, with col 1 = chromosome, col 2 = physical position (sorted from smallest to largest), col 3 = reference base, col 4 = alternate base. Bases are capitalized. Example first row: 1<tab>1000<tab>A<tab>G<tab>
-#' @param genfile Path to gen file with high coverage results. Empty for no genfile. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = hom ref, 1 = het, 2 = hom alt and NA indicating missing genotype, with rows corresponding to rows of the posfile. Note therefore this file has one more row than posfile which has no header
-#' @param phasefile Path to phase file with truth phasing results. Empty for no phasefile. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = ref and 1 = alt, separated by a vertical bar |, e.g. 0|0 or 0|1. Note therefore this file has one more row than posfile which has no header. For NIPT imputation, there are 3 columns, representing maternal transmitted, maternal untransmitted, and paternal transmitted
+#' @param posfile Optional, only needed when using genfile or phasefile. File with positions of where to impute, lining up one-to-one with genfile. File is tab seperated with no header, one row per SNP, with col 1 = chromosome, col 2 = physical position (sorted from smallest to largest), col 3 = reference base, col 4 = alternate base. Bases are capitalized. Example first row: 1<tab>1000<tab>A<tab>G<tab>
+#' @param genfile Path to gen file with high coverage results. Empty for no genfile. If both genfile and phasefile are given, only phasefile is used, as genfile (unphased genotypes) is derivative to phasefile (phased genotypes). File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = hom ref, 1 = het, 2 = hom alt and NA indicating missing genotype, with rows corresponding to rows of the posfile. Note therefore this file has one more row than posfile which has no header
+#' @param phasefile Path to phase file with truth phasing results. Empty for no phasefile. Supercedes genfile if both options given. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = ref and 1 = alt, separated by a vertical bar |, e.g. 0|0 or 0|1. Note therefore this file has one more row than posfile which has no header.
 #' @param maxDifferenceBetweenReads How much of a difference to allow the reads to make in the forward backward probability calculation. For example, if P(read | state 1)=1 and P(read | state 2)=1e-6, re-scale so that their ratio is this value. This helps prevent any individual read as having too much of an influence on state changes, helping prevent against influence by false positive SNPs
 #' @param make_plots Whether to make some plots of per-sample imputation. Especially nice when truth data. This is pretty slow though so useful more for debugging and understanding and visualizing performance
 #' @param make_plots_block_gibbs Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs
@@ -37,6 +37,7 @@
 #' @param bxTagUpperLimit When using BX tag, at what distance between reads to consider reads with the same BX tag to come from different molecules
 #' @param addOptimalHapsToVCF Whether to add optimal haplotypes to vcf when phasing information is present, where optimal is imputation done when read label origin is known
 #' @param estimate_bq_using_truth_read_labels When using phasefile with known truth haplotypes, infer truth read labels, and use them to infer the real base quality against the bam recorded base qualities
+#' @param override_default_params_for_small_ref_panel When set to TRUE, then when using a smaller reference panel size (fewer haplotypes than Ksubset), parameter choices are reset appropriately. When set to FALSE, original values are used, which might crash QUILT
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -78,7 +79,8 @@ QUILT <- function(
     use_bx_tag = TRUE,
     bxTagUpperLimit = 50000,
     addOptimalHapsToVCF = FALSE,
-    estimate_bq_using_truth_read_labels = FALSE
+    estimate_bq_using_truth_read_labels = FALSE,
+    override_default_params_for_small_ref_panel = TRUE
 ) {
 
     ## init_method <- "simple"
@@ -111,10 +113,11 @@ QUILT <- function(
     options(scipen = 999)
 
     ## need for outputting
-    regionName <- chr
     options(scipen = 999) ## Dangit rounding
-    if(is.na(regionStart) == FALSE & is.na(regionEnd) == FALSE)
+    regionName <- chr
+    if (!is.na(regionStart) & !is.na(regionEnd)) {
         regionName <- paste0(chr, ".", regionStart,".", regionEnd)
+    }
 
     if (make_plots) {
         dir.create(file.path(outputdir, "plots"), showWarnings = FALSE)
@@ -126,6 +129,7 @@ QUILT <- function(
     STITCH::validate_tempdir(tempdir)
     check_program_dependency("bgzip")
     check_program_dependency("tabix")
+
     
     ##
     ## local validate
@@ -187,50 +191,90 @@ QUILT <- function(
     if (!file.exists(prepared_reference_filename)) {
         stop(paste0("Cannot find prepared haplotype reference file, expecting:", prepared_reference_filename))
     }
+
+    ## always check regionStart, regionEnd and buffer, just in case
+    ## require them to be the same to prevent problems
+    new_regionStart <- regionStart
+    new_regionEnd <- regionEnd 
+    new_buffer <- buffer
+    
     load(prepared_reference_filename)
 
+    validate_quilt_use_of_region_variables(
+        regionStart,
+        new_regionStart,
+        regionEnd,
+        new_regionEnd,
+        buffer,
+        new_buffer
+    )
+
+    
+    ##
+    ## possibly reset values
+    ##
+    if (override_default_params_for_small_ref_panel) {
+        K <- nrow(rhb_t)
+        if (K < Ksubset) {
+            print_message("Overriding default parameters for small reference panel")
+            print_message(paste0("Observing number of reference haplotypes K=", K))
+            print_message(paste0("Reset n_seek_its from ", n_seek_its, " to ", 1))
+            n_seek_its <- 1
+            print_message(paste0("Set Ksubset to ", K, " (no longer necessary"))
+            Ksubset <- K
+            print_message(paste0("Set Knew to ", K, " (no longer necessary"))            
+            Knew <- K
+        }
+    }
+    
 
     ##
     ## optionally load genotypes and phasevali
     ##
-    if (genfile != "") {
-        if (posfile == "") {
+    if ((genfile != "") | (phasefile != "")) {
+        if ((genfile != "") & (posfile == "")) {
             stop("You have given genfile, a set of high confidence genotypes, but not posfile, which confirms their physical positions. Please fix this, and see the help files for more information")
         }
-    }
-    out <- get_and_validate_pos_gen_and_phase(
-        posfile = posfile,
-        genfile = genfile,
-        phasefile = phasefile,
-        chr = chr,
-        verbose = TRUE
-    )
-    posX <- out$pos
-    genX <- out$gen
-    phaseX <- out$phase
-    ##
-    ## shrink (if regionStart and regionEnd are NA)
-    ##
-    out <- shrink_region(
-        regionStart = regionStart,
-        regionEnd = regionEnd,
-        buffer = buffer,
-        L = posX[, 2],
-        pos = posX,
-        gen = genX,
-        phase = phaseX
-    )
-    posX <- out$pos
-    gen <- out$gen
-    phase <- out$phase
-    key1 <- paste0(pos[, 1], pos[, 2], pos[, 3], pos[, 4])
-    key2 <- paste0(posX[, 1], posX[, 2], posX[, 3], posX[, 4])
-    err <- paste0("There was an error lining up the reference data with the prepared reference haplotype file. Please double check that posfile and genfile are defined as exactly the same SNPs in the region to be imputed as the reference legend file")
-    if (length(key1) != length(key2)) {
-        stop(err)
-    }
-    if (sum(key1 != key2) > 0) {
-        stop(err)
+        if ((phasefile != "") & (posfile == "")) {
+            stop("You have given phasefile, with high confidence phased genotypes, but not posfile, which confirms their physical positions. Please fix this, and see the help files for more information")
+        }
+        out <- get_and_validate_pos_gen_and_phase(
+            posfile = posfile,
+            genfile = genfile,
+            phasefile = phasefile,
+            chr = chr,
+            verbose = TRUE
+        )
+        posX <- out$pos
+        genX <- out$gen
+        phaseX <- out$phase
+        ##
+        ## shrink (if regionStart and regionEnd are NA)
+        ##
+        out <- shrink_region(
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer,
+            L = posX[, 2],
+            pos = posX,
+            gen = genX,
+            phase = phaseX
+        )
+        posX <- out$pos
+        gen <- out$gen
+        phase <- out$phase
+        key1 <- paste0(pos[, 1], pos[, 2], pos[, 3], pos[, 4])
+        key2 <- paste0(posX[, 1], posX[, 2], posX[, 3], posX[, 4])
+        err <- paste0("There was an error lining up the reference data from the reference legend file with the posfile. Please double check that posfile and genfile/phasefile are defined as exactly the same SNPs in the region to be imputed as the reference legend file")
+        if (length(key1) != length(key2)) {
+            stop(err)
+        }
+        if (sum(key1 != key2) > 0) {
+            stop(err)
+        }
+    } else {
+        gen <- NULL
+        phase <- NULL
     }
     
 
@@ -354,6 +398,23 @@ QUILT <- function(
     ## }
 
 
+    ##
+    ## here initialize where to start and stop getting reads from 
+    ##
+    out <- initialize_chrStart_and_chrEnd(
+        chrStart = NA,
+        chrEnd = NA,
+        L = L,
+        iSizeUpperLimit = iSizeUpperLimit
+    )
+    chrStart <- out$chrStart
+    chrEnd <- out$chrEnd
+    chrLength <- quilt_get_chromosome_length(iBam = 1, bam_files = bam_files, cram_files = cram_files, chr = chr)
+    if (chrEnd > chrLength) {
+        chrEnd <- chrLength
+    }
+    
+    
 
     ##
     ## mclapply the runs!
@@ -464,7 +525,9 @@ QUILT <- function(
                 bxTagUpperLimit = bxTagUpperLimit,
                 addOptimalHapsToVCF = addOptimalHapsToVCF,
                 make_plots_block_gibbs = make_plots_block_gibbs,
-                estimate_bq_using_truth_read_labels = estimate_bq_using_truth_read_labels
+                estimate_bq_using_truth_read_labels = estimate_bq_using_truth_read_labels,
+                chrStart = chrStart,
+                chrEnd = chrEnd
             )
 
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out

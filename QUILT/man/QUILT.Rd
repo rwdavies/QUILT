@@ -18,7 +18,8 @@ QUILT(outputdir, chr, regionStart = NA, regionEnd = NA, buffer = NA,
   record_read_label_usage = TRUE, record_interim_dosages = FALSE,
   use_bx_tag = TRUE, bxTagUpperLimit = 50000,
   addOptimalHapsToVCF = FALSE,
-  estimate_bq_using_truth_read_labels = FALSE)
+  estimate_bq_using_truth_read_labels = FALSE,
+  override_default_params_for_small_ref_panel = TRUE)
 }
 \arguments{
 \item{outputdir}{What output directory to use}
@@ -65,11 +66,11 @@ QUILT(outputdir, chr, regionStart = NA, regionEnd = NA, buffer = NA,
 
 \item{panel_size}{Integer number of reference haplotypes to use, set to NA to use all of them}
 
-\item{posfile}{Optional, only needed when using genfile. File with positions of where to impute, lining up one-to-one with genfile. File is tab seperated with no header, one row per SNP, with col 1 = chromosome, col 2 = physical position (sorted from smallest to largest), col 3 = reference base, col 4 = alternate base. Bases are capitalized. Example first row: 1<tab>1000<tab>A<tab>G<tab>}
+\item{posfile}{Optional, only needed when using genfile or phasefile. File with positions of where to impute, lining up one-to-one with genfile. File is tab seperated with no header, one row per SNP, with col 1 = chromosome, col 2 = physical position (sorted from smallest to largest), col 3 = reference base, col 4 = alternate base. Bases are capitalized. Example first row: 1<tab>1000<tab>A<tab>G<tab>}
 
-\item{genfile}{Path to gen file with high coverage results. Empty for no genfile. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = hom ref, 1 = het, 2 = hom alt and NA indicating missing genotype, with rows corresponding to rows of the posfile. Note therefore this file has one more row than posfile which has no header}
+\item{genfile}{Path to gen file with high coverage results. Empty for no genfile. If both genfile and phasefile are given, only phasefile is used, as genfile (unphased genotypes) is derivative to phasefile (phased genotypes). File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = hom ref, 1 = het, 2 = hom alt and NA indicating missing genotype, with rows corresponding to rows of the posfile. Note therefore this file has one more row than posfile which has no header}
 
-\item{phasefile}{Path to phase file with truth phasing results. Empty for no phasefile. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = ref and 1 = alt, separated by a vertical bar |, e.g. 0|0 or 0|1. Note therefore this file has one more row than posfile which has no header. For NIPT imputation, there are 3 columns, representing maternal transmitted, maternal untransmitted, and paternal transmitted}
+\item{phasefile}{Path to phase file with truth phasing results. Empty for no phasefile. Supercedes genfile if both options given. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = ref and 1 = alt, separated by a vertical bar |, e.g. 0|0 or 0|1. Note therefore this file has one more row than posfile which has no header.}
 
 \item{maxDifferenceBetweenReads}{How much of a difference to allow the reads to make in the forward backward probability calculation. For example, if P(read | state 1)=1 and P(read | state 2)=1e-6, re-scale so that their ratio is this value. This helps prevent any individual read as having too much of an influence on state changes, helping prevent against influence by false positive SNPs}
 
@@ -94,6 +95,8 @@ QUILT(outputdir, chr, regionStart = NA, regionEnd = NA, buffer = NA,
 \item{addOptimalHapsToVCF}{Whether to add optimal haplotypes to vcf when phasing information is present, where optimal is imputation done when read label origin is known}
 
 \item{estimate_bq_using_truth_read_labels}{When using phasefile with known truth haplotypes, infer truth read labels, and use them to infer the real base quality against the bam recorded base qualities}
+
+\item{override_default_params_for_small_ref_panel}{When set to TRUE, then when using a smaller reference panel size (fewer haplotypes than Ksubset), parameter choices are reset appropriately. When set to FALSE, original values are used, which might crash QUILT}
 }
 \value{
 Results in properly formatted version

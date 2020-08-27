@@ -20,7 +20,11 @@ check_quilt_output <- function(
     for(iSample in 1:N) {
         ## check things in turn
         per_col_vcf <- vcf[, iSample + 9]
-        sample_truth_haps <- truth_phase[which_snps, iSample, ]
+        if (!is.null(which_snps)) {
+            sample_truth_haps <- truth_phase[which_snps, iSample, ]
+        } else {
+            sample_truth_haps <- truth_phase[, iSample, ]
+        }
         sample_truth_gen <- sample_truth_haps[, 1] + sample_truth_haps[, 2]
         sample_results <- t(sapply(strsplit(per_col_vcf, ":"), I))
         ## check not too much missingness i.e. non-confident data

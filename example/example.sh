@@ -30,7 +30,10 @@ else
     exit 1
 fi
 ## download package - this should download the files from this website including for example "bamlist.1.0.txt"
-${download_command} http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2020_08_25.tgz ## either wget or curl -O or otherwise as appropriate
+if [ ! -f QUILT_example_2020_08_25.tgz ]
+then
+    ${download_command} http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2020_08_25.tgz ## either wget or curl -O or otherwise as appropriate
+fi
 tar -xzvf QUILT_example_2020_08_25.tgz
 
 
@@ -52,8 +55,8 @@ rm -r -f quilt_output
     --regionEnd=4000000 \
     --buffer=500000
 ## NOTES
-## - succesful completion of this run results in a file at quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData, which is used by QUILT itself during the actual imputation in the next step
-## - there are two haplotype reference file options included in this package
+## 1) succesful completion of this run results in a file at quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData, which is used by QUILT itself during the actual imputation in the next step
+## 2) there are two haplotype reference file options included in this package
 ##   ref.chr20.2000001.4000000.hap.clean.example.1000Gonly.gz and
 ##   ref.chr20.2000001.4000000.hap.clean.example.gz
 ##   the former is just 1000 Genomes samples
@@ -79,10 +82,10 @@ rm -r -f quilt_output
     --bqFilter=10 \
     --nCores=1
 ## NOTES
-## - this imputes NA12878 on this region, using a haplotagged Illumina example and ONT
-## - succesful completion of this run results in a VCF at quilt_output/quilt.chr20.2000001.4000000.vcf.gz
-## - per-sample per-SNP output includes hard-called (integer) genotype, genotype posteriors, diploid dosage, and haploid dosages (i.e. haplotypes, can be turned into standard 0 or 1 haplotpes using rounding)
-## - you can try bamlist.0.25.txt to try 0.25X bams
-## - to turn off the use of haplotagging to link reads, set --use_bx_tag=FALSE
-## - try ./QUILT.R --help for more options
+## 1) this imputes NA12878 on this region, using a haplotagged Illumina example and ONT
+##   succesful completion of this run results in a VCF at quilt_output/quilt.chr20.2000001.4000000.vcf.gz
+## 2) per-sample per-SNP output includes hard-called (integer) genotype, genotype posteriors, diploid dosage, and haploid dosages (i.e. haplotypes, can be turned into standard 0 or 1 haplotpes using rounding)
+## 3) you can try bamlist.0.25.txt to try 0.25X bams
+## 4) try ./QUILT.R --help for more options
+## 5) for normal operation when you do not have high quality phased truth genotypes, you can omit posfile and phasefile, and sites will be imputed 
 

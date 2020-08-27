@@ -510,13 +510,14 @@ get_and_impute_one_sample <- function(
     bxTagUpperLimit,
     addOptimalHapsToVCF,
     make_plots_block_gibbs,
-    estimate_bq_using_truth_read_labels
+    estimate_bq_using_truth_read_labels,
+    chrStart,
+    chrEnd
 ) {
 
-    ## load("~/temp.RData")
-    
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
+
     ##
     ## sample read stuff - work off bam file!
     ##
@@ -535,8 +536,8 @@ get_and_impute_one_sample <- function(
         inputdir = tempdir,
         regionName = regionName,
         tempdir = tempdir,
-        chrStart = regionStart - buffer,
-        chrEnd = regionEnd + buffer,
+        chrStart = chrStart,
+        chrEnd = chrEnd,
         chrLength = NA,
         save_sampleReadsInfo = TRUE,
         use_bx_tag = use_bx_tag,
@@ -583,6 +584,12 @@ get_and_impute_one_sample <- function(
         truth_haps <- NULL
     }
 
+    ## can just set this here
+    if (is.null(phase) & !is.null(gen)) {
+        have_truth_genotypes <- TRUE ## make UNIQUE to genotype having
+    } else {
+        have_truth_genotypes <- FALSE
+    }
 
     
     ## don't need this for routine use - or do better matching!
@@ -843,7 +850,6 @@ get_and_impute_one_sample <- function(
                 x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = FALSE)
                 pse_mat[w, ] <- c(i_gibbs_sample, i_it, as.integer(phasing_it), x)
             }
-
         }
         
         if (!phasing_it) {
@@ -919,6 +925,9 @@ get_and_impute_one_sample <- function(
         x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = phasing_haps[, 1], hap2 = phasing_haps[, 2], truth_haps = truth_haps, af = af, verbose = FALSE)
         print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
         print_message(paste0("Final phasing accuracy for sample ", sample_name, ", pse:", x["pse"], ", disc(%):", x["disc"], "%"))
+    } else if (have_truth_genotypes) {
+        r2 <-  round(cor((dosage)[inRegion2] - 2 * af[inRegion2], gen[inRegion2, sampleNames[iSample]] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
+        print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))        
     }
 
 
