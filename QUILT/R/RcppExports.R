@@ -207,8 +207,8 @@ rcpp_internal_make_eMatRead_t_using_binary <- function(eMatRead_t, rhb, K, nSNPs
 }
 
 #' @export
-Rcpp_haploid_reference_single_forward <- function(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small) {
-    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_forward', PACKAGE = 'QUILT', gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small))
+Rcpp_haploid_reference_single_forward <- function(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold) {
+    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_forward', PACKAGE = 'QUILT', gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold))
 }
 
 #' @export

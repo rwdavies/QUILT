@@ -318,10 +318,16 @@ make_reference_single_test_package <- function(
     my_hap <- c(
         rhi_t[1, 1:36],
         rhi_t[2, 37:60],
-        rhi_t[3, 61:nSNPs]
+        rhi_t[3, 61:200],
+        rhi_t[4, 257:352],
+        rhi_t[5, 353:nSNPs]
     )
+    ## make about 0.25X coverage
     nReads <- round(nSNPs * 1.5)
     u <- sort(sample(1:nSNPs, nReads, replace = TRUE))
+    ## though specifically remove some regions, make have no variants
+    u <- u[!(u %in% 150:250)]
+    ## 
     bq <- rep(-10, length(u))
     bq[my_hap[u] == 1] <- 10
     gl <- make_gl_from_u_bq(u, bq, nSNPs)

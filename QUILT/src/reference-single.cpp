@@ -286,7 +286,9 @@ void Rcpp_haploid_reference_single_forward(
     const int& K,
     const bool& use_eMatDH,
     double ref_error,
-    const bool only_store_alpha_at_gamma_small
+    const bool only_store_alpha_at_gamma_small,
+    bool always_normalize,
+    double min_emission_prob_normalization_threshold
 ) {
     double jump_prob, one_minus_jump_prob, not_jump_prob;
     int s, e, nSNPsLocal, i, iGrid, k;
@@ -305,9 +307,19 @@ void Rcpp_haploid_reference_single_forward(
     bool grid_has_variant;
     const double double_K = double(K);
     bool store_alpha_for_this_grid;
+    double running_min_emission_prob = 1;
+    double min_emission_prob = 1;
+    double prev_alphaHat_t_col_sum = 1;
+    double jump_prob_plus = 1;
     //
     for(iGrid = 1; iGrid < nGrids; iGrid++) {
         jump_prob = transMatRate_t(1, iGrid - 1) / double_K;
+        if (always_normalize) {
+            jump_prob_plus = jump_prob;
+        } else {
+            jump_prob_plus = jump_prob * prev_alphaHat_t_col_sum;
+            //std::cout << "prev_alphaHat_t_col_sum = " <<prev_alphaHat_t_col_sum << ", col sum version = " << arma::sum(alphaHat_t.col(iGrid - 1)) << std::endl;
+        }
         not_jump_prob = transMatRate_t(0, iGrid - 1);
         one_minus_jump_prob = (1 - jump_prob);
         s = 32 * iGrid; // 0-based here
@@ -341,6 +353,7 @@ void Rcpp_haploid_reference_single_forward(
             if (grid_has_variant) {
                 dh_col = hapMatcher.col(iGrid);
                 eMatDH_col = eMatDH.col(iGrid);
+                min_emission_prob = arma::min(eMatDH_col);
 		run_total = 0;
                 for(k = 0; k < K; k++) {
 		    // if dh_col is 0 i.e. need to re-do this prob is 0 so we are OK
@@ -360,16 +373,41 @@ void Rcpp_haploid_reference_single_forward(
                                 prob *= (dR * ref_one_minus_error + dA * ref_error);
                             }
                         }
+                        if (prob < min_emission_prob) {
+                            min_emission_prob = prob;
+                        }
                     } // NOTE - can I not multiply not_jump_prob, and do it at the end?
-		    alphaHat_t_col(k) = (jump_prob + not_jump_prob * alphaHat_t_col(k)) * prob;
+		    alphaHat_t_col(k) = (jump_prob_plus + not_jump_prob * alphaHat_t_col(k)) * prob;
                     run_total += alphaHat_t_col(k);
                 }
-                c(iGrid) = 1 / run_total;
-		alphaHat_t_col *= c(iGrid); // argh
+                if (always_normalize) {
+                    c(iGrid) = 1 / run_total;
+                    alphaHat_t_col *= c(iGrid);
+                } else {
+                    running_min_emission_prob *= min_emission_prob;
+                    if (
+                        (running_min_emission_prob < min_emission_prob_normalization_threshold) |
+                        (iGrid == (nGrids - 1))
+                        ) {
+                        running_min_emission_prob = 1;
+                        c(iGrid) = 1 / run_total;
+                        alphaHat_t_col *= c(iGrid);
+                        run_total = 1;
+                    }
+                }
             } else {
-	        alphaHat_t_col = (jump_prob + not_jump_prob * alphaHat_t_col);
+	        alphaHat_t_col = (jump_prob_plus + not_jump_prob * alphaHat_t_col);
 	        c(iGrid) = 1;
+                if (always_normalize) {
+                    run_total = 1;
+                } else {
+                    run_total = K * jump_prob_plus + prev_alphaHat_t_col_sum * not_jump_prob;
+                }
+                //alt_run_total = sum(alphaHat_t_col); // I think I can re-calculate this easily later
+                //std::cout << "grid " << iGrid << " has no variant, run_total = " << run_total << ", alt_run_total=" << alt_run_total << std::endl;
+                //run_total = alt_run_total;
             }
+            prev_alphaHat_t_col_sum = run_total;
 	    if (store_alpha_for_this_grid) {
 	        alphaHat_t.col(iGrid) = alphaHat_t_col;
 	    }
@@ -905,7 +943,7 @@ void Rcpp_haploid_dosage_versus_refs(
         gettimeofday(&tv, NULL);
         curtime=tv.tv_sec;
         strftime(buffer,30,"%m-%d-%Y  %T.",localtime(&curtime));
-        printf("%s%ld\n",buffer,tv.tv_usec);
+        //printf("%s%ld\n",buffer,tv.tv_usec);
         //std::cout << "================== " << std::endl;        
     }
     std::string prev_section="Null";
@@ -1000,7 +1038,7 @@ void Rcpp_haploid_dosage_versus_refs(
     if (is_version_2) {
         Rcpp_haploid_reference_single_forward_version2(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, eMatDH_special_grid_which, eMatDH_special_values_list);
     } else {
-        Rcpp_haploid_reference_single_forward(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small);
+        Rcpp_haploid_reference_single_forward(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold);
     }
     //
     // run backward algorithm

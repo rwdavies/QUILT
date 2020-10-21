@@ -963,8 +963,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // Rcpp_haploid_reference_single_forward
-void Rcpp_haploid_reference_single_forward(Rcpp::IntegerVector& gammaSmall_cols_to_get, const arma::mat& gl, arma::mat& alphaHat_t, arma::rowvec& c, const arma::mat& transMatRate_t, const arma::imat& rhb_t, arma::imat& hapMatcher, arma::mat& eMatDH, const int& nGrids, const int& nSNPs, const int& K, const bool& use_eMatDH, double ref_error, const bool only_store_alpha_at_gamma_small);
-RcppExport SEXP _QUILT_Rcpp_haploid_reference_single_forward(SEXP gammaSmall_cols_to_getSEXP, SEXP glSEXP, SEXP alphaHat_tSEXP, SEXP cSEXP, SEXP transMatRate_tSEXP, SEXP rhb_tSEXP, SEXP hapMatcherSEXP, SEXP eMatDHSEXP, SEXP nGridsSEXP, SEXP nSNPsSEXP, SEXP KSEXP, SEXP use_eMatDHSEXP, SEXP ref_errorSEXP, SEXP only_store_alpha_at_gamma_smallSEXP) {
+void Rcpp_haploid_reference_single_forward(Rcpp::IntegerVector& gammaSmall_cols_to_get, const arma::mat& gl, arma::mat& alphaHat_t, arma::rowvec& c, const arma::mat& transMatRate_t, const arma::imat& rhb_t, arma::imat& hapMatcher, arma::mat& eMatDH, const int& nGrids, const int& nSNPs, const int& K, const bool& use_eMatDH, double ref_error, const bool only_store_alpha_at_gamma_small, bool always_normalize, double min_emission_prob_normalization_threshold);
+RcppExport SEXP _QUILT_Rcpp_haploid_reference_single_forward(SEXP gammaSmall_cols_to_getSEXP, SEXP glSEXP, SEXP alphaHat_tSEXP, SEXP cSEXP, SEXP transMatRate_tSEXP, SEXP rhb_tSEXP, SEXP hapMatcherSEXP, SEXP eMatDHSEXP, SEXP nGridsSEXP, SEXP nSNPsSEXP, SEXP KSEXP, SEXP use_eMatDHSEXP, SEXP ref_errorSEXP, SEXP only_store_alpha_at_gamma_smallSEXP, SEXP always_normalizeSEXP, SEXP min_emission_prob_normalization_thresholdSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type gammaSmall_cols_to_get(gammaSmall_cols_to_getSEXP);
@@ -981,7 +981,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const bool& >::type use_eMatDH(use_eMatDHSEXP);
     Rcpp::traits::input_parameter< double >::type ref_error(ref_errorSEXP);
     Rcpp::traits::input_parameter< const bool >::type only_store_alpha_at_gamma_small(only_store_alpha_at_gamma_smallSEXP);
-    Rcpp_haploid_reference_single_forward(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small);
+    Rcpp::traits::input_parameter< bool >::type always_normalize(always_normalizeSEXP);
+    Rcpp::traits::input_parameter< double >::type min_emission_prob_normalization_threshold(min_emission_prob_normalization_thresholdSEXP);
+    Rcpp_haploid_reference_single_forward(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold);
     return R_NilValue;
 END_RCPP
 }
@@ -1126,7 +1128,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_Rcpp_get_top_K_or_more_matches_while_building_gamma", (DL_FUNC) &_QUILT_Rcpp_get_top_K_or_more_matches_while_building_gamma, 6},
     {"_QUILT_Rcpp_build_eMatDH", (DL_FUNC) &_QUILT_Rcpp_build_eMatDH, 7},
     {"_QUILT_rcpp_internal_make_eMatRead_t_using_binary", (DL_FUNC) &_QUILT_rcpp_internal_make_eMatRead_t_using_binary, 13},
-    {"_QUILT_Rcpp_haploid_reference_single_forward", (DL_FUNC) &_QUILT_Rcpp_haploid_reference_single_forward, 14},
+    {"_QUILT_Rcpp_haploid_reference_single_forward", (DL_FUNC) &_QUILT_Rcpp_haploid_reference_single_forward, 16},
     {"_QUILT_Rcpp_haploid_reference_single_forward_version2", (DL_FUNC) &_QUILT_Rcpp_haploid_reference_single_forward_version2, 16},
     {"_QUILT_Rcpp_haploid_reference_single_backward", (DL_FUNC) &_QUILT_Rcpp_haploid_reference_single_backward, 26},
     {"_QUILT_Rcpp_haploid_dosage_versus_refs", (DL_FUNC) &_QUILT_Rcpp_haploid_dosage_versus_refs, 29},

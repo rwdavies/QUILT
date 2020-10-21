@@ -142,8 +142,24 @@ test_that("can avoid normalizing alphaHat throughout forward backwards, but reco
     ##
     ## check cpp version here too
     ##
+    m <- (cbind(
+        log(R_c_always_norm),
+        log(R_c_seldom_norm),
+        log(Rcpp_c_always_norm),
+        log(Rcpp_c_seldom_norm)
+    ))
+    ## print(    colSums(m))
+    ## print("-------")
+    ## print(m)
     expect_equal(sum(log(Rcpp_c_always_norm)), sum(log(Rcpp_c_seldom_norm)))
-    ## expect_true(sum(abs(Rcpp_c_always_norm - Rcpp_c_seldom_norm)) > 0)
+    expect_true(sum(abs(Rcpp_c_always_norm - Rcpp_c_seldom_norm)) > 0)
+    ## check dosages vs each other and R
+    expect_equal(R_dosage_always_norm, Rcpp_dosage_always_norm)
+    expect_equal(R_dosage_always_norm, Rcpp_dosage_seldom_norm)
+    ## check gammaSmall vs each other and R
+    expect_equal(R_gammaSmall_t_always_norm, Rcpp_gammaSmall_t_always_norm)
+    expect_equal(R_gammaSmall_t_always_norm, Rcpp_gammaSmall_t_seldom_norm)
+    
     
 
     ## check cpp versions here!
