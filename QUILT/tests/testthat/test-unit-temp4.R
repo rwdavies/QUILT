@@ -16,7 +16,7 @@ if ( 1 == 0 ) {
 
 
 
-test_that("can avoid normalizing alphaHat throughout, but recover correct gamma and dosages when asked", {
+test_that("can avoid normalizing alphaHat throughout forward backwards, but recover correct gamma when asked, as well as dosages", {
 
 
     ##
@@ -57,8 +57,7 @@ test_that("can avoid normalizing alphaHat throughout, but recover correct gamma 
     
     for(always_normalize in c(TRUE, FALSE)) {
 
-        for(language in c("R")) {
-            ## for(language in c("R", "Rcpp")) {            
+        for(language in c("R", "Rcpp")) {            
 
             if (language == "R") {
                 f <- R_haploid_dosage_versus_refs
@@ -69,14 +68,17 @@ test_that("can avoid normalizing alphaHat throughout, but recover correct gamma 
             ##
             alphaHat_t <- array(0, c(K, nGrids))
             betaHat_t <- array(0, c(K, nGrids))
+            c <-  array(1, c(nGrids))
             gamma_t <- array(0, c(K, nGrids))
             gammaSmall_t <- array(0, c(K, nSmallGammaGrids))
             dosage <- numeric(nSNPs)
+            best_haps_stuff_list <- as.list(1:sum(gammaSmall_cols_to_get >= 0))
 
             out <- f(
                 gl = gl,
                 alphaHat_t = alphaHat_t,
                 betaHat_t = betaHat_t,
+                c = c,
                 gamma_t = gamma_t,
                 gammaSmall_t = gammaSmall_t,
                 dosage = dosage,
@@ -95,46 +97,54 @@ test_that("can avoid normalizing alphaHat throughout, but recover correct gamma 
                 return_gamma_t = FALSE,
                 K_top_matches = K_top_matches,
                 always_normalize = always_normalize,
-                min_emission_prob_normalization_threshold = min_emission_prob_normalization_threshold
+                min_emission_prob_normalization_threshold = min_emission_prob_normalization_threshold,
+                best_haps_stuff_list = best_haps_stuff_list,
+                eMatDH_special_values_list = eMatDH_special_values_list,
+                eMatDH_special_grid_which = eMatDH_special_grid_which
             )
 
-            ## check dosage against truth, just to be sure!
-            ## meh, it is pretty close
-            ## mean(abs(out[["dosage"]] - truth_hap))
-
-
-        }
-
-        ## check results the same for the same language here
-        if (always_normalize) {
-            if (language == "R") {
-                dosage_R_always_norm <- out[["dosage"]]
-                alphaHat_t_always_norm <- out[["alphaHat_t"]]                
-                c_always_norm <- out[["c"]]
-                gammaSmall_t_R_always_norm <- out[["gammaSmall_t"]]
+            if (always_normalize) {
+                if (language == "R") {
+                    R_alphaHat_t_always_norm <- out[["alphaHat_t"]]                
+                    R_c_always_norm <- out[["c"]]
+                    R_gammaSmall_t_always_norm <- out[["gammaSmall_t"]]
+                    R_dosage_always_norm <- out[["dosage"]]
+                } else {
+                    Rcpp_dosage_always_norm <- dosage
+                    Rcpp_gammaSmall_t_always_norm <- gammaSmall_t
+                    Rcpp_c_always_norm <- c
+                }
             } else {
-                dosage_Rcpp_always_norm <- dosage
-                gammaSmall_t_Rcpp_always_norm <- gammaSmall_t
+                if (language == "R") {
+                    R_alphaHat_t_seldom_norm <- out[["alphaHat_t"]]
+                    R_c_seldom_norm <- out[["c"]]
+                    R_gammaSmall_t_seldom_norm <- out[["gammaSmall_t"]]
+                    R_dosage_seldom_norm <- out[["dosage"]]
+                } else {
+                    Rcpp_dosage_seldom_norm <- dosage
+                    Rcpp_gammaSmall_t_seldom_norm <- gammaSmall_t
+                    Rcpp_c_seldom_norm <- c                    
+                }
             }
-        } else {
-            if (language == "R") {
-                dosage_R_seldom_norm <- out[["dosage"]]
-                c_seldom_norm <- out[["c"]]
-                gammaSmall_t_R_seldom_norm <- out[["gammaSmall_t"]]
-                alphaHat_t_seldom_norm <- out[["alphaHat_t"]]
-            } else {
-                dosage_Rcpp_seldom_norm <- dosage
-                gammaSmall_t_Rcpp_seldom_norm <- gammaSmall_t
-            }
+
         }
 
     }
 
+    ##
     ## check results for R versions
-    expect_equal(dosage_R_always_norm, dosage_R_seldom_norm)
-    expect_equal(gammaSmall_t_R_always_norm, gammaSmall_t_R_seldom_norm)
-    expect_equal(sum(log(c_always_norm)), sum(log(c_seldom_norm)))
-    expect_true(sum(abs(c_always_norm - c_seldom_norm)) > 0)
+    ##
+    expect_equal(R_dosage_always_norm, R_dosage_seldom_norm)
+    expect_equal(R_gammaSmall_t_always_norm, R_gammaSmall_t_seldom_norm)
+    expect_equal(sum(log(R_c_always_norm)), sum(log(R_c_seldom_norm)))
+    expect_true(sum(abs(R_c_always_norm - R_c_seldom_norm)) > 0)
+
+    ##
+    ## check cpp version here too
+    ##
+    expect_equal(sum(log(Rcpp_c_always_norm)), sum(log(Rcpp_c_seldom_norm)))
+    ## expect_true(sum(abs(Rcpp_c_always_norm - Rcpp_c_seldom_norm)) > 0)
+    
 
     ## check cpp versions here!
 

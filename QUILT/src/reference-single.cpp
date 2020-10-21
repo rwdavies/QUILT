@@ -865,6 +865,7 @@ void Rcpp_haploid_dosage_versus_refs(
     const arma::mat& gl,
     arma::mat& alphaHat_t,
     arma::mat& betaHat_t,
+    arma::rowvec& c,
     arma::mat& gamma_t,
     arma::mat& gammaSmall_t,
     Rcpp::List& best_haps_stuff_list,
@@ -887,7 +888,9 @@ void Rcpp_haploid_dosage_versus_refs(
     bool return_gamma_t = true,
     bool return_gammaSmall_t = false,
     bool get_best_haps_from_thinned_sites = false,
-    bool is_version_2 = false
+    bool is_version_2 = false,
+    bool return_extra = false,
+    bool always_normalize = true
 ) {
     //
     double prev=clock();
@@ -915,7 +918,7 @@ void Rcpp_haploid_dosage_versus_refs(
     const int nSNPs = gl.n_cols;
     double one_over_K = 1 / (double)K;
     double ref_one_minus_error = 1 - ref_error;
-    arma::rowvec c = arma::zeros(1, nGrids);
+    //arma::rowvec c = arma::zeros(1, nGrids);
     arma::mat gl_local(2, 32);
     int i, k, dh;
     double prob;

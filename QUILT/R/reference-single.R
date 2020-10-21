@@ -81,6 +81,7 @@ R_haploid_dosage_versus_refs <- function(
     gl,
     alphaHat_t,
     betaHat_t,
+    c,
     gamma_t,
     gammaSmall_t,    
     dosage,
@@ -90,10 +91,13 @@ R_haploid_dosage_versus_refs <- function(
     use_eMatDH,
     distinctHapsB,
     distinctHapsIE,
+    eMatDH_special_values_list,
+    eMatDH_special_grid_which,
     hapMatcher,
     return_extra = FALSE,
     gammaSmall_cols_to_get = array(-1, c(1)),
     get_best_haps_from_thinned_sites = FALSE,
+    best_haps_stuff_list = list(),
     return_gamma_t = TRUE,
     return_dosage = TRUE,
     return_gammaSmall_t = TRUE,
@@ -107,7 +111,7 @@ R_haploid_dosage_versus_refs <- function(
     nSNPs <- ncol(gl)
     one_over_K <- 1 / K
     ref_one_minus_error <- 1 - ref_error
-    c <- array(1, nGrids)
+    ## c <- array(1, nGrids)
     if (use_eMatDH) {
         nMaxDH <- nrow(distinctHapsB)
     } else {
@@ -198,12 +202,10 @@ R_haploid_dosage_versus_refs <- function(
         } else {
             ## otherwise, only do if necessary
             running_min_emission_prob <- running_min_emission_prob * min_emission_prob
-            print(paste0("running_min_emission_prob = ", running_min_emission_prob))
             if (
                 iGrid == (nGrids - 1) |
                 (running_min_emission_prob < min_emission_prob_normalization_threshold)
             ) {
-                print(paste0("Perform normalization"))
                 c[iGrid + 1] <- 1 / sum(alphaHat_t[, iGrid + 1])
                 alphaHat_t[, iGrid + 1] <- alphaHat_t[, iGrid + 1] * c[iGrid + 1]
                 running_min_emission_prob <- 1

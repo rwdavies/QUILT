@@ -4,46 +4,22 @@
 \alias{QUILT}
 \title{QUILT}
 \usage{
-QUILT(
-  outputdir,
-  chr,
-  regionStart = NA,
-  regionEnd = NA,
-  buffer = NA,
-  bamlist = "",
-  cramlist = "",
-  sampleNames_file = "",
-  reference = "",
-  nCores = 1,
-  nGibbsSamples = 7,
-  n_seek_its = 3,
-  Ksubset = 400,
-  Knew = 100,
-  K_top_matches = 5,
-  heuristic_match_thin = 0.1,
-  output_filename = NULL,
-  RData_objects_to_save = NULL,
-  output_RData_filename = NULL,
-  prepared_reference_filename = "",
-  tempdir = NA,
-  bqFilter = as.integer(17),
-  panel_size = NA,
-  posfile = "",
-  genfile = "",
-  phasefile = "",
-  maxDifferenceBetweenReads = 1e+10,
-  make_plots = FALSE,
-  make_plots_block_gibbs = FALSE,
-  verbose = TRUE,
-  shuffle_bin_radius = 5000,
-  iSizeUpperLimit = 1e+06,
-  record_read_label_usage = TRUE,
-  record_interim_dosages = FALSE,
-  use_bx_tag = TRUE,
-  bxTagUpperLimit = 50000,
+QUILT(outputdir, chr, regionStart = NA, regionEnd = NA, buffer = NA,
+  bamlist = "", cramlist = "", sampleNames_file = "",
+  reference = "", nCores = 1, nGibbsSamples = 7, n_seek_its = 3,
+  Ksubset = 400, Knew = 100, K_top_matches = 5,
+  heuristic_match_thin = 0.1, output_filename = NULL,
+  RData_objects_to_save = NULL, output_RData_filename = NULL,
+  prepared_reference_filename = "", tempdir = NA,
+  bqFilter = as.integer(17), panel_size = NA, posfile = "",
+  genfile = "", phasefile = "", maxDifferenceBetweenReads = 1e+10,
+  make_plots = FALSE, make_plots_block_gibbs = FALSE, verbose = TRUE,
+  shuffle_bin_radius = 5000, iSizeUpperLimit = 1e+06,
+  record_read_label_usage = TRUE, record_interim_dosages = FALSE,
+  use_bx_tag = TRUE, bxTagUpperLimit = 50000,
   addOptimalHapsToVCF = FALSE,
-  estimate_bq_using_truth_read_labels = FALSE
-)
+  estimate_bq_using_truth_read_labels = FALSE,
+  override_default_params_for_small_ref_panel = TRUE)
 }
 \arguments{
 \item{outputdir}{What output directory to use}
@@ -121,7 +97,6 @@ QUILT(
 \item{estimate_bq_using_truth_read_labels}{When using phasefile with known truth haplotypes, infer truth read labels, and use them to infer the real base quality against the bam recorded base qualities}
 
 \item{override_default_params_for_small_ref_panel}{When set to TRUE, then when using a smaller reference panel size (fewer haplotypes than Ksubset), parameter choices are reset appropriately. When set to FALSE, original values are used, which might crash QUILT}
-
 }
 \value{
 Results in properly formatted version
