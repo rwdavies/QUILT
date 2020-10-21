@@ -212,12 +212,17 @@ Rcpp_haploid_reference_single_forward <- function(gammaSmall_cols_to_get, gl, al
 }
 
 #' @export
+Rcpp_haploid_reference_single_forward_version2 <- function(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, eMatDH_special_grid_which, eMatDH_special_values_list) {
+    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_forward_version2', PACKAGE = 'QUILT', gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, eMatDH_special_grid_which, eMatDH_special_values_list))
+}
+
+#' @export
 Rcpp_haploid_reference_single_backward <- function(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage, nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches) {
     invisible(.Call('_QUILT_Rcpp_haploid_reference_single_backward', PACKAGE = 'QUILT', alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage, nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches))
 }
 
 #' @export
-Rcpp_haploid_dosage_versus_refs <- function(gl, alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, hapMatcher, gammaSmall_cols_to_get, K_top_matches, suppressOutput = 1L, return_betaHat_t = TRUE, return_dosage = TRUE, return_gamma_t = TRUE, return_gammaSmall_t = FALSE, get_best_haps_from_thinned_sites = FALSE) {
-    invisible(.Call('_QUILT_Rcpp_haploid_dosage_versus_refs', PACKAGE = 'QUILT', gl, alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, hapMatcher, gammaSmall_cols_to_get, K_top_matches, suppressOutput, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites))
+Rcpp_haploid_dosage_versus_refs <- function(gl, alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, hapMatcher, gammaSmall_cols_to_get, eMatDH_special_grid_which, eMatDH_special_values_list, K_top_matches, suppressOutput = 1L, min_emission_prob_normalization_threshold = 1e-100, return_betaHat_t = TRUE, return_dosage = TRUE, return_gamma_t = TRUE, return_gammaSmall_t = FALSE, get_best_haps_from_thinned_sites = FALSE, is_version_2 = FALSE) {
+    invisible(.Call('_QUILT_Rcpp_haploid_dosage_versus_refs', PACKAGE = 'QUILT', gl, alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, hapMatcher, gammaSmall_cols_to_get, eMatDH_special_grid_which, eMatDH_special_values_list, K_top_matches, suppressOutput, min_emission_prob_normalization_threshold, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, is_version_2))
 }
 

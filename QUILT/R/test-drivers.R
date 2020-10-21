@@ -265,3 +265,87 @@ make_quilt_fb_test_package <- function(
     )
 }
 
+
+
+#' @export
+make_reference_single_test_package <- function(
+    nSNPs = 500,
+    K = 1000,
+    seed = 4916,
+    L = NULL,
+    expRate = 1,
+    nGen = 10,
+    nMaxDH = 2 ** 10 - 1,
+    ref_error = 0.01,
+    gammaSmall_cols_to_get = NULL
+) {
+    set.seed(seed)
+    if (is.null(L)) {
+        L <- sort(sample(1:(nSNPs * 10), nSNPs))
+    }
+    out <- assign_positions_to_grid(
+        L = L,
+        grid32 = TRUE,
+        gridWindowSize = NA
+    )
+    grid <- out$grid
+    grid_distances <- out$grid_distances
+    L_grid <- out$L_grid
+    nGrids <- out$nGrids
+    snps_in_grid_1_based <- out$snps_in_grid_1_based
+    cM_grid <- out$cM_grid
+    dl <- diff(L_grid)
+    sigmaCurrent <- exp(-nGen * expRate / 100 / 1000000 * dl)
+    transMatRate_t <- rbind(sigmaCurrent, 1 - sigmaCurrent)
+    reference_haps <- array(as.integer(runif(nSNPs * K) > 0.5), c(nSNPs, K))
+    rhi <- reference_haps
+    rhi_t <- t(rhi)
+    rhb_t <- STITCH::make_rhb_t_from_rhi_t(rhi_t)
+    rhb <- t(rhb_t)
+    K <- nrow(rhb_t)
+    nGrids <- ncol(rhb_t)
+    out <- make_rhb_t_equality(
+        rhb_t = rhb_t,
+        nMaxDH = nMaxDH,
+        nSNPs = nSNPs,
+        ref_error = ref_error
+    )
+    distinctHapsB <- out[["distinctHapsB"]]
+    distinctHapsIE <- out[["distinctHapsIE"]]            
+    hapMatcher <- out[["hapMatcher"]]
+    eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
+    eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
+    my_hap <- c(
+        rhi_t[1, 1:36],
+        rhi_t[2, 37:60],
+        rhi_t[3, 61:nSNPs]
+    )
+    nReads <- round(nSNPs * 1.5)
+    u <- sort(sample(1:nSNPs, nReads, replace = TRUE))
+    bq <- rep(-10, length(u))
+    bq[my_hap[u] == 1] <- 10
+    gl <- make_gl_from_u_bq(u, bq, nSNPs)
+    ## choose some of these
+    if (is.null(gammaSmall_cols_to_get)) {
+        gammaSmall_cols_to_get <- integer(nGrids)
+        gammaSmall_cols_to_get[] <- -1L
+        w <- seq(2, nGrids, 4)
+        gammaSmall_cols_to_get[w] <- as.integer(0:(length(w) - 1))
+    }
+    return(
+        list(
+            distinctHapsB = distinctHapsB, 
+            distinctHapsIE = distinctHapsIE,
+            hapMatcher = hapMatcher,
+            rhb_t = rhb_t,
+            gl = gl,
+            transMatRate_t = transMatRate_t,
+            ref_error = ref_error,
+            eMatDH_special_values_list = eMatDH_special_values_list,
+            eMatDH_special_grid_which = eMatDH_special_grid_which,
+            gammaSmall_cols_to_get = gammaSmall_cols_to_get,
+            truth_hap = my_hap
+        )
+    )
+}
+

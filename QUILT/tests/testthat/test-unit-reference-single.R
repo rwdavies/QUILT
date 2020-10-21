@@ -13,6 +13,51 @@ if ( 1 == 0 ) {
     
 }
 
+
+test_that("can build necessary components from make_rhb_t_equality", {
+
+    ## make them mostly one of three options, with a few small changes
+    K <- 500
+    nSNPs <- 100
+    reference_haps <- array(as.integer(runif(nSNPs * K) > 0.5), c(nSNPs, K))
+    rhi <- reference_haps
+    rhi_t <- t(rhi)
+    rhb_t <- STITCH::make_rhb_t_from_rhi_t(rhi_t)
+    rhb <- t(rhb_t)
+    
+    ref_error <- 0.01
+    ref_one_minus_error <- 1 - ref_error
+
+    for(nMaxDH in c(3, 255)) {
+    
+        ## make haplotype matching objects
+        out <- make_rhb_t_equality(
+            rhb_t = rhb_t,
+            nMaxDH = nMaxDH,
+            nSNPs = nSNPs,
+            ref_error = ref_error
+        )
+        distinctHapsB <- out[["distinctHapsB"]]
+        distinctHapsIE <- out[["distinctHapsIE"]]            
+        hapMatcher <- out[["hapMatcher"]]
+        eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
+        eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
+        nrow_which_hapMatcher_0 <- out[["nrow_which_hapMatcher_0"]]
+        ##
+        ## perform
+        ## 
+        expect_equal(sum(eMatDH_special_grid_which != 0), length(eMatDH_special_values_list))
+        if (length(eMatDH_special_values_list) == 0) {
+            expect_equal(nrow_which_hapMatcher_0, 0)
+        } else {
+            expect_equal(nrow_which_hapMatcher_0, sum(sapply(eMatDH_special_values_list, length)))
+        }
+
+    }
+
+})
+
+
 test_that("can run a single gl sample through reference haplotypes quickly with grid of 32", {
 
     ## switch on and off. off does thes tests, on checks cpp times
@@ -68,8 +113,8 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
             get_best_haps_from_thinned_sites <- TRUE
 
             ##
-            ## i_setup = 1
-            ## i_setup = 2
+            ## i_setup = 1 --- 
+            ## i_setup = 2 --- 
             ## i_setup = 3 --- same as above, but only get best_haps from thinned sites
             if (!suppressOutput) {            
                 print(paste0("use_eMatDH = ", use_eMatDH, ", i_setup = ", i_setup))
@@ -153,7 +198,6 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
             ## from this, make prob of ref and prob of alt emissio for each
             ## my_hap <- 0.90 * my_hap + 0.10 * runif(nSNPs)
             rm(reference_haps, rhi_t, rhi); gc(reset = TRUE); gc(reset = TRUE)
-
 
             if (!speed_test) {
                 ## check the same
@@ -380,7 +424,6 @@ test_that("profile", {
 
     which_hapMatcher_0 <- which(hapMatcher == 0, arr.ind = TRUE) 
     which_hapMatcher_0 <- which_hapMatcher_0 - 1 ## make both 0-based
-
 
 
                 ## // now do additional check on stragglers

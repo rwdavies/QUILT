@@ -97,7 +97,9 @@ R_haploid_dosage_versus_refs <- function(
     return_gamma_t = TRUE,
     return_dosage = TRUE,
     return_gammaSmall_t = TRUE,
-    K_top_matches = 5
+    K_top_matches = 5,
+    always_normalize = TRUE,
+    min_emission_prob_normalization_threshold = 1e-100
 ) {
     ## run one sample haplotype against potentially very many other haplotypes
     K <- nrow(alphaHat_t)
@@ -105,7 +107,7 @@ R_haploid_dosage_versus_refs <- function(
     nSNPs <- ncol(gl)
     one_over_K <- 1 / K
     ref_one_minus_error <- 1 - ref_error
-    c <- array(0, nGrids)
+    c <- array(1, nGrids)
     if (use_eMatDH) {
         nMaxDH <- nrow(distinctHapsB)
     } else {
@@ -133,7 +135,8 @@ R_haploid_dosage_versus_refs <- function(
     }
     ##
     ## initialize alphaHat_t
-    ## 
+    ##
+    running_min_emission_prob <- 1
     iGrid <- 0
     s <- 32 * iGrid + 1 ## 1-based start
     e <- min(32 * (iGrid + 1), nSNPs) ## 1-based end
@@ -160,11 +163,17 @@ R_haploid_dosage_versus_refs <- function(
     for(iGrid in 1:(nGrids - 1)) {
         ## 
         jump_prob <- transMatRate_t[2, iGrid] / K
+        if (always_normalize) {
+            jump_prob_plus <- jump_prob
+        } else {
+            jump_prob_plus <- jump_prob * sum(alphaHat_t[, iGrid])
+        }
         not_jump_prob <- transMatRate_t[1, iGrid]
         s <- 32 * iGrid + 1 ## 1-based start
         e <- min(32 * (iGrid + 1), nSNPs) ## 1-based end
         nSNPsLocal <- e - s + 1
-        gl_local <- gl[, s : e, drop = FALSE]        
+        gl_local <- gl[, s : e, drop = FALSE]
+        min_emission_prob <- 1
         ##
         for(k in 0:(K - 1)) {
             if (use_eMatDH) {
@@ -177,11 +186,29 @@ R_haploid_dosage_versus_refs <- function(
             } else {
                 prob <- get_prob_for_k(rhb_t, k + 1, iGrid + 1, nSNPsLocal, ref_error, ref_one_minus_error, gl_local)
             }
-            alphaHat_t[k + 1, iGrid + 1] <- (jump_prob + not_jump_prob * alphaHat_t[k + 1, iGrid + 1 - 1]) * prob
+            alphaHat_t[k + 1, iGrid + 1] <- (jump_prob_plus + not_jump_prob * alphaHat_t[k + 1, iGrid + 1 - 1]) * prob
+            if (prob < min_emission_prob) {
+                min_emission_prob <- prob
+            }
         }
         ## normalize
-        c[iGrid + 1] <- 1 / sum(alphaHat_t[, iGrid + 1])
-        alphaHat_t[, iGrid + 1] <- alphaHat_t[, iGrid + 1] * c[iGrid + 1]
+        if (always_normalize) {
+            c[iGrid + 1] <- 1 / sum(alphaHat_t[, iGrid + 1])
+            alphaHat_t[, iGrid + 1] <- alphaHat_t[, iGrid + 1] * c[iGrid + 1]
+        } else {
+            ## otherwise, only do if necessary
+            running_min_emission_prob <- running_min_emission_prob * min_emission_prob
+            print(paste0("running_min_emission_prob = ", running_min_emission_prob))
+            if (
+                iGrid == (nGrids - 1) |
+                (running_min_emission_prob < min_emission_prob_normalization_threshold)
+            ) {
+                print(paste0("Perform normalization"))
+                c[iGrid + 1] <- 1 / sum(alphaHat_t[, iGrid + 1])
+                alphaHat_t[, iGrid + 1] <- alphaHat_t[, iGrid + 1] * c[iGrid + 1]
+                running_min_emission_prob <- 1
+            }
+        }
     }
     ##
     ## run backward algorithm
@@ -280,7 +307,11 @@ R_haploid_dosage_versus_refs <- function(
             dosage[s:e] <- dosageL            
         }
         ## finish up
-        betaHat_t_col <- betaHat_t_col * c[iGrid + 1]
+        if (always_normalize) {
+            betaHat_t_col <- betaHat_t_col * c[iGrid + 1]
+        } else {
+            betaHat_t_col <- betaHat_t_col * c[iGrid + 1]
+        }
         if (return_extra) {
             betaHat_t[, iGrid + 1] <- betaHat_t_col
             gamma_t[, iGrid + 1] <- gamma_t_col
@@ -295,10 +326,12 @@ R_haploid_dosage_versus_refs <- function(
     ## compare to each other and dosageX
     return(
         list(
-            gamma_t = gamma_t,
-            dosage = dosage,
             alphaHat_t = alphaHat_t,
             betaHat_t = betaHat_t,
+            c = c,
+            gamma_t = gamma_t,
+            gammaSmall_t = gammaSmall_t,
+            dosage = dosage,
             best_haps_stuff_list = best_haps_stuff_list
         )
     )
@@ -308,7 +341,12 @@ R_haploid_dosage_versus_refs <- function(
 
 
 
-make_rhb_t_equality <- function(rhb_t, nSNPs, ref_error, nMaxDH) {
+make_rhb_t_equality <- function(
+    rhb_t,
+    nSNPs,
+    ref_error,
+    nMaxDH
+) {
     K <- nrow(rhb_t)
     nGrids <- ncol(rhb_t)
     ## --- hapMatcher
@@ -343,11 +381,39 @@ make_rhb_t_equality <- function(rhb_t, nSNPs, ref_error, nMaxDH) {
     }
     distinctHapsIE[distinctHapsIE == 0] <- ref_error
     distinctHapsIE[distinctHapsIE == 1] <- 1 - ref_error
+    ##
+    ## also, look specifically at the 0 matches
+    ##
+    which_hapMatcher_0 <- which(hapMatcher == 0, arr.ind = TRUE) - 1
+    eMatDH_special_grid_which <- integer(nGrids)
+    special_grids <- unique(which_hapMatcher_0[, 2]) + 1 ## this-is-1-based
+    eMatDH_special_grid_which[special_grids] <- as.integer(1:length(special_grids))
+    if (nrow(which_hapMatcher_0) > 0) {
+        ## now build list with them
+        x <- which_hapMatcher_0[, 2]
+        y <- which((x[-1] - x[-length(x)]) > 0) ## last entry that is OK
+        starts <- c(1, y + 1)
+        ends <- c(y, length(x))
+        ##
+        ## eMatDH_special_values
+        ##   list of length the number of special grids
+        ##   entries are which ones to re-do, and where they are in rhb_t
+        ##   entries inside this are 0-based
+        eMatDH_special_values_list <- lapply(1:length(starts), function(i) {
+            return(as.integer(which_hapMatcher_0[starts[i]:ends[i], 1]))
+        })
+    } else {
+        eMatDH_special_values_list <- list()
+    }
+    nrow_which_hapMatcher_0 <- nrow(which_hapMatcher_0) ## for testing
     return(
         list(
             distinctHapsB = distinctHapsB,
             distinctHapsIE = distinctHapsIE,
-            hapMatcher = hapMatcher
+            hapMatcher = hapMatcher,
+            eMatDH_special_values_list = eMatDH_special_values_list,
+            eMatDH_special_grid_which = eMatDH_special_grid_which,
+            nrow_which_hapMatcher_0 = nrow_which_hapMatcher_0
         )
     )
 }
