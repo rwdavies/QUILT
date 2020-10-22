@@ -106,7 +106,8 @@ R_haploid_dosage_versus_refs <- function(
     always_normalize = TRUE,
     min_emission_prob_normalization_threshold = 1e-100,
     is_version_2 = FALSE,
-    suppressOutput = 1
+    suppressOutput = 1,
+    make_c_exact = TRUE
 ) {
     ## run one sample haplotype against potentially very many other haplotypes
     K <- nrow(alphaHat_t)
