@@ -404,6 +404,10 @@ void Rcpp_haploid_reference_single_forward(
                 } else {
                     run_total = K * jump_prob_plus + prev_alphaHat_t_col_sum * not_jump_prob;
                 }
+                if (iGrid == (nGrids - 1)) {
+                    c(iGrid) = 1 / run_total;
+                    alphaHat_t_col *= c(iGrid);
+                }
             }
             prev_alphaHat_t_col_sum = run_total;
 	    if (store_alpha_for_this_grid) {
@@ -482,6 +486,8 @@ void Rcpp_haploid_reference_single_forward_version2(
     double min_emission_prob = 1;
     double prev_alphaHat_t_col_sum = 1;
     double jump_prob_plus = 1;
+    double jump_prob_plus_divided_by_not_jump = 1;
+    double x = 0; // misc    
     //
     for(iGrid = 1; iGrid < nGrids; iGrid++) {
         jump_prob = transMatRate_t(1, iGrid - 1) / double_K;
@@ -492,6 +498,7 @@ void Rcpp_haploid_reference_single_forward_version2(
             //std::cout << "prev_alphaHat_t_col_sum = " <<prev_alphaHat_t_col_sum << ", col sum version = " << arma::sum(alphaHat_t.col(iGrid - 1)) << std::endl;
         }
         not_jump_prob = transMatRate_t(0, iGrid - 1);
+        jump_prob_plus_divided_by_not_jump = jump_prob_plus / not_jump_prob;
         one_minus_jump_prob = (1 - jump_prob);
         s = 32 * iGrid; // 0-based here
         e = 32 * (iGrid + 1) - 1;
@@ -533,7 +540,8 @@ void Rcpp_haploid_reference_single_forward_version2(
 		run_total = 0;
                 for(k = 0; k < K; k++) {
 		    // if dh_col is 0 i.e. need to re-do this prob is 1 so we are OK
-                    alphaHat_t_col(k) = (jump_prob_plus + not_jump_prob * alphaHat_t_col(k)) * eMatDH_col(dh_col(k));
+                    //alphaHat_t_col(k) = (jump_prob_plus + not_jump_prob * alphaHat_t_col(k)) * eMatDH_col(dh_col(k));
+                    alphaHat_t_col(k) = (jump_prob_plus_divided_by_not_jump + alphaHat_t_col(k)) * eMatDH_col(dh_col(k));
                     run_total += alphaHat_t_col(k);
                 }
                 //
@@ -564,36 +572,56 @@ void Rcpp_haploid_reference_single_forward_version2(
                     }
                 }
                 //
-                // end of special cases
+                // now, the normal way, have new alphaHat_t_col, up to not_jump_prob
+                //    and new run_total, accuracy on alphaHat_t_col
                 //
-                if (always_normalize) {
-                    c(iGrid) = 1 / run_total;
-                    alphaHat_t_col *= c(iGrid);
-                } else {
-                    running_min_emission_prob *= min_emission_prob;
-                    if (
-                        (running_min_emission_prob < min_emission_prob_normalization_threshold) |
-                        (iGrid == (nGrids - 1))
-                        ) {
-                        running_min_emission_prob = 1;
-                        c(iGrid) = 1 / run_total;
-                        alphaHat_t_col *= c(iGrid);
-                        run_total = 1;
-                    }
-                }
             } else {
-	        alphaHat_t_col = (jump_prob_plus + not_jump_prob * alphaHat_t_col);
-	        c(iGrid) = 1;
-                if (always_normalize) {
-                    run_total = 1;
-                } else {
-                    run_total = K * jump_prob_plus + prev_alphaHat_t_col_sum * not_jump_prob;
-                }
+                //
+                //
+                //alphaHat_t_col = (jump_prob_plus + not_jump_prob * alphaHat_t_col);
+	        alphaHat_t_col = (jump_prob_plus_divided_by_not_jump + alphaHat_t_col);
+                run_total = K * jump_prob_plus_divided_by_not_jump + prev_alphaHat_t_col_sum;
+                // if (always_normalize) {
+                //     run_total = 1;
+                // } else {
+                // }
+            }
+            //
+            // first, no matter what, capture the not_jump_prob
+            //
+            c(iGrid) = 1 / not_jump_prob;
+            //
+            // then, possibly normalize
+            //
+            if (
+                always_normalize |
+                (running_min_emission_prob < min_emission_prob_normalization_threshold) |
+                (iGrid == (nGrids - 1))
+            ) {
+                // normalize so that alphaHat_t_col has sum 1
+                x = 1 / (run_total);
+                alphaHat_t_col *= x;                
+                c(iGrid) /= run_total;
+                run_total=1;
+                running_min_emission_prob *= min_emission_prob;                
             }
             prev_alphaHat_t_col_sum = run_total;
 	    if (store_alpha_for_this_grid) {
 	        alphaHat_t.col(iGrid) = alphaHat_t_col;
 	    }
+            //     x = arma::sum(alphaHat_t_col) - run_total;
+            //     if (x > 1e-6 | x < (-1e-6)) {
+            //         std::cout << "arma::sum(alphaHat_t_col) = " << arma::sum(alphaHat_t_col) << ", run_total = " << run_total << std::endl;
+            //     }
+	    //     //c(iGrid) = 1 / (not_jump_prob);
+            //     if (iGrid == (nGrids - 1)) {
+            //         c(iGrid) /= run_total;
+            //         x = 1 / run_total;
+            //         alphaHat_t_col *= x;
+            //     }
+            // }
+            //
+            //
         } else {
             //
             // no to eMatDH

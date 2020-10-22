@@ -503,6 +503,8 @@ get_and_impute_one_sample <- function(
     distinctHapsB,
     distinctHapsIE,
     hapMatcher,
+    eMatDH_special_grid_which,
+    eMatDH_special_values_list,
     inRegion2,
     cM_grid,
     af,
@@ -653,6 +655,8 @@ get_and_impute_one_sample <- function(
                 distinctHapsB = distinctHapsB,
                 distinctHapsIE = distinctHapsIE,
                 hapMatcher = hapMatcher,
+                eMatDH_special_grid_which = eMatDH_special_grid_which,
+                eMatDH_special_values_list = eMatDH_special_values_list,
                 ref_error = ref_error,
                 make_plots = make_plots,
                 outplotprefix = outplotprefix,
@@ -811,6 +815,8 @@ get_and_impute_one_sample <- function(
                 distinctHapsB =distinctHapsB,
                 distinctHapsIE = distinctHapsIE,
                 hapMatcher = hapMatcher,
+                eMatDH_special_grid_which = eMatDH_special_grid_which,
+                eMatDH_special_values_list = eMatDH_special_values_list,
                 ref_error = ref_error,
                 make_plots = FALSE, ## these plots are pretty useless? as plots?
                 outplotprefix = outplotprefix,
@@ -1367,6 +1373,8 @@ impute_using_everything <- function(
     distinctHapsB,
     distinctHapsIE,
     hapMatcher,
+    eMatDH_special_grid_which,
+    eMatDH_special_values_list,
     ref_error,
     make_plots,
     outplotprefix,
@@ -1425,10 +1433,12 @@ impute_using_everything <- function(
         }
         gl <- make_gl_from_u_bq(u, bq, nSNPs)
         use_eMatDH <- TRUE
+        c <-  array(1, c(nGrids))  ## more useful for debugging
         Rcpp_haploid_dosage_versus_refs(
             gl = gl,
             alphaHat_t = full_alphaHat_t,
             betaHat_t = full_betaHat_t,
+            c = c,
             gamma_t = full_gamma_t,
             dosage = dosage,
             transMatRate_t = full_transMatRate_t_H,
@@ -1438,6 +1448,8 @@ impute_using_everything <- function(
             distinctHapsB = distinctHapsB,
             distinctHapsIE = distinctHapsIE,
             hapMatcher = hapMatcher,
+            eMatDH_special_grid_which = eMatDH_special_grid_which,
+            eMatDH_special_values_list = eMatDH_special_values_list,
             suppressOutput = 1,
             return_dosage = return_dosage,
             return_betaHat_t = return_betaHat_t,

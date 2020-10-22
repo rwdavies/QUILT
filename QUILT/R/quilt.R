@@ -295,6 +295,8 @@ QUILT <- function(
         distinctHapsB <- out[["distinctHapsB"]]
         distinctHapsIE <- out[["distinctHapsIE"]]
         hapMatcher <- out[["hapMatcher"]]
+        eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
+        eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
     }
     K <- nrow(rhb_t)
     ancAlleleFreqAll <- ref_alleleCount[, 3]
@@ -518,6 +520,8 @@ QUILT <- function(
                 distinctHapsB = distinctHapsB,
                 distinctHapsIE = distinctHapsIE,
                 hapMatcher = hapMatcher,
+                eMatDH_special_grid_which = eMatDH_special_grid_which,
+                eMatDH_special_values_list = eMatDH_special_values_list,
                 inRegion2 = inRegion2,
                 cM_grid = cM_grid,
                 af = af,

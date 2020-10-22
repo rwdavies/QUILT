@@ -82,6 +82,7 @@ R_haploid_dosage_versus_refs <- function(
     alphaHat_t,
     betaHat_t,
     c,
+    c_prob,
     gamma_t,
     gammaSmall_t,    
     dosage,
