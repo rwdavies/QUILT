@@ -212,8 +212,8 @@ Rcpp_haploid_reference_single_forward <- function(gammaSmall_cols_to_get, gl, al
 }
 
 #' @export
-Rcpp_haploid_reference_single_forward_version2 <- function(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, eMatDH_special_grid_which, eMatDH_special_values_list) {
-    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_forward_version2', PACKAGE = 'QUILT', gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, eMatDH_special_grid_which, eMatDH_special_values_list))
+Rcpp_haploid_reference_single_forward_version2 <- function(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, eMatDH_special_grid_which, eMatDH_special_values_list) {
+    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_forward_version2', PACKAGE = 'QUILT', gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, eMatDH_special_grid_which, eMatDH_special_values_list))
 }
 
 #' @export

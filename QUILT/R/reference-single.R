@@ -103,7 +103,9 @@ R_haploid_dosage_versus_refs <- function(
     return_gammaSmall_t = TRUE,
     K_top_matches = 5,
     always_normalize = TRUE,
-    min_emission_prob_normalization_threshold = 1e-100
+    min_emission_prob_normalization_threshold = 1e-100,
+    is_version_2 = FALSE,
+    suppressOutput = 1
 ) {
     ## run one sample haplotype against potentially very many other haplotypes
     K <- nrow(alphaHat_t)
@@ -334,7 +336,8 @@ R_haploid_dosage_versus_refs <- function(
             gamma_t = gamma_t,
             gammaSmall_t = gammaSmall_t,
             dosage = dosage,
-            best_haps_stuff_list = best_haps_stuff_list
+            best_haps_stuff_list = best_haps_stuff_list,
+            eMatDH = eMatDH
         )
     )
 }

@@ -275,7 +275,7 @@ make_reference_single_test_package <- function(
     L = NULL,
     expRate = 1,
     nGen = 10,
-    nMaxDH = 2 ** 10 - 1,
+    nMaxDH = 2 ** 8 - 1,
     ref_error = 0.01,
     gammaSmall_cols_to_get = NULL
 ) {
@@ -297,7 +297,45 @@ make_reference_single_test_package <- function(
     dl <- diff(L_grid)
     sigmaCurrent <- exp(-nGen * expRate / 100 / 1000000 * dl)
     transMatRate_t <- rbind(sigmaCurrent, 1 - sigmaCurrent)
-    reference_haps <- array(as.integer(runif(nSNPs * K) > 0.5), c(nSNPs, K))
+    ## in each grid, make a few, then a tail
+    reference_haps <- array(0, c(nSNPs, K))
+    for(iGrid in 1:(nGrids - 1)) {
+        ##
+        ## this is designed to be semi-realistic
+        ## choose some number of haplotypes to sample from (y)
+        ## then choose some smaller number of haplotypes to make random (z)
+        ## then y are made from z with some small alterations
+        ## like deep branches vs short branches
+        ##
+        y <- rpois(n = K, lambda = 10)
+        nLocal <- 4
+        if (iGrid == 3 | iGrid == 10) {
+            ## 
+            y[sample(1:K, nMaxDH + 20, replace = FALSE)] <- 1:(nMaxDH + 20)
+            ##
+            nLocal <- 6
+        }
+        n <- max(y) + 1
+        y2 <- array(NA, c(32, n))
+        ## here, not that deep
+        z <- max(rpois(n = 1, lambda = 6), nLocal)
+        ## choose each one with a different frequency
+        for(iSNP in 1:32) {
+            if (iGrid == 3 | iGrid == 10) {
+                af <- rbeta(n = 1, 1, 1)
+            } else {
+                af <- rbeta(n = 1, 0.1, 0.1)
+            }
+            y2[iSNP, 1:z] <- sample(c(0, 1), z, replace = TRUE, prob = c(1 - af, af))
+        }
+        ## 
+        for(i in (z + 1):n) {
+            y2[, i] <- y2[, sample(1:z, 1)]
+            y2[sample(1:32, nLocal), i] <- sample(c(0, 1), nLocal, replace = TRUE)
+        }
+        x <- y2[, y + 1]
+        reference_haps[32 * (iGrid - 1) + 1:32, ] <- x ## rows are SNPs
+    }
     rhi <- reference_haps
     rhi_t <- t(rhi)
     rhb_t <- STITCH::make_rhb_t_from_rhi_t(rhi_t)
@@ -318,15 +356,15 @@ make_reference_single_test_package <- function(
     my_hap <- c(
         rhi_t[1, 1:36],
         rhi_t[2, 37:60],
-        rhi_t[3, 61:200],
-        rhi_t[4, 257:352],
-        rhi_t[5, 353:nSNPs]
+        rhi_t[3, 61:250],
+        rhi_t[4, 257:400],
+        rhi_t[5, 401:nSNPs]
     )
     ## make about 0.25X coverage
-    nReads <- round(nSNPs * 1.5)
+    nReads <- round(nSNPs * 0.25)
     u <- sort(sample(1:nSNPs, nReads, replace = TRUE))
     ## though specifically remove some regions, make have no variants
-    u <- u[!(u %in% 150:250)]
+    u <- u[!(u %in% 200:300)]
     ## 
     bq <- rep(-10, length(u))
     bq[my_hap[u] == 1] <- 10
