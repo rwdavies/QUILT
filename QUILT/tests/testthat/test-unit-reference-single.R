@@ -712,7 +712,7 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
 
 test_that("profile", {
 
-    skip("not done routinely")
+    skip("for profiling")
     
     if (1 == 0) {
 
@@ -782,6 +782,31 @@ test_that("profile", {
     add_zero_row <- TRUE
     eMatDH_bigger <- Rcpp_build_eMatDH(distinctHapsB, gl, nGrids, nSNPs, ref_error, ref_one_minus_error, add_zero_row)
 
+    ##
+    ## get first alpha and c
+    ##
+    iGrid <- 0
+    s <- 32 * iGrid + 1 ## 1-based start
+    e <- min(32 * (iGrid + 1), nSNPs) ## 1-based end
+    nSNPsLocal <- e - s + 1
+    gl_local <- gl[, s : e, drop = FALSE]
+    first_alpha <- array(0, K)
+    one_over_K <- 1 / K            
+    for(k in 0:(K - 1)) {
+        if (use_eMatDH) {
+            dh <- hapMatcher[k + 1, iGrid + 1]
+        } else {
+            dh <- 0
+        }
+        if (dh > 0) {
+            prob <- eMatDH[dh, iGrid + 1]
+        } else {
+            prob <- get_prob_for_k(rhb_t, k + 1, iGrid + 1, nSNPsLocal, ref_error, ref_one_minus_error, gl_local)
+        }
+        first_alpha[k + 1] <- prob * one_over_K
+    }
+    first_c <- 1 / sum(first_alpha)
+    first_alpha <- first_c * first_alpha
 
     ##
     ## profile forward
@@ -794,13 +819,13 @@ test_that("profile", {
         print("-----------------------")        
         
         alphaHat_t_new <- array(0, c(K, nGrids))
-        alphaHat_t_new[, 1] <- 1
+        alphaHat_t_new[, 1] <- first_alpha
         c1 <- array(1, c(1, nGrids))
         alphaHat_t_original <- array(0, c(K, nGrids))
-        alphaHat_t_original[, 1] <- 1
+        alphaHat_t_original[, 1] <- first_alpha
         c2 <- array(1, c(1, nGrids))
-        c1[1] <- 1
-        c2[1] <- 1
+        c1[1] <- first_c
+        c2[1] <- first_c
 
         ## OK, is there some way I can avoid more multiplications!
         
@@ -893,7 +918,8 @@ test_that("profile", {
             ## expect_equal(x, exp(sum(log(c1[1:iGrid])) - sum(log(c2[1:iGrid]))))
             expect_equal(
                 exp(x),
-                exp(sum(log(c1[1:iGrid])) - sum(log(c2[1:iGrid])))
+                exp(sum(log(c1[1:iGrid])) - sum(log(c2[1:iGrid]))),
+                tol = 1e-5
             )
         }
 
@@ -950,30 +976,6 @@ test_that("profile", {
             dosage1 <- numeric(nSNPs)
             dosage2 <- numeric(nSNPs)
             
-            ##
-            ## get first alpha and c
-            ##
-            iGrid <- 0
-            s <- 32 * iGrid + 1 ## 1-based start
-            e <- min(32 * (iGrid + 1), nSNPs) ## 1-based end
-            nSNPsLocal <- e - s + 1
-            gl_local <- gl[, s : e, drop = FALSE]
-            first_alpha <- array(0, K)
-            one_over_K <- 1 / K            
-            for(k in 0:(K - 1)) {
-                if (use_eMatDH) {
-                    dh <- hapMatcher[k + 1, iGrid + 1]
-                } else {
-                    dh <- 0
-                }
-                if (dh > 0) {
-                    prob <- eMatDH[dh, iGrid + 1]
-                } else {
-                    prob <- get_prob_for_k(rhb_t, k + 1, iGrid + 1, nSNPsLocal, ref_error, ref_one_minus_error, gl_local)
-                }
-                first_alpha[k + 1] <- prob * one_over_K
-            }
-            first_c <- 1 / sum(first_alpha)
             
             ##
             ## run forward to initialize
