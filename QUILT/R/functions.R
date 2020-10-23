@@ -1459,7 +1459,9 @@ impute_using_everything <- function(
             gammaSmall_cols_to_get = full_gammaSmall_cols_to_get,
             get_best_haps_from_thinned_sites = get_best_haps_from_thinned_sites,
             best_haps_stuff_list = best_haps_stuff_list,
-            K_top_matches = K_top_matches
+            K_top_matches = K_top_matches,
+            always_normalize = FALSE,
+            is_version_2 = TRUE
         )
         dosageNew <- numeric(nSNPs)
         dosageNew <- dosage[]

@@ -97,6 +97,10 @@ Rcpp::List Rcpp_get_top_K_or_more_matches_while_building_gamma(
 ) {
     // first pass, do gamma, and calculate minimal value for the get
     // second pass, get those values and store them
+    //
+    // note, possible that betaHat_t_col is off by a factor of not_jump_prob
+    // this will uniformly scale the values. it won't affect order or rank
+    //
     Rcpp::NumericVector top_K_values(K_top_matches); // reverse order i.e. first is smallest, last is highest
     top_K_values.fill(0);
     int beats_value = 0;
@@ -965,8 +969,10 @@ void Rcpp_haploid_reference_single_backward_version2(
     arma::colvec eMatDH_col(nMaxDH + 1);
     arma::colvec prob_col(K);
     double sum_e_times_b = 0;
-    double prev_val = -1; // argh
+    //double prev_val = -1; // argh
     double min_emission_prob, max_emission_prob;
+    double B_prev = 1;
+    double B_prev_star = 1;
     //
     //
     for(iGrid = nGrids - 1; iGrid >= 0; --iGrid) {
@@ -1005,7 +1011,7 @@ void Rcpp_haploid_reference_single_backward_version2(
 		    sum_e_times_b = 0;
 		    for(k = 0; k < K; k++) {
 			e_times_b(k) = betaHat_t_col(k) * eMatDH_col(dh_col(k));
-			sum_e_times_b += e_times_b(k);
+		        sum_e_times_b += e_times_b(k);
 		    }
                     if (eMatDH_special_grid_which(iGrid + 1) > 0) {
                         Rcpp::IntegerVector vals_to_redo = Rcpp::as<Rcpp::IntegerVector>(eMatDH_special_values_list(eMatDH_special_grid_which(iGrid + 1) - 1));
@@ -1031,31 +1037,26 @@ void Rcpp_haploid_reference_single_backward_version2(
                         }
                     }
                     //
-                    //
-                    //
 		    val = jump_prob / not_jump_prob * sum_e_times_b;
 		    betaHat_t_col = (e_times_b + val);
-		    prev_val = -1;
+                    //
+                    B_prev = sum_e_times_b;
+                    B_prev_star = c(iGrid) * B_prev;
+                    //
 		} else {
                     //
                     // previous version
                     //
-		    if (prev_val == -1) {
-		         val = jump_prob * sum(betaHat_t_col);
-		    } else {
-		     	double J1 = (transMatRate_t(1, iGrid + 1) / double_K);
-		     	double N1 = transMatRate_t(0, iGrid + 1);
-		     	val = prev_val * jump_prob * (N1 / J1 + double_K);
-		    }
-                    val /= not_jump_prob;
+                    val = jump_prob / not_jump_prob * B_prev_star;
 		    betaHat_t_col = betaHat_t_col + val;
-		    prev_val = not_jump_prob * val * c(iGrid);
                     //
+                    B_prev = B_prev_star;
+                    B_prev_star = c(iGrid) * B_prev;
                 }
                 //
 	    } else {
 	        for(k = 0; k < K; k++) {
-		    //
+		  //
 		  std::uint32_t tmp(rhb_t(k, iGrid + 1));
 		  //
 		  prob = 1;
@@ -1076,8 +1077,6 @@ void Rcpp_haploid_reference_single_backward_version2(
 		betaHat_t_col = ((not_jump_prob) * e_times_b + val);
 	    }
             //
-            //betaHat_t_col *= not_jump_prob; // to-work on!
-            //
         }
         //
 	// all this was to give us the unnormalized beta column that we can now work with
@@ -1090,15 +1089,22 @@ void Rcpp_haploid_reference_single_backward_version2(
             }
         }
         if (get_best_haps_from_thinned_sites && (gammaSmall_cols_to_get(iGrid) >= 0)) {
-            betaHat_t_col *= not_jump_prob;
+            // so betaHat_t_col will be missing a multiplication through by not_jump_prob
+            // so so will gamma_t_col as well
+            //betaHat_t_col *= not_jump_prob;
             best_haps_stuff_list(gammaSmall_cols_to_get(iGrid)) = Rcpp_get_top_K_or_more_matches_while_building_gamma(alphaHat_t, betaHat_t_col, gamma_t_col, iGrid, K, K_top_matches);
-            betaHat_t_col /= not_jump_prob;
+            //betaHat_t_col /= not_jump_prob;
+            //gamma_t_col /= not_jump_prob;
+            // because will add this back in later on (when stored)
+            //if (return_gamma_t) {
+            //    gamma_t_col /= not_jump_prob;
+            //}
         } else {
             // otherwise, do per-entry, check for kth best value
             if (return_dosage | return_gamma_t | calculate_small_gamma_t_col) {
-                // betaHat_t_col includes effect of c, so this is accurate and does not need more c                
+                // betaHat_t_col includes effect of c, so this is accurate and does not need more c
+                // we do not multiply through by not_jump_prob here though
                 gamma_t_col = alphaHat_t.col(iGrid) % betaHat_t_col;
-                gamma_t_col *= not_jump_prob;
             }
         }
         //
@@ -1116,8 +1122,9 @@ void Rcpp_haploid_reference_single_backward_version2(
                 // some of the dh will be 0 and go to matched_gammas 0th entry, but that is OK we do not use that
                 // they are dealt with afterwards
                 for(k = 0; k < K; k++) {
-		    matched_gammas(dh_col(k)) += gamma_t_col(k);
+                    matched_gammas(dh_col(k)) += gamma_t_col(k);
                 }
+                matched_gammas *= not_jump_prob;
                 //
                 // special cases here
                 //
@@ -1160,7 +1167,7 @@ void Rcpp_haploid_reference_single_backward_version2(
                             // reference
                             dosageL(b) += gk * (ref_error);
                         }
-                }
+                    }
                 }
                 // put back
                 for(b = 0; b < nSNPsLocal; b++) {
@@ -1168,20 +1175,22 @@ void Rcpp_haploid_reference_single_backward_version2(
                 }
             }
         }
+        //
         // add in c here to betaHat_t_col (as long as not 1!)
-        // if (c(iGrid) == (1 / not_jump_prob)) {
-        //     std::cout << "can skip norm!" << std::endl;
-        // } else {
-        //     //std::cout << "doooo the norm, c(iGrid) = " << c(iGrid) << ", 1 / not_jump_prob = " << 1 / not_jump_prob << std::endl;
-        betaHat_t_col *= not_jump_prob;
+        //
         if (c(iGrid) != 1) {
-            //double x = c(iGrid) / not_jump_prob;
-	    betaHat_t_col *= c(iGrid);
-	}
+            // I don't think I can ever skip these? they are off-by-1 on not-jump-prob?
+            //std::cout << "c(iGrid) = " << c(iGrid) << ", 1 / not_jump_prob = " << 1 / not_jump_prob << std::endl;
+            double x = c(iGrid) * not_jump_prob;
+	    betaHat_t_col *= x;
+	} else {
+            betaHat_t_col *= not_jump_prob;
+        }
         if (return_betaHat_t) {
             betaHat_t.col(iGrid) = betaHat_t_col;
         }
         if (return_gamma_t) {
+            gamma_t_col *= not_jump_prob;
             gamma_t.col(iGrid) = gamma_t_col;
         }
         if (calculate_small_gamma_t_col) {
