@@ -463,8 +463,7 @@ void Rcpp_haploid_reference_single_forward_version2(
     bool always_normalize,
     double min_emission_prob_normalization_threshold,
     const Rcpp::IntegerVector& eMatDH_special_grid_which,
-    const Rcpp::List& eMatDH_special_values_list,
-    const bool make_c_exact
+    const Rcpp::List& eMatDH_special_values_list
 ) {
     double jump_prob, one_minus_jump_prob, not_jump_prob;
     int s, e, nSNPsLocal, i, iGrid, k;
@@ -578,21 +577,19 @@ void Rcpp_haploid_reference_single_forward_version2(
                 //
             } else {
                 //
-                //
-                //alphaHat_t_col = (jump_prob_plus + not_jump_prob * alphaHat_t_col);
+                // here jump_prob_plus_divided_by_not_jump is A_{g-1} * \psi^{g-1} / \eta^{g-1}
+                // 
 	        alphaHat_t_col = (jump_prob_plus_divided_by_not_jump + alphaHat_t_col);
-                run_total = K * jump_prob_plus_divided_by_not_jump + prev_alphaHat_t_col_sum;
-                // if (always_normalize) {
-                //     run_total = 1;
-                // } else {
-                // }
+                //
+                // then the sum is A_{g-1} / ega^{g-1}
+                //
+                run_total = prev_alphaHat_t_col_sum / not_jump_prob;                
+                //run_total = K * jump_prob_plus_divided_by_not_jump + prev_alphaHat_t_col_sum;
             }
             //
             // first, no matter what, capture the not_jump_prob
             //
-            //if (make_c_exact) {
-                c(iGrid) = 1 / not_jump_prob;
-                //}
+            c(iGrid) = 1 / not_jump_prob;
             //
             // then, possibly normalize
             //
@@ -698,8 +695,7 @@ void Rcpp_haploid_reference_single_backward(
     bool return_gammaSmall_t,
     bool get_best_haps_from_thinned_sites,
     const int nMaxDH,
-    const int K_top_matches,
-    bool make_c_exact
+    const int K_top_matches
 ) {
     // 
     //
@@ -835,12 +831,6 @@ void Rcpp_haploid_reference_single_backward(
                 gamma_t_col = alphaHat_t.col(iGrid) % betaHat_t_col; // betaHat_t_col includes effect of c, so this is accurate and does not need more c
             }
         }
-        // if (make_c_exact) {
-        //     //
-        //     // FUCK, ARGH, PROBABLY NOT RIGHT
-        //     //
-        //     gamma_t_col *= not_jump_prob;
-        // }
         //
         if (return_dosage) {
             s = 32 * (iGrid); // 0-based here
@@ -949,7 +939,6 @@ void Rcpp_haploid_reference_single_backward_version2(
     bool get_best_haps_from_thinned_sites,
     const int nMaxDH,
     const int K_top_matches,
-    bool make_c_exact,
     const Rcpp::IntegerVector& eMatDH_special_grid_which,
     const Rcpp::List& eMatDH_special_values_list
 ) {
@@ -975,7 +964,8 @@ void Rcpp_haploid_reference_single_backward_version2(
     arma::colvec eMatDH_col(nMaxDH + 1);
     arma::colvec prob_col(K);
     double sum_e_times_b = 0;
-    double prev_val = -1; // argh          
+    double prev_val = -1; // argh
+    double min_emission_prob, max_emission_prob;
     //
     //
     for(iGrid = nGrids - 1; iGrid >= 0; --iGrid) {
@@ -1006,12 +996,22 @@ void Rcpp_haploid_reference_single_backward_version2(
 	        if (grid_has_variant) {
 		    dh_col = hapMatcher.col(iGrid + 1);		  
 		    eMatDH_col = eMatDH.col(iGrid + 1);
+                    //
+                    min_emission_prob = arma::min(eMatDH_col);
+                    max_emission_prob = arma::max(eMatDH_col);
+                    eMatDH_col(0) = max_emission_prob;
+                    //
 		    sum_e_times_b = 0;
 		    for(k = 0; k < K; k++) {
-                        prob = eMatDH_col(dh_col(k));
-			if (dh_col(k) == 0) {
+			e_times_b(k) = betaHat_t_col(k) * eMatDH_col(dh_col(k));
+			sum_e_times_b += e_times_b(k);
+		    }
+                    if (eMatDH_special_grid_which(iGrid + 1) > 0) {
+                        Rcpp::IntegerVector vals_to_redo = Rcpp::as<Rcpp::IntegerVector>(eMatDH_special_values_list(eMatDH_special_grid_which(iGrid + 1) - 1));
+                        for(i = 0; i < vals_to_redo.size(); i++) {
+                            k = vals_to_redo(i);
 			    //
-			    std::uint32_t tmp(rhb_t(k, iGrid + 1));                
+			    std::uint32_t tmp(rhb_t(k, iGrid + 1));
 			    //
 			    prob = 1;
 			    for(int b = 0; b < nSNPsLocal; b++) {
@@ -1024,18 +1024,21 @@ void Rcpp_haploid_reference_single_backward_version2(
                                 prob *= (dR * ref_one_minus_error + dA * ref_error);
 			      }
 			    }
-			    //prob_col(k) = prob;
-			}
-			//ematcol(k) = prob;		    
-			e_times_b(k) = betaHat_t_col(k) * prob;
-			sum_e_times_b += e_times_b(k);
-		    }
-		    val = jump_prob * sum_e_times_b;
-		    betaHat_t_col = ((not_jump_prob) * e_times_b + val);
+                            sum_e_times_b -= e_times_b(k);
+                            e_times_b(k) = betaHat_t_col(k) * prob;
+                            sum_e_times_b += e_times_b(k);                            
+                        }
+                    }
+                    //
+                    //
+                    //
+		    val = jump_prob / not_jump_prob * sum_e_times_b;
+		    betaHat_t_col = (e_times_b + val);
 		    prev_val = -1;
 		} else {
-		    // so here prob is uniformly 1, can then super simplify
-		    // also, "val", can work out math, is the same if two consecutive no variants, so avoid another fullsum
+                    //
+                    // previous version
+                    //
 		    if (prev_val == -1) {
 		         val = jump_prob * sum(betaHat_t_col);
 		    } else {
@@ -1043,9 +1046,14 @@ void Rcpp_haploid_reference_single_backward_version2(
 		     	double N1 = transMatRate_t(0, iGrid + 1);
 		     	val = prev_val * (N1 * jump_prob / J1 + double_K * jump_prob);
 		    }
-		    betaHat_t_col = ((not_jump_prob) * betaHat_t_col + val);
-		    prev_val = val * c(iGrid); // c should not be relevant though, should be 1, has no variants
+                    val /= not_jump_prob;
+		    betaHat_t_col = betaHat_t_col + val;
+		    prev_val = not_jump_prob * val * c(iGrid);
+                    //
                 }
+                //
+                betaHat_t_col *= not_jump_prob; // to-work on!
+                //
 	    } else {
 	        for(k = 0; k < K; k++) {
 		    //
@@ -1087,12 +1095,6 @@ void Rcpp_haploid_reference_single_backward_version2(
                 gamma_t_col = alphaHat_t.col(iGrid) % betaHat_t_col; // betaHat_t_col includes effect of c, so this is accurate and does not need more c
             }
         }
-        // if (make_c_exact) {
-        //     //
-        //     // FUCK, ARGH, PROBABLY NOT RIGHT
-        //     //
-        //     gamma_t_col *= not_jump_prob;
-        // }
         //
         if (return_dosage) {
             s = 32 * (iGrid); // 0-based here
@@ -1203,8 +1205,7 @@ void Rcpp_haploid_dosage_versus_refs(
     bool get_best_haps_from_thinned_sites = false,
     bool is_version_2 = false,
     bool return_extra = false,
-    bool always_normalize = true,
-    bool make_c_exact = true
+    bool always_normalize = true
 ) {
     //
     double prev=clock();
@@ -1312,7 +1313,7 @@ void Rcpp_haploid_dosage_versus_refs(
     prev=print_times(prev, suppressOutput, prev_section, next_section);
     prev_section=next_section;
     if (is_version_2) {
-        Rcpp_haploid_reference_single_forward_version2(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, eMatDH_special_grid_which, eMatDH_special_values_list, make_c_exact);
+        Rcpp_haploid_reference_single_forward_version2(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, eMatDH_special_grid_which, eMatDH_special_values_list);
     } else {
         Rcpp_haploid_reference_single_forward(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold);
     }
@@ -1330,9 +1331,9 @@ void Rcpp_haploid_dosage_versus_refs(
     prev=print_times(prev, suppressOutput, prev_section, next_section);
     prev_section=next_section;
     if (is_version_2) {
-        Rcpp_haploid_reference_single_backward_version2(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage,     nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches, make_c_exact, eMatDH_special_grid_which, eMatDH_special_values_list);
+        Rcpp_haploid_reference_single_backward_version2(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage,     nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches, eMatDH_special_grid_which, eMatDH_special_values_list);
     } else {
-        Rcpp_haploid_reference_single_backward(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage,     nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches, make_c_exact);
+        Rcpp_haploid_reference_single_backward(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage,     nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches);
     }
     // 
     //

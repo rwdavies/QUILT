@@ -78,7 +78,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     ##
     ## run normal version in R, or Rcpp, and make sure the same
     ##
-    master_f <- function(always_normalize, language, is_version_2, make_c_exact = TRUE) {
+    master_f <- function(always_normalize, language, is_version_2) {
         if (language == "R") {
             f <- R_haploid_dosage_versus_refs
         } else if (language == "Rcpp") {
@@ -133,8 +133,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
             eMatDH_special_values_list = eMatDH_special_values_list,
             eMatDH_special_grid_which = eMatDH_special_grid_which,
             is_version_2 = is_version_2,
-            suppressOutput = suppressOutput,
-            make_c_exact = make_c_exact
+            suppressOutput = suppressOutput
         )
         if (language == "R") {
             alphaHat_t <- out[["alphaHat_t"]]
@@ -159,10 +158,6 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     out_R_seldom_normalize <- master_f(FALSE, "R", NA)
     out_Rcpp_seldom_normalize <- master_f(FALSE, "Rcpp", FALSE)
     out_Rcpp2_seldom_normalize <- master_f(FALSE, "Rcpp", TRUE)
-    out_Rcpp2_always_normalize_c_exact <- master_f(TRUE, "Rcpp", TRUE, TRUE)
-    out_Rcpp2_always_normalize_c_inexact <- master_f(TRUE, "Rcpp", TRUE, FALSE)
-    out_Rcpp2_seldom_normalize_c_exact <- master_f(FALSE, "Rcpp", TRUE, TRUE)
-    out_Rcpp2_seldom_normalize_c_inexact <- master_f(FALSE, "Rcpp", TRUE, FALSE)
 
     ##
     ## do checks if not just for speed
@@ -202,7 +197,11 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
         expect_true(sum(abs(out_Rcpp2_always_normalize[["c"]] - out_Rcpp2_seldom_normalize[["c"]]) > 0) > 0)
         expect_equal(sum(log(out_R_always_normalize[["c"]])), sum(log(out_Rcpp2_always_normalize[["c"]])))
         expect_equal(sum(log(out_R_always_normalize[["c"]])), sum(log(out_Rcpp2_seldom_normalize[["c"]])))
+        
+        expect_equal(out_R_always_normalize[["dosage"]], out_Rcpp2_always_normalize[["dosage"]])
+        expect_equal(out_R_always_normalize[["dosage"]], out_Rcpp2_seldom_normalize[["dosage"]])
         expect_equal(out_Rcpp_always_normalize[["dosage"]], out_Rcpp2_always_normalize[["dosage"]])
+        
         expect_equal(out_Rcpp_always_normalize[["gammaSmall_t"]], out_Rcpp2_always_normalize[["gammaSmall_t"]])
         expect_equal(out_Rcpp2_always_normalize[["dosage"]], out_Rcpp2_seldom_normalize[["dosage"]])
         expect_equal(out_Rcpp2_always_normalize[["gammaSmall_t"]], out_Rcpp2_seldom_normalize[["gammaSmall_t"]])
@@ -218,21 +217,6 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     ##
     if (1 == 0) {
     
-        ##
-        ## make c exact or inexact
-        ##
-        x <- colSums(out_Rcpp2_always_normalize_c_exact[["gammaSmall_t"]])
-        expect_equal(x, rep(1, length(x)))
-        
-        expect_equal(out_Rcpp2_seldom_normalize_c_exact[["dosage"]], out_Rcpp2_seldom_normalize_c_inexact[["dosage"]])
-        expect_equal(out_Rcpp2_seldom_normalize_c_exact[["alphaHat_t"]], out_Rcpp2_seldom_normalize_c_inexact[["alphaHat_t"]])
-        expect_equal(out_Rcpp2_seldom_normalize_c_exact[["betaHat_t"]], out_Rcpp2_seldom_normalize_c_inexact[["betaHat_t"]])
-        
-        ## so look OK, except off by factor
-        ##print(head(out_Rcpp2_seldom_normalize_c_exact[["betaHat_t"]] / out_Rcpp2_seldom_normalize_c_inexact[["betaHat_t"]]))
-        ##print(head(out_Rcpp2_seldom_normalize_c_exact[["gammaSmall_t"]] / out_Rcpp2_seldom_normalize_c_inexact[["gammaSmall_t"]]))
-        
-        
         x <- colSums(out_Rcpp2_always_normalize_c_inexact[["gammaSmall_t"]])
         expect_equal(x, rep(1, length(x)))
         

@@ -273,7 +273,7 @@ make_reference_single_test_package <- function(
     K = 1000,
     seed = 4916,
     L = NULL,
-    expRate = 1,
+    expRate = 100,
     nGen = 10,
     nMaxDH = 2 ** 8 - 1,
     ref_error = 0.01,
