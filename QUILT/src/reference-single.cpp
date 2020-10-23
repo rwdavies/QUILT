@@ -140,6 +140,7 @@ Rcpp::List Rcpp_get_top_K_or_more_matches_while_building_gamma(
     }
     if (count == -1) {
         std::cout << "problem with Rcpp_get_top_K_or_more_matches_while_building_gamma" << std::endl;
+        std::cout << "iGrid = " << iGrid << std::endl;
         std::cout << "gamma_t_col(0) = " << gamma_t_col(0) << std::endl;
         std::cout << "alphaHat_t(0, iGrid) = " << alphaHat_t(0, iGrid) << std::endl;
         std::cout << "betaHat_t_col(0) = " << betaHat_t_col(0) << std::endl;
@@ -576,6 +577,9 @@ void Rcpp_haploid_reference_single_forward_version2(
                     }
                 }
                 //
+                //
+                running_min_emission_prob *= min_emission_prob;
+                //
                 // now, the normal way, have new alphaHat_t_col, up to not_jump_prob
                 //    and new run_total, accuracy on alphaHat_t_col
                 //
@@ -603,11 +607,18 @@ void Rcpp_haploid_reference_single_forward_version2(
                 (iGrid == (nGrids - 1))
             ) {
                 // normalize so that alphaHat_t_col has sum 1
+                //std::cout << "dooooooooooooooooing normalization for iGrid = " << iGrid << std::endl;
+                //std::cout << "running_min_emission_prob = " << running_min_emission_prob << std::endl;
+                //std::cout << "remove me" << std::endl;
+                //std::cout << "run_total = " << run_total << std::endl;
                 x = 1 / (run_total);
-                alphaHat_t_col *= x;                
+                //std::cout << "x = " << x << std::endl;
+                //std::cout << "alphaHat_t_col(0) = " << alphaHat_t_col(0) << std::endl;                                
+                alphaHat_t_col *= x;
+                //std::cout << "alphaHat_t_col(0) = " << alphaHat_t_col(0) << std::endl;    
                 c(iGrid) /= run_total;
                 run_total=1;
-                running_min_emission_prob *= min_emission_prob;                
+                running_min_emission_prob = 1;
             }
             prev_alphaHat_t_col_sum = run_total;
 	    if (store_alpha_for_this_grid) {

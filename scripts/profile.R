@@ -23,6 +23,29 @@ profile_start <- Sys.time()
 outputdir <- tempdir()
 setwd("~/Google\ Drive/Papers/2020\ -\ STITCH\ Haplotagging\ lcWGS/reviewer_package/QUILT_review_package_2020_07_27/")
 system("head -n1 bamlist.1.0.txt > bamlist.1.0.onesample.txt")
+if (1 == 0) {
+    load(file = "quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData")
+        nMaxDH <- 2 ** 8 - 1
+        ref_error <- 1e-3
+        out <- make_rhb_t_equality(
+            rhb_t = rhb_t,
+            nMaxDH = nMaxDH,
+            nSNPs = nSNPs,
+            ref_error = ref_error
+        )
+        distinctHapsB <- out[["distinctHapsB"]]
+        distinctHapsIE <- out[["distinctHapsIE"]]            
+        hapMatcher <- out[["hapMatcher"]]
+        eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
+        eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
+    
+    save(
+        eMatDH_special_grid_which,
+        eMatDH_special_values_list,
+        af, cM, cM_grid, distinctHapsB, distinctHapsIE, dl, grid, hapMatcher, inRegion2, L, L_grid, nGrids, nSNPs, pos, ref_alleleCount, ref_error, reference_samples, rh_in_L, rhb_t, sigmaCurrent_m,
+        file = "quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData"
+    )
+}
 ##    
 ## ARGH have_truth_haplotypes <- FALSE
 if (Sys.getenv("USE_PHASEFILE") == "TRUE") {

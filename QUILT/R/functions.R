@@ -735,6 +735,12 @@ get_and_impute_one_sample <- function(
                 print_message(paste0("i_gibbs=", i_gibbs_sample, ", i_it = ", i_it, " small gibbs"))
             }
 
+            if (i_it < n_seek_its) {
+                return_good_haps <- TRUE
+            } else {
+                ## weird that this is needed on phasing it?
+                return_good_haps <- TRUE
+            }
 
             gibbs_iterate <- impute_one_sample(
                 rhb_t = rhb_t,
@@ -830,7 +836,7 @@ get_and_impute_one_sample <- function(
                 cM_grid = cM_grid,                
                 ancAlleleFreqAll = ancAlleleFreqAll,
                 plot_description = paste0("it", i_it, ".full"),  
-                return_good_haps = TRUE,
+                return_good_haps = return_good_haps,
                 Knew = Knew,
                 return_dosage  = return_dosage,
                 previously_selected_haplotypes = previously_selected_haplotypes,
