@@ -945,7 +945,8 @@ void Rcpp_haploid_reference_single_backward_version2(
     // 
     //
     double ref_one_minus_error = 1 - ref_error;    
-    double jump_prob, one_minus_jump_prob, not_jump_prob;
+    double jump_prob, one_minus_jump_prob;
+    double not_jump_prob = 1;
     int b, s, e, nSNPsLocal, i, iGrid, k, dh;
     const double double_K = double(K);
     arma::mat gl_local(2, 32);
@@ -1044,15 +1045,13 @@ void Rcpp_haploid_reference_single_backward_version2(
 		    } else {
 		     	double J1 = (transMatRate_t(1, iGrid + 1) / double_K);
 		     	double N1 = transMatRate_t(0, iGrid + 1);
-		     	val = prev_val * (N1 * jump_prob / J1 + double_K * jump_prob);
+		     	val = prev_val * jump_prob * (N1 / J1 + double_K);
 		    }
                     val /= not_jump_prob;
 		    betaHat_t_col = betaHat_t_col + val;
 		    prev_val = not_jump_prob * val * c(iGrid);
                     //
                 }
-                //
-                betaHat_t_col *= not_jump_prob; // to-work on!
                 //
 	    } else {
 	        for(k = 0; k < K; k++) {
@@ -1076,8 +1075,11 @@ void Rcpp_haploid_reference_single_backward_version2(
 		val = jump_prob * sum(e_times_b);
 		betaHat_t_col = ((not_jump_prob) * e_times_b + val);
 	    }
+            //
+            //betaHat_t_col *= not_jump_prob; // to-work on!
+            //
         }
-	//
+        //
 	// all this was to give us the unnormalized beta column that we can now work with
 	// now with build gammas and dosages etc
         //
@@ -1088,11 +1090,15 @@ void Rcpp_haploid_reference_single_backward_version2(
             }
         }
         if (get_best_haps_from_thinned_sites && (gammaSmall_cols_to_get(iGrid) >= 0)) {
+            betaHat_t_col *= not_jump_prob;
             best_haps_stuff_list(gammaSmall_cols_to_get(iGrid)) = Rcpp_get_top_K_or_more_matches_while_building_gamma(alphaHat_t, betaHat_t_col, gamma_t_col, iGrid, K, K_top_matches);
+            betaHat_t_col /= not_jump_prob;
         } else {
             // otherwise, do per-entry, check for kth best value
             if (return_dosage | return_gamma_t | calculate_small_gamma_t_col) {
-                gamma_t_col = alphaHat_t.col(iGrid) % betaHat_t_col; // betaHat_t_col includes effect of c, so this is accurate and does not need more c
+                // betaHat_t_col includes effect of c, so this is accurate and does not need more c                
+                gamma_t_col = alphaHat_t.col(iGrid) % betaHat_t_col;
+                gamma_t_col *= not_jump_prob;
             }
         }
         //
@@ -1107,11 +1113,19 @@ void Rcpp_haploid_reference_single_backward_version2(
             dosageL.fill(0);
 	    dh_col = hapMatcher.col(iGrid);
             if (use_eMatDH) {
+                // some of the dh will be 0 and go to matched_gammas 0th entry, but that is OK we do not use that
+                // they are dealt with afterwards
                 for(k = 0; k < K; k++) {
-                    // some of the dh will be 0 and go to matched_gammas 0th entry, but that is OK we do not use that
-		    // they are dealt with afterwards
 		    matched_gammas(dh_col(k)) += gamma_t_col(k);
-                    if (dh_col(k) == 0) {
+                }
+                //
+                // special cases here
+                //
+                if (eMatDH_special_grid_which(iGrid) > 0) {
+                    Rcpp::IntegerVector vals_to_redo = Rcpp::as<Rcpp::IntegerVector>(eMatDH_special_values_list(eMatDH_special_grid_which(iGrid) - 1));
+                    for(i = 0; i < vals_to_redo.size(); i++) {
+                        k = vals_to_redo(i);
+                        //
 		        gk = gamma_t_col(k);
                         std::uint32_t tmp(rhb_t(k, iGrid));
                         for(b = 0; b < nSNPsLocal; b++) {
@@ -1125,6 +1139,9 @@ void Rcpp_haploid_reference_single_backward_version2(
                         }
                     }
                 }
+                //
+                // now do the sums
+                //
                 for(b = 0; b < nSNPsLocal; b++) {
                     for(dh = 0; dh < nMaxDH; dh++) {
                         dosageL(b) += distinctHapsIE(dh, s + b) * matched_gammas(dh + 1);
@@ -1152,7 +1169,13 @@ void Rcpp_haploid_reference_single_backward_version2(
             }
         }
         // add in c here to betaHat_t_col (as long as not 1!)
-	if (c(iGrid) != 1) {
+        // if (c(iGrid) == (1 / not_jump_prob)) {
+        //     std::cout << "can skip norm!" << std::endl;
+        // } else {
+        //     //std::cout << "doooo the norm, c(iGrid) = " << c(iGrid) << ", 1 / not_jump_prob = " << 1 / not_jump_prob << std::endl;
+        betaHat_t_col *= not_jump_prob;
+        if (c(iGrid) != 1) {
+            //double x = c(iGrid) / not_jump_prob;
 	    betaHat_t_col *= c(iGrid);
 	}
         if (return_betaHat_t) {

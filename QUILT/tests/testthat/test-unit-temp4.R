@@ -155,6 +155,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     out_R_always_normalize <- master_f(TRUE, "R", NA)
     out_Rcpp_always_normalize <- master_f(TRUE, "Rcpp", FALSE)
     out_Rcpp2_always_normalize <- master_f(TRUE, "Rcpp", TRUE)
+    
     out_R_seldom_normalize <- master_f(FALSE, "R", NA)
     out_Rcpp_seldom_normalize <- master_f(FALSE, "Rcpp", FALSE)
     out_Rcpp2_seldom_normalize <- master_f(FALSE, "Rcpp", TRUE)
@@ -189,25 +190,29 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     }
 
 
+    ##
+    ## check alternate cpp version
+    ##
     if (!speed_test) {
         ##
-        ## check new cpp version too
+        ## c
         ##
         expect_equal(sum(log(out_Rcpp2_always_normalize[["c"]])), sum(log(out_Rcpp2_seldom_normalize[["c"]])))
         expect_true(sum(abs(out_Rcpp2_always_normalize[["c"]] - out_Rcpp2_seldom_normalize[["c"]]) > 0) > 0)
         expect_equal(sum(log(out_R_always_normalize[["c"]])), sum(log(out_Rcpp2_always_normalize[["c"]])))
         expect_equal(sum(log(out_R_always_normalize[["c"]])), sum(log(out_Rcpp2_seldom_normalize[["c"]])))
-        
+        ##
+        ## dosages
+        ##
         expect_equal(out_R_always_normalize[["dosage"]], out_Rcpp2_always_normalize[["dosage"]])
         expect_equal(out_R_always_normalize[["dosage"]], out_Rcpp2_seldom_normalize[["dosage"]])
         expect_equal(out_Rcpp_always_normalize[["dosage"]], out_Rcpp2_always_normalize[["dosage"]])
-        
+        ##
+        ## gammas
+        ##
+        expect_equal(out_R_always_normalize[["gammaSmall_t"]], out_Rcpp2_always_normalize[["gammaSmall_t"]])
+        expect_equal(out_R_always_normalize[["gammaSmall_t"]], out_Rcpp2_seldom_normalize[["gammaSmall_t"]])
         expect_equal(out_Rcpp_always_normalize[["gammaSmall_t"]], out_Rcpp2_always_normalize[["gammaSmall_t"]])
-        expect_equal(out_Rcpp2_always_normalize[["dosage"]], out_Rcpp2_seldom_normalize[["dosage"]])
-        expect_equal(out_Rcpp2_always_normalize[["gammaSmall_t"]], out_Rcpp2_seldom_normalize[["gammaSmall_t"]])
-        ##
-        ## 
-        ##
     }
 
 
