@@ -1183,13 +1183,6 @@ void Rcpp_haploid_reference_single_backward_version2(
             // so betaHat_t_col will be missing a multiplication through by not_jump_prob
             // so so will gamma_t_col as well
             //betaHat_t_col *= not_jump_prob;
-            // if (iGrid == 786) {
-                //std::cout << c << std::endl;
-                //std::cout << "nGrids = " << nGrids << std::endl;
-                //for(int j = 0; j < nGrids; j++) {
-                //std::cout << "iGrid = " << j << ", value = " << alphaHat_t(0, j) << std::endl;
-                //}
-            //}
             best_haps_stuff_list(gammaSmall_cols_to_get(iGrid)) = Rcpp_get_top_K_or_more_matches_while_building_gamma(alphaHat_t, betaHat_t_col, gamma_t_col, iGrid, K, K_top_matches);
             //betaHat_t_col /= not_jump_prob;
             //gamma_t_col /= not_jump_prob;

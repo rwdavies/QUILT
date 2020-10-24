@@ -271,7 +271,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     ##
     ## run normal version in R, or Rcpp, and make sure the same
     ##
-    master_f <- function(always_normalize, language, is_version_2) {
+    master_f <- function(always_normalize, language, is_version_2, normalize_emissions  = FALSE) {
         if (language == "R") {
             f <- R_haploid_dosage_versus_refs
         } else if (language == "Rcpp") {
@@ -285,7 +285,8 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
                     "-------",
                     "language = ", language, ", ",
                     "always_normalize = ", always_normalize, " ",
-                    "is_version_2 = ", is_version_2
+                    "is_version_2 = ", is_version_2, " ",
+                    "normalize_emissions = ", normalize_emissions
                 )
             )
         }
@@ -326,7 +327,8 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
             eMatDH_special_values_list = eMatDH_special_values_list,
             eMatDH_special_grid_which = eMatDH_special_grid_which,
             is_version_2 = is_version_2,
-            suppressOutput = suppressOutput
+            suppressOutput = suppressOutput,
+            normalize_emissions = normalize_emissions
         )
         if (language == "R") {
             alphaHat_t <- out[["alphaHat_t"]]
@@ -352,6 +354,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     out_R_seldom_normalize <- master_f(FALSE, "R", NA)
     out_Rcpp_seldom_normalize <- master_f(FALSE, "Rcpp", FALSE)
     out_Rcpp2_seldom_normalize <- master_f(FALSE, "Rcpp", TRUE)
+
 
     ##
     ## do checks if not just for speed
@@ -408,6 +411,33 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
         expect_equal(out_Rcpp_always_normalize[["gammaSmall_t"]], out_Rcpp2_always_normalize[["gammaSmall_t"]])
     }
 
+
+    ##
+    ## check dosages and gamma for 4 Rcpp options, without normalization
+    ##
+    if (!speed_test) {
+
+        out_Rcpp_baseline <- master_f(always_normalize = TRUE, language = "Rcpp", is_version_2 = FALSE, normalize_emissions = FALSE)
+        for(always_normalize in c(FALSE, TRUE)) {
+            for(is_version_2 in c(FALSE, TRUE)) {
+                for(normalize_emissions in c(FALSE, TRUE)) {
+                    ## print(
+                    ##     paste0(
+                    ##         "-------",
+                    ##         "language = ", language, ", ",
+                    ##         "always_normalize = ", always_normalize, " ",
+                    ##         "is_version_2 = ", is_version_2, " ",
+                    ##         "normalize_emissions = ", normalize_emissions
+                    ##     )
+                    ## )
+                    out_Rcpp_comparison <- master_f(always_normalize = always_normalize, language = "Rcpp", is_version_2 = is_version_2, normalize_emissions = normalize_emissions)
+                    expect_equal(out_Rcpp_baseline[["gammaSmall_t"]], out_Rcpp_comparison[["gammaSmall_t"]], tolerance = 1e-3) ## yuck, scary? but checked on larger data?
+                    expect_equal(out_Rcpp_baseline[["dosage"]],       out_Rcpp_comparison[["dosage"]], tolerance = 1e-3)
+                }
+            }
+        }
+
+    }
 
     
     ##
@@ -678,7 +708,8 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                     return_betaHat_t = return_betaHat_t,
                     return_dosage = return_dosage,
                     return_gamma_t = return_gamma_t,
-                    return_gammaSmall_t = return_gammaSmall_t
+                    return_gammaSmall_t = return_gammaSmall_t,
+                    normalize_emissions = FALSE
                 )
             )
             if (!suppressOutput) {
