@@ -1440,6 +1440,35 @@ impute_using_everything <- function(
         gl <- make_gl_from_u_bq(u, bq, nSNPs)
         use_eMatDH <- TRUE
         c <-  array(1, c(nGrids))  ## more useful for debugging
+
+        print("hello")
+        save(
+            gl,
+            full_alphaHat_t,
+            full_betaHat_t,
+            c,
+            full_gamma_t,
+            dosage,
+            full_transMatRate_t_H,
+            rhb_t ,
+            ref_error ,
+            use_eMatDH,
+            distinctHapsB,
+            distinctHapsIE,
+            hapMatcher ,
+            eMatDH_special_grid_which,
+            eMatDH_special_values_list,
+            return_dosage,
+            return_betaHat_t,
+            return_gamma_t,
+            return_gammaSmall_t ,
+            full_gammaSmall_t,
+            full_gammaSmall_cols_to_get ,
+            get_best_haps_from_thinned_sites,
+            best_haps_stuff_list,
+            K_top_matches,
+            file = "/well/davies/users/dcc832/temp2.RData", compress = FALSE)
+
         Rcpp_haploid_dosage_versus_refs(
             gl = gl,
             alphaHat_t = full_alphaHat_t,
