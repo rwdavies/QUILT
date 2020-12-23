@@ -514,7 +514,9 @@ get_and_impute_one_sample <- function(
     make_plots_block_gibbs,
     estimate_bq_using_truth_read_labels,
     chrStart,
-    chrEnd
+    chrEnd,
+    gamma_physically_closest_to,
+    hla_run
 ) {
 
     sample_name <- sampleNames[iSample]
@@ -586,6 +588,12 @@ get_and_impute_one_sample <- function(
         truth_haps <- NULL
     }
 
+    if (hla_run) {                
+        print_message("SPECIAL HLA CODE SIMON")
+        gamma_total <- array(0, nrow(rhb_t))
+        list_of_gammas <- as.list(1:nGibbsSamples)
+    }
+    
     ## can just set this here
     if (is.null(phase) & !is.null(gen)) {
         have_truth_genotypes <- TRUE ## make UNIQUE to genotype having
@@ -797,9 +805,21 @@ get_and_impute_one_sample <- function(
                 make_plots_block_gibbs = make_plots_block_gibbs
             )
 
+            if (hla_run) {            
+                ## final phasing it, save gamma
+                if (
+                (i_it == n_seek_its)
+                ) {
+                    print_message("HLA SPECIAL CODE SIMON")
+                    return_gamma_t <- TRUE
+                    full_gamma_t <- array(0, c(nrow(rhb_t), ncol(rhb_t)))
+                } else {
+                    return_gamma_t <- FALSE
+                }
+            }
+            
             ## am here
             ## continue to work on this. weird error below hmm...
-            ## also can I push this 100 to 400, faster maybe if faster start...
             if (verbose) {
                 print_message(paste0("i_gibbs=", i_gibbs_sample, ", i_it = ", i_it, " full"))
             }
@@ -841,7 +861,8 @@ get_and_impute_one_sample <- function(
                 return_dosage  = return_dosage,
                 previously_selected_haplotypes = previously_selected_haplotypes,
                 K_top_matches = K_top_matches,
-                heuristic_match_thin = heuristic_match_thin
+                heuristic_match_thin = heuristic_match_thin,
+                return_gamma_t = return_gamma_t                
             )
             
             which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
@@ -914,6 +935,25 @@ get_and_impute_one_sample <- function(
             phasing_read_labels <- read_labels
         }
 
+        if (hla_run) {
+            print_message("SPECIAL CODE FOR HLA SIMON")
+            gamma1 <- impute_all$fbsoL$gammaMT_t
+            gamma2 <- impute_all$fbsoL$gammaMU_t
+            if (is.na(gamma_physically_closest_to)) {
+                iGrid <- round(nGrids / 2)
+            } else {
+                iGrid <- grid[which.min(abs(L - gamma_physically_closest_to))] + 1
+            }
+            gamma1 <- gamma1[, iGrid]
+            gamma2 <- gamma2[, iGrid]
+            if (!phasing_it) {
+                gamma_total <- gamma_total + gamma1 + gamma2
+            }
+            if (i_gibbs_sample <= nGibbsSamples) {
+                list_of_gammas[[i_gibbs_sample]] <- list(gamma1, gamma2)
+            }
+            print_message("END SPECIAL CODE FOR HLA SIMON")
+        }
     }
 
     if(have_truth_haplotypes) {
@@ -994,25 +1034,33 @@ get_and_impute_one_sample <- function(
     )    
     
     ## what to return
-    return(
-        list(
-            dosage = dosage,
-            super_out_hap_dosages = super_out_hap_dosages,
-            super_out_read_labels = super_out_read_labels,            
-            super_out_dosage_matrix = super_out_dosage_matrix,
-            phasing_haps = phasing_haps,
-            phasing_dosage = phasing_dosage,
-            pse_mat = pse_mat,
-            phasing_read_labels = phasing_read_labels,
-            imputed_truth_haplotypes = imputed_truth_haplotypes,
-            gp_t = gp_t,
-            eij = eij,
-            fij = fij,
-            max_gen = max_gen,
-            per_sample_alleleCount = per_sample_alleleCount,
-            per_sample_vcf_col = per_sample_vcf_col
-        )
+    to_return <- list(
+        dosage = dosage,
+        super_out_hap_dosages = super_out_hap_dosages,
+        super_out_read_labels = super_out_read_labels,            
+        super_out_dosage_matrix = super_out_dosage_matrix,
+        phasing_haps = phasing_haps,
+        phasing_dosage = phasing_dosage,
+        pse_mat = pse_mat,
+        phasing_read_labels = phasing_read_labels,
+        imputed_truth_haplotypes = imputed_truth_haplotypes,
+        gp_t = gp_t,
+        eij = eij,
+        fij = fij,
+        max_gen = max_gen,
+        per_sample_alleleCount = per_sample_alleleCount,
+        per_sample_vcf_col = per_sample_vcf_col
     )
+
+    if (hla_run) {
+        print_message("More HLA SIMON code")
+        to_return[["gamma1"]] <- gamma1
+        to_return[["gamma2"]] <- gamma2
+        to_return[["gamma_total"]] <- gamma_total
+        to_return[["list_of_gammas"]] <- list_of_gammas
+    }
+    
+    return(to_return)
     
 
 }

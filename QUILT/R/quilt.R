@@ -38,6 +38,10 @@
 #' @param addOptimalHapsToVCF Whether to add optimal haplotypes to vcf when phasing information is present, where optimal is imputation done when read label origin is known
 #' @param estimate_bq_using_truth_read_labels When using phasefile with known truth haplotypes, infer truth read labels, and use them to infer the real base quality against the bam recorded base qualities
 #' @param override_default_params_for_small_ref_panel When set to TRUE, then when using a smaller reference panel size (fewer haplotypes than Ksubset), parameter choices are reset appropriately. When set to FALSE, original values are used, which might crash QUILT
+#' @param gamma_physically_closest_to For HLA imputation, the physical position closest to the centre of the gene
+#' @param seed The seed that controls random number generation. When NA, not used#
+#' @param hla_run Whether to use QUILT to generate posterior state probabilities as part of QUILT-HLA
+#' 
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -80,7 +84,10 @@ QUILT <- function(
     bxTagUpperLimit = 50000,
     addOptimalHapsToVCF = FALSE,
     estimate_bq_using_truth_read_labels = FALSE,
-    override_default_params_for_small_ref_panel = TRUE
+    override_default_params_for_small_ref_panel = TRUE,
+    gamma_physically_closest_to = NA,
+    seed = NA,
+    hla_run = FALSE
 ) {
 
     ## init_method <- "simple"
@@ -155,7 +162,11 @@ QUILT <- function(
         output_RData_filename <- file_quilt_output_RData(outputdir, regionName)
     }
 
-
+    if (!is.na(as.integer(seed))) {
+        print_message(paste0("Setting seed with seed:", seed))
+        set.seed(seed)
+    }
+    
 
     ##print(args)
     ##print(paste0(commandArgs(trailingOnly = TRUE), collapse = "', '"))
@@ -199,6 +210,33 @@ QUILT <- function(
     new_buffer <- buffer
     
     load(prepared_reference_filename)
+
+    if (hla_run) {
+
+        print_message("SIMON HLA CODE - fix this eventually!")
+        which_hapMatcher_0 <- which(hapMatcher == 0, arr.ind = TRUE) - 1
+        eMatDH_special_grid_which <- integer(nGrids)
+        special_grids <- unique(which_hapMatcher_0[, 2]) + 1 ## this-is-1-based
+        eMatDH_special_grid_which[special_grids] <- as.integer(1:length(special_grids))
+        if (nrow(which_hapMatcher_0) > 0) {
+            ## now build list with them
+            x <- which_hapMatcher_0[, 2]
+            y <- which((x[-1] - x[-length(x)]) > 0) ## last entry that is OK
+            starts <- c(1, y + 1)
+            ends <- c(y, length(x))
+            ##
+            ## eMatDH_special_values
+            ##   list of length the number of special grids
+            ##   entries are which ones to re-do, and where they are in rhb_t
+            ##   entries inside this are 0-based
+            eMatDH_special_values_list <- lapply(1:length(starts), function(i) {
+                return(as.integer(which_hapMatcher_0[starts[i]:ends[i], 1]))
+            })
+        } else {
+            eMatDH_special_values_list <- list()
+        }
+        nrow_which_hapMatcher_0 <- nrow(which_hapMatcher_0) ## for testing
+    }
 
     validate_quilt_use_of_region_variables(
         regionStart,
@@ -531,7 +569,9 @@ QUILT <- function(
                 make_plots_block_gibbs = make_plots_block_gibbs,
                 estimate_bq_using_truth_read_labels = estimate_bq_using_truth_read_labels,
                 chrStart = chrStart,
-                chrEnd = chrEnd
+                chrEnd = chrEnd,
+                gamma_physically_closest_to = gamma_physically_closest_to,
+                hla_run = hla_run
             )
 
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out
@@ -618,7 +658,5 @@ QUILT <- function(
     print_message("Done QUILT")
     
     return(NULL)
-
-
 
 }
