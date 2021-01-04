@@ -229,6 +229,24 @@ option_list <- list(
         type = "logical",
         help = "When set to TRUE, then when using a smaller reference panel size (fewer haplotypes than Ksubset), parameter choices are reset appropriately. When set to FALSE, original values are used, which might crash QUILT [default TRUE] ",
         default = TRUE
+    ), 
+    make_option(
+        "--gamma_physically_closest_to",
+        type = "integer",
+        help = "For HLA imputation, the physical position closest to the centre of the gene [default NA] ",
+        default = NA
+    ), 
+    make_option(
+        "--seed",
+        type = "integer",
+        help = "The seed that controls random number generation. When NA, not used# [default NA] ",
+        default = NA
+    ), 
+    make_option(
+        "--hla_run",
+        type = "logical",
+        help = "Whether to use QUILT to generate posterior state probabilities as part of QUILT-HLA [default FALSE] ",
+        default = FALSE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -272,5 +290,8 @@ QUILT(
     bxTagUpperLimit = opt$bxTagUpperLimit,
     addOptimalHapsToVCF = opt$addOptimalHapsToVCF,
     estimate_bq_using_truth_read_labels = opt$estimate_bq_using_truth_read_labels,
-    override_default_params_for_small_ref_panel = opt$override_default_params_for_small_ref_panel
+    override_default_params_for_small_ref_panel = opt$override_default_params_for_small_ref_panel,
+    gamma_physically_closest_to = opt$gamma_physically_closest_to,
+    seed = opt$seed,
+    hla_run = opt$hla_run
 )

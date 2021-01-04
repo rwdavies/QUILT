@@ -589,7 +589,7 @@ get_and_impute_one_sample <- function(
     }
 
     if (hla_run) {                
-        print_message("SPECIAL HLA CODE SIMON")
+        ## print_message("SPECIAL HLA CODE SIMON")
         gamma_total <- array(0, nrow(rhb_t))
         list_of_gammas <- as.list(1:nGibbsSamples)
     }
@@ -810,7 +810,7 @@ get_and_impute_one_sample <- function(
                 if (
                 (i_it == n_seek_its)
                 ) {
-                    print_message("HLA SPECIAL CODE SIMON")
+                    ## print_message("HLA SPECIAL CODE SIMON")
                     return_gamma_t <- TRUE
                     full_gamma_t <- array(0, c(nrow(rhb_t), ncol(rhb_t)))
                 } else {
@@ -936,7 +936,7 @@ get_and_impute_one_sample <- function(
         }
 
         if (hla_run) {
-            print_message("SPECIAL CODE FOR HLA SIMON")
+            ## print_message("SPECIAL CODE FOR HLA SIMON")
             gamma1 <- impute_all$fbsoL$gammaMT_t
             gamma2 <- impute_all$fbsoL$gammaMU_t
             if (is.na(gamma_physically_closest_to)) {
@@ -952,7 +952,7 @@ get_and_impute_one_sample <- function(
             if (i_gibbs_sample <= nGibbsSamples) {
                 list_of_gammas[[i_gibbs_sample]] <- list(gamma1, gamma2)
             }
-            print_message("END SPECIAL CODE FOR HLA SIMON")
+            ## print_message("END SPECIAL CODE FOR HLA SIMON")
         }
     }
 
@@ -1053,7 +1053,7 @@ get_and_impute_one_sample <- function(
     )
 
     if (hla_run) {
-        print_message("More HLA SIMON code")
+        ## print_message("More HLA SIMON code")
         to_return[["gamma1"]] <- gamma1
         to_return[["gamma2"]] <- gamma2
         to_return[["gamma_total"]] <- gamma_total

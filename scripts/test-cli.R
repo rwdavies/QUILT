@@ -43,6 +43,8 @@ STITCH::make_STITCH_cli(
 )
 system(paste0("chmod +x ", cli_output_file))
 
+
+
 cli_output_file <- "QUILT_prepare_reference.R"
 STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt-prepare-reference.R",
@@ -57,7 +59,21 @@ system(paste0("chmod +x ", cli_output_file))
 
 
 
-for(cli_output_file in c("QUILT.R", "QUILT_prepare_reference.R")) {
+cli_output_file <- "QUILT_HLA.R"
+STITCH::make_STITCH_cli(
+    function_file = "QUILT/R/quilt-hla.R",
+    cli_output_file = cli_output_file,
+    other_character_params = c("bamfile", "region", "rundir", "finaloutputfile", "ancillary_file_dir", "chr6"),
+    other_logical_params = c("overrideoutput"),
+    other_integer_params = c("nGibbsSamples", "n_seek_iterations", "quilt_seed", "quilt_buffer", "quilt_bqFilter"),
+    function_name = "QUILT_HLA",
+    library_name = "QUILT"
+)
+system(paste0("chmod +x ", cli_output_file))
+
+
+
+for(cli_output_file in c("QUILT.R", "QUILT_prepare_reference.R", "QUILT_HLA.R")) {
     message(paste0("test that ", cli_output_file, " CLI produces help message"))
     ## behaviour of optparse changed!
     ## now exits code 0 as one would hope on --help
