@@ -213,7 +213,7 @@ QUILT <- function(
 
     if (hla_run) {
 
-        print_message("SIMON HLA CODE - fix this eventually!")
+        ## print_message("SIMON HLA CODE - fix this eventually!")
         which_hapMatcher_0 <- which(hapMatcher == 0, arr.ind = TRUE) - 1
         eMatDH_special_grid_which <- integer(nGrids)
         special_grids <- unique(which_hapMatcher_0[, 2]) + 1 ## this-is-1-based

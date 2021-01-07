@@ -49,7 +49,7 @@ cli_output_file <- "QUILT_prepare_reference.R"
 STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt-prepare-reference.R",
     cli_output_file = cli_output_file,
-    other_character_params = c("output_file", "reference_exclude_samplelist_file", "output_sites_filename"),
+    other_character_params = c("output_file", "reference_exclude_samplelist_file", "output_sites_filename", "region_exclude_file"),
     other_logical_params = c("make_fake_vcf_with_sites_list"),
     other_integer_params = c("nMaxDH"),
     function_name = "QUILT_prepare_reference",
@@ -63,7 +63,7 @@ cli_output_file <- "QUILT_HLA.R"
 STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt-hla.R",
     cli_output_file = cli_output_file,
-    other_character_params = c("bamfile", "region", "rundir", "finaloutputfile", "ancillary_file_dir", "chr6"),
+    other_character_params = c("bamfile", "region", "finaloutputfile", "chr", "quilt_hla_haplotype_panelfile", "prepared_hla_reference_dir"),
     other_logical_params = c("overrideoutput"),
     other_integer_params = c("nGibbsSamples", "n_seek_iterations", "quilt_seed", "quilt_buffer", "quilt_bqFilter"),
     function_name = "QUILT_HLA",
@@ -72,8 +72,20 @@ STITCH::make_STITCH_cli(
 system(paste0("chmod +x ", cli_output_file))
 
 
+cli_output_file <- "QUILT_HLA_prepare_reference.R"
+STITCH::make_STITCH_cli(
+    function_file = "QUILT/R/quilt-hla-prepare-reference.R",
+    cli_output_file = cli_output_file,
+    other_character_params = c("outputdir", "ipd_igmt_alignments_zip_file", "quilt_hla_supplementary_info_file", "all_hla_regions", "hla_regions_to_prepare"),
+    character_vectors = c("all_hla_regions", "hla_regions_to_prepare"),
+    function_name = "QUILT_HLA_prepare_reference",
+    library_name = "QUILT"
+)
+system(paste0("chmod +x ", cli_output_file))
 
-for(cli_output_file in c("QUILT.R", "QUILT_prepare_reference.R", "QUILT_HLA.R")) {
+
+
+for(cli_output_file in c("QUILT.R", "QUILT_prepare_reference.R", "QUILT_HLA.R", "QUILT_HLA_prepare_reference.R")) {
     message(paste0("test that ", cli_output_file, " CLI produces help message"))
     ## behaviour of optparse changed!
     ## now exits code 0 as one would hope on --help

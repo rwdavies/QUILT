@@ -12,6 +12,7 @@
 #' @param reference_populations Vector with character populations to include from reference_sample_file e.g. CHB, CHS
 #' @param reference_phred Phred scaled likelihood or an error of reference haplotype. Higher means more confidence in reference haplotype genotypes, lower means less confidence
 #' @param reference_exclude_samplelist_file File with one column of samples to exclude from reference samples e.g. in validation, the samples you are imputing
+#' @param region_exclude_file File with regions to exclude from constructing the reference panel. Particularly useful for QUILT_HLA, where you want to exclude SNPs in the HLA genes themselves, so that reads contribute either to the read mapping or state inference. This file is space separated with a header of Name, Chr, Start and End, with Name being the HLA gene name (e.g. HLA-A), Chr being the chromosome (e.g. chr6), and Start and End are the 1-based starts and ends of the genes (i.e. where we don't want to consider SNPs for the Gibbs sampling state inference)
 #' @param genetic_map_file Path to file with genetic map information, a file with 3 white-space delimited entries giving position (1-based), genetic rate map in cM/Mbp, and genetic map in cM
 #' @param nMaxDH Integer Maximum number of distinct haplotypes to store in reduced form. Recommended to keep as 2 ** N - 1 where N is an integer greater than 0 i.e. 255, 511, etc
 #' @param tempdir What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/
@@ -37,6 +38,7 @@ QUILT_prepare_reference <- function(
     reference_populations = NA,
     reference_phred = 30,
     reference_exclude_samplelist_file = "",
+    region_exclude_file = "",
     genetic_map_file = "",
     nMaxDH = 2 ** 8 - 1,
     tempdir = NA,
@@ -95,12 +97,19 @@ QUILT_prepare_reference <- function(
         if (!dir.exists(basename(output_file))) {
             dir.create(basename(output_file), showWarnings = FALSE)
         }
+        if (basename(output_file) == output_file) {
+            output_file <- file.path(outputdir, output_file)
+        }
     }
     if (is.na(tempdir)) {
         tempdir <- tempdir()
     }
 
 
+
+
+
+    
     ##
     ## work on legend and identify SNPs to keep
     ##
@@ -117,6 +126,40 @@ QUILT_prepare_reference <- function(
     }
 
 
+    ##
+    ## remove sites from consideration
+    ## 
+    if (region_exclude_file != "") {
+        if (!file.exists(region_exclude_file)) {
+            stop(paste0("Cannot find region_exclude_file:", region_exclude_file))
+        }
+        print_message("Loading list of regions to exclude")
+        regionstoexclude <- read.table(region_exclude_file, header = TRUE, as.is = TRUE)
+        regionstoexclude <- regionstoexclude[regionstoexclude[, 2] == chr,]
+        regionstoexclude <- as.matrix(regionstoexclude)
+        
+        excluderegions <- matrix(as.double(regionstoexclude[, 3:4]),ncol = 2)
+        rownames(excluderegions) <- regionstoexclude[, 1]
+
+        ## now do the removal
+        keep <- array(TRUE, nrow(pos_to_use))
+        oldsum <- 0
+        for(i in 1:nrow(excluderegions)){
+            to_remove <-
+                pos_to_use[,"POS"] >= excluderegions[i, 1] &
+                pos_to_use[,"POS"] <= excluderegions[i, 2]
+            keep[to_remove] <- FALSE
+            ##sentence=paste("Excluding ",sum(keep==0)-oldsum," SNPs from region ",rownames(excluderegions)[i])
+            ##print(sentence)
+            ##oldsum <- sum(keep == 0)
+        }
+        pos_to_use <- pos_to_use[keep, ]
+
+        print_message(paste0("Excluded ", length(keep) - sum(keep), " out of ", length(keep), " SNPs from ", nrow(excluderegions), " regions"))
+        
+    }
+
+    
     ##
     ## (optional) make fake vcf with sites list
     ##

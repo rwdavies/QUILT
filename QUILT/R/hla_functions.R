@@ -1,9 +1,6 @@
 run_QUILT_as_part_of_QUILT_HLA <- function(
-    outputdir,
     bamfile,
-    region,
-    rundir,
-    excludefivepops,
+    quilt_hla_haplotype_panelfile,
     regstart,
     regend,
     regmid,
@@ -17,10 +14,6 @@ run_QUILT_as_part_of_QUILT_HLA <- function(
     ## outfile1 <- paste(outputdir,"/quiltoutput.",bamfile,".hla.",region,".RData",sep="")
     outfile1 <- tempfile()
     ## imputation results from reads and database
-    quiltpanelfile <- paste0(rundir, "/hrc.", chr, ".hla.",region,".hlatyped.RData")
-    if (excludefivepops) {
-        quiltpanelfile <- paste0(rundir, "/hrc.", chr, ".hla.",region,".hlatypedexcludefivepop.RData")
-    }
     bamlist <- tempfile()
     cat(bamfile, file = bamlist)
     
@@ -37,7 +30,7 @@ run_QUILT_as_part_of_QUILT_HLA <- function(
         regionEnd = regend,
         buffer = quilt_buffer,
         bamlist = bamlist,
-        prepared_reference_filename = quiltpanelfile,
+        prepared_reference_filename = quilt_hla_haplotype_panelfile,
         RData_objects_to_save = "final_set_of_results",
         output_RData_filename = outfile1,
         nCores = 1,

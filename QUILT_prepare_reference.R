@@ -80,6 +80,12 @@ option_list <- list(
         default = ""
     ), 
     make_option(
+        "--region_exclude_file",
+        type = "character",
+        help = "File with regions to exclude from constructing the reference panel. Particularly useful for QUILT_HLA, where you want to exclude SNPs in the HLA genes themselves, so that reads contribute either to the read mapping or state inference. This file is space separated with a header of Name, Chr, Start and End, with Name being the HLA gene name (e.g. HLA-A), Chr being the chromosome (e.g. chr6), and Start and End are the 1-based starts and ends of the genes (i.e. where we don't want to consider SNPs for the Gibbs sampling state inference) [default \"\"] ",
+        default = ""
+    ), 
+    make_option(
         "--genetic_map_file",
         type = "character",
         help = "Path to file with genetic map information, a file with 3 white-space delimited entries giving position (1-based), genetic rate map in cM/Mbp, and genetic map in cM [default \"\"] ",
@@ -145,6 +151,7 @@ QUILT_prepare_reference(
     reference_populations = eval(parse(text=opt$reference_populations)),
     reference_phred = opt$reference_phred,
     reference_exclude_samplelist_file = opt$reference_exclude_samplelist_file,
+    region_exclude_file = opt$region_exclude_file,
     genetic_map_file = opt$genetic_map_file,
     nMaxDH = opt$nMaxDH,
     tempdir = opt$tempdir,

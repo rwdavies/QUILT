@@ -571,6 +571,8 @@ get_and_impute_one_sample <- function(
     read_label_matrix_all <- array(NA, c(nReads, nGibbsSamples)) ## need this for phasing - store final read labels in it
     read_label_matrix_conf <- array(FALSE, c(nReads, nGibbsSamples)) ## need this for phasing - store whether these are confident reads
 
+    return_gamma_t <- FALSE ## can turn on later, if required
+    
     phasing_read_labels <- NULL
     phasing_haps <- NULL
     phasing_dosage <- NULL

@@ -2,6 +2,7 @@
 
 export(QUILT)
 export(QUILT_HLA)
+export(QUILT_HLA_prepare_reference)
 export(QUILT_prepare_reference)
 export(Rcpp_block_gibbs_resampler)
 export(Rcpp_build_eMatDH)

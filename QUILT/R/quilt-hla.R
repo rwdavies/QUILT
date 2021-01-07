@@ -1,9 +1,9 @@
 #' @title QUILT_HLA
-#' @param outputdir What output directory to use
 #' @param bamfile Path to bamfile to analyze
 #' @param region HLA region to be analyzed, for example A for HLA-A
-#' @param rundir Where some files are, to be deprecated
-#' @param ancillary_file_dir To be deprecated likely
+#' @param outputdir Optional, what output directory to use. Use only if not specifying finaloutputfile
+#' @param prepared_hla_reference_dir Output directory containing HLA reference material necessary for QUILT HLA
+#' @param quilt_hla_haplotype_panelfile Prepared HLA haplotype reference panel file
 #' @param finaloutputfile Final output file path
 #' @param nGibbsSamples How many QUILT Gibbs samples to perform
 #' @param n_seek_iterations How many seek iterations to use in QUILT Gibbs sampling
@@ -15,11 +15,11 @@
 #' @author Robert Davies
 #' @export
 QUILT_HLA <- function(
-    outputdir,
     bamfile,
     region,
-    rundir,
-    ancillary_file_dir,
+    outputdir = "",
+    prepared_hla_reference_dir = "",
+    quilt_hla_haplotype_panelfile = "",
     finaloutputfile = NA,
     overrideoutput = FALSE,
     nGibbsSamples = 15,
@@ -38,9 +38,6 @@ QUILT_HLA <- function(
     )
     print_message(paste0("Running ", command_line))
 
-    ## to be deprecated
-    excludefivepops <- TRUE
-    
     ##
     ## rwd: simon notes from his version of the code
     ## note that many of these variables are now obsolete
@@ -61,8 +58,6 @@ QUILT_HLA <- function(
     ## recommended to give full path for the finaloutputfile file to avoid unexpected behaviour, otherwise it will save into outputdir if no path given, or into the starting directory using the flag "overrideoutput=T"
     ## bamfile is name of bamfile to be analysed
     ## region is HLA region, must be "A","B","C","DQB1", or "DRB1"
-    ## excludefivepops should be set to T for testing but F in general
-    ## rundir is the location of the script and other files needed for running the code, including pre-processed data files
     ## outputdir is where output files (intermediate and final) will be written to
     ## finaloutputfile is name of main output file
     ## overrideoutput is a flag and defines if finaloutputfile should be placed into directory from which this code is run if no full path is given
@@ -82,49 +77,66 @@ QUILT_HLA <- function(
     ##
     check_samtools() ## needs samtools 1.10 or greater in PATH
     startdir <- getwd()
-    if (outputdir == "output") {
-        outputdir <- file.path(rundir, outputdir)
-    }
     if (is.na(finaloutputfile)) {
-        finaloutputfile=paste(outputdir,"/","quiltandreadcombinedanalysis",bamfile,"hla",region,".out",sep="")
+        finaloutputfile <- file_quilt_final_RData_output_file(outputdir, bamfile, region)
     }
-    ##by default, write into the output directory, but can override to write into directory run script from 
-    ## or if full path given will use that, this is safest
-    if(!length(grep("/",finaloutputfile)) & overrideoutput==FALSE) {
-        finaloutputfile=paste(outputdir,"/",finaloutputfile,sep="")
+
+    ##
+    ## other
+    ##
+    refseq_file <- file.path(prepared_hla_reference_dir, "refseq.txt")
+    if (!file.exists(refseq_file)) {
+        stop(paste0("Cannot find file with sequence information refseq_file:", refseq_file))
     }
-    if(!length(grep("/",finaloutputfile)) & overrideoutput==TRUE) {
-        finaloutputfile=paste(outputdir,"/",finaloutputfile,sep="")
-    }
-    setwd(rundir)
-    load(file.path(ancillary_file_dir, paste("hla",region,"full.out",sep="")))
-    load(file.path(ancillary_file_dir, "hlageneboundaries.out"))
+
+    
+    ##
+    ## pre-made file, with boundaries
+    ##
+    print_message("Load input files")
+    load(file.path(prepared_hla_reference_dir, "hlageneboundaries.out"))
     regstart <- ourpos[region,1]
     regend <- ourpos[region,2]
-    regmid <- (regstart+regend)/2
+    regmid <- (regstart + regend) / 2
 
-    ##ids
-    phaseallelesfile <- paste("hla",region,"haptypes.out",sep="")
-    if (excludefivepops) {
-        phaseallelesfile <- paste("hla",region,"haptypesexcludefivepops.out",sep="")
-    }
-    load(file.path(ancillary_file_dir, phaseallelesfile))
+
+    ##
+    ## inputs from sequences
+    ##
+    load(file_quilt_hla_full(prepared_hla_reference_dir, region))
+    load(file_quilt_hla_all_alleles_kmers(prepared_hla_reference_dir))
+    load(file_quilt_hla_full_alleles_filled_in(prepared_hla_reference_dir, region))
+    load(file_quilt_hla_full(prepared_hla_reference_dir, region))
+
+    ## load(file.path(ancillary_file_dir, "HLAallalleleskmers.out")) ## from simon file, now incorporated
+    ##load(file.path(ancillary_file_dir, paste0("HLA", region, "fullallelesfilledin.out"))) ## from simon file, now incorporated
+    ## load(file.path(ancillary_file_dir, paste0("hla", region, "full.out"))) ## from simon file, now incorporated
+
+
+    ##
+    ## things that depend on the haplotypes
+    ##
+    phaseallelesfile <- paste0("hla", region, "haptypesexcludefivepops.out")
+    load(file.path(ancillary_file_dir, phaseallelesfile)) ## 
     print_message(paste0("The number of HLA reference haplotypes is:", length(hlahaptypes)))
 
-    load(file.path(ancillary_file_dir, "HLAallalleleskmers.out"))
-    load(file.path(ancillary_file_dir, paste("HLA",region,"fullallelesfilledin.out",sep="")))
-    load(file.path(ancillary_file_dir, paste("hla",region,"full.out",sep="")))
-    ## make scope so all functions can use
-    ## lookup <<- lookup ## Robbie: what is this sorcery!
-    ## revlookup <<- revlookup
-    ## fullalleles <<- fullalleles
-    ## kmers <<- kmers 
-    ## ourpos<<-ourpos     
-    ## positions <<-positions   
-    ## xx <<-xx
+    if (quilt_hla_haplotype_panelfile == "") {
+        quilt_hla_haplotype_panelfile <- file_quilt_hla_panelfile(prepared_hla_reference_dir, regionName) 
+    }
+    if (!file.exists(quilt_hla_haplotype_panelfile)) {
+        stop(paste0("Cannot find prepared HLA haplotype reference file, expecting:", quilt_hla_haplotype_panelfile))
+    }
 
 
+
+
+
+
+    ##
+    ##
+    ##
     ## regs <- c("A","B","C","DMA" , "DMB" , "DOA"  ,"DOB",  "DPA1", "DPA2", "DPB1" ,"DPB2" ,"DQA1" ,"DQA2" ,"DQB1" ,"DRA",  "DRB1", "DRB5", "E", "F" ,   "G",    "H", "J" ,   "K",    "L",   "MICA", "MICB", "P", "S",    "T" ,   "TAP1" ,"TAP2", "U",    "V",    "W")
+
     kk <- unique(kmers)
     names(kk) <- kk
     for(i in 1:length(kk)) {
@@ -132,11 +144,8 @@ QUILT_HLA <- function(
     }
 
 
-
-
-    ##now all the reads that map alternatively to HLA
-    ##refseq.txt contains all the names of alleles that can be mapped to
-    this <- read.delim("refseq.txt",header=F)
+    print_message("Get information from sequence")
+    
 
 
     ##
@@ -152,6 +161,9 @@ QUILT_HLA <- function(
     ##
     ## this appears to get reads that map to any of the HLA regions from the ref
     ##
+    ## refseq.txt contains all the names of alleles that can be mapped to
+    this <- read.delim(refseq_file, header = FALSE)
+    
     that2 <- get_that2(
         this = this,
         region = region,
@@ -204,6 +216,7 @@ QUILT_HLA <- function(
     ##
     ## don't entirely know what this code is doing, the first part of Simon's read mapping part
     ##
+    print_message("Interpret mapped sequence data")
     out <- do_simon_read_stuff_with_that_and_that2(
         that = that,
         that2 = that2,
@@ -231,13 +244,9 @@ QUILT_HLA <- function(
             
 
     
-
     final_set_of_results <- run_QUILT_as_part_of_QUILT_HLA(
-        outputdir = outputdir,
         bamfile = bamfile,
-        region = region,
-        rundir = rundir,
-        excludefivepops = excludefivepops,
+        quilt_hla_haplotype_panelfile = quilt_hla_haplotype_panelfile,
         regstart = regstart,
         regend = regend,
         regmid = regmid,

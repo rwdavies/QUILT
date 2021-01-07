@@ -53,6 +53,7 @@ test_that("QUILT can impute a few samples in a standard way, using a small panel
         nGen = 100,
         reference_haplotype_file = refpack$reference_haplotype_file,
         reference_legend_file = refpack$reference_legend_file,
+        reference_sample_file = refpack$reference_sample_file,
         genetic_map_file = refpack$reference_genetic_map_file,
         regionStart = regionStart,
         regionEnd = regionEnd,
