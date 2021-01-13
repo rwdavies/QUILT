@@ -12,18 +12,18 @@ QUILT-HLA is an R and C++ program for rapid HLA imputation from low-coverage seq
 Please use this README for general information about QUILT and QUILT-HLA, and specific information about QUILT. Please see the [QUILT-HLA README](README_QUILT-HLA.md) for specific details about QUILT-HLA.
 
 # Table of contents
-[1. Introduction](#paragraph-introduction)
-[2. Installation](#paragraph-installation)
-    [1. github](#paragraph-installation-github)
-    [2. conda](#paragraph-installation-conda)
-[3. Quick start](#paragraph-quickstart)
-[4. Options and parameters](#paragraph-optionsparams)
-[5. Important parameters that influence run time, memory usage and accuracy](#paragraph-paramsimportant)
-[6. Examples](#paragraph-examples)
-[7. License](#paragraph-license)
-[8. Citation](#paragraph-citation)
-[9. Testing](#paragraph-testing)
-[10. Bug reports](#paragraph-bugreports)
+1. [Introduction](#paragraph-introduction)
+2. [Installation](#paragraph-installation)
+    1. [github](#paragraph-installation-github)
+    2. [conda](#paragraph-installation-conda)
+3. [Quick start](#paragraph-quickstart)
+4. [Options and parameters](#paragraph-optionsparams)
+5. [Important parameters that influence run time, memory usage and accuracy](#paragraph-paramsimportant)
+6. [Examples](#paragraph-examples)
+7. [License](#paragraph-license)
+8. [Citation](#paragraph-citation)
+9. [Testing](#paragraph-testing)
+10. [Bug reports](#paragraph-bugreports)
 
 
 

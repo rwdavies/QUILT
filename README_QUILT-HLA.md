@@ -4,11 +4,11 @@ QUILT-HLA
 For general details including installation, version, and changelog, see the main QUILT [README](https://github.com/rwdavies/QUILT).
 
 # Table of contents
-[1. Preparing files](#paragraph-preparing)
-    [1. Preparing IPD-IGMT files](#paragraph-preparing-ipdigmt)
-    [2. Preparing haplotype files](#paragraph-preparing-haplotypes)    
-[2. Quick start run](#paragraph-quickstart)
-[3. Options and parameters](#paragraph-optionsparams)
+1. [Preparing files](#paragraph-preparing)
+    1. [Preparing IPD-IGMT files](#paragraph-preparing-ipdigmt)
+    2. [Preparing haplotype files](#paragraph-preparing-haplotypes)    
+2. [Quick start run](#paragraph-quickstart)
+3. [Options and parameters](#paragraph-optionsparams)
 
 ## Preparing files <a name="paragraph-preparing"></a>
 
