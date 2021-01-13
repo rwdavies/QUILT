@@ -131,11 +131,6 @@ For a full list of options, query `?QUILT::QUILT`, or alternatively, type
 ```
 ./QUILT.R --help
 ```
-Or alternatively, try, in R
-```
-library("QUILT")
-?QUILT
-```
 
 
 

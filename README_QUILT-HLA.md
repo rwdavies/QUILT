@@ -1,11 +1,20 @@
 QUILT-HLA
 =========
 
-For general details including installation, version, and changelog, see the main QUILT [README](README.md).
+For general details including installation, version, and changelog, see the main QUILT [README](https://github.com/rwdavies/QUILT).
 
-## Preparing files
+# Table of contents
+[1. Preparing files](#paragraph-preparing)
+    [1. Preparing IPD-IGMT files](#paragraph-preparing-ipdigmt)
+    [2. Preparing haplotype files](#paragraph-preparing-haplotypes)    
+[2. Quick start run](#paragraph-quickstart)
+[3. Options and parameters](#paragraph-optionsparams)
 
-### Preparing IPD-IGMT files
+## Preparing files <a name="paragraph-preparing"></a>
+
+Some text, maybe
+
+### Preparing IPD-IGMT files <a name="paragraph-preparing-ipdigmt"></a>
 
 Download IPD_IGMT files
 ```
@@ -23,7 +32,8 @@ Prepare mapping related files
 --quilt_hla_supplementary_info_file=quilt_hla_supplementary_info.txt
 ```
 
-### Preparing haplotype files
+
+### Preparing haplotype files <a name="paragraph-preparing-haplotypes"></a>
 ```
 HLA_GENE="A"
 regionStart=29942554
@@ -44,4 +54,16 @@ regionEnd=29945741
 --output_file=quilt.hrc.chr6.hla.${HLA_GENE}.haplotypes.RData \
 --region_exclude_file=/well/davies/shared/1000G/robbie_files/hlagenes.txt \
 --minRate=0.01
+```
+
+
+## Quick start run <a name="paragraph-quickstart"></a>
+
+Example here, is this still the right way to do it?
+
+## Options and parameters <a name="paragraph-optionsparams"></a>
+
+For a full list of options, query `?QUILT::QUILT_HLA`, or alternatively, type 
+```
+./QUILT_HLA.R --help
 ```
