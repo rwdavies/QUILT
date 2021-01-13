@@ -7,19 +7,29 @@ For details of past changes please see [CHANGELOG](CHANGELOG.md).
 
 QUILT is an R and C++ program for rapid genotype imputation from low-coverage sequence using a large reference panel.
 
+QUILT-HLA is an R and C++ program for rapid HLA imputation from low-coverage sequence using a labelled reference panel.
+
 # Table of contents
 [1. Introduction](#paragraph-introduction)
 [2. Installation](#paragraph-installation)
     [1. github](#paragraph-installation-github)
     [2. conda](#paragraph-installation-conda)
-[3. Quick start](#paragraph-quickstart)
+[3. QUILT-HLA](#paragraph-quilthla)
+[4. Quick start](#paragraph-quickstart)
+[5. Options and parameters](#paragraph-optionsparams)
+[6. Important parameters that influence run time, memory usage and accuracy](#paragraph-paramsimportant)
+[7. Examples](#paragraph-examples)
+[8. License](#paragraph-license)
+[9. Citation](#paragraph-citation)
+[10. Testing](#paragraph-testing)
+[11. Bug reports](#paragraph-bugreports)
+
+
 
 ## Introduction <a name="paragraph-introduction"></a>
 Some introduction text
 
-
-
-## installation <a name="paragraph-installation"></a>
+## Installation <a name="paragraph-installation"></a>
 
 QUILT is available to download either through this github repository, or through conda.
 
@@ -46,6 +56,17 @@ source activate
 R -e 'library("QUILT")'
 ```
 Note that currently the command like `QUILT.R` is not included with the bioconda installation, so from the command line, you can either run something like `R -e 'library("QUILT"); QUILT(chr="chr19", etc)'`, or clone the repo to get `QUILT.R`. 
+
+
+
+
+
+
+## QUILT-HLA <a name="paragraph-quilthla"></a>
+
+Please see the [QUILT-HLA README](https://github.com/rwdavies/README_QUILT-HLA) for details including QUICK start, options, and examples.
+
+
 
 
 
@@ -102,57 +123,53 @@ Second, to perform imputation
 ##   succesful completion of this run results in a VCF at quilt_output/quilt.chr20.2000001.4000000.vcf.gz
 ## 2) per-sample per-SNP output includes hard-called (integer) genotype, genotype posteriors, diploid dosage, and haploid dosages (i.e. haplotypes, can be turned into standard 0 or 1 haplotpes using rounding)
 ## 3) you can try bamlist.0.25.txt to try 0.25X bams
-## 4) try ./QUILT.R --help for more options
-## 5) for normal operation when you do not have high quality phased truth genotypes, you can omit posfile and phasefile, and sites will be imputed
+## 4) for normal operation when you do not have high quality phased truth genotypes, you can omit posfile and phasefile, and sites will be imputed
+```
+
+## Options and parameters <a name="paragraph-optionsparams"></a>
+
+For a full list of options, query `?QUILT::QUILT`, or alternatively, type 
+```
+./QUILT.R --help
+```
+Or alternatively, try, in R
+```
+library("QUILT")
+?QUILT
 ```
 
 
 
+## Important parameters that influence run time, memory usage and accuracy <a name="paragraph-paramsimportant"></a>
+
+Text here
+
+
+## Examples <a name="paragraph-examples"></a>
+
+Text here
+
+## License <a name="paragraph-license"></a>
+
+Text here
+
+## Citation <a name="paragraph-citation"></a>
+
+Text here
+
+## Testing <a name="paragraph-testing"></a>
+
+Text here
+
+## Bug reports <a name="paragraph-bugreports"></a>
+
+Text here
 
 
 
 
-## QUILT HLA
 
-### Preparing files
 
-#### Preparing IPD-IGMT files
 
-Download IPD_IGMT files
-```
-## To download IPD-IGMT version 3.39, for example
-wget https://github.com/ANHIG/IMGTHLA/blob/032815608e6312b595b4aaf9904d5b4c189dd6dc/Alignments_Rel_3390.zip?raw=true
-mv Alignments_Rel_3390.zip?raw=true Alignments_Rel_3390.zip
-```
-Prepare supplementary information file (or use provided one, if using above release, and GRCh38)
 
-Prepare mapping related files
-```
-./QUILT_HLA_prepare_reference.R \
---outputdir=/well/davies/users/dcc832/single_imp/HLA_TEST_2021_01_06/ \
---ipd_igmt_alignments_zip_file=Alignments_Rel_3390.zip \
---quilt_hla_supplementary_info_file=quilt_hla_supplementary_info.txt
-```
 
-#### Preparing haplotype files
-```
-HLA_GENE="A"
-regionStart=29942554
-regionEnd=29945741
-    
-./QUILT_prepare_reference.R \
---outputdir=/well/davies/users/dcc832/single_imp/HLA_TEST_2021_01_06/ \
---nGen=100 \
---reference_haplotype_file=/well/davies/users/dcc832/single_imp/2020_06_25/ref_panels/hrc.chr6.hap.clean.gz \
---reference_legend_file=/well/davies/users/dcc832/single_imp/2020_06_25/ref_panels/hrc.chr6.legend.clean.gz \
---reference_sample_file=/well/davies/users/dcc832/single_imp/2020_06_25/ref_panels/hrc.chr6.samples.reheadered2 \
---chr=chr6 \
---regionStart=${regionStart} \
---regionEnd=${regionEnd} \
---buffer=500000 \
---genetic_map_file=/well/davies/shared/recomb/CEU/CEU-chr6-final.b38.txt.gz \
---reference_exclude_samplelist_file=/well/davies/shared/1000G/robbie_files/hlauntyped${HLA_GENE}.excludefivepop.txt \
---output_file=quilt.hrc.chr6.hla.${HLA_GENE}.haplotypes.RData \
---region_exclude_file=/well/davies/shared/1000G/robbie_files/hlagenes.txt \
---minRate=0.01
-```
