@@ -5,9 +5,9 @@ if (!suppressPackageStartupMessages(require("optparse")))
 
 option_list <- list(
     make_option(
-        "--bamfile",
+        "--bamlist",
         type = "character",
-        help = "Path to bamfile to analyze"
+        help = "Path to file with bam file locations. File is one row per entry, path to bam files. Bam index files should exist in same directory as for each bam, suffixed either .bam.bai or .bai"
     ), 
     make_option(
         "--region",
@@ -17,8 +17,20 @@ option_list <- list(
     make_option(
         "--outputdir",
         type = "character",
-        help = "Optional, what output directory to use. Use only if not specifying finaloutputfile [default \"\"] ",
+        help = "What output directory to use. Otherwise defaults to current directory [default \"\"] ",
         default = ""
+    ), 
+    make_option(
+        "--summary_output_file_prefix",
+        type = "character",
+        help = "Prefix for output text summary files [default 'quilt.hla.output'] ",
+        default = 'quilt.hla.output'
+    ), 
+    make_option(
+        "--nCores",
+        type = "integer",
+        help = "How many cores to use [default 1] ",
+        default = 1
     ), 
     make_option(
         "--prepared_hla_reference_dir",
@@ -33,10 +45,16 @@ option_list <- list(
         default = ""
     ), 
     make_option(
-        "--finaloutputfile",
+        "--final_output_RData_file",
         type = "character",
-        help = "Final output file path [default NA] ",
+        help = "Final output RData file path, if desired [default NA] ",
         default = NA
+    ), 
+    make_option(
+        "--write_summary_text_files",
+        type = "logical",
+        help = "Whether to write out final summary text files or not [default TRUE] ",
+        default = TRUE
     ), 
     make_option(
         "--nGibbsSamples",
@@ -73,22 +91,32 @@ option_list <- list(
         type = "integer",
         help = "For QUILT Gibbs sampling, do not consider sequence information if the base quality is below this threshold [default 10] ",
         default = 10
+    ), 
+    make_option(
+        "--summary_best_alleles_threshold",
+        type = "double",
+        help = "When reporting results, give results until posterior probability exceeds this value [default 0.99] ",
+        default = 0.99
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
 suppressPackageStartupMessages(library(QUILT))
 Sys.setenv(PATH = paste0(Sys.getenv("PATH"), ":", getwd()))
 QUILT_HLA(
-    bamfile = opt$bamfile,
+    bamlist = opt$bamlist,
     region = opt$region,
     outputdir = opt$outputdir,
+    summary_output_file_prefix = opt$summary_output_file_prefix,
+    nCores = opt$nCores,
     prepared_hla_reference_dir = opt$prepared_hla_reference_dir,
     quilt_hla_haplotype_panelfile = opt$quilt_hla_haplotype_panelfile,
-    finaloutputfile = opt$finaloutputfile,
+    final_output_RData_file = opt$final_output_RData_file,
+    write_summary_text_files = opt$write_summary_text_files,
     nGibbsSamples = opt$nGibbsSamples,
     n_seek_iterations = opt$n_seek_iterations,
     quilt_seed = opt$quilt_seed,
     chr = opt$chr,
     quilt_buffer = opt$quilt_buffer,
-    quilt_bqFilter = opt$quilt_bqFilter
+    quilt_bqFilter = opt$quilt_bqFilter,
+    summary_best_alleles_threshold = opt$summary_best_alleles_threshold
 )

@@ -1,11 +1,29 @@
 QUILT
 =====
 **__Current Version: pre-release__**
-Release date: Ongoing
+Release date: pre-release
 
 For details of past changes please see [CHANGELOG](CHANGELOG.md).
 
+QUILT is an R and C++ program for rapid genotype imputation from low-coverage sequence using a large reference panel.
 
+# Table of contents
+1. [Introduction](#introduction)
+2. [Some next paragraph](#paragraph1)
+    1. [Sub paragraph](#subparagraph1)
+3. [Another paragraph](#paragraph2)
+
+## This is the introduction <a name="introduction"></a>
+Some introduction text, formatted in heading 2 style
+
+## Some next paragraph <a name="paragraph1"></a>
+The first paragraph text
+
+### Sub paragraph <a name="subparagraph1"></a>
+This is a sub paragraph, formatted in heading 3 style
+
+## Another paragraph <a name="paragraph2"></a>
+The second paragraph text
 
 
 

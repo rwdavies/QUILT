@@ -1,33 +1,41 @@
 #' @title QUILT_HLA
-#' @param bamfile Path to bamfile to analyze
+#' @param bamlist Path to file with bam file locations. File is one row per entry, path to bam files. Bam index files should exist in same directory as for each bam, suffixed either .bam.bai or .bai
 #' @param region HLA region to be analyzed, for example A for HLA-A
-#' @param outputdir Optional, what output directory to use. Use only if not specifying finaloutputfile
+#' @param outputdir What output directory to use. Otherwise defaults to current directory
+#' @param summary_output_file_prefix Prefix for output text summary files
+#' @param nCores How many cores to use
 #' @param prepared_hla_reference_dir Output directory containing HLA reference material necessary for QUILT HLA
 #' @param quilt_hla_haplotype_panelfile Prepared HLA haplotype reference panel file
-#' @param finaloutputfile Final output file path
+#' @param final_output_RData_file Final output RData file path, if desired
+#' @param write_summary_text_files Whether to write out final summary text files or not
 #' @param nGibbsSamples How many QUILT Gibbs samples to perform
 #' @param n_seek_iterations How many seek iterations to use in QUILT Gibbs sampling
 #' @param quilt_seed When running QUILT Gibbs sampling, what seed to use, optionally
 #' @param chr What chromosome, probably chr6 or maybe 6
 #' @param quilt_buffer For QUILT Gibbs sampling, what buffer to include around center of gene
 #' @param quilt_bqFilter For QUILT Gibbs sampling, do not consider sequence information if the base quality is below this threshold
+#' @param summary_best_alleles_threshold When reporting results, give results until posterior probability exceeds this value
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
 QUILT_HLA <- function(
-    bamfile,
+    bamlist,
     region,
     outputdir = "",
+    summary_output_file_prefix = 'quilt.hla.output',
+    nCores = 1,
     prepared_hla_reference_dir = "",
     quilt_hla_haplotype_panelfile = "",
-    finaloutputfile = NA,
+    final_output_RData_file = NA,
+    write_summary_text_files = TRUE,
     overrideoutput = FALSE,
     nGibbsSamples = 15,
     n_seek_iterations = 3,
     quilt_seed = NA,
     chr = 'chr6',
     quilt_buffer = 500000,
-    quilt_bqFilter = 10
+    quilt_bqFilter = 10,
+    summary_best_alleles_threshold = 0.99
 ) {
 
     x <- as.list(environment())
@@ -37,6 +45,7 @@ QUILT_HLA <- function(
         ")"
     )
     print_message(paste0("Running ", command_line))
+    print_message("Begin QUILT-HLA")    
 
     ##
     ## rwd: simon notes from his version of the code
@@ -56,7 +65,7 @@ QUILT_HLA <- function(
     ## it would be a red flag if these are strongly discordant
     ## there is also likelihood at higher resolution potentially available e.g. 6-digit or 8-digit resolution from the reads, which likely is useful mainly at higher coverage
     ## recommended to give full path for the finaloutputfile file to avoid unexpected behaviour, otherwise it will save into outputdir if no path given, or into the starting directory using the flag "overrideoutput=T"
-    ## bamfile is name of bamfile to be analysed
+    ## bamfile is name of bamfile to be analysed (now bamlist)
     ## region is HLA region, must be "A","B","C","DQB1", or "DRB1"
     ## outputdir is where output files (intermediate and final) will be written to
     ## finaloutputfile is name of main output file
@@ -66,8 +75,8 @@ QUILT_HLA <- function(
     ##
     ## validation
     ##
-    if (!file.exists(bamfile)) {
-        stop(paste0("Cannot find file:", bamfile))
+    if (!file.exists(bamlist)) {
+        stop(paste0("Cannot find file:", bamlist))
     }
     
 
@@ -77,8 +86,8 @@ QUILT_HLA <- function(
     ##
     check_samtools() ## needs samtools 1.10 or greater in PATH
     startdir <- getwd()
-    if (is.na(finaloutputfile)) {
-        finaloutputfile <- file_quilt_final_RData_output_file(outputdir, bamfile, region)
+    if (is.na(final_output_RData_file)) {
+        final_output_RData_file <- file_quilt_final_RData_output_file(outputdir, region)
     }
 
     ##
@@ -143,314 +152,128 @@ QUILT_HLA <- function(
         kk[i] <- paste(positions[kmers==names(kk)[i]],collapse=",")
     }
 
-
-    print_message("Get information from sequence")
-    
-
-
     ##
-    ## this appears to get reads that map to the region of interest on chr6
+    ## do the normal QUILT part first. don't need to save this per-se
     ##
-    that <- get_that(
-        bamfile = bamfile,
+    outfile1 <- tempfile()    
+    QUILT(
+        outputdir = tempdir(),
         chr = chr,
-        regstart = regstart,
-        regend = regend
+        regionStart = regstart,
+        regionEnd = regend,
+        buffer = quilt_buffer,
+        bamlist = bamlist,
+        prepared_reference_filename = quilt_hla_haplotype_panelfile,
+        RData_objects_to_save = c("sampleNames", "final_set_of_results"),
+        output_RData_filename = outfile1,
+        nCores = nCores,
+        record_interim_dosages = FALSE,
+        bqFilter = quilt_bqFilter,
+        nGibbsSamples = nGibbsSamples,
+        n_seek_its = n_seek_iterations,
+        gamma_physically_closest_to = regmid,
+        seed = quilt_seed,
+        hla_run = TRUE
     )
+    load(outfile1)
+    unlink(outfile1)
+    ## will return final_set_of_results
+    ## kind of cumbersome, but meh
     
+
     ##
-    ## this appears to get reads that map to any of the HLA regions from the ref
+    ## run many samples through
     ##
-    ## refseq.txt contains all the names of alleles that can be mapped to
-    this <- read.delim(refseq_file, header = FALSE)
-    
-    that2 <- get_that2(
-        this = this,
+    bamfiles <- scan(bamlist, what = "char", quiet = TRUE)
+    all_results <- mclapply(
+        1:length(bamfiles),
+        mc.cores = nCores,
+        FUN = quilt_hla_one_sample,
+        final_set_of_results = final_set_of_results,
+        bamfiles = bamfiles,
+        chr = chr,
         region = region,
-        that = that,
-        bamfile = bamfile
-    )
-
-
-    that <- filter_that(
-        that = that,
-        chr = chr,
-        regstart = regstart,
-        regend = regend
-    )
-
-    that2 <- filter_that2(
-        that2 = that2,
-        chr = chr,
-        regstart = regstart,
-        regend = regend
-    )
-
-
-    ## now have filtered matrices
-    ## now more sophisticated filtering to remove reads mapping to alternative HLA alleles
-    ## uses the set of ALL kmers found in all HLA alleles, to determine whether kmers can be found ordered in correct vs. other alleles
-    out <- further_filter_that_and_that2(
-        that = that,
-        that2 = that2,
-        newkmers = newkmers,
-        region = region
-    )
-    that <- out[["that"]]
-    that2 <- out[["that2"]]
-
-
-
-
-    ## print("#########could worry have no reads; perhaps a dummy??")
-    ## have at least two reads, both that and that2?
-    ## still need to be careful later!
-    ## now have both types of read, filter and process
-    ## deal with any problems of conversion,w now, just make sure both have at least two reads; duplicate reads are not overcounted in the end
-    if(nrow(that)==1) that <- rbind(that,that)
-    if(nrow(that2)==1) that2 <- rbind(that2,that2)
-    if(nrow(that)==0 & nrow(that2)>0) that <- that2[1:2,]
-    if(nrow(that2)==0 & nrow(that)>0) that2 <- that[1:2,]
-
-
-    ##
-    ## don't entirely know what this code is doing, the first part of Simon's read mapping part
-    ##
-    print_message("Interpret mapped sequence data")
-    out <- do_simon_read_stuff_with_that_and_that2(
-        that = that,
-        that2 = that2,
-        lookup = lookup,
-        revlookup = revlookup,
-        fullalleles = fullalleles,
-        regstart = regstart,
-        regend = regend,
-        region = region,
-        kk = kk
-    )
-    readlikelihoodmat <- out[["readlikelihoodmat"]]
-    readset1 <- out[["readset1"]]
-    readset2 <- out[["readset2"]]
-    pairedscores <- out[["pairedscores"]]
-    readscaledlikelihoodmat <- out[["readscaledlikelihoodmat"]]
-    fourdigitreadscaledlikelihoodmat <- out[["fourdigitreadscaledlikelihoodmat"]]
-    intersectfourdigitreadscaledlikelihoodmat <- out[["intersectfourdigitreadscaledlikelihoodmat"]]
-    intersectquiltscaledlikelihoodmat <- out[["intersectquiltscaledlikelihoodmat"]]
-    intersectreadscaledlikelihoodmat <- out[["intersectreadscaledlikelihoodmat"]]
-    combinedscaledlikelihoodmat <- out[["combinedscaledlikelihoodmat"]]
-    combinedresults <- out[["combinedresults"]]
-    mappingonlyresults <- out[["mappingonlyresults"]]
-    overall <- out[["overall"]]
-            
-
-    
-    final_set_of_results <- run_QUILT_as_part_of_QUILT_HLA(
-        bamfile = bamfile,
-        quilt_hla_haplotype_panelfile = quilt_hla_haplotype_panelfile,
         regstart = regstart,
         regend = regend,
         regmid = regmid,
+        refseq_file = refseq_file,
+        newkmers = newkmers,
+        lookup = lookup,
+        revlookup = revlookup,
+        fullalleles = fullalleles,
+        kk = kk,
+        quilt_hla_haplotype_panelfile = quilt_hla_haplotype_panelfile,
         quilt_seed = quilt_seed,
-        chr = chr,
         quilt_buffer = quilt_buffer,
-        quilt_bqFilter = quilt_bqFilter
-    )     
-
-    ##
-    ## really strong Robbie hack because I don't know nature of how below works
-    ## basically, do 1:20 are Gibbs samples
-    ##
-    i_gibbs_sample <- 1
-    
-    for(i_gibbs_sample in 1:(nGibbsSamples + 1)) {
-
-        print_message(paste0("Re-shaping QUILT output ", i_gibbs_sample, " / ", nGibbsSamples))
-        if (i_gibbs_sample == (nGibbsSamples + 1)) {
-            use_final_phase <- TRUE
-            use_averaging <- TRUE
-        } else {
-            use_final_phase <- FALSE
-            use_averaging <- FALSE
-        }
-        
-        ##resset is the results from QUILT
-        ##can use this to make likelihood for different 4-digit codes, see below processing
-        ##QUILT already takes into account allele frequency in the population
-        ##there are some 4-digit codes that are non-overlapping, and even some weight on unknown alleles
-        ##now take reads in our region and process
-        resset <- reshape_QUILT_output(
-            final_set_of_results = final_set_of_results,
-            hlahaptypes = hlahaptypes,
-            use_final_phase = use_final_phase,
-            i_gibbs_sample = i_gibbs_sample
-        )
-        ##
-        ## store a list of raw data things
-        ##
-        quiltprobs <- resset
-        colnames(quiltprobs) <- c("Allele_1_best_prob","Allele_2_best_prob","Summed_means")
-        raw_output <- list(
-            quiltprobs = quiltprobs,
-            readlikelihoodmat = readlikelihoodmat,
-            readset1 = readset1,
-            readset2 = readset2,
-            pairedscores = pairedscores,
-            ndistinctfragments = nrow(pairedscores)
-        )
-        
-        out <- reshape_and_filter_resset(
-            resset = resset,
-            region = region,
-            use_averaging = use_averaging
-        )
-        newresset <- out[["newresset"]]        
-        newresset2 <- out[["newresset2"]]
-        newquiltprobs <- out[["newquiltprobs"]]
-    
-        newphasedquiltprobs <- newresset2
-        quiltscaledlikelihoodmat <- matrix(1,nrow=nrow(newresset),ncol=nrow(newresset))
-        rownames(quiltscaledlikelihoodmat) <- rownames(newphasedquiltprobs)
-        colnames(quiltscaledlikelihoodmat) <- rownames(newphasedquiltprobs)
-        quiltscaledlikelihoodmat <- quiltscaledlikelihoodmat*newphasedquiltprobs[,1]
-        quiltscaledlikelihoodmat <- t(t(quiltscaledlikelihoodmat)*newphasedquiltprobs[,2])
-        quiltscaledlikelihoodmat <- 0.5*(quiltscaledlikelihoodmat+t(quiltscaledlikelihoodmat))
-
-
-        ## make a list of processed output from reads
-        ## now if we have some interesting results, process read based inferences
-        if(length(that) | length(that2)){
-            if (i_gibbs_sample == 1) {
-                ## this should depend on quilt only through alleles which are constant
-                output_fourdigitreadscaledlikelihoodmat <- get_fourdigitreadscaledlikelihoodmat(
-                    overall = overall,
-                    newphasedquiltprobs = newphasedquiltprobs
-                )
-            }
-            fourdigitreadscaledlikelihoodmat <- output_fourdigitreadscaledlikelihoodmat[["fourdigitreadscaledlikelihoodmat"]]
-            mappingonlyresults <- getbestalleles(fourdigitreadscaledlikelihoodmat)
-            vv2 <- output_fourdigitreadscaledlikelihoodmat[["vv2"]]
-            readscaledlikelihoodmat <- output_fourdigitreadscaledlikelihoodmat[["readscaledlikelihoodmat"]]
-            intersectreadscaledlikelihoodmat <- output_fourdigitreadscaledlikelihoodmat[["intersectreadscaledlikelihoodmat"]]
-            ##
-            ##intersection of this with quilt four digit inferences, summing the intersection, above (should sum to 1)
-            ## 
-            intersectfourdigitreadscaledlikelihoodmat=fourdigitreadscaledlikelihoodmat[names(vv2),names(vv2)]
-            intersectfourdigitreadscaledlikelihoodmat=intersectfourdigitreadscaledlikelihoodmat/sum(intersectfourdigitreadscaledlikelihoodmat)
-            ##
-            ##intersection of quilt matrix with four digit inferences (rescaled to sum to one, ordered to match above)
-            ## 
-            intersectquiltscaledlikelihoodmat=quiltscaledlikelihoodmat[rownames(intersectfourdigitreadscaledlikelihoodmat),colnames(intersectfourdigitreadscaledlikelihoodmat)]
-            intersectquiltscaledlikelihoodmat=intersectquiltscaledlikelihoodmat/sum(intersectquiltscaledlikelihoodmat)
-            ##product of intersection matrices gives overall likelihood, rescaled to sum to one
-            combinedscaledlikelihoodmat=intersectfourdigitreadscaledlikelihoodmat*intersectquiltscaledlikelihoodmat
-            combinedscaledlikelihoodmat=combinedscaledlikelihoodmat/sum(combinedscaledlikelihoodmat)
-            combinedresults <- getbestalleles(combinedscaledlikelihoodmat,0.99)
-            ##for a matrix, make a little function to output allele pair probabilities, the answer
-        }
-
-        quiltresults <- getbestalleles(quiltscaledlikelihoodmat,0.99)
-        processed_output <- list(
-            newquiltprobs = newquiltprobs,
-            newphasedquiltprobs = newphasedquiltprobs,
-            quiltscaledlikelihoodmat = quiltscaledlikelihoodmat,
-            readscaledlikelihoodmat = readscaledlikelihoodmat,
-            intersectreadscaledlikelihoodmat = intersectreadscaledlikelihoodmat,
-            fourdigitreadscaledlikelihoodmat = fourdigitreadscaledlikelihoodmat,
-            intersectfourdigitreadscaledlikelihoodmat = intersectfourdigitreadscaledlikelihoodmat,
-            intersectquiltscaledlikelihoodmat = intersectquiltscaledlikelihoodmat,
-            combinedscaledlikelihoodmat = combinedscaledlikelihoodmat
-        )
-
-        ## now per-gibbs sample, save
-        ## need this
-        if (i_gibbs_sample == 1) {
-            joint_quiltscaledlikelihoodmat <- quiltscaledlikelihoodmat
-            if(length(that) | length(that2)){
-                joint_combinedscaledlikelihoodmat <- combinedscaledlikelihoodmat
-            }
-        } else if (i_gibbs_sample <= nGibbsSamples) {
-            joint_quiltscaledlikelihoodmat <-
-                joint_quiltscaledlikelihoodmat + 
-                quiltscaledlikelihoodmat
-            if(length(that) | length(that2)){
-                joint_combinedscaledlikelihoodmat <-
-                    joint_combinedscaledlikelihoodmat + 
-                    combinedscaledlikelihoodmat
-            }
-        }
-
-    }
-
-    ##
-    ## normalize joint version
-    ##
-    joint_quiltscaledlikelihoodmat <- joint_quiltscaledlikelihoodmat / nGibbsSamples
-    joint_quiltresults <- getbestalleles(joint_quiltscaledlikelihoodmat, 0.99)    
-    if(length(that) | length(that2)){
-        joint_combinedscaledlikelihoodmat <- joint_combinedscaledlikelihoodmat / nGibbsSamples
-        joint_combinedresults <- getbestalleles(joint_combinedscaledlikelihoodmat, 0.99)    
-    } else {
-        joint_combinedresults <- NULL
-    }
-
-
-
-
-    
-    ##
-    ## robbie hacks
-    ## try and do proper unphased version
-    ## 
-    ## first, for QUILT, this is easy. take two highest posterior probabilities
-    quilt_unphased_probs <- newresset[, 3]
-    y <- quilt_unphased_probs[order(-quilt_unphased_probs)]
-    unphased_summary_quilt_only <- c(y[1:2], conf = sum(y[1:2]))
-    ## now, for Simon's thing
-    ## first, get intersection
-    if (!is.null(intersectfourdigitreadscaledlikelihoodmat)) {
-        ## work on intersection, and make Simon's thing unphased
-        a <- rownames(intersectfourdigitreadscaledlikelihoodmat)
-        ## great
-        simon_map_phased_probs <- intersectfourdigitreadscaledlikelihoodmat[a %in% names(y), a %in% names(y)]
-        simon_map_unphased_probs <- rowSums(simon_map_phased_probs) ## I think
-        ## OK, now merge
-        joint <- intersect(names(quilt_unphased_probs), names(simon_map_unphased_probs))
-        simon_unphased_joint <- simon_map_unphased_probs[match(joint, names(simon_map_unphased_probs))]
-        quilt_unphased_joint <- quilt_unphased_probs[match(joint, names(quilt_unphased_probs))]
-        both_unphased <- simon_unphased_joint * quilt_unphased_joint
-        both_unphased <- both_unphased / sum(both_unphased)
-        ##
-        y <- both_unphased[order(-both_unphased)]
-        unphased_summary_both <- c(y[1:2], conf = sum(y[1:2]))
-    } else {
-        unphased_summary_both <- NULL
-    }
-    ## simon_unphased_joint[c("A*02:01", "A*23:01")]
-    unphased_summary_quilt_only
-    unphased_summary_both
-
-    
-    ##various of above terms are empty if there is no additional informartion from  reads in a gene (at low coverage)
-    ##below is a function to predict hla combinations from the above
-    ## save in finaloutfile
-    ##if that and that2 are empty, what happens, is one question
-    ##should just have empty (null) containers for the other things I think
-
-    hla_results <- list(
-        raw_output = raw_output,
-        processed_output = processed_output,
-        region = region,
-        quiltresults = quiltresults,
-        combinedresults = combinedresults,
-        mappingonlyresults = mappingonlyresults,
-        unphased_summary_quilt_only = unphased_summary_quilt_only,
-        unphased_summary_both = unphased_summary_both,
-        joint_quiltresults = joint_quiltresults,
-        joint_combinedresults = joint_combinedresults
+        quilt_bqFilter = quilt_bqFilter,
+        nGibbsSamples = nGibbsSamples,
+        hlahaptypes = hlahaptypes,
+        summary_best_alleles_threshold = summary_best_alleles_threshold
     )
-    
-    save(hla_results, file = finaloutputfile)
 
+    check_mclapply_OK(all_results)
+
+    ## save everything to a giant RData file
+    save(
+        all_results,
+        file = final_output_RData_file
+    )
+
+    ##
+    ## make table summaries of the most important information
+    ##
+    ## OK, can have QUILT only, or with mapping
+    ## then, can either be based on single, final phased run
+    ## all of them (Gibbs)
+    ## or somehow un-phased? leave this for now
+    ## either for single one (the final, phased one), or proper Gibbs
+    ## OK, so should have 
+    
+    ## so per-sample, write out top results, for either option
+    ## and/or all results, so that sums >= 0.99
+
+    ##
+    ## just QUILT, joint results, i.e. across all the Gibbs samples
+    ##
+    if (write_summary_text_files) {
+        for(i in 1:4) {
+            if (i == 1) {
+                only_take_top_result <- FALSE
+                what <- "joint_quiltresults"
+                summary_suffix <- "onlystates.all.txt"
+            } else if (i == 2) {
+                only_take_top_result <- TRUE
+                what <- "joint_quiltresults"
+                summary_suffix <- "onlystates.topresult.txt"
+            } else if (i == 3) {
+                only_take_top_result <- FALSE
+                what <- "joint_combinedresults"
+                summary_suffix <- "combined.all.txt"
+            } else if (i == 4) {
+                only_take_top_result <- TRUE
+                what <- "joint_quiltresults"
+                summary_suffix <- "combined.topresult.txt"
+            }
+            summary_quilt_joint_results <- summarize_all_results_and_write_to_disk(
+                all_results = all_results,
+                sampleNames = sampleNames,
+                what = what,
+                outputdir = outputdir,
+                summary_prefix = summary_output_file_prefix,
+                summary_suffix = summary_suffix,
+                only_take_top_result = only_take_top_result
+            )
+        }
+    }
+
+    ##
+    ## also, write out text tables of most common output?
+    ## and/or, explain output?
+    ##
+
+    print_message("Done QUILT-HLA")
 
 }
+
+
 

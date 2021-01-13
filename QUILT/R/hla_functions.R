@@ -1,55 +1,399 @@
-run_QUILT_as_part_of_QUILT_HLA <- function(
-    bamfile,
-    quilt_hla_haplotype_panelfile,
+quilt_hla_one_sample <- function(
+    iSample,
+    final_set_of_results,
+    bamfiles,
+    chr,
+    region,
     regstart,
     regend,
     regmid,
-    quilt_seed = NA,
-    chr = "chr6",
-    quilt_buffer = 500000,
-    quilt_bqFilter = 10
+    refseq_file,
+    newkmers,
+    lookup,
+    revlookup,
+    fullalleles,
+    kk,
+    quilt_hla_haplotype_panelfile,
+    quilt_seed,
+    quilt_buffer,
+    quilt_bqFilter,
+    nGibbsSamples,
+    hlahaptypes,
+    summary_best_alleles_threshold
 ) {
 
-    ## imputation results from QUILT
-    ## outfile1 <- paste(outputdir,"/quiltoutput.",bamfile,".hla.",region,".RData",sep="")
-    outfile1 <- tempfile()
-    ## imputation results from reads and database
-    bamlist <- tempfile()
-    cat(bamfile, file = bamlist)
+    ##
+    ## print 
+    ##
+    n <- length(bamfiles)
+    if (iSample %in% (match(1:10, ceiling(10 * (1:n / n))))) {
+        print_message(paste0("Processing file ", iSample, " out of ", n))
+    }
     
-    ## run QUILT
-    ## quilt_cmd <- paste0(
-    ##     "cd ",bamdir,"; ",
-    ##     "R -f ", quilt_imp_file, "  --args chr6 ",regstart," ",regend," 500000 NA12878 ,",bamfile," ",quiltpanelfile," ",outfile1," 1 /well/davies/users/dcc832/single_imp/2020_06_25/genotypes/gen.NA12878.chr20.1.2000000.txt  1.0 simon_is_awesome FALSE 10 FALSE ", nGibbsSamples, " ", n_seek_iterations, " full ",regmid," ", quilt_seed
-    ## )
-    ## genfile <- "/well/davies/users/dcc832/single_imp/2020_06_25/genotypes/gen.NA12878.chr20.1.2000000.txt"
-    QUILT(
-        outputdir = tempdir(),
-        chr = chr,
-        regionStart = regstart,
-        regionEnd = regend,
-        buffer = quilt_buffer,
-        bamlist = bamlist,
-        prepared_reference_filename = quilt_hla_haplotype_panelfile,
-        RData_objects_to_save = "final_set_of_results",
-        output_RData_filename = outfile1,
-        nCores = 1,
-        record_interim_dosages = FALSE,
-        bqFilter = quilt_bqFilter,
-        nGibbsSamples = nGibbsSamples,
-        n_seek_its = n_seek_iterations,
-        gamma_physically_closest_to = regmid,
-        seed = quilt_seed,
-        hla_run = TRUE
-    )
+    bamfile <- bamfiles[iSample]
 
     ##
-    load(outfile1)
-    unlink(outfile1)
+    ## this appears to get reads that map to the region of interest on chr6
+    ##
+    that <- get_that(
+        bamfile = bamfile,
+        chr = chr,
+        regstart = regstart,
+        regend = regend
+    )
     
+    ##
+    ## this appears to get reads that map to any of the HLA regions from the ref
+    ##
+    ## refseq.txt contains all the names of alleles that can be mapped to
+    this <- read.delim(refseq_file, header = FALSE)
+    
+    that2 <- get_that2(
+        this = this,
+        region = region,
+        that = that,
+        bamfile = bamfile
+    )
+
+
+    that <- filter_that(
+        that = that,
+        chr = chr,
+        regstart = regstart,
+        regend = regend
+    )
+
+    that2 <- filter_that2(
+        that2 = that2,
+        chr = chr,
+        regstart = regstart,
+        regend = regend
+    )
+
+
+    ## now have filtered matrices
+    ## now more sophisticated filtering to remove reads mapping to alternative HLA alleles
+    ## uses the set of ALL kmers found in all HLA alleles, to determine whether kmers can be found ordered in correct vs. other alleles
+    out <- further_filter_that_and_that2(
+        that = that,
+        that2 = that2,
+        newkmers = newkmers,
+        region = region
+    )
+    that <- out[["that"]]
+    that2 <- out[["that2"]]
+
+
+
+
+    ## print("#########could worry have no reads; perhaps a dummy??")
+    ## have at least two reads, both that and that2?
+    ## still need to be careful later!
+    ## now have both types of read, filter and process
+    ## deal with any problems of conversion,w now, just make sure both have at least two reads; duplicate reads are not overcounted in the end
+    if(nrow(that)==1) that <- rbind(that,that)
+    if(nrow(that2)==1) that2 <- rbind(that2,that2)
+    if(nrow(that)==0 & nrow(that2)>0) that <- that2[1:2,]
+    if(nrow(that2)==0 & nrow(that)>0) that2 <- that[1:2,]
+
+
+    ##
+    ## don't entirely know what this code is doing, the first part of Simon's read mapping part
+    ##
+    ## print_message("Interpret mapped sequence data")
+    out <- do_simon_read_stuff_with_that_and_that2(
+        that = that,
+        that2 = that2,
+        lookup = lookup,
+        revlookup = revlookup,
+        fullalleles = fullalleles,
+        regstart = regstart,
+        regend = regend,
+        region = region,
+        kk = kk
+    )
+    readlikelihoodmat <- out[["readlikelihoodmat"]]
+    readset1 <- out[["readset1"]]
+    readset2 <- out[["readset2"]]
+    pairedscores <- out[["pairedscores"]]
+    readscaledlikelihoodmat <- out[["readscaledlikelihoodmat"]]
+    fourdigitreadscaledlikelihoodmat <- out[["fourdigitreadscaledlikelihoodmat"]]
+    intersectfourdigitreadscaledlikelihoodmat <- out[["intersectfourdigitreadscaledlikelihoodmat"]]
+    intersectquiltscaledlikelihoodmat <- out[["intersectquiltscaledlikelihoodmat"]]
+    intersectreadscaledlikelihoodmat <- out[["intersectreadscaledlikelihoodmat"]]
+    combinedscaledlikelihoodmat <- out[["combinedscaledlikelihoodmat"]]
+    combinedresults <- out[["combinedresults"]]
+    mappingonlyresults <- out[["mappingonlyresults"]]
+    overall <- out[["overall"]]
+            
+
+    ##
+    ## really strong Robbie hack because I don't know nature of how below works
+    ## basically, do 1:20 are Gibbs samples
+    ##
+    i_gibbs_sample <- 1
+    
+    for(i_gibbs_sample in 1:(nGibbsSamples + 1)) {
+
+        ## print_message(paste0("Re-shaping QUILT output ", i_gibbs_sample, " / ", nGibbsSamples))
+        if (i_gibbs_sample == (nGibbsSamples + 1)) {
+            use_final_phase <- TRUE
+            use_averaging <- TRUE
+        } else {
+            use_final_phase <- FALSE
+            use_averaging <- FALSE
+        }
+        
+        ##resset is the results from QUILT
+        ##can use this to make likelihood for different 4-digit codes, see below processing
+        ##QUILT already takes into account allele frequency in the population
+        ##there are some 4-digit codes that are non-overlapping, and even some weight on unknown alleles
+        ##now take reads in our region and process
+        resset <- reshape_QUILT_output(
+            final_set_of_results = final_set_of_results,
+            iSample = iSample,
+            hlahaptypes = hlahaptypes,
+            use_final_phase = use_final_phase,
+            i_gibbs_sample = i_gibbs_sample
+        )
+        ##
+        ## store a list of raw data things
+        ##
+        quiltprobs <- resset
+        colnames(quiltprobs) <- c("Allele_1_best_prob","Allele_2_best_prob","Summed_means")
+        raw_output <- list(
+            quiltprobs = quiltprobs,
+            readlikelihoodmat = readlikelihoodmat,
+            readset1 = readset1,
+            readset2 = readset2,
+            pairedscores = pairedscores,
+            ndistinctfragments = nrow(pairedscores)
+        )
+        
+        out <- reshape_and_filter_resset(
+            resset = resset,
+            region = region,
+            use_averaging = use_averaging
+        )
+        newresset <- out[["newresset"]]        
+        newresset2 <- out[["newresset2"]]
+        newquiltprobs <- out[["newquiltprobs"]]
+    
+        newphasedquiltprobs <- newresset2
+        quiltscaledlikelihoodmat <- matrix(1,nrow=nrow(newresset),ncol=nrow(newresset))
+        rownames(quiltscaledlikelihoodmat) <- rownames(newphasedquiltprobs)
+        colnames(quiltscaledlikelihoodmat) <- rownames(newphasedquiltprobs)
+        quiltscaledlikelihoodmat <- quiltscaledlikelihoodmat*newphasedquiltprobs[,1]
+        quiltscaledlikelihoodmat <- t(t(quiltscaledlikelihoodmat)*newphasedquiltprobs[,2])
+        quiltscaledlikelihoodmat <- 0.5*(quiltscaledlikelihoodmat+t(quiltscaledlikelihoodmat))
+
+
+        ## make a list of processed output from reads
+        ## now if we have some interesting results, process read based inferences
+        if(length(that) | length(that2)){
+            if (i_gibbs_sample == 1) {
+                ## this should depend on quilt only through alleles which are constant
+                output_fourdigitreadscaledlikelihoodmat <- get_fourdigitreadscaledlikelihoodmat(
+                    overall = overall,
+                    newphasedquiltprobs = newphasedquiltprobs
+                )
+            }
+            fourdigitreadscaledlikelihoodmat <- output_fourdigitreadscaledlikelihoodmat[["fourdigitreadscaledlikelihoodmat"]]
+            mappingonlyresults <- getbestalleles(fourdigitreadscaledlikelihoodmat, summary_best_alleles_threshold)
+            vv2 <- output_fourdigitreadscaledlikelihoodmat[["vv2"]]
+            readscaledlikelihoodmat <- output_fourdigitreadscaledlikelihoodmat[["readscaledlikelihoodmat"]]
+            intersectreadscaledlikelihoodmat <- output_fourdigitreadscaledlikelihoodmat[["intersectreadscaledlikelihoodmat"]]
+            ##
+            ##intersection of this with quilt four digit inferences, summing the intersection, above (should sum to 1)
+            ## 
+            intersectfourdigitreadscaledlikelihoodmat=fourdigitreadscaledlikelihoodmat[names(vv2),names(vv2)]
+            intersectfourdigitreadscaledlikelihoodmat=intersectfourdigitreadscaledlikelihoodmat/sum(intersectfourdigitreadscaledlikelihoodmat)
+            ##
+            ##intersection of quilt matrix with four digit inferences (rescaled to sum to one, ordered to match above)
+            ## 
+            intersectquiltscaledlikelihoodmat=quiltscaledlikelihoodmat[rownames(intersectfourdigitreadscaledlikelihoodmat),colnames(intersectfourdigitreadscaledlikelihoodmat)]
+            intersectquiltscaledlikelihoodmat=intersectquiltscaledlikelihoodmat/sum(intersectquiltscaledlikelihoodmat)
+            ##product of intersection matrices gives overall likelihood, rescaled to sum to one
+            combinedscaledlikelihoodmat=intersectfourdigitreadscaledlikelihoodmat*intersectquiltscaledlikelihoodmat
+            combinedscaledlikelihoodmat=combinedscaledlikelihoodmat/sum(combinedscaledlikelihoodmat)
+            combinedresults <- getbestalleles(combinedscaledlikelihoodmat, summary_best_alleles_threshold)
+            ##for a matrix, make a little function to output allele pair probabilities, the answer
+        }
+
+        quiltresults <- getbestalleles(quiltscaledlikelihoodmat, summary_best_alleles_threshold)
+        processed_output <- list(
+            newquiltprobs = newquiltprobs,
+            newphasedquiltprobs = newphasedquiltprobs,
+            quiltscaledlikelihoodmat = quiltscaledlikelihoodmat,
+            readscaledlikelihoodmat = readscaledlikelihoodmat,
+            intersectreadscaledlikelihoodmat = intersectreadscaledlikelihoodmat,
+            fourdigitreadscaledlikelihoodmat = fourdigitreadscaledlikelihoodmat,
+            intersectfourdigitreadscaledlikelihoodmat = intersectfourdigitreadscaledlikelihoodmat,
+            intersectquiltscaledlikelihoodmat = intersectquiltscaledlikelihoodmat,
+            combinedscaledlikelihoodmat = combinedscaledlikelihoodmat
+        )
+
+        ## now per-gibbs sample, save
+        ## need this
+        if (i_gibbs_sample == 1) {
+            joint_quiltscaledlikelihoodmat <- quiltscaledlikelihoodmat
+            if(length(that) | length(that2)){
+                joint_combinedscaledlikelihoodmat <- combinedscaledlikelihoodmat
+            }
+        } else if (i_gibbs_sample <= nGibbsSamples) {
+            joint_quiltscaledlikelihoodmat <-
+                joint_quiltscaledlikelihoodmat + 
+                quiltscaledlikelihoodmat
+            if(length(that) | length(that2)){
+                joint_combinedscaledlikelihoodmat <-
+                    joint_combinedscaledlikelihoodmat + 
+                    combinedscaledlikelihoodmat
+            }
+        }
+
+    }
+
+    ##
+    ## normalize joint version
+    ##
+    joint_quiltscaledlikelihoodmat <- joint_quiltscaledlikelihoodmat / nGibbsSamples
+    joint_quiltresults <- getbestalleles(joint_quiltscaledlikelihoodmat, summary_best_alleles_threshold)
+    if(length(that) | length(that2)){
+        joint_combinedscaledlikelihoodmat <- joint_combinedscaledlikelihoodmat / nGibbsSamples
+        joint_combinedresults <- getbestalleles(joint_combinedscaledlikelihoodmat, summary_best_alleles_threshold)
+    } else {
+        ##joint_combinedresults <- NULL
+        ## change this, so if no reads, this just gives top QUILT results
+        joint_combinedresults <- joint_quiltresults
+    }
+
+
+
+
+    
+    ##
+    ## robbie hacks
+    ## try and do proper unphased version
     ## 
-    return(final_set_of_results)
+    ## first, for QUILT, this is easy. take two highest posterior probabilities
+    quilt_unphased_probs <- newresset[, 3]
+    y <- quilt_unphased_probs[order(-quilt_unphased_probs)]
+    unphased_summary_quilt_only <- c(y[1:2], conf = sum(y[1:2]))
+    ## now, for Simon's thing
+    ## first, get intersection
+    if (!is.null(intersectfourdigitreadscaledlikelihoodmat)) {
+        ## work on intersection, and make Simon's thing unphased
+        a <- rownames(intersectfourdigitreadscaledlikelihoodmat)
+        ## great
+        simon_map_phased_probs <- intersectfourdigitreadscaledlikelihoodmat[a %in% names(y), a %in% names(y)]
+        simon_map_unphased_probs <- rowSums(simon_map_phased_probs) ## I think
+        ## OK, now merge
+        joint <- intersect(names(quilt_unphased_probs), names(simon_map_unphased_probs))
+        simon_unphased_joint <- simon_map_unphased_probs[match(joint, names(simon_map_unphased_probs))]
+        quilt_unphased_joint <- quilt_unphased_probs[match(joint, names(quilt_unphased_probs))]
+        both_unphased <- simon_unphased_joint * quilt_unphased_joint
+        both_unphased <- both_unphased / sum(both_unphased)
+        ##
+        y <- both_unphased[order(-both_unphased)]
+        unphased_summary_both <- c(y[1:2], conf = sum(y[1:2]))
+    } else {
+        unphased_summary_both <- NULL
+    }
+    ## simon_unphased_joint[c("A*02:01", "A*23:01")]
+    ## unphased_summary_quilt_only
+    ##unphased_summary_both
+
+    
+    ##various of above terms are empty if there is no additional informartion from  reads in a gene (at low coverage)
+    ##below is a function to predict hla combinations from the above
+    ## save in finaloutfile
+    ##if that and that2 are empty, what happens, is one question
+    ##should just have empty (null) containers for the other things I think
+
+    hla_results <- list(
+        raw_output = raw_output,
+        processed_output = processed_output,
+        region = region,
+        quiltresults = quiltresults,
+        combinedresults = combinedresults,
+        mappingonlyresults = mappingonlyresults,
+        unphased_summary_quilt_only = unphased_summary_quilt_only,
+        unphased_summary_both = unphased_summary_both,
+        joint_quiltresults = joint_quiltresults,
+        joint_combinedresults = joint_combinedresults
+    )
+
+    return(hla_results)
+    
 }
+
+
+
+
+
+## final_set_of_results <- run_QUILT_as_part_of_QUILT_HLA(
+##     bamfile = bamfile,
+##     quilt_hla_haplotype_panelfile = quilt_hla_haplotype_panelfile,
+##     regstart = regstart,
+##     regend = regend,
+##     regmid = regmid,
+##     quilt_seed = quilt_seed,
+##     chr = chr,
+##     quilt_buffer = quilt_buffer,
+##     quilt_bqFilter = quilt_bqFilter
+## )     
+
+
+## run_QUILT_as_part_of_QUILT_HLA <- function(
+##     bamfile,
+##     quilt_hla_haplotype_panelfile,
+##     regstart,
+##     regend,
+##     regmid,
+##     quilt_seed = NA,
+##     chr = "chr6",
+##     quilt_buffer = 500000,
+##     quilt_bqFilter = 10
+## ) {
+##     ## imputation results from QUILT
+##     ## outfile1 <- paste(outputdir,"/quiltoutput.",bamfile,".hla.",region,".RData",sep="")
+##     outfile1 <- tempfile()
+##     ## imputation results from reads and database
+##     bamlist <- tempfile()
+##     cat(bamfile, file = bamlist)
+##     ## run QUILT
+##     ## quilt_cmd <- paste0(
+##     ##     "cd ",bamdir,"; ",
+##     ##     "R -f ", quilt_imp_file, "  --args chr6 ",regstart," ",regend," 500000 NA12878 ,",bamfile," ",quiltpanelfile," ",outfile1," 1 /well/davies/users/dcc832/single_imp/2020_06_25/genotypes/gen.NA12878.chr20.1.2000000.txt  1.0 simon_is_awesome FALSE 10 FALSE ", nGibbsSamples, " ", n_seek_iterations, " full ",regmid," ", quilt_seed
+##     ## )
+##     ## genfile <- "/well/davies/users/dcc832/single_imp/2020_06_25/genotypes/gen.NA12878.chr20.1.2000000.txt"
+##     QUILT(
+##         outputdir = tempdir(),
+##         chr = chr,
+##         regionStart = regstart,
+##         regionEnd = regend,
+##         buffer = quilt_buffer,
+##         bamlist = bamlist,
+##         prepared_reference_filename = quilt_hla_haplotype_panelfile,
+##         RData_objects_to_save = "final_set_of_results",
+##         output_RData_filename = outfile1,
+##         nCores = 1,
+##         record_interim_dosages = FALSE,
+##         bqFilter = quilt_bqFilter,
+##         nGibbsSamples = nGibbsSamples,
+##         n_seek_its = n_seek_iterations,
+##         gamma_physically_closest_to = regmid,
+##         seed = quilt_seed,
+##         hla_run = TRUE
+##     )
+##     ##
+##     load(outfile1)
+##     unlink(outfile1)
+##     ## 
+##     return(final_set_of_results)
+## }
+
+
 
 
 check_samtools <- function() {
@@ -69,19 +413,20 @@ check_samtools <- function() {
 
 reshape_QUILT_output <- function(
     final_set_of_results,
+    iSample,
     hlahaptypes,
     use_final_phase,
     i_gibbs_sample
 ) {
     ## OK here's where Simons starting on this
     if (use_final_phase) {
-        g1 <- final_set_of_results[[1]]$gamma1
-        g2 <- final_set_of_results[[1]]$gamma2
+        g1 <- final_set_of_results[[iSample]]$gamma1
+        g2 <- final_set_of_results[[iSample]]$gamma2
     } else {
-        g1 <- final_set_of_results[[1]]$list_of_gammas[[i_gibbs_sample]][[1]]
-        g2 <- final_set_of_results[[1]]$list_of_gammas[[i_gibbs_sample]][[2]]
+        g1 <- final_set_of_results[[iSample]]$list_of_gammas[[i_gibbs_sample]][[1]]
+        g2 <- final_set_of_results[[iSample]]$list_of_gammas[[i_gibbs_sample]][[2]]
     }
-    g3 <- final_set_of_results[[1]]$gamma_total    
+    g3 <- final_set_of_results[[iSample]]$gamma_total    
     names(g1) <- hlahaptypes
     names(g2) <- hlahaptypes
     names(g3) <- hlahaptypes
@@ -944,7 +1289,7 @@ getbestalleles <- function(matrix,thresh=0.99){
     sums=cumsum(lhoods)
     results=cbind(bestallele1,bestallele2,lhoods,sums)
     row2=min(which(sums>=thresh))
-    return(results[1:row2,])
+    return(results[1:row2, , drop = FALSE])
 }
 
 
@@ -1149,8 +1494,8 @@ do_simon_read_stuff_with_that_and_that2 <- function(
                 }
             }
         }
-        print_message("Get score for pairs of alleles, and again filter so now we only allow e.g. equivalent of 5 mismatches among 300bp")
-        print_message("First remove read pairs mismatching all alleles strongly")
+        ##print_message("Get score for pairs of alleles, and again filter so now we only allow e.g. equivalent of 5 mismatches among 300bp")
+        ## print_message("First remove read pairs mismatching all alleles strongly")
         if (nrow(pairedscores) > 0) {
             newmaxes=1:nrow(pairedscores)*0
             for(i in 1:length(newmaxes)) {
@@ -1223,3 +1568,46 @@ do_simon_read_stuff_with_that_and_that2 <- function(
         )
     )
 }
+
+
+
+
+
+
+
+summarize_all_results_and_write_to_disk <- function(
+    all_results,
+    sampleNames,
+    what,
+    outputdir,
+    summary_prefix,
+    summary_suffix,
+    only_take_top_result = FALSE
+) {
+    result <- data.frame(rbindlist(lapply(1:length(all_results), function(iSample) {
+        x <- all_results[[iSample]]
+        y <- data.frame(
+            sample_number = iSample,
+            sample_name = sampleNames[iSample],
+            x[[what]]
+        )
+        if (only_take_top_result) {
+            y <- y[1, , drop = FALSE]
+        }
+        y
+    })))
+    file <- paste0(summary_prefix, ".", summary_suffix)    
+    if (outputdir != "") {
+        file <- file.path(outputdir, file)
+    }
+    write.table(
+        result,
+        file = file,
+        row.names = FALSE,
+        col.names = TRUE,
+        sep = "\t",
+        quote = FALSE
+    )
+    result
+}
+    

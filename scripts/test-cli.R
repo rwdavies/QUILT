@@ -63,14 +63,14 @@ cli_output_file <- "QUILT_HLA.R"
 STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt-hla.R",
     cli_output_file = cli_output_file,
-    other_character_params = c("bamfile", "region", "finaloutputfile", "chr", "quilt_hla_haplotype_panelfile", "prepared_hla_reference_dir"),
-    other_logical_params = c("overrideoutput"),
+    other_character_params = c("bamlist", "region", "finaloutputfile", "chr", "quilt_hla_haplotype_panelfile", "prepared_hla_reference_dir", "summary_output_file_prefix", "final_output_RData_file"),
+    other_logical_params = c("overrideoutput", "write_summary_text_files"),
     other_integer_params = c("nGibbsSamples", "n_seek_iterations", "quilt_seed", "quilt_buffer", "quilt_bqFilter"),
+    other_double_params = c("summary_best_alleles_threshold"),
     function_name = "QUILT_HLA",
     library_name = "QUILT"
 )
 system(paste0("chmod +x ", cli_output_file))
-
 
 cli_output_file <- "QUILT_HLA_prepare_reference.R"
 STITCH::make_STITCH_cli(

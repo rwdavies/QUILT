@@ -56,12 +56,11 @@ file_quilt_hla_snpformatalleles <- function(outputdir, hla_region) {
 }
 
 
-## to be changed?
-file_quilt_final_RData_output_file <- function(outputdir, bamfile, region) {
+file_quilt_final_RData_output_file <- function(outputdir, region) {
     return(
         file.path(
             outputdir,
-            paste0("quiltandreadcombinedanalysis", bamfile, "hla", region, ".RData")
+            paste0("quilt.output.hla", region, ".RData")
         )
     )
 }

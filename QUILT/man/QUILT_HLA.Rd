@@ -5,33 +5,43 @@
 \title{QUILT_HLA}
 \usage{
 QUILT_HLA(
-  bamfile,
+  bamlist,
   region,
   outputdir = "",
+  summary_output_file_prefix = "quilt.hla.output",
+  nCores = 1,
   prepared_hla_reference_dir = "",
   quilt_hla_haplotype_panelfile = "",
-  finaloutputfile = NA,
+  final_output_RData_file = NA,
+  write_summary_text_files = TRUE,
   overrideoutput = FALSE,
   nGibbsSamples = 15,
   n_seek_iterations = 3,
   quilt_seed = NA,
   chr = "chr6",
   quilt_buffer = 5e+05,
-  quilt_bqFilter = 10
+  quilt_bqFilter = 10,
+  summary_best_alleles_threshold = 0.99
 )
 }
 \arguments{
-\item{bamfile}{Path to bamfile to analyze}
+\item{bamlist}{Path to file with bam file locations. File is one row per entry, path to bam files. Bam index files should exist in same directory as for each bam, suffixed either .bam.bai or .bai}
 
 \item{region}{HLA region to be analyzed, for example A for HLA-A}
 
-\item{outputdir}{Optional, what output directory to use. Use only if not specifying finaloutputfile}
+\item{outputdir}{What output directory to use. Otherwise defaults to current directory}
+
+\item{summary_output_file_prefix}{Prefix for output text summary files}
+
+\item{nCores}{How many cores to use}
 
 \item{prepared_hla_reference_dir}{Output directory containing HLA reference material necessary for QUILT HLA}
 
 \item{quilt_hla_haplotype_panelfile}{Prepared HLA haplotype reference panel file}
 
-\item{finaloutputfile}{Final output file path}
+\item{final_output_RData_file}{Final output RData file path, if desired}
+
+\item{write_summary_text_files}{Whether to write out final summary text files or not}
 
 \item{nGibbsSamples}{How many QUILT Gibbs samples to perform}
 
@@ -44,6 +54,8 @@ QUILT_HLA(
 \item{quilt_buffer}{For QUILT Gibbs sampling, what buffer to include around center of gene}
 
 \item{quilt_bqFilter}{For QUILT Gibbs sampling, do not consider sequence information if the base quality is below this threshold}
+
+\item{summary_best_alleles_threshold}{When reporting results, give results until posterior probability exceeds this value}
 }
 \value{
 Results in properly formatted version
