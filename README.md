@@ -17,13 +17,17 @@ For details of past changes please see [CHANGELOG](CHANGELOG.md).
     1. [github](#paragraph-installation-github)
     2. [conda](#paragraph-installation-conda)
 3. [Quick start](#paragraph-quickstart)
-4. [Help, options and parameters](#paragraph-helpoptionsparams)
-5. [Important parameters that influence run time, memory usage and accuracy](#paragraph-paramsimportant)
+4. [Input and output formats](#paragraph-io)
+    1. [Input](#paragraph-io-input)
+    2. [Output](#paragraph-io-output)
+5. [Help, options and parameters](#paragraph-helpoptionsparams)
+6. [Important parameters that influence run time, memory usage and accuracy](#paragraph-paramsimportant)
 6. [Examples](#paragraph-examples)
-7. [License](#paragraph-license)
-8. [Citation](#paragraph-citation)
-9. [Testing](#paragraph-testing)
-10. [Bug reports](#paragraph-bugreports)
+7. [Plot explanation](#paragraph-plotexplanation)
+8. [License](#paragraph-license)
+9. [Citation](#paragraph-citation)
+10. [Testing](#paragraph-testing)
+11. [Bug reports](#paragraph-bugreports)
 
 
 
@@ -110,6 +114,21 @@ Second, to perform imputation
 ```
 Succesful completion of this run results in a VCF at `quilt_output/quilt.chr20.2000001.4000000.vcf.gz`. For more details on this and other examples, see [Examples](#paragraph-examples)
 
+
+
+
+## Input and output formats <a name="paragraph-io"></a>
+
+### Input <a name="paragraph-io-input"></a>
+
+Reference panel
+Site list (or is this obvious?)
+Bams
+
+### Output <a name="paragraph-io-output"></a>
+
+Describe VCF here
+
 ## Help, options and parameters <a name="paragraph-helpoptionsparams"></a>
 
 For a full list of options, query `?QUILT::QUILT`, or alternatively, type 
@@ -121,20 +140,42 @@ For a full list of options, query `?QUILT::QUILT`, or alternatively, type
 
 ## Important parameters that influence run time, memory usage and accuracy <a name="paragraph-paramsimportant"></a>
 
-Text here
+nGibbsSamples
+n_seek_its
+Ksubset
+Synchronize the names!
+
+
+Other ones maybe relevant
+Knew
+K_top_matches
+heuristic_match_thin
+
+
 
 
 ## Examples <a name="paragraph-examples"></a>
 
 In this directory you will find [example/examples.sh](example/examples.sh), a script with examples, including the above. They can either be run in their entirety using `./example/examples.sh`, or can be run interactively line by line.
 
+
+## Plot explanation <a name="paragraph-plotexplanation"></a>
+
+Note this is SLOW, so turn on to understand performance, then turn off
+Also maybe include tiny plot?
+        "--make_plots",
+        "--make_plots_block_gibbs",
+
+Also semi-related
+        "--estimate_bq_using_truth_read_labels"
+
 ## License <a name="paragraph-license"></a>
 
-Text here
+QUILT and the code in this repo is available under a GPL3 license. For more information please see the [LICENSE](LICENSE).
 
 ## Citation <a name="paragraph-citation"></a>
 
-Text here
+Forthcoming
 
 ## Testing <a name="paragraph-testing"></a>
 
