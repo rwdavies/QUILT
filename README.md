@@ -8,10 +8,10 @@ For details of past changes please see [CHANGELOG](CHANGELOG.md).
 QUILT is an R and C++ program for rapid genotype imputation from low-coverage sequence using a large reference panel.
 
 # Table of contents
-[1. Introduction](#introduction)
-[2. Some next paragraph](#paragraph1)
-    [1. Sub paragraph](#subparagraph1)
-[3. Another paragraph](#paragraph2)
+1. [Introduction](#introduction)
+2. [Some next paragraph](#paragraph1)
+    1. [Sub paragraph](#subparagraph1)
+3. [Another paragraph](#paragraph2)
 
 ## This is the introduction <a name="introduction"></a>
 Some introduction text, formatted in heading 2 style
