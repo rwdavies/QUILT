@@ -117,6 +117,8 @@ Succesful completion of this run results in a VCF at `quilt_output/quilt.chr20.2
 
 
 
+
+
 ## Input and output formats <a name="paragraph-io"></a>
 
 ### Input <a name="paragraph-io-input"></a>
@@ -158,7 +160,6 @@ heuristic_match_thin
 
 In this directory you will find [example/examples.sh](example/examples.sh), a script with examples, including the above. They can either be run in their entirety using `./example/examples.sh`, or can be run interactively line by line.
 
-
 ## Plot explanation <a name="paragraph-plotexplanation"></a>
 
 Note this is SLOW, so turn on to understand performance, then turn off
@@ -180,7 +181,6 @@ Forthcoming
 ## Testing <a name="paragraph-testing"></a>
 
 Tests in QUILT are split into unit or acceptance run using ```./scripts/test-unit.sh``` and ```./scripts/test-acceptance.sh```. To run all tests use ```./scripts/all-tests.sh```, which also builds and installs a release version of QUILT. To make compilation go faster do something like ```export MAKE="make -j 8"```.
-
 
 ## Bug reports <a name="paragraph-bugreports"></a>
 
