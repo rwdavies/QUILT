@@ -64,7 +64,7 @@ Note that currently the command like `QUILT.R` is not included with the bioconda
 
 ## QUILT-HLA <a name="paragraph-quilthla"></a>
 
-Please see the [QUILT-HLA README](https://github.com/rwdavies/README_QUILT-HLA) for details including QUICK start, options, and examples.
+Please see the [QUILT-HLA README](README_QUILT-HLA.md) for details including QUICK start, options, and examples.
 
 
 
