@@ -3,13 +3,13 @@ QUILT
 **__Current Version: pre-release__**
 Release date: pre-release
 
-For details of past changes please see [CHANGELOG](CHANGELOG.md).
-
 QUILT is an R and C++ program for rapid genotype imputation from low-coverage sequence using a large reference panel.
 
 QUILT-HLA is an R and C++ program for rapid HLA imputation from low-coverage sequence using a labelled reference panel.
 
 Please use this README for general information about QUILT and QUILT-HLA, and specific information about QUILT. Please see the [QUILT-HLA README](README_QUILT-HLA.md) for specific details about QUILT-HLA.
+
+For details of past changes please see [CHANGELOG](CHANGELOG.md).
 
 # Table of contents
 1. [Introduction](#paragraph-introduction)
@@ -73,7 +73,7 @@ Note that currently the command like `QUILT.R` is not included with the bioconda
 
 A quick start to ensure QUILT is properly installed and working can be performed using the following
 
-Download package
+Download data package
 ```
 wget http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2020_08_25.tgz ## or curl -O
 tar -xzvf QUILT_example_2020_08_25.tgz
@@ -92,16 +92,16 @@ rm -r -f quilt_output
 --regionStart=2000001 \
 --regionEnd=4000000 \
 --buffer=500000
-## NOTES
-## 1) succesful completion of this run results in a file at quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData, which is used by QUILT itself during the actual imputation in the next step
-## 2) there are two haplotype reference file options included in this package
-##   ref.chr20.2000001.4000000.hap.clean.example.1000Gonly.gz and
-##   ref.chr20.2000001.4000000.hap.clean.example.gz
-##   the former is just 1000 Genomes samples
-##   the later is the full size of the HRC but all non-1000G sample genoytpes have been set to 0 and sample names redatcted
-##   the site list for both is the HRC site list which has been released publicly
-##   as such the larger haplotype reference panel just demonstrates performance run times of QUILT rather than generating more accurate imputation
-##   the choice of file can be modified using the reference_haplotype_file option above
+```
+
+Notes
+- Succesful completion of this run results in a file at `quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData`, which is used by QUILT itself during the actual imputation in the next step
+- There are two haplotype reference file options included in this package
+    - `ref.chr20.2000001.4000000.hap.clean.example.1000Gonly.gz`
+    - `ref.chr20.2000001.4000000.hap.clean.example.gz`
+    - The former is just 1000 Genomes samples, while the later is the full size of the HRC but all non-1000G sample genoytpes have been set to 0 and sample names redatcted
+    - The site list for both is the HRC site list which has been released publicly, as such, the larger haplotype reference panel just demonstrates performance run times of QUILT rather than generating more accurate imputation
+    - The choice of file can be modified using the reference_haplotype_file option above
 ```
 
 Second, to perform imputation
@@ -117,13 +117,13 @@ Second, to perform imputation
 --phasefile=package_2020_08_25/phase.chr20.2000001.4000000.txt \
 --bqFilter=10 \
 --nCores=1
-## NOTES
-## 1) this imputes NA12878 on this region, using a haplotagged Illumina example and ONT
-##   succesful completion of this run results in a VCF at quilt_output/quilt.chr20.2000001.4000000.vcf.gz
-## 2) per-sample per-SNP output includes hard-called (integer) genotype, genotype posteriors, diploid dosage, and haploid dosages (i.e. haplotypes, can be turned into standard 0 or 1 haplotpes using rounding)
-## 3) you can try bamlist.0.25.txt to try 0.25X bams
-## 4) for normal operation when you do not have high quality phased truth genotypes, you can omit posfile and phasefile, and sites will be imputed
 ```
+Notes
+- This imputes NA12878 on this region, using a haplotagged Illumina example and ONT
+- Succesful completion of this run results in a VCF at `quilt_output/quilt.chr20.2000001.4000000.vcf.gz`
+- Per-sample, per-SNP output includes hard-called (integer) genotype, genotype posteriors, diploid dosage, and haploid dosages (i.e. haplotypes, can be turned into standard 0 or 1 haplotpes using rounding)
+- You can try bamlist.0.25.txt to try 0.25X bams
+- For normal operation when you do not have high quality phased truth genotypes, you can omit posfile and phasefile, and sites will be imputed
 
 ## Options and parameters <a name="paragraph-optionsparams"></a>
 

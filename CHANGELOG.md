@@ -1,6 +1,6 @@
 * v0.1.3
 	* Bugfixes
-	* v0.1.2
+* v0.1.2
 	* More optimization, avoid normalization when possible, avoid unnecessary adds and mults
 * v0.1.1
 	* Better acceptance tests
