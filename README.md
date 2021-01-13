@@ -9,20 +9,21 @@ QUILT is an R and C++ program for rapid genotype imputation from low-coverage se
 
 QUILT-HLA is an R and C++ program for rapid HLA imputation from low-coverage sequence using a labelled reference panel.
 
+Please use this README for general information about QUILT and QUILT-HLA, and specific information about QUILT. Please see the [QUILT-HLA README](README_QUILT-HLA.md) for specific details about QUILT-HLA.
+
 # Table of contents
 [1. Introduction](#paragraph-introduction)
 [2. Installation](#paragraph-installation)
     [1. github](#paragraph-installation-github)
     [2. conda](#paragraph-installation-conda)
-[3. QUILT-HLA](#paragraph-quilthla)
-[4. Quick start](#paragraph-quickstart)
-[5. Options and parameters](#paragraph-optionsparams)
-[6. Important parameters that influence run time, memory usage and accuracy](#paragraph-paramsimportant)
-[7. Examples](#paragraph-examples)
-[8. License](#paragraph-license)
-[9. Citation](#paragraph-citation)
-[10. Testing](#paragraph-testing)
-[11. Bug reports](#paragraph-bugreports)
+[3. Quick start](#paragraph-quickstart)
+[4. Options and parameters](#paragraph-optionsparams)
+[5. Important parameters that influence run time, memory usage and accuracy](#paragraph-paramsimportant)
+[6. Examples](#paragraph-examples)
+[7. License](#paragraph-license)
+[8. Citation](#paragraph-citation)
+[9. Testing](#paragraph-testing)
+[10. Bug reports](#paragraph-bugreports)
 
 
 
@@ -62,9 +63,7 @@ Note that currently the command like `QUILT.R` is not included with the bioconda
 
 
 
-## QUILT-HLA <a name="paragraph-quilthla"></a>
 
-Please see the [QUILT-HLA README](README_QUILT-HLA.md) for details including QUICK start, options, and examples.
 
 
 
