@@ -179,11 +179,14 @@ Forthcoming
 
 ## Testing <a name="paragraph-testing"></a>
 
-Text here
+Tests in QUILT are split into unit or acceptance run using ```./scripts/test-unit.sh``` and ```./scripts/test-acceptance.sh```. To run all tests use ```./scripts/all-tests.sh```, which also builds and installs a release version of QUILT. To make compilation go faster do something like ```export MAKE="make -j 8"```.
+
 
 ## Bug reports <a name="paragraph-bugreports"></a>
 
-Text here
+The best way to get help is to submit a bug report on GitHub in the [Issues](https://github.com/rwdavies/STITCH/issues) section. Please also use the Issues section if you have a more general question, such issues will be left open for others to see. Similarly, please check the issues before posting to see if your issue has already been addressed
+
+For more detailed questions or other concerns please contact Robert Davies robertwilliamdavies@gmail.com
 
 
 
