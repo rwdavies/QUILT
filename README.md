@@ -102,7 +102,6 @@ Notes
     - The former is just 1000 Genomes samples, while the later is the full size of the HRC but all non-1000G sample genoytpes have been set to 0 and sample names redatcted
     - The site list for both is the HRC site list which has been released publicly, as such, the larger haplotype reference panel just demonstrates performance run times of QUILT rather than generating more accurate imputation
     - The choice of file can be modified using the reference_haplotype_file option above
-```
 
 Second, to perform imputation
 ```
@@ -118,6 +117,7 @@ Second, to perform imputation
 --bqFilter=10 \
 --nCores=1
 ```
+
 Notes
 - This imputes NA12878 on this region, using a haplotagged Illumina example and ONT
 - Succesful completion of this run results in a VCF at `quilt_output/quilt.chr20.2000001.4000000.vcf.gz`
