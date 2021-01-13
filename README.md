@@ -94,15 +94,6 @@ rm -r -f quilt_output
 --buffer=500000
 ```
 
-Notes
-- Succesful completion of this run results in a file at `quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData`, which is used by QUILT itself during the actual imputation in the next step
-- There are two haplotype reference file options included in this package
-    - `ref.chr20.2000001.4000000.hap.clean.example.1000Gonly.gz`
-    - `ref.chr20.2000001.4000000.hap.clean.example.gz`
-    - The former is just 1000 Genomes samples, while the later is the full size of the HRC but all non-1000G sample genoytpes have been set to 0 and sample names redatcted
-    - The site list for both is the HRC site list which has been released publicly, as such, the larger haplotype reference panel just demonstrates performance run times of QUILT rather than generating more accurate imputation
-    - The choice of file can be modified using the reference_haplotype_file option above
-
 Second, to perform imputation
 ```
 ./QUILT.R \
@@ -117,13 +108,7 @@ Second, to perform imputation
 --bqFilter=10 \
 --nCores=1
 ```
-
-Notes
-- This imputes NA12878 on this region, using a haplotagged Illumina example and ONT
-- Succesful completion of this run results in a VCF at `quilt_output/quilt.chr20.2000001.4000000.vcf.gz`
-- Per-sample, per-SNP output includes hard-called (integer) genotype, genotype posteriors, diploid dosage, and haploid dosages (i.e. haplotypes, can be turned into standard 0 or 1 haplotpes using rounding)
-- You can try bamlist.0.25.txt to try 0.25X bams
-- For normal operation when you do not have high quality phased truth genotypes, you can omit posfile and phasefile, and sites will be imputed
+Succesful completion of this run results in a VCF at `quilt_output/quilt.chr20.2000001.4000000.vcf.gz`. For more details on this and other examples, see [Examples](#paragraph-examples)
 
 ## Help, options and parameters <a name="paragraph-helpoptionsparams"></a>
 
@@ -141,7 +126,7 @@ Text here
 
 ## Examples <a name="paragraph-examples"></a>
 
-Text here
+In this directory you will find [example/examples.sh](example/examples.sh), a script with examples, including the above. They can either be run in their entirety using `./example/examples.sh`, or can be run interactively line by line.
 
 ## License <a name="paragraph-license"></a>
 
