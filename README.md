@@ -17,7 +17,7 @@ For details of past changes please see [CHANGELOG](CHANGELOG.md).
     1. [github](#paragraph-installation-github)
     2. [conda](#paragraph-installation-conda)
 3. [Quick start](#paragraph-quickstart)
-4. [Options and parameters](#paragraph-optionsparams)
+4. [Help, options and parameters](#paragraph-helpoptionsparams)
 5. [Important parameters that influence run time, memory usage and accuracy](#paragraph-paramsimportant)
 6. [Examples](#paragraph-examples)
 7. [License](#paragraph-license)
@@ -125,7 +125,7 @@ Notes
 - You can try bamlist.0.25.txt to try 0.25X bams
 - For normal operation when you do not have high quality phased truth genotypes, you can omit posfile and phasefile, and sites will be imputed
 
-## Options and parameters <a name="paragraph-optionsparams"></a>
+## Help, options and parameters <a name="paragraph-helpoptionsparams"></a>
 
 For a full list of options, query `?QUILT::QUILT`, or alternatively, type 
 ```
