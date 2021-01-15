@@ -165,12 +165,6 @@ option_list <- list(
         default = FALSE
     ), 
     make_option(
-        "--make_plots_block_gibbs",
-        type = "logical",
-        help = "Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs [default FALSE] ",
-        default = FALSE
-    ), 
-    make_option(
         "--verbose",
         type = "logical",
         help = "whether to be more verbose when running [default TRUE] ",
@@ -280,7 +274,6 @@ QUILT(
     phasefile = opt$phasefile,
     maxDifferenceBetweenReads = opt$maxDifferenceBetweenReads,
     make_plots = opt$make_plots,
-    make_plots_block_gibbs = opt$make_plots_block_gibbs,
     verbose = opt$verbose,
     shuffle_bin_radius = opt$shuffle_bin_radius,
     iSizeUpperLimit = opt$iSizeUpperLimit,

@@ -1597,7 +1597,10 @@ impute_using_everything <- function(
             have_truth_haplotypes = have_truth_haplotypes,
             uncertain_truth_labels = uncertain_truth_labels,
             sample_name = sample_name,
-            smooth_cm = smooth_cm
+            smooth_cm = smooth_cm,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer
         )
     }
     if (1 == 0) {
