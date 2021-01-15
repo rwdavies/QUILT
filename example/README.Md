@@ -41,9 +41,15 @@ rm -r -f quilt_output
 
 
 
-## 
-## step 2 - impute samples using the prepared reference package
-##
+## Impute samples using the prepared reference package
+This imputes NA12878 on this region, using three different bams, a haplotagged Illumina, an ONT, and an unlinked Illumina example, all downsampled to about 1.0X. You can try imputing from lower coverage using the other included bamlist in this example.
+
+If this run completes succesfully, you will get a VCF at quilt_output/quilt.chr20.2000001.4000000.vcf.gz. Note that this can be changed with `--output_filename`, which is useful if you're running multiple jobs off of the same reference dataset built above (they can all be pointed at the same `outputdir` that has the reference data).
+
+For normal operation, when you do not have high quality phased truth genotypes, you can omit posfile and phasefile, and normal imputation will be performed.
+
+Here we have turned on `make_plots_block_gibbs`, which is very slow, but does make some fun graphs when you have truth data, which will be discussed below. You should disable this for non-explaratory jobs.
+
 ```
 ./QUILT.R \
     --outputdir=quilt_output \
@@ -53,13 +59,8 @@ rm -r -f quilt_output
     --buffer=500000 \
     --bamlist=package_2021_01_14B/bamlist.1.0.txt \
     --posfile=package_2021_01_14B/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.4000000.posfile.txt \
-    --phasefile=package_2021_01_14B/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.4000000.phasefile.txt
+    --phasefile=package_2021_01_14B/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.4000000.phasefile.txt \
+    --make_plots_block_gibbs=TRUE
 ```    
-## note the following
-##  this imputes NA12878 on this region, using a haplotagged Illumina, an ONT, and an unlinked Illumina example
-##  succesful completion of this run results in a VCF at quilt_output/quilt.chr20.2000001.4000000.vcf.gz (this location can be changed with --output_filename)
-##  output format is described on the main README
-##  you can try bamlist.0.1.txt for 0.1X versions of the above bams
-##  for normal operation when you do not have high quality phased truth genotypes, you can omit posfile and phasefile, and sites will be imputed 
 
-Plots here
+## Plots
