@@ -9,8 +9,11 @@ Here we first walk through downloading some data, preparing the reference packag
 Here we download some example data to use. Note that the code below is just a fancy way of ensuring it should download on either mac or linux.
 ```
 path=http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2021_01_14B.tgz
-wget ${path} || true
-curl -O || true
+if [ ! -f basename ${path} ]
+then
+    wget ${path} || true
+    curl -O || true
+fi
 if [ ! -f basename ${path} ]
 then
     exit 1
@@ -64,9 +67,18 @@ Here we have turned on `make_plots_block_gibbs`, which is very slow, but does ma
     --make_plots_block_gibbs=TRUE
 ```    
 
- plot_attempt_to_reblock_snps
+## Plot to understand per-sample imputation performance
+
+Turning on `make_plots` will generate some plots that can be informative about how the method is doing. Here we take a look at a few of these plots, and interpret them. Note that since the random number generator in R is intialized differently each run, unless you set the seed in QUILT, re-running the same command will generate slightly different plots each time.
+
+First, plots are named `haps.{sample_name}.{regionName}_igs.{iGibbsSample}.it{iSeekIt}.gibbs.png` where assuming you set `regionStart` and `regionEnd`, then `regionName={chr}.{regionStart}.{regionEnd}`. The `{iGibbsSample}` is what number of Gibbs sample this is (the method runs `nGibbsSamples` number of Gibbs sample iterations, and a final additional one where phasing is performed, so `iGibbsSample=nGibbsSamples + 1` is the phasing iteration). The `{iSeekIt}` is how many times the iterative process of first performing Gibbs sampling using a reduced reference panel, and then getting a new version of that reduced reference panel using full haploid imputation, is performed.
+
+Next, the plot is divided into sections. 
+
+
+TODO, understand 
+
+plot_attempt_to_reblock_snps
 So make plots is the one I want (probably)
 Need to re-figure out what is plot attempt to reblock SNPs
 
-
-## Plots

@@ -199,6 +199,7 @@ plot_single_gamma_dosage <- function(
         ## colour dpeending on truth
         if (have_truth_haplotypes) {
             col <- c("black", "blue", "red")[truth[iRead] + 1]
+            text(x = Ls[1], y = (1 - frac_reads) + frac_reads / 2, labels = "Blue = truth hap 1, Red = truth hap 2", pos = 4, cex = 1.25)
         } else {
             col <- "black"
         }
