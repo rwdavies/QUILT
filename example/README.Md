@@ -1,46 +1,28 @@
-## for now there is only one example, a slightly larger version of the quick start example
-## imputation is performed in a more reasonable chunk size for this example
-## you should be able to run this example non-interactively (./examples/examples.sh)
-## this is also how the example plots were generated
-## see scripts/prepare_example.R for code for how it was made
-## note this includes not directly avaialble public data (the bams, though these all should be available for download through links not used here in their creation)
+#Example
+
+For now there is only one example, a slightly larger version of the quick start example, with imputation performed over a more reasonable chunk size.
+
+Here we first walk through downloading some data, preparing the reference package using a haplotype reference file, and imputing samples using the prepared reference package
 
 
-## structure of remaining example
-## step 0 - download some example data
-## step 1 - prepare a reference package using a haplotype reference file
-## step 2 - impute samples using the prepared reference package
-
-
-##
-## step 0 - download some example data
-##
+## Downloading example data
+Here we download some example data to use. Note that the code below is just a fancy way of ensuring it should download on either mac or linux.
 ```
-os=`uname -a | cut -f 1 -d " "`
-if [ "${os}" == "Darwin" ]
+path=http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2021_01_14B.tgz
+wget ${path} || true
+curl -O || true
+if [ ! -f basename ${path} ]
 then
-   download_command="curl -O"
-elif [ "${os}" == "Linux" ]
-then
-    download_command="wget"
-else
-    echo "cannot figure out operating system for selecting download command, please run file interactively"
     exit 1
 fi
-## download package - this should download the files from this website including for example "bamlist.1.0.txt"
-if [ ! -f QUILT_example_2021_01_14B.tgz ]
-then
-    ${download_command} http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2021_01_14B.tgz ## either wget or curl -O or otherwise as appropriate
-fi
-tar -xzvf QUILT_example_2021_01_14B.tgz
 ```
 
 
 
 
-##
-## step 1 - prepare a reference package using a haplotype reference file
-##
+## Prepare reference package using a haplotype reference file
+note that succesful completion of this run results in a file at quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData, which is used by QUILT itself during the actual imputation that follows in the next step
+also note that making a reference panel in .hap and .legend format from a haplotype VCF is facilitated by using bcftools convert --haplegendsample
 ```
 rm -r -f quilt_output
 ./QUILT_prepare_reference.R \
@@ -54,8 +36,6 @@ rm -r -f quilt_output
     --regionEnd=4000000 \
     --buffer=500000
 ```
-## note that succesful completion of this run results in a file at quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData, which is used by QUILT itself during the actual imputation that follows in the next step
-## also note that making a reference panel in .hap and .legend format from a haplotype VCF is facilitated by using bcftools convert --haplegendsample
 
 
 
