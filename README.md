@@ -153,7 +153,7 @@ heuristic_match_thin
 
 ## Examples and plots <a name="paragraph-examples"></a>
 
-In this directory you will find [example/examples.Md](example/examples.Md), with for now just one example, a larger version of the quick start example. This can be run using either  `./example/examples.sh`, or can be run interactively line by line from the [example/examples.Md](example/examples.Md) file.
+In this directory you will find [example/README.Md](example/), with for now just one example, a larger version of the quick start example. This can be run using either  `./example/examples.sh`, or can be run interactively line by line from the [example/README.Md](example/) file.
 
 ## Plot explanation <a name="paragraph-plotexplanation"></a>
 
