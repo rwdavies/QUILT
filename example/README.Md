@@ -73,7 +73,17 @@ Turning on `make_plots` will generate some plots that can be informative about h
 
 First, plots are named `haps.{sample_name}.{regionName}_igs.{iGibbsSample}.it{iSeekIt}.gibbs.png` where assuming you set `regionStart` and `regionEnd`, then `regionName={chr}.{regionStart}.{regionEnd}`. The `{iGibbsSample}` is what number of Gibbs sample this is (the method runs `nGibbsSamples` number of Gibbs sample iterations, and a final additional one where phasing is performed, so `iGibbsSample=nGibbsSamples + 1` is the phasing iteration). The `{iSeekIt}` is how many times the iterative process of first performing Gibbs sampling using a reduced reference panel, and then getting a new version of that reduced reference panel using full haploid imputation, is performed.
 
-Next, the plot is divided into sections. 
+Here is an example of such a plot. Below we'll walk through what the plot shows, and how to interpret it.
+
+SHOW PLOT HERE
+
+The plot is divided into sections. All sections are aligned vertically, by physical position.
+
+The first two sections, "Imputed haplotype 1" and "Imputed haplotype 2", show the same information, but for the two imputed haplotypes. Within these subsections are first two plots with red and green lines, and then a large colourful rectangular region. The upper red and green lines represent a rolling difference between the dosages of that imputed haplotype and the two truth haplotypes, one at a time, where a flat line represents perfect agreement between the truth and imputed haplotype, and higher values off the line indicate more differences. To the left is an r2 correlation between the truth and imputed haplotype dosage. Below these, the large colourful rectangle gives, for any given physical position, a stacked bar chart of what fraction of the posterior state probability is taken up by a given haplotype in the small haplotype reference panel used by the Gibbs sampler.
+
+
+
+
 
 
 TODO, understand 
