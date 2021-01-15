@@ -79,6 +79,7 @@ plot_single_gamma_dosage <- function(
     have_truth_haplotypes,
     uncertain_truth_labels,
     sample_name,
+    smooth_cm,
     output_plot = TRUE
 ) {
     ## load("~/Downloads/atta/haps.NA12878HT.chr20.2000001.4000000_igs.1.it1.gibbs.png.RData")

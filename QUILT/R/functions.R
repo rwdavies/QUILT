@@ -684,7 +684,8 @@ get_and_impute_one_sample <- function(
                 return_good_haps = FALSE,
                 plot_description = "0.truth",
                 return_dosage = TRUE,
-                sample_name = sample_name
+                sample_name = sample_name,
+                smooth_cm = smooth_cm
             )
 
         } else {
@@ -805,7 +806,8 @@ get_and_impute_one_sample <- function(
                 Jmax = 10000,
                 suppressOutput = 1,
                 shuffle_bin_radius = shuffle_bin_radius,
-                make_plots_block_gibbs = make_plots_block_gibbs
+                make_plots_block_gibbs = make_plots_block_gibbs,
+                sample_name = sample_name
             )
 
             if (hla_run) {            
@@ -866,7 +868,8 @@ get_and_impute_one_sample <- function(
                 K_top_matches = K_top_matches,
                 heuristic_match_thin = heuristic_match_thin,
                 return_gamma_t = return_gamma_t,
-                sample_name = sample_name                
+                sample_name = sample_name,
+                smooth_cm = smooth_cm                
             )
             
             which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
@@ -1450,6 +1453,7 @@ impute_using_everything <- function(
     Knew,
     previously_selected_haplotypes,
     sample_name,
+    smooth_cm,
     return_dosage = FALSE,
     return_betaHat_t = FALSE,
     return_gamma_t = FALSE,
@@ -1580,7 +1584,8 @@ impute_using_everything <- function(
             truth_labels = truth_labels,
             have_truth_haplotypes = have_truth_haplotypes,
             uncertain_truth_labels = uncertain_truth_labels,
-            sample_name = sample_name
+            sample_name = sample_name,
+            smooth_cm = smooth_cm
         )
     }
     if (1 == 0) {
@@ -1782,6 +1787,7 @@ impute_one_sample <- function(
     have_truth_haplotypes,
     truth_haps,
     truth_labels,
+    sample_name,
     uncertain_truth_labels,
     return_p_store = FALSE,
     return_extra = FALSE,
@@ -1903,7 +1909,9 @@ impute_one_sample <- function(
             haps = truth_haps,
             truth_labels = truth_labels,
             have_truth_haplotypes = have_truth_haplotypes,
-            uncertain_truth_labels = uncertain_truth_labels
+            uncertain_truth_labels = uncertain_truth_labels,
+            sample_name = sample_name,
+            smooth_cm = smooth_cm
         )
         ## would like a plot here
     }
@@ -2185,85 +2193,6 @@ calculate_eMatRead_t_vs_two_haplotypes <- function(
 
 
 
-
-if (1 == 0) {
-
-    ## 
-    ## all I have changed is how I view accuracy
-    ## hopefully is enough!
-    ##
-    out2 <- mclapply(c(1e-2, 1e-3, 1e-4), mc.cores = 3, function(full_error) {
-        print(paste0("full_error = ", full_error))
-        out <- mclapply(-2:2, mc.cores = 8, function(i) {
-            rDenom <- (1.5 ** i)
-            cheat_all <- impute_using_everything(
-                H = H,
-                expRate = full_expRate,
-                nGen = full_nGen,
-                error = full_error,
-                rDenom = rDenom,
-                save_for_plot = TRUE
-            )
-            plot_single_gamma_dosage(
-                fbsoL = cheat_all$fbsoL,
-                L_grid = L_grid,
-                L = L,
-                inRegion2 = inRegion2,
-                cM_grid = cM_grid,
-                ancAlleleFreqAll = ref_alleleCount[, 3],
-                outname = paste0(outplotprefix, "0.TEMPTEMP.", rDenom, ".", full_error, ".png"),
-                method = "gibbs-nipt",
-                haps = truth_haps,
-                truth_labels = truth_labels,
-                have_truth_haplotypes = have_truth_haplotypes,
-                uncertain_truth_labels = uncertain_truth_labels
-            )
-            ## rsync_to_rescomp()
-            return(check_accuracy_from_all(cheat_all))
-        })
-        return(out)
-    })
-
-    ## check out the options
-    f <- function(i) {
-        round(sapply(out2[[i]], function(x) x[["r2sm2"]][, "simple"]), 3)
-    }
-    f(1) ##
-    f(2)
-    f(3) ## 
-    
-    
-    ## trying now with better estimate
-    full_error
-    full_nGen
-    full_expRate
-    sapply(-2:2, function(i) {
-        transMatRate_t <- get_transMatRate_m("pseudoHaploid", sigmaCurrent_m)[, , 1]
-        rDenom <- (1.5 ** i)
-        r <- log(transMatRate_t[2, ])
-        r <- exp(r / rDenom)
-        transMatRate_t <- rbind(1 - r, r)
-        return(log10(prod(transMatRate_t[1, ])))
-    })
-    
-    ## check r2sm, which is what I use for real
-    round(sapply(out, function(x) x[["r2sm"]][, "simple"]), 2)
-
-    ## can I check this - maybe should be much more recent!
-    prod(sigmaCurrent_m)
-    ##     
-    sigmaCurrent_m <- initialize_sigmaCurrent_m(
-        cM_grid = cM_grid,
-        nGen = 4 * 20000 / K,
-        nGrids = nGrids,
-        S = 1,
-        dl = dl,
-        expRate = expRate
-    )
-    log10(prod(sigmaCurrent_m)) ## would be 
-    
-
-}
 
 
 ##

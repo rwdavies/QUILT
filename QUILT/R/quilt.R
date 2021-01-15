@@ -126,7 +126,7 @@ QUILT <- function(
         regionName <- paste0(chr, ".", regionStart,".", regionEnd)
     }
 
-    if (make_plots) {
+    if (make_plots | make_plots_block_gibbs) {
         dir.create(file.path(outputdir, "plots"), showWarnings = FALSE)
     }
 

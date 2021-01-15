@@ -60,7 +60,13 @@ Here we have turned on `make_plots_block_gibbs`, which is very slow, but does ma
     --bamlist=package_2021_01_14B/bamlist.1.0.txt \
     --posfile=package_2021_01_14B/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.4000000.posfile.txt \
     --phasefile=package_2021_01_14B/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.4000000.phasefile.txt \
+    --make_plots=TRUE \
     --make_plots_block_gibbs=TRUE
 ```    
+
+ plot_attempt_to_reblock_snps
+So make plots is the one I want (probably)
+Need to re-figure out what is plot attempt to reblock SNPs
+
 
 ## Plots
