@@ -80,11 +80,17 @@ plot_single_gamma_dosage <- function(
     uncertain_truth_labels,
     sample_name,
     smooth_cm,
+    regionStart,
+    regionEnd,
+    buffer,
     output_plot = TRUE
 ) {
-    ## load("~/Downloads/atta/haps.NA12878HT.chr20.2000001.4000000_igs.1.it1.gibbs.png.RData")
-    ## setwd("~/Downloads/atta")
-    ## outname="temp.png"
+    ##load("~/Downloads/atta/haps.NA12878HT.chr20.2000001.4000000_igs.1.it1.gibbs.png.RData")
+   ## setwd("~/Downloads/atta")
+    ##regionStart <- 1800000
+    ##regionEnd <- 2000000
+    ##buffer <- 200000
+    ##outname="temp.png"
     ##
     colStore <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
     smoothV <- 10
@@ -94,8 +100,8 @@ plot_single_gamma_dosage <- function(
     ##    
     nCols <- length(colStore)
     if (output_plot) {
-        png(outname, height = 10, width = 20, units = "in", res = 100)
-        par(mfrow = c(3, 1))
+        png(outname, height = 12, width = 20, units = "in", res = 100)
+        par(mfrow = c(4, 1))
     }
     par(oma = c(0, 0, 5, 0))
     ##
@@ -164,21 +170,10 @@ plot_single_gamma_dosage <- function(
         ## add cor!
     }
     ##
-    ## below, plot recomb rate (need real thing!)
+    ## plot section 3 - add in how well the reads are doing, and the genotypes
     ##
-    recombF <- 0.3 ## i.e. what fraction of the below is for recombination
-    ylim <- c(0, 1 + recombF)
-    ## the extra 1 space is for the rest below
-    ##rate <- diff(cM_grid) / diff(L_grid) * 1e6 ## normally 0-100 scaled
-    rate <- smooth_cm / max(smooth_cm) ## 0-1 scale
-    rate <- rate * recombF ## so on a scale from 0 to recombF
-    ## recombF <- max(rate) ## bound slightly?
-    plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, main = "Smoothed recombination rate", cex = 1.5, col = "white", cex.main = 1.5)
-    lines(x = (L_grid[-1] + L_grid[-length(L_grid)]) / 2, y = 1 + rate, col = "purple", lwd = 2)
-    abline(h = 1)
-    ##
-    ## add in how well the reads are doing
-    ## 
+    ylim <- c(0, 1)
+    plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, main = "Read assignments", cex = 1.5, col = "white", cex.main = 1.5)
     test <- fbsoL$double_list_of_ending_read_labels[[1]][[1]] ## 1, 2, maybe 3 in the future
     if (have_truth_haplotypes) {
         truth <- truth_labels
@@ -190,7 +185,7 @@ plot_single_gamma_dosage <- function(
     ## note, do 3-test so first haplotype reads on top
     y <- (1 - frac_reads) + (0.95 * frac_reads) * (((3 - test) - 1) * (2 / 3) + runif(length(test)) / 3)
     ##
-    text(x = mean(xlim), y = (1 - frac_reads) + frac_reads / 2, labels = "Read assignments", cex = 1.5, font = 2)
+    ## text(x = mean(xlim), y = (1 - frac_reads) + frac_reads / 2, labels = "Read assignments", cex = 1.5, font = 2)
     text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (5 / 6), labels = "Hap1", srt = 90, cex = 1.5, font = 2)
     text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (1 / 6), labels = "Hap2", srt = 90, cex = 1.5, font = 2)
     for(iRead in 1:length(sampleReads)) {
@@ -211,15 +206,39 @@ plot_single_gamma_dosage <- function(
         segments(x0 = L[u[1] + 1], x1 = L[u[2] + 1], y0 = y[iRead], y1 = y[iRead], col = col, lwd = lwd)
     }
     ##
-    abline(h = (1 - frac_reads))
+    ## abline(h = (1 - frac_reads))
     text(x = mean(xlim), y = (1 - frac_reads) * 0.85, labels = "Imputed genotypes", cex = 1.5, font = 2)
     r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = rowSums(haps[, 1:2]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads), col = "green", label = "Rolling accuracy versus truth genotypes"))
+    ##
+    ## plot section 4 - recombination rate (need real thing!), and x-axis with locations
+    ##
+    recombF <- 0.3 ## i.e. what fraction of the below is for recombination
+    ylim <- c(0, recombF)
+    ## the extra 1 space is for the rest below
+    ##rate <- diff(cM_grid) / diff(L_grid) * 1e6 ## normally 0-100 scaled
+    rate <- smooth_cm / max(smooth_cm) ## 0-1 scale
+    rate <- rate * recombF ## so on a scale from 0 to recombF
+    ## recombF <- max(rate) ## bound slightly?
+    par(mar = c(5, 0, 3, 0)) ## bottom, left, top, and right.
+    plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, main = "Smoothed recombination rate", cex = 1.5, col = "white", cex.main = 1.5, xlab = "Physical position")
+    lines(x = (L_grid[-1] + L_grid[-length(L_grid)]) / 2, y = rate, col = "purple", lwd = 2)
+    axis(1)
+    ##
+    ## finalize
+    ##
     outer_main <- paste0("QUILT imputation for ", sample_name)
     mtext(text = outer_main, outer = TRUE, cex = 1.5)
+    abline(v = regionStart)
+    if (!is.na(regionStart)) {
+        text(x = regionStart, srt = 90, labels = "Region Start", cex = 1.5, font = 2, pos = 1)
+        text(x = regionEnd, srt = 90, labels = "Region End", cex = 1.5, font = 2, pos = 3)
+    }
+    abline(v = regionStart)
+    abline(v = regionEnd)
     if (output_plot) {
         dev.off()
     }
-    ## also add recombination rate map
+    ## abline(h = 1)
     return(r2s)
 }
 

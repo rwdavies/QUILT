@@ -685,7 +685,10 @@ get_and_impute_one_sample <- function(
                 plot_description = "0.truth",
                 return_dosage = TRUE,
                 sample_name = sample_name,
-                smooth_cm = smooth_cm
+                smooth_cm = smooth_cm,
+                regionStart = regionStart,
+                regionEnd = regionEnd,
+                buffer = buffer
             )
 
         } else {
@@ -807,7 +810,10 @@ get_and_impute_one_sample <- function(
                 suppressOutput = 1,
                 shuffle_bin_radius = shuffle_bin_radius,
                 make_plots_block_gibbs = make_plots_block_gibbs,
-                sample_name = sample_name
+                sample_name = sample_name,
+                regionStart = regionStart,
+                regionEnd = regionEnd,
+                buffer = buffer
             )
 
             if (hla_run) {            
@@ -869,7 +875,10 @@ get_and_impute_one_sample <- function(
                 heuristic_match_thin = heuristic_match_thin,
                 return_gamma_t = return_gamma_t,
                 sample_name = sample_name,
-                smooth_cm = smooth_cm                
+                smooth_cm = smooth_cm ,
+                regionStart = regionStart,
+                regionEnd = regionEnd,
+                buffer = buffer
             )
             
             which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
@@ -1454,6 +1463,9 @@ impute_using_everything <- function(
     previously_selected_haplotypes,
     sample_name,
     smooth_cm,
+    regionStart,
+    regionEnd,
+    buffer,
     return_dosage = FALSE,
     return_betaHat_t = FALSE,
     return_gamma_t = FALSE,
@@ -1788,6 +1800,9 @@ impute_one_sample <- function(
     truth_haps,
     truth_labels,
     sample_name,
+    regionStart,
+    regionEnd,
+    buffer,
     uncertain_truth_labels,
     return_p_store = FALSE,
     return_extra = FALSE,
@@ -1911,7 +1926,10 @@ impute_one_sample <- function(
             have_truth_haplotypes = have_truth_haplotypes,
             uncertain_truth_labels = uncertain_truth_labels,
             sample_name = sample_name,
-            smooth_cm = smooth_cm
+            smooth_cm = smooth_cm,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer
         )
         ## would like a plot here
     }
