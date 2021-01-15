@@ -1,4 +1,4 @@
-plot_1_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, smoothV, Ls, scale, ybottom, col, minAFForBounding = 0.01) {
+plot_1_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, smoothV, Ls, scale, ybottom, col, minAFForBounding = 0.01, label = "") {
     ##
     ancAlleleFreqAll[ancAlleleFreqAll < minAFForBounding] <- minAFForBounding
     ancAlleleFreqAll[ancAlleleFreqAll > (1 - minAFForBounding)] <- (1 - minAFForBounding)
@@ -11,11 +11,15 @@ plot_1_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, s
     diff <- diff / 3
     diff[diff > 1] <- 1
     r2 <- round(cor(dosage2[inRegion2], truth2[inRegion2], method = "pearson", use = "pairwise.complete") ** 2, 3)    
-    points(x = Ls, y = ybottom + scale * diff, col = col, type = "l")
-    text(x = Ls[1], y = ybottom + scale * 1, labels = paste0("r2 = ", r2), pos = 1, cex = 1.5)
+    points(x = Ls, y = ybottom + (0.8 * scale) * diff, col = col, type = "l")
+    text_labels <- paste0("r2 = ", r2)
+    if (label != "") {
+        text_labels <- paste0(label, ", ", text_labels)
+    }
+    text(x = Ls[1], y = ybottom + scale * 0.85, labels = text_labels, pos = 4, cex = 1.25)
     return(r2)
 }
-plot_2_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, smoothV, Ls, scale, ybottom, col, minAFForBounding = 0.01) {
+plot_2_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, smoothV, Ls, scale, ybottom, col, minAFForBounding = 0.01, label = "") {
     ##
     ancAlleleFreqAll[ancAlleleFreqAll < minAFForBounding] <- minAFForBounding
     ancAlleleFreqAll[ancAlleleFreqAll > (1 - minAFForBounding)] <- (1 - minAFForBounding)
@@ -25,11 +29,15 @@ plot_2_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, s
     truth2 <- truth - 2 * ancAlleleFreqAll
     ## difference!
     diff <- smooth_vector(x = abs(dosage2 - truth2), n = smoothV)
-    diff <- diff / 3
+    ## diff <- diff # / 3
     diff[diff > 1] <- 1
-    r2 <- round(cor(dosage2[inRegion2], truth2[inRegion2], method = "pearson", use = "pairwise.complete") ** 2, 3)    
-    points(x = Ls, y = ybottom + scale * diff, col = col, type = "l")
-    text(x = Ls[1], y = ybottom + scale * 1, labels = paste0("r2 = ", r2), pos = 1, cex = 1.5)
+    r2 <- round(cor(dosage2[inRegion2], truth2[inRegion2], method = "pearson", use = "pairwise.complete") ** 2, 3)
+    points(x = Ls, y = ybottom + (0.8 * scale) * diff, col = col, type = "l")
+    text_labels <- paste0("r2 = ", r2)
+    if (label != "") {
+        text_labels <- paste0(label, ", ", text_labels)
+    }
+    text(x = Ls[1], y = ybottom + scale * 0.85, labels = text_labels, pos = 4, cex = 1.25)
     return(r2)
 }
 add_numbers <- function(ytop, ybottom, x, i) {
@@ -54,6 +62,8 @@ smooth_vector <- function(x, n) {
     a <- (y - z) / n
     return(a)
 }
+
+
 plot_single_gamma_dosage <- function(
     sampleReads,
     fbsoL,
@@ -71,24 +81,9 @@ plot_single_gamma_dosage <- function(
     sample_name,
     output_plot = TRUE
 ) {
-    save(
-    sampleReads,
-    fbsoL,
-    L_grid,
-    L,
-    inRegion2,
-    cM_grid,
-    ancAlleleFreqAll,
-    haps,
-    outname,
-    method,
-    truth_labels,
-    have_truth_haplotypes,
-    uncertain_truth_labels,
-    sample_name,
-    output_plot,
-    file = "~/temp.RData")
-    stop("WER")
+    ## load("~/Downloads/atta/haps.NA12878HT.chr20.2000001.4000000_igs.1.it1.gibbs.png.RData")
+    ## setwd("~/Downloads/atta")
+    ## outname="temp.png"
     ##
     colStore <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
     smoothV <- 10
@@ -120,13 +115,13 @@ plot_single_gamma_dosage <- function(
         ##
         K <- nrow(gammaK_t)
         xlim <- range(L_grid)
-        ylim <- c(0, 1 + scale_dosage + scale_dosage)
+        ylim <- c(0, 1 + scale_dosage + scale_dosage) 
         nGrids <- ncol(gammaK_t)
         backwards <- nGrids:1
         ##
-        main <- c("Haplotype 1", "Haplotype 2")[i_which]
+        main <- c("Imputed haplotype 1", "Imputed haplotype 2")[i_which]
         ##
-        plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, main = main, cex = 1.5)
+        plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, main = main, cex.main = 1.5, col = "white")
         x <- L_grid ## c(L_grid[1], L_grid) ## , L_grid[length(L_grid):1])
         xleft <- c(x[1] - (x[2] - x[1]) / 2, x[-length(x)])
         xright <- c(x[-1], x[length(x)] + (x[length(x)] - x[(length(x) - 1)]) / 2)
@@ -163,29 +158,40 @@ plot_single_gamma_dosage <- function(
         truth1 <- haps[, 1]
         truth2 <- haps[, 2]
         ## ## 
-        r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth1, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1, scale = scale_dosage, col = "red"))
-        r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth2, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1 + scale_dosage, scale = scale_dosage, col = "green"))
+        r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth2, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1, scale = scale_dosage, col = "red", label = "Rolling accuracy versus truth haplotype 2"))
+        r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth1, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1 + scale_dosage, scale = scale_dosage, col = "green", label = "Rolling accuracy versus truth haplotype 1"))
         ## add cor!
     }
-    ## below, plot dosage vs truth
-    recombF <- 0.5
+    ##
+    ## below, plot recomb rate (need real thing!)
+    ##
+    recombF <- 0.3 ## i.e. what fraction of the below is for recombination
     ylim <- c(0, 1 + recombF)
-    plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, main = main, cex = 1.5)
-    ## cM / Mbp difference
-    rate <- diff(cM_grid) / diff(L_grid) * 1e6 ## normally 0-100 scaled
-    rate <- rate / 100 * recombF
-    rate[rate > recombF] <- recombF
-    rate <- rate + 1
-    lines(x = (L_grid[-1] + L_grid[-length(L_grid)]) / 2, y = rate, col = "purple", lwd = 2)
+    ## the extra 1 space is for the rest below
+    ##rate <- diff(cM_grid) / diff(L_grid) * 1e6 ## normally 0-100 scaled
+    rate <- smooth_cm / max(smooth_cm) ## 0-1 scale
+    rate <- rate * recombF ## so on a scale from 0 to recombF
+    ## recombF <- max(rate) ## bound slightly?
+    plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, main = "Smoothed recombination rate", cex = 1.5, col = "white", cex.main = 1.5)
+    lines(x = (L_grid[-1] + L_grid[-length(L_grid)]) / 2, y = 1 + rate, col = "purple", lwd = 2)
     abline(h = 1)
+    ##
     ## add in how well the reads are doing
-    test <- fbsoL$double_list_of_ending_read_labels[[1]][[1]]
+    ## 
+    test <- fbsoL$double_list_of_ending_read_labels[[1]][[1]] ## 1, 2, maybe 3 in the future
     if (have_truth_haplotypes) {
         truth <- truth_labels
         truth[uncertain_truth_labels] <- 0
     }
-    y <- 0.1 + (test - 1) / 2 + runif(length(test)) / 4
+    ## so have space 0-1 to fit both of these
+    ## use first two thirds for reads, last bit for diploid dosage
+    frac_reads <- 2/3
+    ## note, do 3-test so first haplotype reads on top
+    y <- (1 - frac_reads) + (0.95 * frac_reads) * (((3 - test) - 1) * (2 / 3) + runif(length(test)) / 3)
     ##
+    text(x = mean(xlim), y = (1 - frac_reads) + frac_reads / 2, labels = "Read assignments", cex = 1.5, font = 2)
+    text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (5 / 6), labels = "Hap1", srt = 90, cex = 1.5, font = 2)
+    text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (1 / 6), labels = "Hap2", srt = 90, cex = 1.5, font = 2)
     for(iRead in 1:length(sampleReads)) {
         u <- range(sampleReads[[iRead]][[4]])
         ## level depending on what I say
@@ -202,8 +208,10 @@ plot_single_gamma_dosage <- function(
         ## }
         segments(x0 = L[u[1] + 1], x1 = L[u[2] + 1], y0 = y[iRead], y1 = y[iRead], col = col, lwd = lwd)
     }
-    ## 
-    r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = rowSums(haps[, 1:2]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = 1, col = "green"))
+    ##
+    abline(h = (1 - frac_reads))
+    text(x = mean(xlim), y = (1 - frac_reads) * 0.85, labels = "Imputed genotypes", cex = 1.5, font = 2)
+    r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = rowSums(haps[, 1:2]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads), col = "green", label = "Rolling accuracy versus truth genotypes"))
     outer_main <- paste0("QUILT imputation for ", sample_name)
     mtext(text = outer_main, outer = TRUE, cex = 1.5)
     if (output_plot) {
