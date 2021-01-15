@@ -22,6 +22,10 @@ do
     awk '{if((NR > '${b1}') && (NR < '${b2}')) {print $0}}' example/README.Md >> ${script_temp_file}
 done
 
+## hack, get rid of extra print out things
+grep -v "^\[" ${script_temp_file} > ${script_temp_file}.temp
+mv ${script_temp_file}.temp ${script_temp_file}
+
 bash -e ${script_temp_file}
 
 ## clean up

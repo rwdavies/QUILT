@@ -27,7 +27,6 @@
 #' @param phasefile Path to phase file with truth phasing results. Empty for no phasefile. Supercedes genfile if both options given. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = ref and 1 = alt, separated by a vertical bar |, e.g. 0|0 or 0|1. Note therefore this file has one more row than posfile which has no header.
 #' @param maxDifferenceBetweenReads How much of a difference to allow the reads to make in the forward backward probability calculation. For example, if P(read | state 1)=1 and P(read | state 2)=1e-6, re-scale so that their ratio is this value. This helps prevent any individual read as having too much of an influence on state changes, helping prevent against influence by false positive SNPs
 #' @param make_plots Whether to make some plots of per-sample imputation. Especially nice when truth data. This is pretty slow though so useful more for debugging and understanding and visualizing performance
-#' @param make_plots_block_gibbs Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs
 #' @param verbose whether to be more verbose when running
 #' @param shuffle_bin_radius Parameter that controls how to detect ancestral haplotypes that are shuffled during EM for possible re-setting. If set (not NULL), then recombination rate is calculated around pairs of SNPs in window of twice this value, and those that exceed what should be the maximum (defined by nGen and maxRate) are checked for whether they are shuffled
 #' @param iSizeUpperLimit Do not use reads with an insert size of more than this value
@@ -74,7 +73,6 @@ QUILT <- function(
     phasefile = "",
     maxDifferenceBetweenReads = 1e10,
     make_plots = FALSE,
-    make_plots_block_gibbs = FALSE,
     verbose = TRUE,
     shuffle_bin_radius = 5000,
     iSizeUpperLimit = 1e6,
@@ -90,23 +88,6 @@ QUILT <- function(
     hla_run = FALSE
 ) {
 
-    ## init_method <- "simple"
-    ## use_eMatDH <- TRUE
-    ## maxDifferenceBetweenReads <- 1e10 ## OK hopefully?
-    ## full_expRate <- NA ## not being used currently
-    ##full_nGen <- NA ## not being used currently
-    ## full_error <- 1e-3
-    ## verbose <- TRUE
-    ##tempdir <- tempdir()
-    ## shuffle_bin_radius <- 5000
-    ##Ksubset <- 400 ## how many good haps to start with
-    ##Knew <- 100 ## when updating how many new haplotypes to get from each round
-    ##K_top_matches <- 5 ## how many top haplotypes to priotize
-    ##heuristic_match_thin <- 0.1 ## how much thinning for faster checking
-    ##truth_haps_all <- NULL
-    ##record_read_label_usage <- FALSE
-    ##nGibbsSamples <- as.integer(args[16])
-    ##n_seek_its <- as.integer(args[17])
 
     x <- as.list(environment())
     command_line <- paste0(
@@ -115,6 +96,10 @@ QUILT <- function(
         ")"
     )
     print_message(paste0("Running ", command_line))
+
+    ## turn this off for now
+    make_plots_block_gibbs <- FALSE    
+    ## #' @param make_plots_block_gibbs Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs
     
     options(digits.secs=6)
     options(scipen = 999)

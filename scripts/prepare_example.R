@@ -12,7 +12,7 @@ source("~/proj/QUILT/scripts/prepare_example_functions.R")
 
 ## smaller package for quick test 
 prepare_example_using_1000G(
-    package_output_date = "2021_01_14A",
+    package_output_date = "2021_01_15A",
     chr = "chr20",
     regionStart = 2000001,
     regionEnd = 2100000,
@@ -21,7 +21,7 @@ prepare_example_using_1000G(
 
 ## larger package for example
 prepare_example_using_1000G(
-    package_output_date = "2021_01_14B",
+    package_output_date = "2021_01_15B",
     chr = "chr20",
     regionStart = 2000001,
     regionEnd = 4000000,
