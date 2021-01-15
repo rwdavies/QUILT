@@ -151,7 +151,7 @@ heuristic_match_thin
 
 
 
-## Examples <a name="paragraph-examples"></a>
+## Examples and plots <a name="paragraph-examples"></a>
 
 In this directory you will find [example/examples.sh](example/examples.sh), a script with as of now one example, a larger region of the quick start example. This can be run using either  `./example/examples.sh`, or can be run interactively line by line.
 
