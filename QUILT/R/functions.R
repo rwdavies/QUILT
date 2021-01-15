@@ -683,7 +683,8 @@ get_and_impute_one_sample <- function(
                 full_gammaSmall_cols_to_get = full_gammaSmall_cols_to_get,
                 return_good_haps = FALSE,
                 plot_description = "0.truth",
-                return_dosage = TRUE
+                return_dosage = TRUE,
+                sample_name = sample_name
             )
 
         } else {
@@ -864,7 +865,8 @@ get_and_impute_one_sample <- function(
                 previously_selected_haplotypes = previously_selected_haplotypes,
                 K_top_matches = K_top_matches,
                 heuristic_match_thin = heuristic_match_thin,
-                return_gamma_t = return_gamma_t                
+                return_gamma_t = return_gamma_t,
+                sample_name = sample_name                
             )
             
             which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
@@ -1447,6 +1449,7 @@ impute_using_everything <- function(
     plot_description,
     Knew,
     previously_selected_haplotypes,
+    sample_name,
     return_dosage = FALSE,
     return_betaHat_t = FALSE,
     return_gamma_t = FALSE,
@@ -1576,7 +1579,8 @@ impute_using_everything <- function(
             haps = truth_haps,
             truth_labels = truth_labels,
             have_truth_haplotypes = have_truth_haplotypes,
-            uncertain_truth_labels = uncertain_truth_labels
+            uncertain_truth_labels = uncertain_truth_labels,
+            sample_name = sample_name
         )
     }
     if (1 == 0) {

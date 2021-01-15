@@ -21,7 +21,7 @@ fi
 
 
 ## Prepare reference package using a haplotype reference file
-In QUILT, the step of loading in and converting the reference data into a binary form is done separately from the imputation, to avoid performing this step multiple times when imputing a small number of samples. The principal output of this is a file at quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData, which is used by QUILT itself during the actual imputation that follows in the next step.
+In QUILT, the step of loading in and converting the reference data into a binary form is done separately from the imputation, to avoid performing this step multiple times when imputing a small number of samples. The principal output of this is a file at `quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData`, which is used by QUILT itself during the actual imputation that follows in the next step.
 
 Note that QUILT requires a reference panel in the .hap and .legend format. One easy way to make these from a haplotype VCF is by using the `bcftools convert --haplegendsample` command.
 ```

@@ -68,8 +68,27 @@ plot_single_gamma_dosage <- function(
     truth_labels,
     have_truth_haplotypes,
     uncertain_truth_labels,
+    sample_name,
     output_plot = TRUE
 ) {
+    save(
+    sampleReads,
+    fbsoL,
+    L_grid,
+    L,
+    inRegion2,
+    cM_grid,
+    ancAlleleFreqAll,
+    haps,
+    outname,
+    method,
+    truth_labels,
+    have_truth_haplotypes,
+    uncertain_truth_labels,
+    sample_name,
+    output_plot,
+    file = "~/temp.RData")
+    stop("WER")
     ##
     colStore <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
     smoothV <- 10
@@ -105,7 +124,7 @@ plot_single_gamma_dosage <- function(
         nGrids <- ncol(gammaK_t)
         backwards <- nGrids:1
         ##
-        main <- c("hap1", "hap2")[i_which]
+        main <- c("Haplotype 1", "Haplotype 2")[i_which]
         ##
         plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, main = main, cex = 1.5)
         x <- L_grid ## c(L_grid[1], L_grid) ## , L_grid[length(L_grid):1])
@@ -185,7 +204,7 @@ plot_single_gamma_dosage <- function(
     }
     ## 
     r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = rowSums(haps[, 1:2]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = 1, col = "green"))
-    outer_main <- "placeholder"
+    outer_main <- paste0("QUILT imputation for ", sample_name)
     mtext(text = outer_main, outer = TRUE, cex = 1.5)
     if (output_plot) {
         dev.off()
