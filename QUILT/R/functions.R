@@ -551,8 +551,8 @@ get_and_impute_one_sample <- function(
     load(file_sampleReads(tempdir, iSample, regionName))
     load(file_sampleReadsInfo(tempdir, iSample, regionName))
     sample_alleleCount <- get_alleleCount(sampleReads, nrow(pos))
-    message(paste0("The average depth of this sample is:", mean(sample_alleleCount[, 2])))
-    message(paste0("There are ", length(sampleReads), " reads under consideration"))
+    print_message(paste0("The average depth of this sample is:", mean(sample_alleleCount[, 2])))
+    print_message(paste0("There are ", length(sampleReads), " reads under consideration"))
     
     sampleReads <- snap_sampleReads_to_grid(
         sampleReads = sampleReads,

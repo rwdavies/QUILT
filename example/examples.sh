@@ -2,13 +2,19 @@
 
 set -e
 
-## script_dir=`dirname "$0"`
-## cd "${script_dir}"/../
+script_dir=`dirname "$0"`
+cd "${script_dir}"/../
 
 
-##
-## example of running QUILT
-## using either approx 5000 or 50000 haplotypes
+## for now there is only one example, a slightly larger version of the quick start example
+## imputation is performed in a more reasonable chunk size for this example
+## you should be able to run this example non-interactively (./examples/examples.sh)
+## this is also how the example plots were generated
+## see scripts/prepare_example.R for code for how it was made
+## note this includes not directly avaialble public data (the bams, though these all should be available for download through links not used here in their creation)
+
+
+## structure of remaining example
 ## step 0 - download some example data
 ## step 1 - prepare a reference package using a haplotype reference file
 ## step 2 - impute samples using the prepared reference package
@@ -30,11 +36,11 @@ else
     exit 1
 fi
 ## download package - this should download the files from this website including for example "bamlist.1.0.txt"
-if [ ! -f QUILT_example_2020_08_25.tgz ]
+if [ ! -f QUILT_example_2021_01_14B.tgz ]
 then
-    ${download_command} http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2020_08_25.tgz ## either wget or curl -O or otherwise as appropriate
+    ${download_command} http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2021_01_14B.tgz ## either wget or curl -O or otherwise as appropriate
 fi
-tar -xzvf QUILT_example_2020_08_25.tgz
+tar -xzvf QUILT_example_2021_01_14B.tgz
 
 
 
@@ -48,22 +54,15 @@ rm -r -f quilt_output
     --outputdir=quilt_output \
     --chr=chr20 \
     --nGen=100 \
-    --reference_haplotype_file=package_2020_08_25/ref.chr20.2000001.4000000.hap.clean.example.1000Gonly.gz \
-    --reference_legend_file=package_2020_08_25/ref.chr20.2000001.4000000.legend.clean.example.gz \
-    --genetic_map_file=package_2020_08_25/CEU-chr20-final.b38.txt.gz \
+    --reference_haplotype_file=package_2021_01_14B/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.hap.gz \
+    --reference_legend_file=package_2021_01_14B/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.legend.gz \
+    --genetic_map_file=package_2021_01_14B/CEU-chr20-final.b38.txt.gz \
     --regionStart=2000001 \
     --regionEnd=4000000 \
     --buffer=500000
-## NOTES
-## 1) succesful completion of this run results in a file at quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData, which is used by QUILT itself during the actual imputation in the next step
-## 2) there are two haplotype reference file options included in this package
-##   ref.chr20.2000001.4000000.hap.clean.example.1000Gonly.gz and
-##   ref.chr20.2000001.4000000.hap.clean.example.gz
-##   the former is just 1000 Genomes samples
-##   the later is the full size of the HRC but all non-1000G sample genoytpes have been set to 0 and sample names redatcted
-##   the site list for both is the HRC site list which has been released publicly
-##   as such the larger haplotype reference panel just demonstrates performance run times of QUILT rather than generating more accurate imputation
-##   the choice of file can be modified using the reference_haplotype_file option above
+## note that succesful completion of this run results in a file at quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData, which is used by QUILT itself during the actual imputation that follows in the next step
+## also note that making a reference panel in .hap and .legend format from a haplotype VCF is facilitated by using bcftools convert --haplegendsample
+
 
 
 
@@ -76,16 +75,13 @@ rm -r -f quilt_output
     --regionStart=2000001 \
     --regionEnd=4000000 \
     --buffer=500000 \
-    --bamlist=package_2020_08_25/bamlist.1.0.txt \
-    --posfile=package_2020_08_25/pos.chr20.2000001.4000000.txt \
-    --phasefile=package_2020_08_25/phase.chr20.2000001.4000000.txt \
-    --bqFilter=10 \
-    --nCores=1
-## NOTES
-## 1) this imputes NA12878 on this region, using a haplotagged Illumina example and ONT
-##   succesful completion of this run results in a VCF at quilt_output/quilt.chr20.2000001.4000000.vcf.gz
-## 2) per-sample per-SNP output includes hard-called (integer) genotype, genotype posteriors, diploid dosage, and haploid dosages (i.e. haplotypes, can be turned into standard 0 or 1 haplotpes using rounding)
-## 3) you can try bamlist.0.25.txt to try 0.25X bams
-## 4) try ./QUILT.R --help for more options
-## 5) for normal operation when you do not have high quality phased truth genotypes, you can omit posfile and phasefile, and sites will be imputed 
+    --bamlist=package_2021_01_14B/bamlist.1.0.txt \
+    --posfile=package_2021_01_14B/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.posfile.txt \
+    --phasefile=package_2021_01_14B/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.phasefile.txt
+## note the following
+##  this imputes NA12878 on this region, using a haplotagged Illumina, an ONT, and an unlinked Illumina example
+##  succesful completion of this run results in a VCF at quilt_output/quilt.chr20.2000001.4000000.vcf.gz (this location can be changed with --output_filename)
+##  output format is described on the main README
+##  you can try bamlist.0.1.txt for 0.1X versions of the above bams
+##  for normal operation when you do not have high quality phased truth genotypes, you can omit posfile and phasefile, and sites will be imputed 
 

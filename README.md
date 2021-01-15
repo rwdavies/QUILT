@@ -77,10 +77,10 @@ Note that currently the command like `QUILT.R` is not included with the bioconda
 
 A quick start to ensure QUILT is properly installed and working can be performed using the following
 
-Download data package
+Download data package, containing 1000 Genomes haplotypes, and NA12878 bams
 ```
-wget http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2020_08_25.tgz ## or curl -O
-tar -xzvf QUILT_example_2020_08_25.tgz
+wget http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2021_01_14A.tgz ## or curl -O
+tar -xzvf QUILT_example_2021_01_14A.tgz
 ```
 
 First, to re-format the reference panel
@@ -90,12 +90,12 @@ rm -r -f quilt_output
 --outputdir=quilt_output \
 --chr=chr20 \
 --nGen=100 \
---reference_haplotype_file=package_2020_08_25/ref.chr20.2000001.4000000.hap.clean.example.1000Gonly.gz \
---reference_legend_file=package_2020_08_25/ref.chr20.2000001.4000000.legend.clean.example.gz \
---genetic_map_file=package_2020_08_25/CEU-chr20-final.b38.txt.gz \
+--reference_haplotype_file=package_2021_01_14A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.hap.gz \
+--reference_legend_file=package_2021_01_14A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.legend.gz \
+--genetic_map_file=package_2021_01_14A/CEU-chr20-final.b38.txt.gz \
 --regionStart=2000001 \
---regionEnd=4000000 \
---buffer=500000
+--regionEnd=2100000 \
+--buffer=10000
 ```
 
 Second, to perform imputation
@@ -104,18 +104,13 @@ Second, to perform imputation
 --outputdir=quilt_output \
 --chr=chr20 \
 --regionStart=2000001 \
---regionEnd=4000000 \
---buffer=500000 \
---bamlist=package_2020_08_25/bamlist.1.0.txt \
---posfile=package_2020_08_25/pos.chr20.2000001.4000000.txt \
---phasefile=package_2020_08_25/phase.chr20.2000001.4000000.txt \
---bqFilter=10 \
---nCores=1
+--regionEnd=2100000 \
+--buffer=10000 \
+--bamlist=package_2021_01_14A/bamlist.1.0.txt \
+--posfile=package_2021_01_14A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.posfile.txt \
+--phasefile=package_2021_01_14A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.phasefile.txt
 ```
-Succesful completion of this run results in a VCF at `quilt_output/quilt.chr20.2000001.4000000.vcf.gz`. For more details on this and other examples, see [Examples](#paragraph-examples)
-
-
-
+Succesful completion of this run results in a VCF at `quilt_output/quilt.chr20.2000001.2100000.vcf.gz`. For a slightly longer version of this example, see [Examples](#paragraph-examples)
 
 
 
@@ -158,7 +153,7 @@ heuristic_match_thin
 
 ## Examples <a name="paragraph-examples"></a>
 
-In this directory you will find [example/examples.sh](example/examples.sh), a script with examples, including the above. They can either be run in their entirety using `./example/examples.sh`, or can be run interactively line by line.
+In this directory you will find [example/examples.sh](example/examples.sh), a script with as of now one example, a larger region of the quick start example. This can be run using either  `./example/examples.sh`, or can be run interactively line by line.
 
 ## Plot explanation <a name="paragraph-plotexplanation"></a>
 
@@ -169,6 +164,10 @@ Also maybe include tiny plot?
 
 Also semi-related
         "--estimate_bq_using_truth_read_labels"
+Also, accuracy?
+[2021-01-14 21:19:49] Final imputation dosage accuracy for sample NA12878, r2:0.969
+[2021-01-14 21:19:49] Final phasing accuracy for sample NA12878, pse:0.4, disc(%):3.4%
+
 
 ## License <a name="paragraph-license"></a>
 
