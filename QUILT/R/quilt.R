@@ -18,6 +18,7 @@
 #' @param output_filename Override the default bgzip-VCF / bgen output name with this given file name. Please note that this does not change the names of inputs or outputs (e.g. RData, plots), so if outputdir is unchanged and if multiple QUILT runs are processing on the same region then they may over-write each others inputs and outputs.
 #' @param RData_objects_to_save Can be used to name interim and misc results from imputation to save an an RData file. Default NULL means do not save such output
 #' @param output_RData_filename Override the default location for miscellaneous outputs saved in RData format
+#' @param prepared_reference_filename Optional, override the default location for where to find the prepared reference filename (the file prepared when running QUILT_prepare_reference)
 #' @param tempdir What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/
 #' @param bqFilter Minimum BQ for a SNP in a read. Also, the algorithm uses bq<=mq, so if mapping quality is less than this, the read isnt used
 #' @param panel_size Integer number of reference haplotypes to use, set to NA to use all of them

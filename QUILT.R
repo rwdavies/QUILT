@@ -117,6 +117,12 @@ option_list <- list(
         default = NULL
     ), 
     make_option(
+        "--prepared_reference_filename",
+        type = "character",
+        help = "Optional, override the default location for where to find the prepared reference filename (the file prepared when running QUILT_prepare_reference) [default \"\"] ",
+        default = ""
+    ), 
+    make_option(
         "--tempdir",
         type = "character",
         help = "What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/ [default NA] ",
@@ -266,6 +272,7 @@ QUILT(
     output_filename = opt$output_filename,
     RData_objects_to_save = eval(parse(text=opt$RData_objects_to_save)),
     output_RData_filename = opt$output_RData_filename,
+    prepared_reference_filename = opt$prepared_reference_filename,
     tempdir = opt$tempdir,
     bqFilter = opt$bqFilter,
     panel_size = opt$panel_size,
