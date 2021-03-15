@@ -2,8 +2,10 @@
 ## Code to test minimal functionality of QUILT_HLA
 ##
 inputs_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/inputs/
-test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15B/
+test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15C/
 mkdir -p ${test_dir}
+
+set -e
 
 ## To download IPD-IGMT version 3.39, for example
 cd ${test_dir}
@@ -18,10 +20,10 @@ rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hla*haptypesexclude
 ##
 ## other dependencies, to clean up
 ##
-rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlageneboundaries.out  ${inputs_dir} ## can be made a text file, included in repo
-rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/refseq.txt ${inputs_dir}
-rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlagenes.txt ${inputs_dir}
-rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlauntyped*.excludefivepop.txt ${inputs_dir}
+rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlageneboundaries.out  ${test_dir} ## can be made a text file, included in repo
+rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/refseq.txt ${test_dir}
+rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlagenes.txt ${test_dir}
+rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlauntyped*.excludefivepop.txt ${test_dir}
 
 
 ##
