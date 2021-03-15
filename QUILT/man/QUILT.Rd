@@ -87,6 +87,8 @@ QUILT(
 
 \item{output_RData_filename}{Override the default location for miscellaneous outputs saved in RData format}
 
+\item{prepared_reference_filename}{Optional path to prepared RData file with reference objects. Can be used instead of outputdir to coordinate use of QUILT_prepare_reference and QUILT}
+
 \item{tempdir}{What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/}
 
 \item{bqFilter}{Minimum BQ for a SNP in a read. Also, the algorithm uses bq<=mq, so if mapping quality is less than this, the read isnt used}

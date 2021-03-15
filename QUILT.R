@@ -119,7 +119,7 @@ option_list <- list(
     make_option(
         "--prepared_reference_filename",
         type = "character",
-        help = "Optional, override the default location for where to find the prepared reference filename (the file prepared when running QUILT_prepare_reference) [default \"\"] ",
+        help = "Optional path to prepared RData file with reference objects. Can be used instead of outputdir to coordinate use of QUILT_prepare_reference and QUILT [default \"\"] ",
         default = ""
     ), 
     make_option(
