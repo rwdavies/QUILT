@@ -41,6 +41,7 @@ rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam ${in
 
 ##
 ## Prepare mapping related files
+## Decently slow, think some of Simon's code is inefficient, but meh, can probably release
 ##
 rsync -av ~/proj/QUILT/quilt_hla_supplementary_info.txt . ## what is this - check it out
 cd ~/proj/QUILT/
@@ -48,11 +49,11 @@ cd ~/proj/QUILT/
 --outputdir=${test_dir} \
 --ipd_igmt_alignments_zip_file=Alignments_Rel_3390.zip \
 --quilt_hla_supplementary_info_file=quilt_hla_supplementary_info.txt
-## Decently slow
 
 
 ##
 ## Preparing haplotype files
+## Also slow-ish, less than above, files are massive. Can be made faster using cleverness. Also faster on 1000G
 ##
 HLA_GENE="A"
 regionStart=29942554
