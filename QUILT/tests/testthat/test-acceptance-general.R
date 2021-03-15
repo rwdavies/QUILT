@@ -41,47 +41,52 @@ refpack <- STITCH::make_reference_package(
     phasemaster = phasemaster
 )
 
-test_that("QUILT can impute a few samples in a standard way, using a small panel", {
+test_that("QUILT can impute a few samples in a standard way, using a small panel, with or without a genetic map", {
     
     outputdir <- STITCH::make_unique_tempdir()
     regionStart <- 11
     regionEnd <- 40
     buffer <- 5
-    QUILT_prepare_reference(
-        outputdir = outputdir,
-        chr = data_package$chr,
-        nGen = 100,
-        reference_haplotype_file = refpack$reference_haplotype_file,
-        reference_legend_file = refpack$reference_legend_file,
-        reference_sample_file = refpack$reference_sample_file,
-        genetic_map_file = refpack$reference_genetic_map_file,
-        regionStart = regionStart,
-        regionEnd = regionEnd,
-        buffer = buffer
-    )
-    regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
-    expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
-    
-    QUILT(
-        outputdir = outputdir,
-        chr = data_package$chr,
-        regionStart = regionStart,
-        regionEnd = regionEnd,
-        buffer = buffer,
-        bamlist = data_package$bamlist,
-        posfile = data_package$posfile
-    )
 
-    which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
-    
-    ## now evaluate versus truth!
-    check_quilt_output(
-        file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
-        data_package = data_package,
-        which_snps = which_snps,
-        tol = 0.1,
-        min_info = 0.9
-    )
+    for(genetic_map_file in c("", refpack$reference_genetic_map_file)) {
+        
+        QUILT_prepare_reference(
+            outputdir = outputdir,
+            chr = data_package$chr,
+            nGen = 100,
+            reference_haplotype_file = refpack$reference_haplotype_file,
+            reference_legend_file = refpack$reference_legend_file,
+            reference_sample_file = refpack$reference_sample_file,
+            genetic_map_file = genetic_map_file,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer,
+            expRate = 0.5
+        )
+        regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
+        expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
+        
+        QUILT(
+            outputdir = outputdir,
+            chr = data_package$chr,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer,
+            bamlist = data_package$bamlist,
+            posfile = data_package$posfile
+        )
+        
+        which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
+        
+        ## now evaluate versus truth!
+        check_quilt_output(
+            file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+            data_package = data_package,
+            which_snps = which_snps,
+            tol = 0.1,
+            min_info = 0.9
+        )
+    }
     
 })
 

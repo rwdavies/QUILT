@@ -88,7 +88,7 @@ option_list <- list(
     make_option(
         "--genetic_map_file",
         type = "character",
-        help = "Path to file with genetic map information, a file with 3 white-space delimited entries giving position (1-based), genetic rate map in cM/Mbp, and genetic map in cM [default \"\"] ",
+        help = "Path to file with genetic map information, a file with 3 white-space delimited entries giving position (1-based), genetic rate map in cM/Mbp, and genetic map in cM. If no file included, rate is based on physical distance and expected rate (expRate) [default \"\"] ",
         default = ""
     ), 
     make_option(

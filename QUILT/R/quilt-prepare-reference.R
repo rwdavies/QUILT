@@ -13,7 +13,7 @@
 #' @param reference_phred Phred scaled likelihood or an error of reference haplotype. Higher means more confidence in reference haplotype genotypes, lower means less confidence
 #' @param reference_exclude_samplelist_file File with one column of samples to exclude from reference samples e.g. in validation, the samples you are imputing
 #' @param region_exclude_file File with regions to exclude from constructing the reference panel. Particularly useful for QUILT_HLA, where you want to exclude SNPs in the HLA genes themselves, so that reads contribute either to the read mapping or state inference. This file is space separated with a header of Name, Chr, Start and End, with Name being the HLA gene name (e.g. HLA-A), Chr being the chromosome (e.g. chr6), and Start and End are the 1-based starts and ends of the genes (i.e. where we don't want to consider SNPs for the Gibbs sampling state inference)
-#' @param genetic_map_file Path to file with genetic map information, a file with 3 white-space delimited entries giving position (1-based), genetic rate map in cM/Mbp, and genetic map in cM
+#' @param genetic_map_file Path to file with genetic map information, a file with 3 white-space delimited entries giving position (1-based), genetic rate map in cM/Mbp, and genetic map in cM. If no file included, rate is based on physical distance and expected rate (expRate)
 #' @param nMaxDH Integer Maximum number of distinct haplotypes to store in reduced form. Recommended to keep as 2 ** N - 1 where N is an integer greater than 0 i.e. 255, 511, etc
 #' @param tempdir What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/
 #' @param make_fake_vcf_with_sites_list Whether to output a list of sites as a minimal VCF, for example to use with GATK 3 to genotype given sites
@@ -77,11 +77,13 @@ QUILT_prepare_reference <- function(
     STITCH::validate_regionStart_regionEnd_and_buffer(regionStart, regionEnd, buffer)
     STITCH::validate_tempdir(tempdir)
     STITCH::validate_nGen(nGen)
-    if (genetic_map_file == "") {
-        stop("Please include a genetic map file")
-    }
-    if (!file.exists(genetic_map_file)) {
-        stop(paste0("Cannot find file:", genetic_map_file))
+    ##if (genetic_map_file == "") {
+    ##    stop("Please include a genetic map file")
+    ##}
+    if (genetic_map_file != "") {
+        if (!file.exists(genetic_map_file)) {
+            stop(paste0("Cannot find file:", genetic_map_file))
+        }
     }
     
     ##
@@ -233,11 +235,17 @@ QUILT_prepare_reference <- function(
     nSNPs <- nrow(pos)
     af <- ref_alleleCount[, 3]
     ancAlleleFreqAll <- af
+    ## returns NULL if no file
     cM <- load_validate_and_match_genetic_map(
         genetic_map_file = genetic_map_file,
         L = L,
         expRate = expRate
     )
+    if (is.null(cM)) {
+        ## we need this here, build it!
+        ## so expRate is cM / Mbp
+        cM <- c(0, cumsum(diff(L) * expRate)) / 1e6
+    }
 
 
     ##
@@ -261,11 +269,19 @@ QUILT_prepare_reference <- function(
     
 
     ##
-    ## hmm
+    ## might not be necessary
     ##
     ## nGen <- 100 ## 4 * 20000 / nrow(rhb_t)
-    genetic_map <- get_and_validate_genetic_map(genetic_map_file)
     S <- 1
+    if (genetic_map_file != "") {
+        genetic_map <- get_and_validate_genetic_map(genetic_map_file)
+    } else {
+        ## hack it
+        genetic_map <- cbind(L, expRate, cM)
+        colnames(genetic_map) <- c(
+            "position", "COMBINED_rate.cM.Mb.", "Genetic_Map.cM."
+        )
+    }
     cM_grid <- match_genetic_map_to_L(
         genetic_map = genetic_map,
         L = L_grid,

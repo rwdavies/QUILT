@@ -1,3 +1,5 @@
+* v0.1.4
+	* Option to impute without specifying genetic map, just using expected genetic and physical distance
 * v0.1.3
 	* Bugfixes
 * v0.1.2
