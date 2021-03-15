@@ -13,7 +13,7 @@ mv Alignments_Rel_3390.zip?raw=true Alignments_Rel_3390.zip
 ## 
 ## big unknown dependency 
 ## 
-rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hla*haptypesexcludefivepops.out ${inputs_dir}
+rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hla*haptypesexcludefivepops.out ${test_dir}
 
 ##
 ## other dependencies, to clean up
