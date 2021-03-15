@@ -1,6 +1,7 @@
 ##
 ## Code to test minimal functionality of QUILT_HLA
 ##
+inputs_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/inputs/
 test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15/
 mkdir -p ${test_dir}
 
@@ -12,15 +13,15 @@ mv Alignments_Rel_3390.zip?raw=true Alignments_Rel_3390.zip
 ## 
 ## big unknown dependency 
 ## 
-rsync -av /well/davies/shared/1000G/robbie_files/hla*haptypesexcludefivepops.out ${test_dir}
+rsync -av /well/davies/shared/1000G/robbie_files/hla*haptypesexcludefivepops.out ${inputs_dir}
 
 ##
 ## other dependencies, to clean up
 ##
-rsync -av /well/davies/shared/1000G/robbie_files/hlageneboundaries.out  ${test_dir} ## can be made a text file, included in repo
-rsync -av /well/davies/shared/1000G/robbie_files/refseq.txt ${test_dir}
-rsync -av /well/davies/shared/1000G/robbie_files/hlagenes.txt ${test_dir}
-rsync -av /well/davies/shared/1000G/robbie_files/hlauntyped*.excludefivepop.txt ${test_dir}
+rsync -av /well/davies/shared/1000G/robbie_files/hlageneboundaries.out  ${inputs_dir} ## can be made a text file, included in repo
+rsync -av /well/davies/shared/1000G/robbie_files/refseq.txt ${inputs_dir}
+rsync -av /well/davies/shared/1000G/robbie_files/hlagenes.txt ${inputs_dir}
+rsync -av /well/davies/shared/1000G/robbie_files/hlauntyped*.excludefivepop.txt ${inputs_dir}
 
 ##
 ## Prepare mapping related files
@@ -42,8 +43,8 @@ regionStart=29942554
 regionEnd=29945741
 #HRC_DIR=/well/davies/users/dcc832/single_imp/2020_06_25/ref_panels/
 #RECOMB_DIR=/well/davies/shared/recomb/CEU/
-HRC_DIR=${test_dir}inputs/
-RECOMB_DIR=${test_dir}inputs/
+HRC_DIR=${inputs_dir}
+RECOMB_DIR=${inputs_dir}
 ./QUILT_prepare_reference.R \
 --outputdir=${test_dir} \
 --nGen=100 \
@@ -55,7 +56,7 @@ RECOMB_DIR=${test_dir}inputs/
 --regionEnd=${regionEnd} \
 --buffer=500000 \
 --genetic_map_file=${RECOMB_DIR}CEU-chr6-final.b38.txt.gz \
---reference_exclude_samplelist_file=${test_dir}/hlauntyped${HLA_GENE}.excludefivepop.txt 
+--reference_exclude_samplelist_file=${inputs_dir}/hlauntyped${HLA_GENE}.excludefivepop.txt 
 --output_file=quilt.hrc.chr6.hla.${HLA_GENE}.haplotypes.RData \
 --region_exclude_file=${test_dir}hlagenes.txt \
 --minRate=0.01
