@@ -67,7 +67,8 @@ quilt_hla_one_sample <- function(
         that2 = that2,
         chr = chr,
         regstart = regstart,
-        regend = regend
+        regend = regend,
+        region = region
     )
 
 
@@ -583,7 +584,8 @@ filter_that2 <- function(
     that2,
     chr,
     regstart,
-    regend
+    regend,
+    region
 ) {
     ##now the hla defined read mapping filters
     ##above is all that is used so can filter these initially
@@ -623,7 +625,7 @@ filter_that2 <- function(
         keep[r==1]=0
         that2=that2[keep==1,,drop=F]
     }
-return(that2)
+    return(that2)
 }
 
 
