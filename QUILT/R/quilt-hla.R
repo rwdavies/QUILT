@@ -132,10 +132,8 @@ QUILT_HLA <- function(
     if (!file.exists(phaseallelesfile)) {
         stop(paste0("Cannot find phase alleles file ", phaseallelesfile))
     }
-
     ## load(file.path(ancillary_file_dir, phaseallelesfile)) ##
-
-    load() ##     
+    load(phaseallelesfile) ##     
     print_message(paste0("The number of HLA reference haplotypes is:", length(hlahaptypes)))
 
     if (quilt_hla_haplotype_panelfile == "") {
