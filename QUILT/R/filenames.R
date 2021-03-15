@@ -57,10 +57,10 @@ file_quilt_hla_snpformatalleles <- function(outputdir, hla_region) {
 
 
 file_quilt_final_RData_output_file <- function(outputdir, region) {
-    return(
-        file.path(
-            outputdir,
-            paste0("quilt.output.hla", region, ".RData")
-        )
-    )
+    suffix <- paste0("quilt.output.hla", region, ".RData")
+    if (outputdir == "") {
+        return(suffix)
+    } else {
+        return(file.path(outputdir, suffix))
+    }
 }
