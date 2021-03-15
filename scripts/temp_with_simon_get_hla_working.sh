@@ -61,7 +61,7 @@ RECOMB_DIR=/well/davies/shared/recomb/CEU/
 ##
 ## Try running QUILT_HLA here
 ##
-echo -e "/well/davies/shared/1000G/mhc_hla/NA18566.bam\n" > bamlist.txt
+echo -e "/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam\n" > bamlist.txt
 ./QUILT_HLA.R \
 --bamlist=bamlist.txt \
 --region=${HLA_GENE} \
