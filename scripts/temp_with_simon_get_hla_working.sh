@@ -35,7 +35,7 @@ rsync -av rescompNew2:${WELL_HRC_DIR}hrc.chr6.samples.reheadered2 ${inputs_dir}
 WELL_RECOMB_DIR=/well/davies/shared/recomb/CEU/
 rsync -av rescompNew2:${WELL_RECOMB_DIR}CEU-chr6-final.b38.txt.gz ${inputs_dir}
 ## bam file
-rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam ${inputs_dir}
+rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam* ${inputs_dir}
 
 
 
@@ -79,7 +79,7 @@ regionEnd=29945741
 ##
 #echo -e "/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam\n" > bamlist.txt
 cd ${test_dir}
-echo -e ${inputs_dir}"NA12878.mhc.2.0.bam\n" > bamlist.txt
+echo -e ${inputs_dir}"NA12878.mhc.2.0.bam" > bamlist.txt
 ~/proj/QUILT/QUILT_HLA.R \
 --bamlist=bamlist.txt \
 --region=${HLA_GENE} \
