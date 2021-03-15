@@ -2,7 +2,7 @@
 ## Code to test minimal functionality of QUILT_HLA
 ##
 inputs_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/inputs/
-test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15/
+test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15B/
 mkdir -p ${test_dir}
 
 ## To download IPD-IGMT version 3.39, for example
@@ -37,17 +37,18 @@ rsync -av rescompNew2:${WELL_RECOMB_DIR}CEU-chr6-final.b38.txt.gz ${inputs_dir}
 ## bam file
 rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam* ${inputs_dir}
 
+## not 100% sure, why isn't this in repo
+rsync -av rescompNew2:~/proj/QUILT/quilt_hla_supplementary_info.txt ~/proj/QUILT/
 
 
 ##
 ## Prepare mapping related files
 ## Decently slow, think some of Simon's code is inefficient, but meh, can probably release
 ##
-rsync -av ~/proj/QUILT/quilt_hla_supplementary_info.txt . ## what is this - check it out
 cd ~/proj/QUILT/
 ./QUILT_HLA_prepare_reference.R \
 --outputdir=${test_dir} \
---ipd_igmt_alignments_zip_file=Alignments_Rel_3390.zip \
+--ipd_igmt_alignments_zip_file=${test_dir}Alignments_Rel_3390.zip \
 --quilt_hla_supplementary_info_file=quilt_hla_supplementary_info.txt
 
 
