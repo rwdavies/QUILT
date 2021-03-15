@@ -8,10 +8,10 @@ QUILT_HLA_prepare_reference(
   outputdir,
   ipd_igmt_alignments_zip_file,
   quilt_hla_supplementary_info_file,
-  all_hla_regions = c("A", "B", "C", "DMA", "DMB", "DOA", "DOB", "DPA1", "DPA2", "DPB1",
-    "DPB2", "DQA1", "DQA2", "DQB1", "DRA", "DRB1", "DRB3", "DRB4", "DRB5", "E", "F", "G",
-    "HFE", "H", "J", "K", "L", "MICA", "MICB", "N", "P", "S", "TAP1", "TAP2", "T", "U",
-    "V", "W", "Y"),
+  all_hla_regions = c("A", "B", "C", "DMA", "DMB", "DOA", "DOB", "DPA1", "DPA2",
+    "DPB1", "DPB2", "DQA1", "DQA2", "DQB1", "DRA", "DRB1", "DRB3", "DRB4", "DRB5", "E",
+    "F", "G", "HFE", "H", "J", "K", "L", "MICA", "MICB", "N", "P", "S", "TAP1", "TAP2",
+    "T", "U", "V", "W", "Y"),
   hla_regions_to_prepare = c("A", "B", "C", "DQA1", "DQB1", "DRB1")
 )
 }

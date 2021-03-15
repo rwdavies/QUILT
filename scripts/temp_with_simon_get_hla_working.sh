@@ -69,7 +69,7 @@ regionEnd=29945741
 --regionEnd=${regionEnd} \
 --buffer=500000 \
 --genetic_map_file=${inputs_dir}CEU-chr6-final.b38.txt.gz \
---reference_exclude_samplelist_file=${inputs_dir}/hlauntyped${HLA_GENE}.excludefivepop.txt 
+--reference_exclude_samplelist_file=${inputs_dir}/hlauntyped${HLA_GENE}.excludefivepop.txt \
 --output_file=quilt.hrc.chr6.hla.${HLA_GENE}.haplotypes.RData \
 --region_exclude_file=${test_dir}hlagenes.txt \
 --minRate=0.01
@@ -80,7 +80,7 @@ regionEnd=29945741
 #echo -e "/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam\n" > bamlist.txt
 cd ${test_dir}
 echo -e ${inputs_dir}"NA12878.mhc.2.0.bam\n" > bamlist.txt
-./QUILT_HLA.R \
+~/proj/QUILT/QUILT_HLA.R \
 --bamlist=bamlist.txt \
 --region=${HLA_GENE} \
 --prepared_hla_reference_dir=${test_dir} \
