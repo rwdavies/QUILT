@@ -1,7 +1,7 @@
 ##
 ## Code to test minimal functionality of QUILT_HLA
 ##
-test_dir=/well/davies/users/dcc832/single_imp/HLA_TEST_2021_03_15/
+test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15/
 mkdir -p ${test_dir}
 
 ## To download IPD-IGMT version 3.39, for example
@@ -40,8 +40,10 @@ cd ~/proj/QUILT/
 HLA_GENE="A"
 regionStart=29942554
 regionEnd=29945741
-HRC_DIR=/well/davies/users/dcc832/single_imp/2020_06_25/ref_panels/
-RECOMB_DIR=/well/davies/shared/recomb/CEU/
+#HRC_DIR=/well/davies/users/dcc832/single_imp/2020_06_25/ref_panels/
+#RECOMB_DIR=/well/davies/shared/recomb/CEU/
+HRC_DIR=${test_dir}inputs/
+RECOMB_DIR=${test_dir}inputs/
 ./QUILT_prepare_reference.R \
 --outputdir=${test_dir} \
 --nGen=100 \
