@@ -20,6 +20,7 @@ rsync -av /well/davies/shared/1000G/robbie_files/hla*haptypesexcludefivepops.out
 rsync -av /well/davies/shared/1000G/robbie_files/hlageneboundaries.out  ${test_dir} ## can be made a text file, included in repo
 rsync -av /well/davies/shared/1000G/robbie_files/refseq.txt ${test_dir}
 rsync -av /well/davies/shared/1000G/robbie_files/hlagenes.txt ${test_dir}
+rsync -av /well/davies/shared/1000G/robbie_files/hlauntyped*.excludefivepop.txt ${test_dir}
 
 ##
 ## Prepare mapping related files
@@ -52,7 +53,7 @@ RECOMB_DIR=/well/davies/shared/recomb/CEU/
 --regionEnd=${regionEnd} \
 --buffer=500000 \
 --genetic_map_file=${RECOMB_DIR}CEU-chr6-final.b38.txt.gz \
---reference_exclude_samplelist_file=/well/davies/shared/1000G/robbie_files/hlauntyped${HLA_GENE}.excludefivepop.txt \
+--reference_exclude_samplelist_file=${test_dir}/hlauntyped${HLA_GENE}.excludefivepop.txt 
 --output_file=quilt.hrc.chr6.hla.${HLA_GENE}.haplotypes.RData \
 --region_exclude_file=${test_dir}hlagenes.txt \
 --minRate=0.01
