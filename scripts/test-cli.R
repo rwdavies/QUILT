@@ -76,7 +76,7 @@ cli_output_file <- "QUILT_HLA_prepare_reference.R"
 STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt-hla-prepare-reference.R",
     cli_output_file = cli_output_file,
-    other_character_params = c("outputdir", "ipd_igmt_alignments_zip_file", "quilt_hla_supplementary_info_file", "all_hla_regions", "hla_regions_to_prepare"),
+    other_character_params = c("outputdir", "ipd_igmt_alignments_zip_file", "quilt_hla_supplementary_info_file", "all_hla_regions", "hla_regions_to_prepare", "local_reference_hap_file", "full_reference_hap_file"),
     character_vectors = c("all_hla_regions", "hla_regions_to_prepare"),
     function_name = "QUILT_HLA_prepare_reference",
     library_name = "QUILT"

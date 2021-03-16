@@ -36,9 +36,6 @@ rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlagenes.txt ${test
 rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlauntyped*.excludefivepop.txt ${test_dir}
 
 
-##
-## Properly capture this as well it looks like
-##
 
 
 ##
@@ -83,7 +80,7 @@ regionEnd=33629686
 ## Preparing haplotype files, need to do all of them it seems?
 ## Clearly need to fix this, easily, internally. Should be do-able with above
 ##
-for i in $(seq 0 4)
+for i in $(seq 0 5)
 do
     if [ $i == 0 ]
     then
@@ -100,6 +97,9 @@ do
     elif [ $i == 4 ]
     then
 	HLA_GENE="DQB1"; regionStart=32660035; regionEnd=32666603
+    elif [ $i == 5 ]
+    then
+	HLA_GENE="DQA1"; regionStart=32637480; regionEnd=32643199
     fi && 
     ./QUILT_prepare_reference.R \
 	--outputdir=${test_dir} \
@@ -128,9 +128,10 @@ cd ~/proj/QUILT/
 ./QUILT_HLA_prepare_reference.R \
 --outputdir=${test_dir} \
 --ipd_igmt_alignments_zip_file=${test_dir}Alignments_Rel_3390.zip \
---quilt_hla_supplementary_info_file=quilt_hla_supplementary_info.txt
-
-
+--quilt_hla_supplementary_info_file=quilt_hla_supplementary_info.txt \
+--full_reference_hap_file=${test_dir}quilt.hrc.chr6.hla.all.haplotypes.RData \
+--local_reference_hap_file=${test_dir}quilt.hrc.chr6.hla.*.haplotypes.RData \
+--hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')"
 
 
 

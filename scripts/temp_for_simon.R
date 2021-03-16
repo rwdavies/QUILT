@@ -1,14 +1,119 @@
-phase_hla_haplotypes <- function(
-    outputdir,
-    regions,
-    full_reference_hap_file,
-    local_reference_hap_file,
-    hla_types_panel
-) {
+print_message <- function(x, include_mem = FALSE) {
+    if (include_mem) {
+        mem <- system("ps auxww | grep 'scripts/profile.R' | grep slave | grep -v 'grep' | awk -v OFS='\t' '$1=$1' | cut -f6", intern = TRUE)
+        if (length(mem) > 0) {
+            mem <- paste0(paste0(round(as.integer(mem) / 2 ** 20, 3), collapse = ", "), " - ")
+        } else {
+            mem <- ""
+        }
+    } else {
+        mem <- ""
+    }
+    message(
+        paste0(
+            "[", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "] ", mem, x
+        )
+    )
+}
 
-    print_message("Begin assigning HLA types to haplotypes")
-    if (1 == 0 ) {
-        
+
+file_quilt_prepared_reference <- function(outputdir, regionName) {
+    output_file <- file.path(
+        outputdir, "RData", paste0("QUILT_prepared_reference.", regionName, ".RData")
+    )
+    return(output_file)
+}
+
+
+
+file_quilt_output_RData <- function(outputdir, regionName) {
+    output_file <- file.path(
+        outputdir, "RData", paste0("QUILT_output.", regionName, ".RData")
+    )
+    return(output_file)
+}
+
+
+file_quilt_hla_panelfile <- function(outputdir, hlaregion) {
+    quilt_panelfile <- file.path(
+        outputdir,
+        paste0("quilt.hla.", hlaregion, ".haplotypes.RData")
+    )
+    return(quilt_panelfile)
+}
+
+file_quilt_hla_all_alleles_kmers <- function(outputdir) {
+    quilt_hla_all_alleles_kmers <- file.path(
+        outputdir,
+        "HLAallalleleskmers.out"
+    )
+    return(quilt_hla_all_alleles_kmers)
+}
+
+file_quilt_hla_full_alleles_filled_in <- function(outputdir, hla_region) {
+    quilt_hla_full_alleles_filled_in <- file.path(
+        outputdir,
+        paste0("HLA", hla_region, "fullallelesfilledin.out")
+    )
+    return(quilt_hla_full_alleles_filled_in)
+}
+
+file_quilt_hla_full <- function(outputdir, hla_region) {
+    quilt_hla_full <- file.path(
+        outputdir,
+        paste0("hla", hla_region, "full.out")
+    )
+    return(quilt_hla_full)
+}
+
+
+file_quilt_hla_snpformatalleles <- function(outputdir, hla_region) {
+    return(file.path(
+        outputdir,
+        paste0("hla", hla_region, "snpformatalleles.out")
+    ))
+}
+
+
+file_quilt_final_RData_output_file <- function(outputdir, region) {
+    suffix <- paste0("quilt.output.hla", region, ".RData")
+    if (outputdir == "") {
+        return(suffix)
+    } else {
+        return(file.path(outputdir, suffix))
+    }
+}
+
+file_quilt_hla_phase_step_1 <- function(outputdir, region) {
+    file.path(
+        outputdir,
+        paste("hla", region, "newphased.out")
+    )
+    ## paste("hla",region,"newphased.out",sep="")
+}
+
+
+file_quilt_hla_phased_haplotypes <- function(outputdir, region) {
+    file.path(
+        outputdir,
+        paste("hla", region, "haptypes.out")
+    )
+}
+
+
+
+
+
+
+
+
+
+
+
+if (1 == 1) {
+
+
+
         outputdir <- "/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15B"
         regions<- c("A", "B", "C", "DQB1", "DRB1")
         ## new Robbie prepared input file list
@@ -16,17 +121,9 @@ phase_hla_haplotypes <- function(
         full_reference_hap_file <- file.path(outputdir, "quilt.hrc.chr6.hla.all.haplotypes.RData")
         local_reference_hap_file <- file.path(outputdir, paste0("quilt.hrc.chr6.hla.*.haplotypes.RData")) ## OK?
         hla_types_panel <- file.path(outputdir, "20181129_HLA_types_full_1000_Genomes_Project_panel.txt")
-        
-    }
 
 
-
-    ## outputdir <- "/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15"
-    ## setwd(outputdir)
-
-
-
-    ##
+        ##
     ## input file description
     ##
 
@@ -574,4 +671,5 @@ phase_hla_haplotypes <- function(
 
     NULL
 }
+
 

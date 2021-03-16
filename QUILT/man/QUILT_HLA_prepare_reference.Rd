@@ -12,7 +12,9 @@ QUILT_HLA_prepare_reference(
     "DPB1", "DPB2", "DQA1", "DQA2", "DQB1", "DRA", "DRB1", "DRB3", "DRB4", "DRB5", "E",
     "F", "G", "HFE", "H", "J", "K", "L", "MICA", "MICB", "N", "P", "S", "TAP1", "TAP2",
     "T", "U", "V", "W", "Y"),
-  hla_regions_to_prepare = c("A", "B", "C", "DQA1", "DQB1", "DRB1")
+  hla_regions_to_prepare = c("A", "B", "C", "DQA1", "DQB1", "DRB1"),
+  full_reference_hap_file = "",
+  local_reference_hap_file = ""
 )
 }
 \arguments{
@@ -25,6 +27,10 @@ QUILT_HLA_prepare_reference(
 \item{all_hla_regions}{Character vector of all HLA genes for which IPD-IMGT files are available for}
 
 \item{hla_regions_to_prepare}{Character vector of HLA genes to prepare for imputation}
+
+\item{full_reference_hap_file}{Path to file with full haplotype reference file}
+
+\item{local_reference_hap_file}{Path to file with haplotype reference file for HLA genes with asterisk for gene name}
 }
 \value{
 Results in properly formatted version

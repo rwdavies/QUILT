@@ -30,6 +30,18 @@ option_list <- list(
         type = "character",
         help = "Character vector of HLA genes to prepare for imputation [default c('A','B','C','DQA1','DQB1','DRB1')] ",
         default = "c('A','B','C','DQA1','DQB1','DRB1')"
+    ), 
+    make_option(
+        "--full_reference_hap_file",
+        type = "character",
+        help = "Path to file with full haplotype reference file [default \"\"] ",
+        default = ""
+    ), 
+    make_option(
+        "--local_reference_hap_file",
+        type = "character",
+        help = "Path to file with haplotype reference file for HLA genes with asterisk for gene name [default \"\"] ",
+        default = ""
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -40,5 +52,7 @@ QUILT_HLA_prepare_reference(
     ipd_igmt_alignments_zip_file = opt$ipd_igmt_alignments_zip_file,
     quilt_hla_supplementary_info_file = opt$quilt_hla_supplementary_info_file,
     all_hla_regions = eval(parse(text=opt$all_hla_regions)),
-    hla_regions_to_prepare = eval(parse(text=opt$hla_regions_to_prepare))
+    hla_regions_to_prepare = eval(parse(text=opt$hla_regions_to_prepare)),
+    full_reference_hap_file = opt$full_reference_hap_file,
+    local_reference_hap_file = opt$local_reference_hap_file
 )

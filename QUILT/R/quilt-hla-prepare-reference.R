@@ -4,6 +4,8 @@
 #' @param quilt_hla_supplementary_info_file Path to file with supplementary information about the genes, necessary for proper converstion. File is tab separated without header, with 4 columns, with the following entries. First is the HLA gene name (e.g. A for HLA-A). Second is the correponding row in the _gen.txt IPD-IMGT file. Third is the position of the first column in the reference genome. Fourth is the strand (options 1 or -1).
 #' @param all_hla_regions Character vector of all HLA genes for which IPD-IMGT files are available for 
 #' @param hla_regions_to_prepare Character vector of HLA genes to prepare for imputation
+#' @param full_reference_hap_file Path to file with full haplotype reference file 
+#' @param local_reference_hap_file Path to file with haplotype reference file for HLA genes with asterisk for gene name
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -12,7 +14,9 @@ QUILT_HLA_prepare_reference <- function(
     ipd_igmt_alignments_zip_file,
     quilt_hla_supplementary_info_file,
     all_hla_regions = c('A','B','C','DMA','DMB','DOA','DOB','DPA1','DPA2','DPB1','DPB2','DQA1','DQA2','DQB1','DRA','DRB1','DRB3','DRB4','DRB5','E','F','G','HFE','H','J','K','L','MICA','MICB','N','P','S','TAP1','TAP2','T','U','V','W','Y'),
-    hla_regions_to_prepare = c('A','B','C','DQA1','DQB1','DRB1')
+    hla_regions_to_prepare = c('A','B','C','DQA1','DQB1','DRB1'),
+    full_reference_hap_file = "",
+    local_reference_hap_file = ""
 ) {
 
     x <- as.list(environment())
@@ -31,8 +35,37 @@ QUILT_HLA_prepare_reference <- function(
     system(paste0("cd ", outputdir, " && unzip -u ", basename(ipd_igmt_alignments_zip_file)))
 
 
+
+
+    
     ##
-    ## input files
+    ## this is the checking and naming for the phasing which happens below
+    ##
+    regions <- hla_regions_to_prepare
+    ## conceptually more separate
+    if (full_reference_hap_file == "") {
+        full_reference_hap_file <- file.path(outputdir, "quilt.hrc.chr6.hla.all.haplotypes.RData")
+        if (!file.exists(full_reference_hap_file)) {
+            stop(paste0("Cannot find full haplotype reference file:", full_reference_hap_file))
+        }
+    }
+    if (local_reference_hap_file == "") {
+        local_reference_hap_file <- file.path(outputdir, paste0("quilt.hrc.chr6.hla.*.haplotypes.RData")) ## OK?
+        for(region in regions) {
+            x <- gsub("*", region, local_reference_hap_file, fixed = TRUE)
+            if (!file.exists(x)) {
+                stop(paste0("Cannot find specific haplotype reference file:", x))
+            }
+        }
+    }
+    hla_types_panel <- file.path(outputdir, "20181129_HLA_types_full_1000_Genomes_Project_panel.txt")
+
+
+
+    
+    
+    ##
+    ## input files (for first set of functions)
     ##
     ## input files from IPD-IMGT version 3.39.0 needed, one per region AND for other HLA regions that are to be excluded
     ## A_gen.txt, B_gen.txt, C_gen.txt, DQA1_gen.txt,DRB1_gen.txt
@@ -103,7 +136,7 @@ QUILT_HLA_prepare_reference <- function(
     hla_regions <- all_hla_regions
     regs <- hla_regions_to_prepare
     ourfiles <- hla_regions
-    
+
     make_and_save_hla_all_alleles_kmers(
         outputdir = outputdir,
         ourfiles = ourfiles
@@ -126,6 +159,15 @@ QUILT_HLA_prepare_reference <- function(
         regs = regs
     )
 
+    ## this is distinct in flavour, uses above, but also HRC haplotypes
+    phase_hla_haplotypes(    
+        outputdir = outputdir,
+        regions = regions,
+        full_reference_hap_file = full_reference_hap_file,
+        local_reference_hap_file = local_reference_hap_file,
+        hla_types_panel = hla_types_panel
+    )
+        
     print_message("Done preparing HLA reference")
     
 }
