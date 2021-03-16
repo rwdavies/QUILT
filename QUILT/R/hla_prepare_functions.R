@@ -855,3 +855,12 @@ make_and_save_hla_snpformatalleles <- function(
 
 
 }
+
+
+
+
+
+
+
+
+
