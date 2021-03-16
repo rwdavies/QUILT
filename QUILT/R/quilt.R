@@ -244,9 +244,9 @@ QUILT <- function(
             print_message(paste0("Observing number of reference haplotypes K=", K))
             print_message(paste0("Reset n_seek_its from ", n_seek_its, " to ", 1))
             n_seek_its <- 1
-            print_message(paste0("Set Ksubset to ", K, " (no longer necessary"))
+            print_message(paste0("Set Ksubset to ", K, " (no longer necessary)"))
             Ksubset <- K
-            print_message(paste0("Set Knew to ", K, " (no longer necessary"))            
+            print_message(paste0("Set Knew to ", K, " (no longer necessary)"))
             Knew <- K
         }
     }
