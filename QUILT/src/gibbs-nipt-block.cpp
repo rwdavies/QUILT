@@ -168,6 +168,8 @@ Rcpp::List Rcpp_define_blocked_snps_using_gamma_on_the_fly(
         std::cout << "make simple quintile" << std::endl;
     }
     double break_thresh = 1;
+
+    
     d = rcpp_simple_quantile(smoothed_rate, block_gibbs_quantile_prob);
     if (d < break_thresh) {
         break_thresh = d;
@@ -435,6 +437,10 @@ void Rcpp_consider_block_relabelling(
         //
     }
   }
+  if (verbose) {
+    std::cout << "done calculate choice log probs" << std::endl;
+    std::cout << "block_approach = " << block_approach << std::endl;    
+  }
   //
   Rcpp::NumericVector choice_log_probs_H;
   if (block_approach == 1) {
@@ -442,9 +448,21 @@ void Rcpp_consider_block_relabelling(
   } else if (block_approach == 2) {
       choice_log_probs_H = rcpp_calculate_block_read_label_probabilities_using_read_informativeness(read_start_0_based, read_end_0_based, H, log_prior_probs, rr0, read_is_uninformative);
   } else if (block_approach == 4) {
+      if (verbose) {
+          std::cout << "realculate block read label probs" << std::endl;
+      }
+      //
+      // problem looks to be with this, but why
+      //
       choice_log_probs_H = rcpp_calculate_block_read_label_probabilities_using_proposed_H(read_start_0_based, read_end_0_based, proposed_H, log_prior_probs, rr0);
+      if (verbose) {
+          std::cout << "done realculate block read label probs" << std::endl;
+      }
   }
   //
+  if (verbose) {
+    std::cout << "add them together" << std::endl;
+  }
   // add them together
   Rcpp::NumericVector choice_log_probs(6);
   Rcpp::NumericVector choice_probs(6);  
@@ -476,7 +494,9 @@ void Rcpp_consider_block_relabelling(
     choice_probs(ir) *= d;
   }
   //
-  // now sample / choose
+  if (verbose) {
+    std::cout << "now sample / choose" << std::endl;
+  }
   //
   // ir_chosen <- sample(1:6, size = 1, prob = choice_probs)  
   double chance = runif_block(iBlock);
@@ -556,9 +576,9 @@ void Rcpp_consider_block_relabelling(
       int iRead = read_start_0_based;
       int wif_read = wif0(iRead);
       for(iGrid2 = grid_start_0_based; iGrid2 <= grid_end_0_based; iGrid2++) {
-          if (verbose) {
-              std::cout << "changing iGrid2 (0-based) = " <<  iGrid2 << std::endl;
-	  }
+          //if (verbose) {
+          //    std::cout << "changing iGrid2 (0-based) = " <<  iGrid2 << std::endl;
+	  //}
           if (block_approach == 1 | block_approach == 2) {          
               eMatGridLocal.col(rr0(ir_chosen, 0)) = eMatGrid_t1.col(iGrid2);
               eMatGridLocal.col(rr0(ir_chosen, 1)) = eMatGrid_t2.col(iGrid2);
@@ -1500,9 +1520,9 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     arma::cube eMatGridLocalc(K, 3, 6);    
     arma::cube log_cStore(nGrids, 3, 6);
     for(int iGrid = 0; iGrid < nGrids; iGrid++) {    
-        if (verbose) {
-            std::cout << "iBlock = " << iBlock << ", iGrid = " << iGrid << ", nGrids = " << nGrids << std::endl;
-        }
+        //if (verbose) {
+        //    std::cout << "iBlock = " << iBlock << ", iGrid = " << iGrid << ", nGrids = " << nGrids << std::endl;
+        //}
         eMatGridLocal.col(0) = eMatGrid_t1.col(iGrid);
         eMatGridLocal.col(1) = eMatGrid_t2.col(iGrid);
         eMatGridLocal.col(2) = eMatGrid_t3.col(iGrid);
@@ -1538,9 +1558,9 @@ Rcpp::List Rcpp_block_gibbs_resampler(
             //
             //
             //
-            if (verbose) {
-                std::cout << "add to logC from previous run" << std::endl;
-            }
+            //if (verbose) {
+            //    std::cout << "add to logC from previous run" << std::endl;
+            //}
             for(int iGrid2 = grid_start_0_based; iGrid2 <= grid_end_0_based; iGrid2++) {
                 logC_before(0) += log(c1(iGrid2));
                 logC_before(1) += log(c2(iGrid2));
