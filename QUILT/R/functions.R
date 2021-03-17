@@ -522,7 +522,8 @@ get_and_impute_one_sample <- function(
     chrStart,
     chrEnd,
     gamma_physically_closest_to,
-    hla_run
+    hla_run,
+    downsampleToCov
 ) {
 
     sample_name <- sampleNames[iSample]
@@ -541,7 +542,7 @@ get_and_impute_one_sample <- function(
         bqFilter = bqFilter,
         chr = chr,
         N = 1,
-        downsampleToCov = 100,
+        downsampleToCov = downsampleToCov,
         sampleNames = "sample",
         inputdir = tempdir,
         regionName = regionName,
@@ -556,6 +557,7 @@ get_and_impute_one_sample <- function(
 
     load(file_sampleReads(tempdir, iSample, regionName))
     load(file_sampleReadsInfo(tempdir, iSample, regionName))
+
     sample_alleleCount <- get_alleleCount(sampleReads, nrow(pos))
     print_message(paste0("The average depth of this sample is:", mean(sample_alleleCount[, 2])))
     print_message(paste0("There are ", length(sampleReads), " reads under consideration"))
@@ -1856,7 +1858,6 @@ impute_one_sample <- function(
     block_gibbs_quantile_prob = 0.95,
     make_plots_block_gibbs = FALSE
 ) {
-
     ##
     K <- length(which_haps_to_use)
     S <- 1

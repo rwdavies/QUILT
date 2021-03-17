@@ -41,6 +41,7 @@
 #' @param gamma_physically_closest_to For HLA imputation, the physical position closest to the centre of the gene
 #' @param seed The seed that controls random number generation. When NA, not used#
 #' @param hla_run Whether to use QUILT to generate posterior state probabilities as part of QUILT-HLA
+#' @param downsampleToCov What coverage to downsample individual sites to. This ensures no floating point errors at sites with really high coverage
 #' 
 #' @return Results in properly formatted version
 #' @author Robert Davies
@@ -86,7 +87,8 @@ QUILT <- function(
     override_default_params_for_small_ref_panel = TRUE,
     gamma_physically_closest_to = NA,
     seed = NA,
-    hla_run = FALSE
+    hla_run = FALSE,
+    downsampleToCov = 30
 ) {
 
 
@@ -557,7 +559,8 @@ QUILT <- function(
                 chrStart = chrStart,
                 chrEnd = chrEnd,
                 gamma_physically_closest_to = gamma_physically_closest_to,
-                hla_run = hla_run
+                hla_run = hla_run,
+                downsampleToCov = downsampleToCov
             )
 
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out
