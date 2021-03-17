@@ -4,12 +4,13 @@ if ( 1 == 0 ) {
     library("QUILT")
     dir <- "~/proj/QUILT/"
     setwd(paste0(dir, "/QUILT/R"))
-    a <- dir(pattern = "*R")
+    a <- dir(pattern = "*.R")
     b <- grep("~", a)
     if (length(b) > 0) {
         a <- a[-b]
     }
     o <- sapply(a, source)
+
 
 }
 
@@ -40,6 +41,8 @@ refpack <- STITCH::make_reference_package(
     chr = chr,
     phasemaster = phasemaster
 )
+
+
 
 test_that("QUILT can impute a few samples in a standard way, using a small panel, with or without a genetic map", {
     
@@ -248,3 +251,6 @@ test_that("QUILT can use all combinations of posfile, genfile and phasfile in th
     }
     
 })
+
+
+

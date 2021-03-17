@@ -187,6 +187,11 @@ Rcpp_test <- function(k, iGrid, rhb_t) {
 }
 
 #' @export
+Rcpp_make_gl_bound <- function(gl, minGLValue, to_fix) {
+    invisible(.Call('_QUILT_Rcpp_make_gl_bound', PACKAGE = 'QUILT', gl, minGLValue, to_fix))
+}
+
+#' @export
 rcpp_nth_partial_sort <- function(x, nth) {
     .Call('_QUILT_rcpp_nth_partial_sort', PACKAGE = 'QUILT', x, nth)
 }

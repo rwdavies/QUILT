@@ -573,7 +573,6 @@ R_block_gibbs_resampler <- function(
         approach2_iRead <- out[["approach2_iRead"]]
         proposed_H <- out[["proposed_H"]]
         eMatGridLocalc <- out[["eMatGridLocalc"]]
-        
         ##
         ## if this is when we consider the block change
         ##

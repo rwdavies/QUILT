@@ -54,6 +54,36 @@ Rcpp::IntegerVector Rcpp_test(int k, int iGrid, arma::imat& rhb_t) {
   return(output);
 }
 
+//' @export
+// [[Rcpp::export]]
+void Rcpp_make_gl_bound(arma::mat & gl, double minGLValue, Rcpp::IntegerVector& to_fix) {
+    //
+    double a, b;
+    int n = to_fix.length();
+    int i_col;
+    for(int i = 0; i < n; i++) {
+        i_col = to_fix(i);
+        a = gl(0, i_col);
+        b = gl(1, i_col);
+        if (a > b) {
+            b = b / a;
+            a = 1;
+            if (b < minGLValue) {
+                b = minGLValue;
+            }
+        } else {
+            a = a / b;
+            b = 1;
+            if (a < minGLValue) {
+                a = minGLValue;
+            }
+        }
+        gl(0, i_col) = a;
+        gl(1, i_col) = b;
+    }
+    return;
+}
+
 
 
 //' @export

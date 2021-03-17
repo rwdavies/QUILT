@@ -14,7 +14,13 @@ if (1 == 0) {
 }
 
 
-make_gl_from_u_bq <- function(u, bq, nSNPs) {
+## here u is 1-based
+make_gl_from_u_bq <- function(
+    u,
+    bq,
+    nSNPs,
+    minGLValue = 1e-10
+) {
     gl <- array(1, c(2, nSNPs))
     if (length(u) == 0) {
         return(gl)
@@ -23,6 +29,13 @@ make_gl_from_u_bq <- function(u, bq, nSNPs) {
     ## 
     for(i in 1:length(u)) {
         gl[, u[i]] <- gl[, u[i]] * probs[i, ]
+    }
+    if (minGLValue > 0) {
+        ## minGLValue <- 1e-10
+        to_fix <- as.integer(which(colSums(gl < minGLValue) > 0)) - 1
+        if (length(to_fix) > 0) {
+            Rcpp_make_gl_bound(gl, minGLValue, to_fix) ## here to_fix is 0-based
+        }
     }
     return(gl)
 }

@@ -1515,31 +1515,6 @@ impute_using_everything <- function(
             print_message(paste0("Read label assignment includes no reads for haplotype ", i_hap))
         }
         gl <- make_gl_from_u_bq(u, bq, nSNPs)
-################################################### potential newcode
-        minGLValue <- 1e-10
-        to_fix <- which(colSums(gl < minGLValue) > 0)
-        if (length(to_fix) > 0) {
-            for(i_col in to_fix) {
-                a <- gl[1, i_col]
-                b <- gl[2, i_col]
-                if (a > b) {
-                    b <- b / a                    
-                    a <- 1
-                    if (b < minGLValue) {
-                        b <- minGLValue
-                    }
-                } else {
-                    a <- a / b
-                    b <- 1
-                    if (a < minGLValue) {
-                        a <- minGLValue
-                    }
-                }
-                gl[1, i_col] <- a
-                gl[2, i_col] <- b
-            }
-        }
-################################################### newcode        
         use_eMatDH <- TRUE
         c <-  array(1, c(nGrids))  ## more useful for debugging
         Rcpp_haploid_dosage_versus_refs(

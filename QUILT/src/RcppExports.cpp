@@ -895,6 +895,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// Rcpp_make_gl_bound
+void Rcpp_make_gl_bound(arma::mat& gl, double minGLValue, Rcpp::IntegerVector& to_fix);
+RcppExport SEXP _QUILT_Rcpp_make_gl_bound(SEXP glSEXP, SEXP minGLValueSEXP, SEXP to_fixSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type gl(glSEXP);
+    Rcpp::traits::input_parameter< double >::type minGLValue(minGLValueSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type to_fix(to_fixSEXP);
+    Rcpp_make_gl_bound(gl, minGLValue, to_fix);
+    return R_NilValue;
+END_RCPP
+}
 // rcpp_nth_partial_sort
 Rcpp::NumericVector rcpp_nth_partial_sort(Rcpp::NumericVector x, int nth);
 RcppExport SEXP _QUILT_rcpp_nth_partial_sort(SEXP xSEXP, SEXP nthSEXP) {
@@ -1172,6 +1184,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 61},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
     {"_QUILT_Rcpp_test", (DL_FUNC) &_QUILT_Rcpp_test, 3},
+    {"_QUILT_Rcpp_make_gl_bound", (DL_FUNC) &_QUILT_Rcpp_make_gl_bound, 3},
     {"_QUILT_rcpp_nth_partial_sort", (DL_FUNC) &_QUILT_rcpp_nth_partial_sort, 2},
     {"_QUILT_Rcpp_get_top_K_or_more_matches_while_building_gamma", (DL_FUNC) &_QUILT_Rcpp_get_top_K_or_more_matches_while_building_gamma, 6},
     {"_QUILT_Rcpp_build_eMatDH", (DL_FUNC) &_QUILT_Rcpp_build_eMatDH, 7},

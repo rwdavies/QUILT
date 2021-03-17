@@ -13,6 +13,60 @@ if ( 1 == 0 ) {
     
 }
 
+test_that("can bound make_gl_from_u_bq", {
+
+    ## caused by overflow issues
+    ## want to bound at least a little bit!
+
+    set.seed(10)
+    nSNPs <- 100
+    bq <- sample(c(-50, -10, 10, 50), nSNPs, replace = TRUE)
+    u <- 1:(nSNPs)
+
+    ## no change
+    m1 <- make_gl_from_u_bq(u, bq, nSNPs, minGLValue = 0) ## original
+
+    ## check Rcpp makes sense
+    minGLValue <- 1e-2
+    gl <- array(NA, dim(m1))
+    gl[] <- m1[]
+    to_fix <- as.integer(which(colSums(gl < minGLValue) > 0))    
+    for(i_col in to_fix) {
+        a <- gl[1, i_col]
+        b <- gl[2, i_col]
+        if (a > b) {
+            b <- b / a                    
+            a <- 1
+            if (b < minGLValue) {
+                b <- minGLValue
+            }
+        } else {
+            a <- a / b
+            b <- 1
+            if (a < minGLValue) {
+                a <- minGLValue
+            }
+        }
+        gl[1, i_col] <- a
+        gl[2, i_col] <- b
+    }
+
+    gl2 <- array(NA, dim(m1))
+    gl2[] <- m1[]
+    Rcpp_make_gl_bound(gl2, minGLValue, to_fix - 1);
+
+    expect_equal(gl, gl2)
+    
+    ## now do bounding
+    m2 <- make_gl_from_u_bq(u, bq, nSNPs, minGLValue = 1e-2)
+
+    expect_true(sum(m1 == 1e-2) == 0)    ## confirm that m1 has not changed
+    expect_false(sum(m2 == 1e-2) == 0)   ## confirm that m2 has changed
+
+    ## check that rcpp works too 
+
+})
+
 
 
 test_that(" can select good haps properly", {
@@ -1434,6 +1488,8 @@ test_that("prototype idea of classes for faster alphaHat", {
 
 
 })
+
+
 
 
 

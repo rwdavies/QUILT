@@ -45,7 +45,8 @@ QUILT(
   override_default_params_for_small_ref_panel = TRUE,
   gamma_physically_closest_to = NA,
   seed = NA,
-  hla_run = FALSE
+  hla_run = FALSE,
+  downsampleToCov = 30
 )
 }
 \arguments{
@@ -130,6 +131,8 @@ QUILT(
 \item{seed}{The seed that controls random number generation. When NA, not used#}
 
 \item{hla_run}{Whether to use QUILT to generate posterior state probabilities as part of QUILT-HLA}
+
+\item{downsampleToCov}{What coverage to downsample individual sites to. This ensures no floating point errors at sites with really high coverage}
 }
 \value{
 Results in properly formatted version

@@ -68,7 +68,7 @@ file_quilt_final_RData_output_file <- function(outputdir, region) {
 file_quilt_hla_phase_step_1 <- function(outputdir, region) {
     file.path(
         outputdir,
-        paste("hla", region, "newphased.out")
+        paste0("hla", region, "newphased.out")
     )
     ## paste("hla",region,"newphased.out",sep="")
 }
@@ -77,6 +77,6 @@ file_quilt_hla_phase_step_1 <- function(outputdir, region) {
 file_quilt_hla_phased_haplotypes <- function(outputdir, region) {
     file.path(
         outputdir,
-        paste("hla", region, "haptypes.out")
+        paste0("hla", region, "haptypes.out")
     )
 }
