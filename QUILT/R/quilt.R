@@ -42,6 +42,7 @@
 #' @param seed The seed that controls random number generation. When NA, not used#
 #' @param hla_run Whether to use QUILT to generate posterior state probabilities as part of QUILT-HLA
 #' @param downsampleToCov What coverage to downsample individual sites to. This ensures no floating point errors at sites with really high coverage
+#' @param minGLValue For non-Gibbs full imputation, minimum allowed value in haplotype gl, after normalization. In effect, becomes 1/minGLValue becomes maximum difference allowed between genotype likelihoods
 #' 
 #' @return Results in properly formatted version
 #' @author Robert Davies
@@ -88,7 +89,8 @@ QUILT <- function(
     gamma_physically_closest_to = NA,
     seed = NA,
     hla_run = FALSE,
-    downsampleToCov = 30
+    downsampleToCov = 30,
+    minGLValue = 1e-10
 ) {
 
 

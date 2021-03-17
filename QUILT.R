@@ -247,6 +247,18 @@ option_list <- list(
         type = "logical",
         help = "Whether to use QUILT to generate posterior state probabilities as part of QUILT-HLA [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--downsampleToCov",
+        type = "double",
+        help = "What coverage to downsample individual sites to. This ensures no floating point errors at sites with really high coverage [default 30] ",
+        default = 30
+    ), 
+    make_option(
+        "--minGLValue",
+        type = "double",
+        help = "For non-Gibbs full imputation, minimum allowed value in haplotype gl, after normalization. In effect, becomes 1/minGLValue becomes maximum difference allowed between genotype likelihoods [default 1e-10] ",
+        default = 1e-10
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -293,5 +305,7 @@ QUILT(
     override_default_params_for_small_ref_panel = opt$override_default_params_for_small_ref_panel,
     gamma_physically_closest_to = opt$gamma_physically_closest_to,
     seed = opt$seed,
-    hla_run = opt$hla_run
+    hla_run = opt$hla_run,
+    downsampleToCov = opt$downsampleToCov,
+    minGLValue = opt$minGLValue
 )

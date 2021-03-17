@@ -1,3 +1,6 @@
+* v0.1.5
+	* Export downsampleToCov and set to 30 to reduce underflow likelihood for high coverage regions
+	* Add minGLValue as bound on haplotype genotype likelihoods also to reduce underflow likelihood
 * v0.1.4
 	* Option to impute without specifying genetic map, just using expected genetic and physical distance
 * v0.1.3

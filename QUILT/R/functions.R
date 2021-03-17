@@ -696,7 +696,8 @@ get_and_impute_one_sample <- function(
                 smooth_cm = smooth_cm,
                 regionStart = regionStart,
                 regionEnd = regionEnd,
-                buffer = buffer
+                buffer = buffer,
+                minGLValue = minGLValue                
             )
 
         } else {
@@ -886,7 +887,8 @@ get_and_impute_one_sample <- function(
                 smooth_cm = smooth_cm ,
                 regionStart = regionStart,
                 regionEnd = regionEnd,
-                buffer = buffer
+                buffer = buffer,
+                minGLValue = minGLValue
             )
             
             which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
@@ -1474,6 +1476,7 @@ impute_using_everything <- function(
     regionStart,
     regionEnd,
     buffer,
+    minGLValue,
     return_dosage = FALSE,
     return_betaHat_t = FALSE,
     return_gamma_t = FALSE,
@@ -1514,7 +1517,7 @@ impute_using_everything <- function(
         if (length(u) == 0) {
             print_message(paste0("Read label assignment includes no reads for haplotype ", i_hap))
         }
-        gl <- make_gl_from_u_bq(u, bq, nSNPs)
+        gl <- make_gl_from_u_bq(u, bq, nSNPs, minGLValue = minGLValue)
         use_eMatDH <- TRUE
         c <-  array(1, c(nGrids))  ## more useful for debugging
         Rcpp_haploid_dosage_versus_refs(
@@ -2336,148 +2339,8 @@ if (1 == 0) {
 
 
 
-if (1 == 0) {
 
 
-
-
-
-f = function(inbam) {
-tempdir <- tempdir()
-loadBamAndConvert(
-    iBam = 1,
-    L = L,
-    pos = pos,
-    nSNPs = nSNPs,
-    bam_files = inbam,
-    iSizeUpperLimit = 1e6,
-    bqFilter = 10,
-    chr = chr,
-    N = 1,
-    downsampleToCov = 100,
-    sampleNames = "sample",
-    inputdir = tempdir,
-    regionName = regionName,
-    tempdir = tempdir,
-    chrStart = regionStart - buffer,
-    chrEnd = regionEnd + buffer,
-    chrLength = NA,
-    save_sampleReadsInfo = TRUE
-)
-load(file_sampleReads(tempdir, 1, regionName))
-load(file_sampleReadsInfo(tempdir, 1, regionName))
-sample_alleleCount <- get_alleleCount(sampleReads, nrow(pos))
-message(paste0("The average depth of this sample is:", mean(sample_alleleCount[, 2])))
-sampleReads <- snap_sampleReads_to_grid(
-    sampleReads = sampleReads,
-    grid = grid
-)
-        eMatRead_truth_t <- calculate_eMatRead_t_vs_two_haplotypes(
-            sampleReads,
-            hap1 = truth_hap1,
-            hap2 = truth_hap2,
-            rescale_eMatRead_t = FALSE
-        ) ## leave as false 
-        p1 <- eMatRead_truth_t[1, ]
-        p2 <- eMatRead_truth_t[2, ]
-        weird <- (colSums(is.na(eMatRead_truth_t)) > 0) | (colSums(eMatRead_truth_t == Inf) > 0)
-        ## 
-        nReads <- length(sampleReads)
-        H <- as.integer(runif(nReads) < (p2 / (p1 + p2))) + 1
-        H[is.na(H)] <- sample(1:2, sum(is.na(H)), replace = TRUE)
-        truth_labels <- H ## at least, one of them!
-        fold_diff <- p1 / p2
-        fold_diff[weird] <- 1 ## hmm
-        fold_diff[fold_diff > 1] <- (p2 / p1)[fold_diff > 1]
-        uncertain_truth_labels <- (fold_diff > 0.5) ## |         (p1 < 1e-5 & p2 < 1e-5)
-        u <- unlist(sapply(sampleReads[H == i_hap], function(x) x[[4]])) + 1
-        bq <- unlist(sapply(sampleReads[H == i_hap], function(x) x[[3]]))
-        print("check me - is this right about bq")
-        w <- bq != 0
-        bq <- bq[w]
-        u <- u[w]
-        ## 
-        gl <- make_gl_from_u_bq(u, bq, nSNPs)
-        ## ##
-print(table(paste0(as.integer(gl[1, ] > 0.5), "-", as.integer(gl[2, ] > 0.5)), truth_hap1))
-print(table(paste0(as.integer(gl[1, ] > 0.5), "-", as.integer(gl[2, ] > 0.5)), truth_hap2))
-return(list(sampleReads, sampleReadsInfo))
-}
-    ## original 9.75X - looks OK
-    a <- f("/well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.bam")
-    a2 <- f("/well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.headerFixV2.bam")
-    
-    ## reheader 9.75X - looks OK
-    b <- f("/well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.bam")
-    ## WHAT THE FUCK AM I DOING WRONG
-    ## OK, ready to re-try this!
-    c <- f("/well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.headerFix.bam")
-    d <- f("/well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.headerFix.chr20.test.bam")
-    e <- f("/well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.headerFixV2.bam")
-
-    length(b[[1]])
-    length(c[[1]])
-
-
-
-    f2 <- function(inbam, x) {
-        system(paste0("samtools view ", inbam, " chr20:9000000-13000000 | head -n2 # grep ", x))
-    }
-    x <- "ST-J00101:128:H2WN7BBXY:7:1207:9445:41106"
-    f2("/well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.bam", x)
-    f2("/well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.headerFix.bam", x)    
-
-    a1 <- ("/well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.bam")
-    ## reheader 9.75X - looks OK
-    b1 <- ("/well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.bam")
-    ## WHAT THE FUCK AM I DOING WRONG
-    ## ARRRRGH
-    ## OK, ready to re-try this!
-    c1 <- ("/well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.headerFix.bam")
-    d1 <- ("/well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.headerFix.chr20.bam")    
-
-    for(a in c(a1, b1, c1, d1)) {
-        system(paste0("samtools view ", a, " chr20 | head -n1"))
-    }
-
-    ## or - can just chop out 20 (leave re-sort for later (for all of them?))
-    system(paste0("samtools view -hb /well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.headerFix.bam chr20 > /well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.headerFix.chr20.bam"))
-    system(paste0("samtools index /well/davies/shared/haplotagged_NA12878/Lane7_Lane8-C01-C24_merged.hg38.sorted.dedup.reheader.headerFix.chr20.bam"))
-
-    
-}
-
-
-
-if (1 == 0) {
-
-
-    ## what is distribution of number of possibilities?
-    out <- apply(rhb_t, 2, function(x) table(table(x)))
-    table(table(rhb_t[, 100]))
-
-    ## so most of the time, fewer than 256 even
-    ## can speed test?
-    out <- apply(rhb_t, 2, function(x) length(unique(x)))
-                 
-
-    i_hap <- 1
-        print("check me - is this right about bq")
-        w <- bq != 0
-        bq <- bq[w]
-        u <- u[w]
-        ## 
-        gl <- make_gl_from_u_bq(u, bq, nSNPs)
-
-    ## load(file = "/well/davies/users/dcc832/temp.RData")
-    save(sampleReads, nSNPs, transMatRate_t, gl, rhb_t, file = "/well/davies/users/dcc832/temp.RData", compress = FALSE)
-
-
-    ## check them?
-    sampleReads[[1]]
-
-
-}
 
 estimate_bq <- function(truth_labels, sampleReads, truth_haps) {
     ## do my own bqsr versus truth
