@@ -125,10 +125,11 @@ QUILT_HLA <- function(
     ##
     ## things that depend on the haplotypes
     ##
-    phaseallelesfile <- file.path(
-        prepared_hla_reference_dir,
-        paste0("hla", region, "haptypesexcludefivepops.out")
-    )
+    ## phaseallelesfile <- file.path(
+    ##     prepared_hla_reference_dir,
+    ##     paste0("hla", region, "haptypesexcludefivepops.out")
+    ## )
+    phaseallelesfile <- file_quilt_hla_phased_haplotypes(prepared_hla_reference_dir, region)    
     if (!file.exists(phaseallelesfile)) {
         stop(paste0("Cannot find phase alleles file ", phaseallelesfile))
     }
@@ -137,7 +138,7 @@ QUILT_HLA <- function(
     print_message(paste0("The number of HLA reference haplotypes is:", length(hlahaptypes)))
 
     if (quilt_hla_haplotype_panelfile == "") {
-        quilt_hla_haplotype_panelfile <- file_quilt_hla_panelfile(prepared_hla_reference_dir, regionName) 
+        quilt_hla_haplotype_panelfile <- file_quilt_hla_panelfile(prepared_hla_reference_dir, region) 
     }
     if (!file.exists(quilt_hla_haplotype_panelfile)) {
         stop(paste0("Cannot find prepared HLA haplotype reference file, expecting:", quilt_hla_haplotype_panelfile))

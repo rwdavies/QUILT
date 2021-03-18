@@ -137,28 +137,28 @@ QUILT_prepare_reference <- function(
         }
         print_message("Loading list of regions to exclude")
         regionstoexclude <- read.table(region_exclude_file, header = TRUE, as.is = TRUE)
-        regionstoexclude <- regionstoexclude[regionstoexclude[, 2] == chr,]
-        regionstoexclude <- as.matrix(regionstoexclude)
-        
-        excluderegions <- matrix(as.double(regionstoexclude[, 3:4]),ncol = 2)
-        rownames(excluderegions) <- regionstoexclude[, 1]
-
-        ## now do the removal
-        keep <- array(TRUE, nrow(pos_to_use))
-        oldsum <- 0
-        for(i in 1:nrow(excluderegions)){
-            to_remove <-
-                pos_to_use[,"POS"] >= excluderegions[i, 1] &
-                pos_to_use[,"POS"] <= excluderegions[i, 2]
-            keep[to_remove] <- FALSE
-            ##sentence=paste("Excluding ",sum(keep==0)-oldsum," SNPs from region ",rownames(excluderegions)[i])
-            ##print(sentence)
-            ##oldsum <- sum(keep == 0)
+        regionstoexclude <- regionstoexclude[regionstoexclude[, 2] == chr,, drop = FALSE]
+        if (nrow(regionstoexclude) == 0) {
+            warning("No regions to exclude based on region_exclude_file. Perhaps the chr isn't the same?")
+        } else {
+            regionstoexclude <- as.matrix(regionstoexclude)
+            excluderegions <- matrix(as.double(regionstoexclude[, 3:4]),ncol = 2)
+            rownames(excluderegions) <- regionstoexclude[, 1]
+            ## now do the removal
+            keep <- array(TRUE, nrow(pos_to_use))
+            oldsum <- 0
+            for(i in 1:nrow(excluderegions)){
+                to_remove <-
+                    pos_to_use[,"POS"] >= excluderegions[i, 1] &
+                    pos_to_use[,"POS"] <= excluderegions[i, 2]
+                keep[to_remove] <- FALSE
+                ##sentence=paste("Excluding ",sum(keep==0)-oldsum," SNPs from region ",rownames(excluderegions)[i])
+                ##print(sentence)
+                ##oldsum <- sum(keep == 0)
+            }
+            pos_to_use <- pos_to_use[keep, ]
+            print_message(paste0("Excluded ", length(keep) - sum(keep), " out of ", length(keep), " SNPs from ", nrow(excluderegions), " regions"))
         }
-        pos_to_use <- pos_to_use[keep, ]
-
-        print_message(paste0("Excluded ", length(keep) - sum(keep), " out of ", length(keep), " SNPs from ", nrow(excluderegions), " regions"))
-        
     }
 
     

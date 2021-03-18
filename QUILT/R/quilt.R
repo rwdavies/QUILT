@@ -562,7 +562,8 @@ QUILT <- function(
                 chrEnd = chrEnd,
                 gamma_physically_closest_to = gamma_physically_closest_to,
                 hla_run = hla_run,
-                downsampleToCov = downsampleToCov
+                downsampleToCov = downsampleToCov,
+                minGLValue = minGLValue
             )
 
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out

@@ -1,3 +1,10 @@
+##
+## TODO
+## 1) Re-do from scratch, make sure it works
+## 2) Capture other dependencies more properly so can rsync nothing into testdir
+## 3) Re-facor making reference panel to be more efficient
+## 
+
 inputs_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/inputs/
 test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15B/
 mkdir -p ${test_dir}
@@ -10,31 +17,29 @@ cd ~/proj/QUILT/
 ##
 ## Code to test minimal functionality of QUILT_HLA
 ##
-inputs_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/inputs/
-test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15B/
+inputs_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/inputs_2021_03_18/
+test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_18/
 mkdir -p ${test_dir}
 
-set -e
 
-## To download IPD-IGMT version 3.39, for example
-cd ${test_dir}
-wget https://github.com/ANHIG/IMGTHLA/blob/032815608e6312b595b4aaf9904d5b4c189dd6dc/Alignments_Rel_3390.zip?raw=true
-mv Alignments_Rel_3390.zip?raw=true Alignments_Rel_3390.zip
-wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HLA_types/20181129_HLA_types_full_1000_Genomes_Project_panel.txt
+
 
 ## 
-## big unknown dependency 
+## not yet properly captured dependencies
 ## 
-rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hla*haptypesexcludefivepops.out ${test_dir}
+## now made!
+## rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hla*haptypesexcludefivepops.out ${test_dir}
 
 ##
 ## other dependencies, to clean up
 ##
+## not 100% sure, why isn't this in repo
+rsync -av rescompNew2:~/proj/QUILT/quilt_hla_supplementary_info.txt ~/proj/QUILT/
 rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlageneboundaries.out  ${test_dir} ## can be made a text file, included in repo
 rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/refseq.txt ${test_dir}
 rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlagenes.txt ${test_dir}
 rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlauntyped*.excludefivepop.txt ${test_dir}
-
+rsync -av /datas/muscovy/not-backed-up/shi/covid/hlauntyped.exclude.txt ${test_dir}
 
 
 
@@ -51,12 +56,37 @@ rsync -av rescompNew2:${WELL_RECOMB_DIR}CEU-chr6-final.b38.txt.gz ${inputs_dir}
 ## bam file
 rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam* ${inputs_dir}
 
-## not 100% sure, why isn't this in repo
-rsync -av rescompNew2:~/proj/QUILT/quilt_hla_supplementary_info.txt ~/proj/QUILT/
+## make input HRC smaller, easier that way
+## do pretty hack, this is fine for now.
+##gunzip -c hrc.chr6.legend.clean.gz | awk 'NR % 100000 == 0' 
+##gunzip -c hrc.chr6.legend.clean.gz | grep -n 23141138
+##gunzip -c hrc.chr6.legend.clean.gz | grep -n 36253842
+
+## unnecessary but should make some next steps faster until re-structuring done
+gunzip -c hrc.chr6.legend.clean.gz | awk '{if((NR == 1) || (NR >= 350000 && NR <= 550000)) {print $0}}' | gzip > hrc.chr6.legend.clean.small.gz
+gunzip -c hrc.chr6.hap.clean.gz | awk '{if((NR >= 349999 && NR <= 549000)) {print $0}}' | gzip > hrc.chr6.hap.clean.small.gz
+
+
 
 
 ##
-## Prepare entire panel
+## Download HLA database
+##
+## To download IPD-IGMT version 3.39, for example
+cd ${test_dir}
+wget https://github.com/ANHIG/IMGTHLA/blob/032815608e6312b595b4aaf9904d5b4c189dd6dc/Alignments_Rel_3390.zip?raw=true
+mv Alignments_Rel_3390.zip?raw=true Alignments_Rel_3390.zip
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HLA_types/20181129_HLA_types_full_1000_Genomes_Project_panel.txt
+
+
+
+
+
+
+
+
+##
+## Prepare panels
 ##
 cd ~/proj/QUILT
 regionStart=25587319
@@ -64,18 +94,17 @@ regionEnd=33629686
 ./QUILT_prepare_reference.R \
 --outputdir=${test_dir} \
 --nGen=100 \
---reference_haplotype_file=${inputs_dir}hrc.chr6.hap.clean.gz \
---reference_legend_file=${inputs_dir}hrc.chr6.legend.clean.gz \
+--reference_haplotype_file=${inputs_dir}hrc.chr6.hap.clean.small.gz \
+--reference_legend_file=${inputs_dir}hrc.chr6.legend.clean.small.gz \
 --reference_sample_file=${inputs_dir}hrc.chr6.samples.reheadered2 \
 --chr=chr6 \
 --regionStart=${regionStart} \
 --regionEnd=${regionEnd} \
 --buffer=500000 \
 --genetic_map_file=${inputs_dir}CEU-chr6-final.b38.txt.gz \
---reference_exclude_samplelist_file=${inputs_dir}/hlauntyped${HLA_GENE}.excludefivepop.txt \
+--reference_exclude_samplelist_file=${test_dir}/hlauntyped.exclude.txt \
 --output_file=${tet_dir}quilt.hrc.chr6.hla.all.haplotypes.RData \
---minRate=0.01
-
+--minRate=0.01 &
 ##
 ## Preparing haplotype files, need to do all of them it seems?
 ## Clearly need to fix this, easily, internally. Should be do-able with above
@@ -120,6 +149,9 @@ done
 wait
 
 
+
+
+
 ##
 ## Prepare mapping related files
 ## Decently slow, think some of Simon's code is inefficient, but meh, can probably release
@@ -140,10 +172,14 @@ cd ~/proj/QUILT/
 ## Try running QUILT_HLA here
 ##
 #echo -e "/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam\n" > bamlist.txt
-cd ${test_dir}
+
 echo -e ${inputs_dir}"NA12878.mhc.2.0.bam" > bamlist.txt
+HLA_GENE="A"
 ~/proj/QUILT/QUILT_HLA.R \
+--outputdir=${test_dir} \
 --bamlist=bamlist.txt \
 --region=${HLA_GENE} \
 --prepared_hla_reference_dir=${test_dir} \
 --quilt_hla_haplotype_panelfile=${test_dir}quilt.hrc.chr6.hla.${HLA_GENE}.haplotypes.RData
+
+## seems to have worked? A bit less confident I think, but OK?

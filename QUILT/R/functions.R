@@ -523,7 +523,8 @@ get_and_impute_one_sample <- function(
     chrEnd,
     gamma_physically_closest_to,
     hla_run,
-    downsampleToCov
+    downsampleToCov,
+    minGLValue
 ) {
 
     sample_name <- sampleNames[iSample]

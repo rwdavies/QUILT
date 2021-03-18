@@ -7,6 +7,7 @@ phase_hla_haplotypes <- function(
 ) {
 
     print_message("Begin assigning HLA types to haplotypes")
+    
     if (1 == 0 ) {
         
         outputdir <- "/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15B"
@@ -19,11 +20,11 @@ phase_hla_haplotypes <- function(
         
     }
 
-
-
     ## outputdir <- "/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15"
     ## setwd(outputdir)
 
+    removeinds <- FALSE
+    ##if removeinds=TRUE a file excludeinds.txt containing a list of IDs to remove
 
 
     ##
@@ -487,6 +488,34 @@ phase_hla_haplotypes <- function(
     ##subset of inds in the reference panels
     hlatypes2=hlatypes[match(reference_samples[,1],hlatypes[,3]),]
 
+
+    ## all individuals that could be used to make a panel, i.e. full set of reference panel individuals
+    full <- read.table("hrc.chr6.samples",header=T)
+
+    ## exclude individuals without phasing information
+    for(region in regions){
+        ##region specific
+        load(paste("hla",region,"newphased.out",sep=""))
+        ## make an input file for getting imputation panels
+        ## remove untyped cases (including no HLA type but not "None")
+        keep=hlatypes2[phased1==T | phased2==T,3]
+        ##pos=match(full[,1],hlatypes[,3])
+        newremoves=full[!full[,1]%in%keep,1]
+        newremoves=as.vector(newremoves)
+        ##check if additional individuals are to be removed
+        if(removeinds==T){
+            removes=scan("excludeinds.txt",what='char')
+            newremoves2=full[!full[,1]%in% keep | full[,1]%in%removes,1]
+            newremoves2=as.vector(newremoves2)
+            newremoves=newremoves2
+        }
+        print(length(newremoves))
+        cat(newremoves,file=paste("hlauntyped",region,".exclude.txt",sep=""),sep="\n")
+    }
+
+
+
+    
     ##below is commented out as deals with excluding five groups for testing purposes
     ##for(region in c("A","B","C","DQB1","DRB1")){
     ##load(paste("hrc.chr6.hla.",region,".hlatypedexcludefivepop.RData",sep=""))
