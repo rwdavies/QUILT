@@ -97,7 +97,7 @@ QUILT_prepare_reference <- function(
         output_file <- file_quilt_prepared_reference(outputdir, regionName)
     } else {
         if (!dir.exists(basename(output_file))) {
-            dir.create(basename(output_file), showWarnings = FALSE)
+            dir.create(dirname(output_file), showWarnings = FALSE, recursive = TRUE)
         }
         if (basename(output_file) == output_file) {
             output_file <- file.path(outputdir, output_file)

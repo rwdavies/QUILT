@@ -5,14 +5,32 @@ For general details including installation, version, and changelog, see the main
 
 # Table of contents
 1. [Preparing files](#paragraph-preparing)
-    1. [Preparing IPD-IGMT files](#paragraph-preparing-ipdigmt)
-    2. [Preparing haplotype files](#paragraph-preparing-haplotypes)    
+    1. [Preparing ancillary files](#paragraph-ancillary-files)
+    2. [Preparing IPD-IGMT files](#paragraph-preparing-ipdigmt)
+    3. [Preparing haplotype files](#paragraph-preparing-haplotypes)
 2. [Quick start run](#paragraph-quickstart)
 3. [Options and parameters](#paragraph-optionsparams)
 
 ## Preparing files <a name="paragraph-preparing"></a>
 
-Some text, maybe
+Some preamble
+
+### Preparing ancillary files <a name="paragraph-ancillary-files"></a>
+
+
+List here and explain any other random file
+
+Provided files are for GRCh38
+quilt_hla_supplementary_info.txt
+hlagenes.txt 
+
+
+#### Dictionary file
+
+Reference sequence dictionary. Described elsewhere. Made using for example Picard CreateSequenceDictionary. Version here from 
+```
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.dict
+```
 
 ### Preparing IPD-IGMT files <a name="paragraph-preparing-ipdigmt"></a>
 
@@ -22,8 +40,6 @@ Download IPD_IGMT files
 wget https://github.com/ANHIG/IMGTHLA/blob/032815608e6312b595b4aaf9904d5b4c189dd6dc/Alignments_Rel_3390.zip?raw=true
 mv Alignments_Rel_3390.zip?raw=true Alignments_Rel_3390.zip
 ```
-Prepare supplementary information file (or use provided one, if using above release, and GRCh38)
-
 Prepare mapping related files
 ```
 ./QUILT_HLA_prepare_reference.R \
@@ -55,6 +71,7 @@ regionEnd=29945741
 --region_exclude_file=/well/davies/shared/1000G/robbie_files/hlagenes.txt \
 --minRate=0.01
 ```
+
 
 
 ## Quick start run <a name="paragraph-quickstart"></a>

@@ -22,7 +22,13 @@ test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_18/
 mkdir -p ${test_dir}
 
 
-
+##
+## other dependencies, now captured
+##
+## todo, explain in README
+ls -lth ~/proj/QUILT/hla_ancillary_files/quilt_hla_supplementary_info.txt
+ls -lth ~/proj/QUILT/hla_ancillary_files/hlagenes.txt
+ls -lth ~/proj/QUILT/hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict 
 
 ## 
 ## not yet properly captured dependencies
@@ -33,11 +39,22 @@ mkdir -p ${test_dir}
 ##
 ## other dependencies, to clean up
 ##
-## not 100% sure, why isn't this in repo
-rsync -av rescompNew2:~/proj/QUILT/quilt_hla_supplementary_info.txt ~/proj/QUILT/
-rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlageneboundaries.out  ${test_dir} ## can be made a text file, included in repo
-rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/refseq.txt ${test_dir}
-rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlagenes.txt ${test_dir}
+## required, to be included in repo (and explained)
+## rsync -av ~/proj/QUILT/quilt_hla_supplementary_info.txt ~/proj/QUILT/
+## rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlagenes.txt ${test_dir}
+## this one especially - complete copy of hlagenes.txt
+## rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlageneboundaries.out  ${test_dir}
+
+
+##rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/refseq.txt ${test_dir}
+##cd ${test_dir}
+##wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.dict
+##mv GRCh38_full_analysis_set_plus_decoy_hla.dict refseq.txt
+
+
+##
+## last dependency, how to do sample exclusion! across all, and specific
+##
 rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlauntyped*.excludefivepop.txt ${test_dir}
 rsync -av /datas/muscovy/not-backed-up/shi/covid/hlauntyped.exclude.txt ${test_dir}
 
@@ -63,9 +80,11 @@ rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam* ${i
 ##gunzip -c hrc.chr6.legend.clean.gz | grep -n 36253842
 
 ## unnecessary but should make some next steps faster until re-structuring done
+cd ${inputs_dir}
+echo "Shrinking input files"
 gunzip -c hrc.chr6.legend.clean.gz | awk '{if((NR == 1) || (NR >= 350000 && NR <= 550000)) {print $0}}' | gzip > hrc.chr6.legend.clean.small.gz
 gunzip -c hrc.chr6.hap.clean.gz | awk '{if((NR >= 349999 && NR <= 549000)) {print $0}}' | gzip > hrc.chr6.hap.clean.small.gz
-
+echo "Done shrinking input files"
 
 
 
@@ -160,7 +179,7 @@ cd ~/proj/QUILT/
 ./QUILT_HLA_prepare_reference.R \
 --outputdir=${test_dir} \
 --ipd_igmt_alignments_zip_file=${test_dir}Alignments_Rel_3390.zip \
---quilt_hla_supplementary_info_file=quilt_hla_supplementary_info.txt \
+--quilt_hla_supplementary_info_file=hla_ancillary_files/quilt_hla_supplementary_info.txt \
 --full_reference_hap_file=${test_dir}quilt.hrc.chr6.hla.all.haplotypes.RData \
 --local_reference_hap_file=${test_dir}quilt.hrc.chr6.hla.*.haplotypes.RData \
 --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')"
@@ -181,5 +200,7 @@ HLA_GENE="A"
 --region=${HLA_GENE} \
 --prepared_hla_reference_dir=${test_dir} \
 --quilt_hla_haplotype_panelfile=${test_dir}quilt.hrc.chr6.hla.${HLA_GENE}.haplotypes.RData
+--hla_gene_region_file=hla_ancillary_files/hlagenes.txt \
+--dict_file=hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
 
 ## seems to have worked? A bit less confident I think, but OK?

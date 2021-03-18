@@ -1,6 +1,8 @@
 #' @title QUILT_HLA
 #' @param bamlist Path to file with bam file locations. File is one row per entry, path to bam files. Bam index files should exist in same directory as for each bam, suffixed either .bam.bai or .bai
 #' @param region HLA region to be analyzed, for example A for HLA-A
+#' @param hla_gene_region_file Path to file with gene boundaries. 4 columns, named Name Chr Start End, with respectively gene name (e.g. HLA-A), chromsome (e.g. chr6), and 1 based start and end positions of gene
+#' @param dict_file Path to dictionary file for reference build
 #' @param outputdir What output directory to use. Otherwise defaults to current directory
 #' @param summary_output_file_prefix Prefix for output text summary files
 #' @param nCores How many cores to use
@@ -21,6 +23,8 @@
 QUILT_HLA <- function(
     bamlist,
     region,
+    hla_gene_region_file,
+    dict_file,
     outputdir = "",
     summary_output_file_prefix = 'quilt.hla.output',
     nCores = 1,
@@ -93,7 +97,8 @@ QUILT_HLA <- function(
     ##
     ## other
     ##
-    refseq_file <- file.path(prepared_hla_reference_dir, "refseq.txt")
+    ##refseq_file <- file.path(prepared_hla_reference_dir, "refseq.txt")
+    refseq_file <- dict_file
     if (!file.exists(refseq_file)) {
         stop(paste0("Cannot find file with sequence information refseq_file:", refseq_file))
     }
@@ -103,9 +108,15 @@ QUILT_HLA <- function(
     ## pre-made file, with boundaries
     ##
     print_message("Load input files")
-    load(file.path(prepared_hla_reference_dir, "hlageneboundaries.out"))
-    regstart <- ourpos[region,1]
-    regend <- ourpos[region,2]
+    ## load(file.path(prepared_hla_reference_dir, "hlageneboundaries.out"))
+    ## regstart <- ourpos[region,1]
+    ## regend <- ourpos[region,2]
+    if (!file.exists(hla_gene_region_file)) {
+        stop(paste0("Cannot find file with HLA gene boundaries (hla_gene_region_file):", hla_gene_region_file))
+    }
+    ourpos2 <- read.table(hla_gene_region_file, header = TRUE)
+    regstart <- ourpos2[ourpos2[, "Name"] == paste0("HLA-", region), "Start"]
+    regend <- ourpos2[ourpos2[, "Name"] == paste0("HLA-", region), "End"]
     regmid <- (regstart + regend) / 2
 
 
