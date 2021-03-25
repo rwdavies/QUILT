@@ -51,8 +51,6 @@ then
 fi
 
 
-
-
 ##
 ## Download HLA database
 ##
@@ -93,6 +91,7 @@ cd ~/proj/QUILT/
 --reference_exclude_samples_for_initial_phasing=FALSE \
 --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
 --nCores=6
+
 
 ##
 ## Try running QUILT_HLA here
