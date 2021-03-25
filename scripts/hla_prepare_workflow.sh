@@ -63,18 +63,16 @@ mv Alignments_Rel_3390.zip?raw=true Alignments_Rel_3390.zip
 wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HLA_types/20181129_HLA_types_full_1000_Genomes_Project_panel.txt
 
 
-
+##
+## make exclusion file with some samples that we want to test
+## 
+awk '{if ((($2 == "ASW") || ($2 == "CEU") || ($2 == "CHB") || ($2 == "PJL") || ($2 == "PUR"))) {print $0}}'  ${test_dir}/20181129_HLA_types_full_1000_Genomes_Project_panel.txt | cut -f3 > ${test_dir}exclude_ref_samples_for_testing.txt
 
 
 ##
 ## Do all prep here, single function
 ## Slow, but self-contained
 ##
-## make exclusion file with some populations
-awk '{if ((($2 == "ASW") || ($2 == "CEU") || ($2 == "CHB") || ($2 == "PJL") || ($2 == "PUR"))) {print $0}}'  ${test_dir}/20181129_HLA_types_full_1000_Genomes_Project_panel.txt | cut -f3 > ${test_dir}exclude_ref_samples_for_testing.txt
-
-
-## TODO, add more links etc
 cd ~/proj/QUILT/
 ./QUILT_HLA_prepare_reference.R \
 --outputdir=${test_dir} \
