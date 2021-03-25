@@ -1,7 +1,7 @@
 #' @title QUILT_prepare_reference
 #' @param outputdir What output directory to use
 #' @param chr What chromosome to run. Should match BAM headers
-#' @param nGen Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure                                    
+#' @param nGen Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure
 #' @param regionStart When running imputation, where to start from. The 1-based position x is kept if regionStart <= x <= regionEnd
 #' @param regionEnd When running imputation, where to stop
 #' @param buffer Buffer of region to perform imputation over. So imputation is run form regionStart-buffer to regionEnd+buffer, and reported for regionStart to regionEnd, including the bases of regionStart and regionEnd
@@ -105,6 +105,11 @@ QUILT_prepare_reference <- function(
     }
     if (is.na(tempdir)) {
         tempdir <- tempdir()
+    }
+    if (reference_exclude_samplelist_file != "") {
+        if (!file.exists(reference_exclude_samplelist_file)) {
+            stop(paste0("Cannot find file:", reference_exclude_samplelist_file))
+        }
     }
 
 
@@ -348,9 +353,7 @@ QUILT_prepare_reference <- function(
         reference_samples <- NULL
     }
     if (reference_exclude_samplelist_file != "") {
-        if (!file.exists(reference_exclude_samplelist_file)) {
-            stop(paste0("Cannot find file:", reference_exclude_samplelist_file))
-        }
+        ## validated above
         if (is.null(reference_samples)) {
             stop(paste0("You have requested to exclude reference samples with reference_exclude_samplelist_file but you have not supplied reference_sample_file"))
         }
@@ -416,6 +419,6 @@ QUILT_prepare_reference <- function(
     
 
     print_message("Done converting reference haplotypes")
-    return(NULL)
+
 }
 

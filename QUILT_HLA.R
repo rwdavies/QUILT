@@ -15,6 +15,16 @@ option_list <- list(
         help = "HLA region to be analyzed, for example A for HLA-A"
     ), 
     make_option(
+        "--hla_gene_region_file",
+        type = "character",
+        help = "Path to file with gene boundaries. 4 columns, named Name Chr Start End, with respectively gene name (e.g. HLA-A), chromsome (e.g. chr6), and 1 based start and end positions of gene"
+    ), 
+    make_option(
+        "--dict_file",
+        type = "character",
+        help = "Path to dictionary file for reference build"
+    ), 
+    make_option(
         "--outputdir",
         type = "character",
         help = "What output directory to use. Otherwise defaults to current directory [default \"\"] ",
@@ -105,6 +115,8 @@ Sys.setenv(PATH = paste0(Sys.getenv("PATH"), ":", getwd()))
 QUILT_HLA(
     bamlist = opt$bamlist,
     region = opt$region,
+    hla_gene_region_file = opt$hla_gene_region_file,
+    dict_file = opt$dict_file,
     outputdir = opt$outputdir,
     summary_output_file_prefix = opt$summary_output_file_prefix,
     nCores = opt$nCores,

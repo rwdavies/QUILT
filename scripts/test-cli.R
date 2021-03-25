@@ -63,7 +63,7 @@ cli_output_file <- "QUILT_HLA.R"
 STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt-hla.R",
     cli_output_file = cli_output_file,
-    other_character_params = c("bamlist", "region", "finaloutputfile", "chr", "quilt_hla_haplotype_panelfile", "prepared_hla_reference_dir", "summary_output_file_prefix", "final_output_RData_file", "hla_gene_region_file"),
+    other_character_params = c("bamlist", "region", "finaloutputfile", "chr", "quilt_hla_haplotype_panelfile", "prepared_hla_reference_dir", "summary_output_file_prefix", "final_output_RData_file", "hla_gene_region_file", "dict_file"),
     other_logical_params = c("overrideoutput", "write_summary_text_files"),
     other_integer_params = c("nGibbsSamples", "n_seek_iterations", "quilt_seed", "quilt_buffer", "quilt_bqFilter"),
     other_double_params = c("summary_best_alleles_threshold"),
@@ -76,11 +76,14 @@ cli_output_file <- "QUILT_HLA_prepare_reference.R"
 STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt-hla-prepare-reference.R",
     cli_output_file = cli_output_file,
-    other_character_params = c("outputdir", "ipd_igmt_alignments_zip_file", "quilt_hla_supplementary_info_file", "all_hla_regions", "hla_regions_to_prepare", "local_reference_hap_file", "full_reference_hap_file"),
+    other_character_params = c("outputdir", "ipd_igmt_alignments_zip_file", "quilt_hla_supplementary_info_file", "all_hla_regions", "hla_regions_to_prepare", "reference_exclude_samplelist_file", "region_exclude_file", "hla_gene_region_file", "hla_types_panel"),
+    other_double_params = c("full_regionStart", "full_regionEnd", "full_buffer"),
+    other_logical_params = c("reference_exclude_samples_for_initial_phasing"),
     character_vectors = c("all_hla_regions", "hla_regions_to_prepare"),
     function_name = "QUILT_HLA_prepare_reference",
     library_name = "QUILT"
 )
+
 system(paste0("chmod +x ", cli_output_file))
 
 

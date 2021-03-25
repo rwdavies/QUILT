@@ -7,6 +7,8 @@
 QUILT_HLA(
   bamlist,
   region,
+  hla_gene_region_file,
+  dict_file,
   outputdir = "",
   summary_output_file_prefix = "quilt.hla.output",
   nCores = 1,
@@ -28,6 +30,10 @@ QUILT_HLA(
 \item{bamlist}{Path to file with bam file locations. File is one row per entry, path to bam files. Bam index files should exist in same directory as for each bam, suffixed either .bam.bai or .bai}
 
 \item{region}{HLA region to be analyzed, for example A for HLA-A}
+
+\item{hla_gene_region_file}{Path to file with gene boundaries. 4 columns, named Name Chr Start End, with respectively gene name (e.g. HLA-A), chromsome (e.g. chr6), and 1 based start and end positions of gene}
+
+\item{dict_file}{Path to dictionary file for reference build}
 
 \item{outputdir}{What output directory to use. Otherwise defaults to current directory}
 

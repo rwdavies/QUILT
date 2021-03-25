@@ -65,6 +65,14 @@ file_quilt_final_RData_output_file <- function(outputdir, region) {
     }
 }
 
+file_quilt_hla_all_haplotypes <- function(outputdir) {
+    file.path(outputdir, paste0("quilt.hrc.hla.all.haplotypes.RData"))
+}
+
+file_quilt_hla_specific_haplotypes <- function(outputdir, hla_gene) {
+    file.path(outputdir, paste0("quilt.hrc.hla.", hla_gene, ".haplotypes.RData"))
+}
+
 file_quilt_hla_phase_step_1 <- function(outputdir, region) {
     file.path(
         outputdir,
@@ -73,6 +81,12 @@ file_quilt_hla_phase_step_1 <- function(outputdir, region) {
     ## paste("hla",region,"newphased.out",sep="")
 }
 
+file_quilt_hla_after_step_1_who_to_remove <- function(outputdir, hla_gene) {
+    file.path(
+        outputdir,
+        paste0("hla", hla_gene, "exclude.txt")
+    )
+}
 
 file_quilt_hla_phased_haplotypes <- function(outputdir, region) {
     file.path(

@@ -17,7 +17,7 @@ option_list <- list(
     make_option(
         "--nGen",
         type = "double",
-        help = "Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure                                   "
+        help = "Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure"
     ), 
     make_option(
         "--regionStart",

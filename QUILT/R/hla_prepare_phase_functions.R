@@ -1,32 +1,195 @@
 phase_hla_haplotypes <- function(
     outputdir,
-    regions,
-    full_reference_hap_file,
-    local_reference_hap_file,
-    hla_types_panel
+    chr,
+    hla_gene_region_file,
+    full_regionStart,
+    full_regionEnd,
+    buffer,
+    regions,    
+    region_exclude_file,
+    reference_haplotype_file,
+    reference_legend_file,
+    reference_sample_file,
+    reference_exclude_samplelist_file,
+    reference_exclude_samples_for_initial_phasing,
+    hla_types_panel,
+    genetic_map_file,    
+    minRate,
+    nGen,
+    nCores
 ) {
 
-    print_message("Begin assigning HLA types to haplotypes")
-    
-    if (1 == 0 ) {
-        
-        outputdir <- "/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15B"
-        regions<- c("A", "B", "C", "DQB1", "DRB1")
+
+    if (1 == 0 )  {
+
+        ## not needed per-se
+        inputs_dir <- "/data/smew1/rdavies/quilt_hla_finalize_with_simon/inputs_2021_03_25/"
+        outputdir <- "/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_25"
+        chr <- "chr6"
+        hla_gene_region_file <- "~/proj/QUILT/hla_ancillary_files/hlagenes.txt"
+        full_regionStart <- 25587319
+        full_regionEnd <- 33629686
+        buffer <- 500000
+        regions <- c("A", "B", "C", "DQB1", "DRB1")
+        region_exclude_file <- "~/proj/QUILT/hla_ancillary_files/hlagenes.txt"
+        reference_haplotype_file <- file.path(inputs_dir, "hrc.chr6.hap.clean.small.gz")
+        reference_legend_file <- file.path(inputs_dir, "hrc.chr6.legend.clean.small.gz")
+        reference_sample_file <- file.path(inputs_dir, "hrc.chr6.samples.reheadered2")
+        reference_exclude_samplelist_file <- ""
+        reference_exclude_samples_for_initial_phasing <- FALSE
+        hla_types_panel <- file.path(outputdir, "20181129_HLA_types_full_1000_Genomes_Project_panel.txt")
+        genetic_map_file <- file.path(inputs_dir, "CEU-chr6-final.b38.txt.gz")
+        minRate <- 0.1
+        nGen <- 100
+        nCores <- 6
+        ##reference_exclude_samplelist_file <- file.path(outputdir, "hlauntyped.exclude.txt")
+        ##removeinds_file <- "" ## need to do this!
+        ##cat(c("NA12878", "NA18566"), file = file.path(outputdir, "exclude.test.txt"), sep = "\n")
+        ##removeinds_file <-  file.path(outputdir, "exclude.test.txt")
         ## new Robbie prepared input file list
         ##full_reference_hap_file <- "hrc.chr6.25587319.33629686.pretendhlatyped.RData" ## re-name later
-        full_reference_hap_file <- file.path(outputdir, "quilt.hrc.chr6.hla.all.haplotypes.RData")
-        local_reference_hap_file <- file.path(outputdir, paste0("quilt.hrc.chr6.hla.*.haplotypes.RData")) ## OK?
-        hla_types_panel <- file.path(outputdir, "20181129_HLA_types_full_1000_Genomes_Project_panel.txt")
         
     }
 
-    ## outputdir <- "/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_15"
-    ## setwd(outputdir)
 
-    removeinds <- FALSE
-    ##if removeinds=TRUE a file excludeinds.txt containing a list of IDs to remove
+    ##
+    ## determine people we don't want at all to extract
+    ##
+    print_message("Determine who to remove from full panel")
+    hlatypes <- read.table(hla_types_panel, header = TRUE, skip = 0, sep = "\t")
+    ref_samples <- read.table(reference_sample_file, header = TRUE)
+    ## keep only well defined samples
+    remove <- !(ref_samples[, "SAMPLE"] %in% hlatypes[, "Sample.ID"])
+    samples_to_remove <- ref_samples[remove, "SAMPLE"]
+    if (reference_exclude_samples_for_initial_phasing) {
+        more_samples_to_remove <- as.character(read.table(reference_exclude_samplelist_file, stringsAsFactors = FALSE)[, 1])
+        samples_to_remove <- c(samples_to_remove, more_samples_to_remove)
+    }
+    if (length(samples_to_remove) == 0) {
+        full_reference_exclude_samplelist_file <- ""
+    } else {
+        full_reference_exclude_samplelist_file <- file.path(outputdir, "hlauntyped.exclude.txt")
+        write.table(
+            matrix(samples_to_remove, ncol = 1),
+            file = full_reference_exclude_samplelist_file,
+            row.names = FALSE,
+            col.names = FALSE,
+            sep = "\t",
+            quote = FALSE
+        )
+    }
+    print_message("Done determining who to remove from full panel")
+    
 
 
+    
+    ##
+    ## do first extraction here (maybe?)
+    ##
+    QUILT_prepare_reference(
+        outputdir = outputdir,
+        nGen = nGen,
+        chr = chr,
+        regionStart = full_regionStart,
+        regionEnd = full_regionEnd,
+        buffer = buffer,
+        reference_haplotype_file = reference_haplotype_file,
+        reference_legend_file = reference_legend_file,
+        reference_sample_file = reference_sample_file,
+        genetic_map_file = genetic_map_file,
+        reference_exclude_samplelist_file = full_reference_exclude_samplelist_file,
+        output_file = file_quilt_hla_all_haplotypes(outputdir),
+        minRate = minRate
+    )
+
+
+
+
+    
+    ##
+    ## this performs the initial phasing with a large set, using all SNPs
+    ## later on, we remove individuals, and keep only the good set, and good SNPs
+    ##
+    print_message("Begin assigning HLA types to haplotypes")
+    hla_perform_step_1_phasing(
+        outputdir = outputdir,
+        regions = regions,
+        hla_types_panel = hla_types_panel
+    )    
+
+    ##
+    ## determine who we want to keep
+    ##
+    print_message("Determine who to remove post HLA phasing")    
+    hla_phasing_determine_who_to_remove(
+        outputdir = outputdir,
+        hla_types_panel = hla_types_panel,
+        reference_sample_file = reference_sample_file,
+        reference_exclude_samplelist_file = reference_exclude_samplelist_file,
+        regions = regions
+     )
+
+    
+    ##
+    ## do second extraction here (maybe?)
+    ## TODO - make this more efficient based on above already done data
+    ##
+    print_message("Extract new subsetted panels")
+    ## what actually changes?
+    ## exclude individuals, SNPs?
+    ## for now, just operationalize, then fix later?
+    hla_gene_regions <- read.table(hla_gene_region_file, header = TRUE)
+    out <- parallel::mclapply(regions, mc.cores = nCores, function(region) {
+        i <- match(paste0("HLA-", region), hla_gene_regions[, "Name"])
+        regionStart <- hla_gene_regions[i, "Start"]
+        regionEnd <- hla_gene_regions[i, "End"]
+        ## if (region == "A")    {regionStart=29942554; regionEnd=29945741}
+        ## if (region == "B")    {regionStart=31353367; regionEnd=31357155}
+        ## if (region == "C")    {regionStart=31268257; regionEnd=31353367}
+        ## if (region == "DRB1") {regionStart=32578780; regionEnd=32589729}
+        ## if (region == "DQB1") {regionStart=32660035; regionEnd=32666603}
+        ## if (region == "DQA1") {regionStart=32637480; regionEnd=32643199}
+        QUILT_prepare_reference(
+            outputdir = outputdir,
+            nGen = nGen,
+            reference_haplotype_file = reference_haplotype_file,
+            reference_legend_file = reference_legend_file,
+            reference_sample_file = reference_sample_file,
+            chr = chr,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer,
+            genetic_map_file = genetic_map_file,
+            reference_exclude_samplelist_file = file_quilt_hla_after_step_1_who_to_remove(outputdir, region),
+            output_file = file_quilt_hla_specific_haplotypes(outputdir, region),
+            region_exclude_file = region_exclude_file,
+            minRate = minRate
+        )
+    })
+    check_mclapply_OK(out)
+
+    ##
+    ## get HLA types for each individual in a panel
+    ##
+    print_message("Get HLA types for each individual in a panel")
+    hla_perform_step_2_phasing(
+        outputdir = outputdir,
+        regions = regions,
+        hla_types_panel = hla_types_panel
+    )
+    
+    print_message("Done assigning HLA types to haplotypes")
+
+    NULL
+}
+
+
+
+
+if (1 == 0) {
+
+    ## rwd: simon previous preamble comments
+    
     ##
     ## input file description
     ##
@@ -73,32 +236,34 @@ phase_hla_haplotypes <- function(
 
     ## temporary output file
     ## hla*newphased.out
-
     ## output file 
     ## hla*haptypes.out
 
+}
 
 
-    
-    ##
-    ## code
-    ##
-    load(full_reference_hap_file)
-    hlatypes <- read.table(hla_types_panel,header=T,skip=0,sep="\t")
 
 
+
+hla_perform_step_1_phasing <- function(
+    outputdir,
+    regions,
+    hla_types_panel
+) {
 
     ## reorder the HLA types to match the reference panel information
     ## at this point we have two tables, "ref_samples" which gives a set of individuals in (in our case) HRC with reference panel data on SNPs, and "hlatypes2" which gives a set of unphased HLA types for these individuals in each region
     ## now, we need to phase the HLA types to combine with reference panel information, and to do this we need SNP format HLA data
 
 
+
     ## then can intersect prior to phasing
     ## hlatypes2 <- hlatypes[match(ref_samples[,1],hlatypes[,3]),]
+    load(file_quilt_hla_all_haplotypes(outputdir))
+    hlatypes <- read.table(hla_types_panel,header=T,skip=0,sep="\t")
     hlatypes2 <- hlatypes[match(reference_samples[,1],hlatypes[,3]),]
-
+    
     for(region in regions){
-
 
         print_message(paste0("Work on phasing in region:", region))
         ## alternative
@@ -480,40 +645,83 @@ phase_hla_haplotypes <- function(
     }
 
 
+    NULL
+}
+
+
+hla_phasing_determine_who_to_remove <- function(
+    outputdir,
+    hla_types_panel,
+    reference_sample_file,
+    reference_exclude_samplelist_file,
+    regions
+) {
+
+
     ## new code, to process these!!!
     ## used here to define the reference samples essentially, above to identify hla types and phase
-    load(full_reference_hap_file)
+    ## load(full_reference_hap_file)
+    load(file_quilt_hla_all_haplotypes(outputdir))
     ## this needs to have the HLA types in it
     hlatypes <- read.table(hla_types_panel,header=T,skip=0,sep="\t")
     ##subset of inds in the reference panels
     hlatypes2=hlatypes[match(reference_samples[,1],hlatypes[,3]),]
 
-
     ## all individuals that could be used to make a panel, i.e. full set of reference panel individuals
-    full <- read.table("hrc.chr6.samples",header=T)
+    ## full <- read.table("hrc.chr6.samples",header=T)
+    full <- read.table(reference_sample_file,header=T)
+    ##full <- read.table("/data/smew1/rdavies/quilt_hla_finalize_with_simon/inputs_2021_03_18/hrc.chr6.samples.reheadered2", header=T)
 
     ## exclude individuals without phasing information
     for(region in regions){
         ##region specific
-        load(paste("hla",region,"newphased.out",sep=""))
+
+        ## load(paste("hla",region,"newphased.out",sep=""))
+        load(file_quilt_hla_phase_step_1(outputdir, region))
+        
         ## make an input file for getting imputation panels
         ## remove untyped cases (including no HLA type but not "None")
         keep=hlatypes2[phased1==T | phased2==T,3]
         ##pos=match(full[,1],hlatypes[,3])
-        newremoves=full[!full[,1]%in%keep,1]
-        newremoves=as.vector(newremoves)
-        ##check if additional individuals are to be removed
-        if(removeinds==T){
-            removes=scan("excludeinds.txt",what='char')
-            newremoves2=full[!full[,1]%in% keep | full[,1]%in%removes,1]
-            newremoves2=as.vector(newremoves2)
-            newremoves=newremoves2
+        newremoves <- full[!full[,1]%in%keep,1]
+        newremoves <- as.vector(newremoves)
+        
+        ## check if additional individuals are to be removed
+        if(reference_exclude_samplelist_file != "") {
+            removes <- scan(reference_exclude_samplelist_file, what = 'char')
+            newremoves2 <- full[
+                !full[, 1] %in% keep |
+                 full[, 1] %in% removes,
+                1
+            ]
+            newremoves2 <- as.vector(newremoves2)
+            newremoves <- newremoves2
         }
         print(length(newremoves))
-        cat(newremoves,file=paste("hlauntyped",region,".exclude.txt",sep=""),sep="\n")
+        cat(
+            newremoves,
+            file = file_quilt_hla_after_step_1_who_to_remove(outputdir, region),
+            sep = "\n"
+        )
     }
 
+}
 
+
+
+hla_perform_step_2_phasing <- function(
+    outputdir,
+    regions,
+    hla_types_panel
+) {
+
+
+    load(file_quilt_hla_all_haplotypes(outputdir))
+    hlatypes <- read.table(hla_types_panel, header=T,skip=0,sep="\t")
+    hlatypes2 <- hlatypes[match(reference_samples[,1],hlatypes[,3]),]
+    
+    
+    ## not entirely sure where this goes
 
     
     ##below is commented out as deals with excluding five groups for testing purposes
@@ -541,21 +749,17 @@ phase_hla_haplotypes <- function(
     ##copya1=alleles[vv]
     ##hlahaptypes=copya1
     ##save(hlahaptypes,file=paste("hla",region,"haptypesexcludefivepops.out",sep=""))
-
     ##}
+    
 
-
-
-    ##
-    ## get HLA types for each individual in a panel
-    ##
     
 
     for(region in regions){
 
         print_message(paste0("Integrate results from region:", region))        
         ##panel hrc.chr6.hla. is the RData file of the reference panel for this region, must contain the individuals whose HLA types we seek
-        load(gsub("*", region, local_reference_hap_file, fixed = TRUE))
+        load(file_quilt_hla_specific_haplotypes(outputdir, region))
+        ## load(gsub("*", region, local_reference_hap_file, fixed = TRUE))
         ## load(paste("hrc.chr6.hla.",region,".hlatyped.RData",sep=""))
         
         sample_names <- reference_samples
@@ -599,8 +803,7 @@ phase_hla_haplotypes <- function(
 
     }
 
-    print_message("Done assigning HLA types to haplotypes")
 
     NULL
-}
 
+}
