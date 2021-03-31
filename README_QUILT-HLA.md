@@ -29,17 +29,39 @@ QUILT-HLA is installed through the installation of QUILT. No additional installa
 
 ## Quick start run <a name="paragraph-quickstart"></a>
 
-Example here, is this still the right way to do it?
+A quick start to ensure QUILT-HLA is properly installed and working can be performed using the following
+
+First, download some prepared reference panel data. This reference panel package was prepared using [example/QUILT_hla_reference_panel_construction.Md](example/QUILT_hla_reference_panel_construction.Md), and uses data from IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129).
+
 ```
+wget something
+# or curl -O on mac
+
+put into here quilt_hla_reference_data
+ACTUALLY
+name package, once ready
+```
+
+Next, download data package, containing NA12878 bam
+```
+Incorporate this into package
 echo -e ${inputs_dir}"NA12878.mhc.2.0.bam" > bamlist.txt
 echo -e ${inputs_dir}"NA18566.mhc.2.0.bam" >> bamlist.txt
+
+wget something
+# or curl -O on mac
+```
+
+Now, HLA imputation for a particular region (here A) can be done as follows
+```
+
 HLA_GENE="A"
-~/proj/QUILT/QUILT_HLA.R \
---outputdir=${test_dir} \
+./QUILT_HLA.R \
+--outputdir=quilt_output \
 --bamlist=bamlist.txt \
 --region=${HLA_GENE} \
---prepared_hla_reference_dir=${test_dir} \
---quilt_hla_haplotype_panelfile=${test_dir}quilt.hrc.hla.${HLA_GENE}.haplotypes.RData \
+--prepared_hla_reference_dir=quilt_hla_reference_data \
+--quilt_hla_haplotype_panelfile=quilt_hla_reference_data/quilt.hrc.hla.${HLA_GENE}.haplotypes.RData \
 --hla_gene_region_file=hla_ancillary_files/hlagenes.txt \
 --dict_file=hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
 ```
