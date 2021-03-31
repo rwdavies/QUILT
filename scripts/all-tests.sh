@@ -12,4 +12,4 @@ cd "${script_dir}"/../
 ./scripts/test-acceptance.sh
 ./scripts/build-and-install.R
 ./scripts/test-cli.R
-./example/examples.sh
+./example/run_example.sh example/QUILT_usage.Md

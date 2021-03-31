@@ -154,7 +154,7 @@ These parameters are most likely to influence run time and accuracy
 
 ## Examples and plots <a name="paragraph-examples"></a>
 
-In this directory you will find [example/README.Md](example/), with for now just one example, a larger version of the quick start example. This can be run using either  `./example/examples.sh`, or can be run interactively line by line from the [example/README.Md](example/) file. It also contains an explanation of what the plots are, and why they might be useful.
+In this directory you will find [example/QUILT_usage.Md](example/QUILT_usage.Md), with for now just one example, a larger version of the quick start example. This can be run using either  `./example/run_example.sh example/QUILT_usage.Md`, or can be run interactively line by line from the [example/QUILT_usage.Md](example/QUILT_usage.Md) file. It also contains an explanation of what the plots are, and why they might be useful.
 
 ## License <a name="paragraph-license"></a>
 
