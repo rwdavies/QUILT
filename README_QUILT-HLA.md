@@ -14,9 +14,6 @@ For general details including installation, version, and changelog, see the main
     2. [Output](#paragraph-io-output)
 5. [Help, options and parameters](#paragraph-helpoptionsparams)
 6. [Preparing a reference package](#paragraph-preparing)
-    1. [Preparing ancillary files](#paragraph-ancillary-files)
-    2. [Preparing IPD-IGMT files](#paragraph-preparing-ipdigmt)
-    3. [Preparing haplotype files](#paragraph-preparing-haplotypes)
 
 
 ## Introduction <a name="paragraph-introduction"></a>
@@ -31,7 +28,7 @@ QUILT-HLA is installed through the installation of QUILT. No additional installa
 
 A quick start to ensure QUILT-HLA is properly installed and working can be performed using the following
 
-First, download some prepared reference panel data. This reference panel package was prepared using [example/QUILT_hla_reference_panel_construction.Md](example/QUILT_hla_reference_panel_construction.Md), and uses data from IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129).
+First, download some prepared reference panel data. This reference panel package was prepared as described in [Preparing haplotype files](#paragraph-preparing-haplotypes), and uses data from IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129).
 
 ```
 wget something
@@ -70,24 +67,14 @@ HLA_GENE="A"
 
 ### Input <a name="paragraph-io-input"></a>
 
-For all of these, it can be useful to take a look at the example files provided as part of the quick start example above.
-
-- Reference package. 
 - Bams. Given as a bamlist (i.e. a file with one row per sample, the path to the bam)
+- Reference package. For more detail, see [Preparing haplotype files](#paragraph-preparing-haplotypes)
+
 
 ### Output <a name="paragraph-io-output"></a>
 
 - Text files, explained here
 ```
-##INFO=<ID=EAF,Number=.,Type=Float,Description="Estimated allele frequency">
-##INFO=<ID=HWE,Number=.,Type=Float,Description="Hardy-Weinberg p-value">
-##INFO=<ID=ERC,Number=.,Type=Float,Description="Estimated number of copies of the reference allele from the pileup">
-##INFO=<ID=EAC,Number=.,Type=Float,Description="Estimated number of copies of the alternate allele from the pileup">
-##INFO=<ID=PAF,Number=.,Type=Float,Description="Estimated allele frequency using the pileup of reference and alternate alleles">
-##FORMAT=<ID=GT,Number=1,Type=String,Description="Most likely genotype, given posterior probability of at least 0.90">
-##FORMAT=<ID=GP,Number=3,Type=Float,Description="Posterior genotype probability of 0/0, 0/1, and 1/1">
-##FORMAT=<ID=DS,Number=1,Type=Float,Description="Diploid dosage">
-##FORMAT=<ID=HD,Number=2,Type=Float,Description="Haploid dosages">
 ```
 
 ## Help, options and parameters <a name="paragraph-helpoptionsparams"></a>
