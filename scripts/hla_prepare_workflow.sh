@@ -6,8 +6,8 @@ cd ~/proj/QUILT/
 ##
 ## Code to test minimal functionality of QUILT_HLA
 ##
-inputs_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/inputs_2021_03_25/
-test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_25B/
+inputs_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/inputs_2021_03_29/
+test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_29/
 mkdir -p ${test_dir}
 mkdir -p ${inputs_dir}
 
@@ -23,10 +23,6 @@ ls -lth ~/proj/QUILT/hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla
 ##
 ## normal dependencies
 ##
-WELL_HRC_DIR=/well/davies/users/dcc832/single_imp/2020_06_25/ref_panels/
-rsync -av rescompNew2:${WELL_HRC_DIR}hrc.chr6.hap.clean.gz ${inputs_dir}
-rsync -av rescompNew2:${WELL_HRC_DIR}hrc.chr6.legend.clean.gz ${inputs_dir}
-rsync -av rescompNew2:${WELL_HRC_DIR}hrc.chr6.samples.reheadered2 ${inputs_dir}
 ## recombination
 WELL_RECOMB_DIR=/well/davies/shared/recomb/CEU/
 rsync -av rescompNew2:${WELL_RECOMB_DIR}CEU-chr6-final.b38.txt.gz ${inputs_dir}
@@ -34,21 +30,50 @@ rsync -av rescompNew2:${WELL_RECOMB_DIR}CEU-chr6-final.b38.txt.gz ${inputs_dir}
 rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam* ${inputs_dir}
 rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA18566.mhc.2.0.bam* ${inputs_dir}
 
-## make input HRC smaller, easier that way
-## do pretty hack, this is fine for now.
-##gunzip -c hrc.chr6.legend.clean.gz | awk 'NR % 100000 == 0' 
-##gunzip -c hrc.chr6.legend.clean.gz | grep -n 23141138
-##gunzip -c hrc.chr6.legend.clean.gz | grep -n 36253842
-
-## unnecessary but should make some next steps faster until re-structuring done
+##
+## 1000 Genomes based version
+##
 cd ${inputs_dir}
-if [ ! -f hrc.chr6.legend.clean.gz ]
+oneKG_vcf_name=CCDG_14151_B01_GRM_WGS_2020-08-05_chr6.filtered.shapeit2-duohmm-phased.vcf.gz
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/${oneKG_vcf_name}
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/${oneKG_vcf_name}.tbi
+bcftools view --output-file oneKG.temp.vcf.gz --output-type z --min-alleles 2 --max-alleles 2 --types snps ${oneKG_vcf_name} chr6:25000000-34000000
+tabix oneKG.temp.vcf.gz
+bcftools convert --haplegendsample oneKG oneKG.temp.vcf.gz
+reference_haplotype_file=${inputs_dir}oneKG.hap.gz
+reference_legend_file=${inputs_dir}oneKG.legend.gz
+reference_sample_file=${inputs_dir}oneKG.samples
+## convert to uppercase, slight wording change
+sed -i 's/sample population group sex/SAMPLE POP GROUP SEX/g' ${reference_sample_file}
+
+
+
+## HRC version
+if [ 1 == 0 ]
 then
-    echo "Shrinking input files"
-    gunzip -c hrc.chr6.legend.clean.gz | awk '{if((NR == 1) || (NR >= 350000 && NR <= 550000)) {print $0}}' | gzip > hrc.chr6.legend.clean.small.gz
-    gunzip -c hrc.chr6.hap.clean.gz | awk '{if((NR >= 349999 && NR <= 549000)) {print $0}}' | gzip > hrc.chr6.hap.clean.small.gz
-    echo "Done shrinking input files"
+    ## make input HRC smaller, easier that way
+    ## do pretty hack, this is fine for now.
+    WELL_HRC_DIR=/well/davies/users/dcc832/single_imp/2020_06_25/ref_panels/
+    rsync -av rescompNew2:${WELL_HRC_DIR}hrc.chr6.hap.clean.gz ${inputs_dir}
+    rsync -av rescompNew2:${WELL_HRC_DIR}hrc.chr6.legend.clean.gz ${inputs_dir}
+    rsync -av rescompNew2:${WELL_HRC_DIR}hrc.chr6.samples.reheadered2 ${inputs_dir}
+    ##gunzip -c hrc.chr6.legend.clean.gz | awk 'NR % 100000 == 0' 
+    ##gunzip -c hrc.chr6.legend.clean.gz | grep -n 23141138
+    ##gunzip -c hrc.chr6.legend.clean.gz | grep -n 36253842
+    ## unnecessary but should make some next steps faster until re-structuring done
+    cd ${inputs_dir}
+    if [ ! -f hrc.chr6.legend.clean.gz ]
+    then
+	echo "Shrinking input files"
+	gunzip -c hrc.chr6.legend.clean.gz | awk '{if((NR == 1) || (NR >= 350000 && NR <= 550000)) {print $0}}' | gzip > hrc.chr6.legend.clean.small.gz
+	gunzip -c hrc.chr6.hap.clean.gz | awk '{if((NR >= 349999 && NR <= 549000)) {print $0}}' | gzip > hrc.chr6.hap.clean.small.gz
+	echo "Done shrinking input files"
+    fi
+    reference_haplotype_file=${inputs_dir}hrc.chr6.hap.clean.small.gz
+    reference_legend_file=${inputs_dir}hrc.chr6.legend.clean.small.gz
+    reference_sample_file=${inputs_dir}hrc.chr6.samples.reheadered2
 fi
+
 
 
 ##
@@ -65,6 +90,8 @@ wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HLA_types/201811
 ## make exclusion file with some samples that we want to test
 ## 
 awk '{if ((($2 == "ASW") || ($2 == "CEU") || ($2 == "CHB") || ($2 == "PJL") || ($2 == "PUR"))) {print $0}}'  ${test_dir}/20181129_HLA_types_full_1000_Genomes_Project_panel.txt | cut -f3 > ${test_dir}exclude_ref_samples_for_testing.txt
+
+
 
 
 ##
@@ -84,9 +111,9 @@ cd ~/proj/QUILT/
 --buffer=500000 \
 --region_exclude_file=hla_ancillary_files/hlagenes.txt \
 --genetic_map_file=${inputs_dir}CEU-chr6-final.b38.txt.gz \
---reference_haplotype_file=${inputs_dir}hrc.chr6.hap.clean.small.gz \
---reference_legend_file=${inputs_dir}hrc.chr6.legend.clean.small.gz \
---reference_sample_file=${inputs_dir}hrc.chr6.samples.reheadered2 \
+--reference_haplotype_file=${reference_haplotype_file} \
+--reference_legend_file=${reference_legend_file} \
+--reference_sample_file=${reference_sample_file} \
 --reference_exclude_samplelist_file=${test_dir}exclude_ref_samples_for_testing.txt \
 --reference_exclude_samples_for_initial_phasing=FALSE \
 --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
@@ -111,42 +138,3 @@ HLA_GENE="A"
 
 ## check versus previous values
 ## seems to have worked? A bit less confident I think, but OK?
-
-
-
-
-
-
-
-
-##
-## previous dependencies, now captured
-##
-##
-## last dependency, how to do sample exclusion! across all, and specific
-##
-## rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlauntyped*.excludefivepop.txt ${test_dir}
-## rsync -av /datas/muscovy/not-backed-up/shi/covid/hlauntyped.exclude.txt ${test_dir}
-
-
-## 
-## not yet properly captured dependencies
-## 
-## now made!
-## rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hla*haptypesexcludefivepops.out ${test_dir}
-
-##
-## other dependencies, to clean up
-##
-## required, to be included in repo (and explained)
-## rsync -av ~/proj/QUILT/quilt_hla_supplementary_info.txt ~/proj/QUILT/
-## rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlagenes.txt ${test_dir}
-## this one especially - complete copy of hlagenes.txt
-## rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/hlageneboundaries.out  ${test_dir}
-
-
-##rsync -av rescompNew2:/well/davies/shared/1000G/robbie_files/refseq.txt ${test_dir}
-##cd ${test_dir}
-##wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.dict
-##mv GRCh38_full_analysis_set_plus_decoy_hla.dict refseq.txt
-
