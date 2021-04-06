@@ -6,9 +6,7 @@ For general details including installation, version, and changelog, see the main
 # Table of contents
 1. [Introduction](#paragraph-introduction)
 2. [Installation](#paragraph-installation)
-    1. [github](#paragraph-installation-github)
-    2. [conda](#paragraph-installation-conda)
-3. [Quick start](#paragraph-quickstart)
+3. [Quick start run](#paragraph-quickstartrun)
 4. [Input and output formats](#paragraph-io)
     1. [Input](#paragraph-io-input)
     2. [Output](#paragraph-io-output)
@@ -24,7 +22,7 @@ Forthcoming.
 
 QUILT-HLA is installed through the installation of QUILT. No additional installation is necessary.
 
-## Quick start run <a name="paragraph-quickstart"></a>
+## Quick start run <a name="paragraph-quickstartrun"></a>
 
 A quick start to ensure QUILT-HLA is properly installed and working can be performed using the following
 

@@ -16,7 +16,7 @@ For details of past changes please see [CHANGELOG](CHANGELOG.md).
 2. [Installation](#paragraph-installation)
     1. [github](#paragraph-installation-github)
     2. [conda](#paragraph-installation-conda)
-3. [Quick start](#paragraph-quickstart)
+3. [Quick start run](#paragraph-quickstartrun)
 4. [Input and output formats](#paragraph-io)
     1. [Input](#paragraph-io-input)
     2. [Output](#paragraph-io-output)
@@ -64,7 +64,7 @@ Note that currently the command like `QUILT.R` is not included with the bioconda
 
 
 
-## Quick start <a name="paragraph-quickstart"></a>
+## Quick start run <a name="paragraph-quickstartrun"></a>
 
 A quick start to ensure QUILT is properly installed and working can be performed using the following
 
