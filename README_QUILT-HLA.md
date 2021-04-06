@@ -26,7 +26,7 @@ QUILT-HLA is installed through the installation of QUILT. No additional installa
 
 A quick start to ensure QUILT-HLA is properly installed and working can be performed using the following
 
-First, download some prepared reference panel data. This reference panel package was prepared as described in [Preparing haplotype files](#paragraph-preparing-haplotypes), and uses data from IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129).
+First, download some prepared reference panel data. This reference panel package was prepared as described in [Preparing a reference package](#paragraph-preparing), and uses data from IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129).
 
 ```
 wget something
@@ -86,5 +86,4 @@ For a full list of options, query `?QUILT::QUILT_HLA`, or alternatively, type
 
 An example of this is presented in detail in [example/QUILT_hla_reference_panel_construction.Md](example/QUILT_hla_reference_panel_construction.Md), which was used to make the reference panel package from 1000 Genomes Project data presented above.
 
-
-
+[//]: # This can be run using either  `./example/run_example.sh example/QUILT_hla_reference_panel_construction.Md`

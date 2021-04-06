@@ -1,40 +1,23 @@
 ## QUILT HLA reference panel construction example
 
-Here as an example the code to generate the reference panel is provided and walked through.
+Here the code to generate the provided reference panel data package is provided and walked through.
 
+### Specify working directories
+
+Where you want to store the files as you work on them, and where the output files should go
 
 ```
-cd ~/proj/QUILT/
 inputs_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/inputs_2021_03_29/
 test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_29/
 mkdir -p ${test_dir}
 mkdir -p ${inputs_dir}
 ```
 
-Here are some dependencies that need explanation
-```
-ls -lth ~/proj/QUILT/hla_ancillary_files/quilt_hla_supplementary_info.txt
-ls -lth ~/proj/QUILT/hla_ancillary_files/hlagenes.txt
-ls -lth ~/proj/QUILT/hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict 
-```
-
-Reference sequence dictionary. Described elsewhere. Made using for example Picard CreateSequenceDictionary. Version here from 
-```
-## wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.dict
-```
 
 
+### Reference haplotype data including HLA alleles database
 
-Here are some normal dependencies (?package, recomb rate?)
-```
-WELL_RECOMB_DIR=/well/davies/shared/recomb/CEU/
-rsync -av rescompNew2:${WELL_RECOMB_DIR}CEU-chr6-final.b38.txt.gz ${inputs_dir}
-## bam file
-rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam* ${inputs_dir}
-rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA18566.mhc.2.0.bam* ${inputs_dir}
-```
-
-Here we show how we get reference haplotype data and re-format
+Here we show how we get reference haplotype data, in this case 1000 Genomes project haplotypes, and re-format them
 ```
 cd ${inputs_dir}
 oneKG_vcf_name=CCDG_14151_B01_GRM_WGS_2020-08-05_chr6.filtered.shapeit2-duohmm-phased.vcf.gz
@@ -65,9 +48,22 @@ awk '{if ((($2 == "ASW") || ($2 == "CEU") || ($2 == "CHB") || ($2 == "PJL") || (
 ```
 
 
-Here we run a single large self-contained function to build the reference panel
+### Recombination rate
+
 ```
-cd ~/proj/QUILT/
+Download recomb, also possibly liftOver
+Put recomb online for chromosome 6?
+
+WELL_RECOMB_DIR=/well/davies/shared/recomb/CEU/
+rsync -av rescompNew2:${WELL_RECOMB_DIR}CEU-chr6-final.b38.txt.gz ${inputs_dir}
+```
+
+### Make the reference data package
+
+Here we run a single large self-contained function to build the reference panel. There are two other dependencies used below not explained below (`hla_gene_region_file`, `quilt_hla_supplementary_info_file`), for which an explanation is given with the QUILT help i.e. by typing `./QUILT_HLA_prepare_reference.R --help`. You can get these by cloning the QUILT repository, if not already done so, or downloading the individual files and changing the paths below as appropriate.
+
+```
+cd ~/proj/QUILT/ ## change to the directory where you've cloned QUILT
 ./QUILT_HLA_prepare_reference.R \
 --outputdir=${test_dir} \
 --nGen=100 \
@@ -89,6 +85,21 @@ cd ~/proj/QUILT/
 --nCores=6
 ```
 
+
+### Test the reference data package
+
+Note in the below we need the reference sequence dictionary for `GRCh38_full_analysis_set_plus_decoy_hla`, which is described elsewhere. It can be made using for example Picard CreateSequenceDictionary, of which the current version was used
+```
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.dict
+```
+
+Here we download some example BAM files
+```
+## bam file
+rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam* ${inputs_dir}
+rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA18566.mhc.2.0.bam* ${inputs_dir}
+```
+
 Here we test it out by running QUILT_HLA
 ```
 echo -e ${inputs_dir}"NA12878.mhc.2.0.bam" > bamlist.txt
@@ -103,8 +114,6 @@ HLA_GENE="A"
 --hla_gene_region_file=hla_ancillary_files/hlagenes.txt \
 --dict_file=hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
 
-## perform some check here
+## perform some check here (one of them is off! try some more!)
 ```
-
-
 

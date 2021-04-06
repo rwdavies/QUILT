@@ -6,7 +6,7 @@ Here we first walk through downloading some data, preparing the reference packag
 
 
 ## Downloading example data
-Here we download some example data to use. Note that the code below is just a fancy way of ensuring it should download on either mac or linux.
+Here we download some example data to use. Note that the code below is just a fancy way of ensuring it should download on either mac or linux, otherwise throw an error.
 ```
 path=http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2021_01_15B.tgz
 file=`basename ${path}`
