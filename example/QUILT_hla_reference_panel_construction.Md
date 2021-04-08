@@ -51,7 +51,6 @@ Here we can optionally make an exclusion file of samples we want to remove from 
 echo NA12878 > ${test_dir}exclude_ref_samples_for_testing.txt
 echo NA19625 > ${test_dir}exclude_ref_samples_for_testing.txt
 echo NA19700 > ${test_dir}exclude_ref_samples_for_testing.txt
-
 ```
 
 
@@ -148,13 +147,14 @@ cd ~/proj/QUILT/
 --dict_file=hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
 ```
 
-Here we test against known truth
+Here we test against known truth. Here two samples that are imputed correctly, while the third matches one allele correctly, while the other is the second most likely result
 ```
 echo Truth
-cut -f1-5 20181129_HLA_types_full_1000_Genomes_Project_panel.txt | head -n1
-cut -f1-5 20181129_HLA_types_full_1000_Genomes_Project_panel.txt | grep NA12878
-cut -f1-5 20181129_HLA_types_full_1000_Genomes_Project_panel.txt | grep NA19625
-cut -f1-5 20181129_HLA_types_full_1000_Genomes_Project_panel.txt | grep NA19700
+file=${test_dir}20181129_HLA_types_full_1000_Genomes_Project_panel.txt
+cut -f1-5 ${file} | head -n1
+cut -f1-5 ${file} | grep NA12878
+cut -f1-5 ${file} | grep NA19625
+cut -f1-5 ${file} | grep NA19700
 echo QUILT-HLA imputed
-cat ${test_dir}quilt.hla.output.combined.topresult.txt
+cat ${test_dir}quilt.hla.output.combined.all.txt
 ```

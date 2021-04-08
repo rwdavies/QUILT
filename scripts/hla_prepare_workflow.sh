@@ -2,8 +2,18 @@ set -e
 
 cd ~/proj/QUILT/
 
-## specify directory
-./example/run_example.sh example/QUILT_hla_reference_panel_construction.Md 
+## Run twice, to make the two packages
+
+## WITH exclusion of samples
+./example/run_example.sh example/QUILT_hla_reference_panel_construction.Md
+## Make tar-ball of required outputs
+
+## WITHOUT exclusion of samples
+./example/run_example.sh example/QUILT_hla_reference_panel_construction.Md example/reference_panel_no_exclusion.sh
+## remove exclusion here
+example/reference_panel_no_exclusion.sh
+## Make tar-ball of required outputs
+
 
 exit
 
