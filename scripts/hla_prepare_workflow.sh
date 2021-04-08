@@ -6,11 +6,25 @@ set -e
 
 ## Run twice, to make the two packages
 
+
+##
 ## WITH exclusion of samples
-./example/run_example.sh example/QUILT_hla_reference_panel_construction.Md
-## Make tar-ball of required outputs
+##
+script=example/reference_panel_with_exclusion.sh
+rm -f ${script}
+./example/run_example.sh example/QUILT_hla_reference_panel_construction.Md ${script}
+bash ${script}
+## Once done, make tar-ball of required outputs
+## grab directory specified in above
+
+exit
+
 
 /data/smew1/rdavies/quilt_hla_reference_panel_build_2021_04_08/
+
+exit
+
+
 
 
 ## WITHOUT exclusion of samples
