@@ -10,6 +10,9 @@ set -e
 ./example/run_example.sh example/QUILT_hla_reference_panel_construction.Md
 ## Make tar-ball of required outputs
 
+/data/smew1/rdavies/quilt_hla_reference_panel_build_2021_04_08/
+
+
 ## WITHOUT exclusion of samples
 script=example/reference_panel_no_exclusion.sh
 rm -f ${script}
