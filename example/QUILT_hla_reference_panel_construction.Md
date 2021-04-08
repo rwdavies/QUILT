@@ -111,8 +111,6 @@ Note in the below we need the reference sequence dictionary for `GRCh38_full_ana
 wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.dict
 ```
 
-```
-
 Here we download some example 1000 Genomes data, using links given in an index file. Since we're actually downloading CRAM files, we need the reference genome to decode and turn into bams
 ```
 cd ${inputs_dir}
