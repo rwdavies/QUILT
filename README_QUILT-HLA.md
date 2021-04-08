@@ -17,7 +17,7 @@ For general details including installation of QUILT, citation, versions, and cha
 
 ## Introduction <a name="paragraph-introduction"></a>
 
-QUILT-HLA is program for rapid HLA imputation from low-coverage sequence. QUILT-HLA uses reads inside an HLA locus for direct read mapping, and uses the remaining reads for imputation using a labelled reference panel (Online Methods). QUILT-HLA is highly accurate across populations and depth of coverage, including coverages as low as 0.1X, though higher coverage increases the accuracy of imputation through the read mapping component of QUILT-HLA. Imputation of HLA types from lc-WGS and QUILT-HLA generally outperforms imputation from genotyping microarray input. Further details and detailed evaluations are available in the QUILT paper.
+QUILT-HLA is program for rapid HLA imputation from low-coverage sequence. QUILT-HLA uses information from reads within an HLA locus through direct read mapping, and uses information from imputation using a labelled haplotype reference panel using reads outside an HLA locus. QUILT-HLA is highly accurate, including at low coverage, and has been tested with coverages as low as 0.1X, with higher coverage slightly increasing accuracy through direct read mapping. Imputation results are highest for samples most closely matching the reference panel, but are generally high across populations. Imputation results using low-coverage sequence and QUILT-HLA generally outperform imputation from genotyping microarray input. Further details and detailed evaluations are available in the [QUILT paper](README.md#paragraph-citation).
 
 ## Installation <a name="paragraph-installation"></a>
 
@@ -73,7 +73,7 @@ sample_number	sample_name	bestallele1	bestallele2	post_prob	sums
 3	NA19700	A*03:01	A*30:01	0.999999942895535	0.999999942895535
 ```
 
-Here we see that NA12878 is correctly imputed, as is NA19700, while for NA19625, the first allele is imputed correctly (A\*02:01), while the second one is imputed less confidently, with the most confident allele (A\*23:01, confidence 0.67) is incorrect, while the second allele (A\*23:17, confidence 0.3262) is fact correct. More details about the output formats are given in [Output](#paragraph-io-output).
+Here we see that NA12878 is correctly imputed, as is NA19700, while for NA19625, the first allele is imputed correctly (A\*02:01), while the second one is imputed less confidently, with the most confident allele (A\*23:01, confidence 0.67) is incorrect, while the second allele (A\*23:17, confidence 0.3262) is correct. More details about the output formats are given in [Output](#paragraph-io-output).
 
 ## Input and output formats <a name="paragraph-io"></a>
 
@@ -81,6 +81,7 @@ Here we see that NA12878 is correctly imputed, as is NA19700, while for NA19625,
 
 - Bams. Given as a bamlist (i.e. a file with one row per sample, the path to the bam)
 - Reference package. For available pre-made options, see [Reference packages](#reference-packages). For more detail about building your own, see [Preparing haplotype files](#paragraph-preparing-haplotypes). For help in making a reference package, or any other questions or bugs, please feel free to email or file an issue on github.
+- Ancillary files. For a particular reference genome and reference package. 
 
 ### Output <a name="paragraph-io-output"></a>
 
