@@ -267,11 +267,11 @@ make_and_save_hla_full_alleles_filled_in <- function(
         ##gives where each allele comes from, which is reference allele, and strand
         
         ##print(hla_region)
-        if(hla_region %in% supplementary_gene_info[, 1]) {
+        if (hla_region %in% supplementary_gene_info[, "gene"]) {
 
             print_message(paste0("Processing HLA-", hla_region))
             matches <- supplementary_gene_info[
-                match(hla_region, supplementary_gene_info[, 1]), -1
+                match(hla_region, supplementary_gene_info[, "gene"]),
                 ]
             
             this <- scan(
@@ -306,6 +306,11 @@ make_and_save_hla_full_alleles_filled_in <- function(
                 ##print(k)
             }
             names(ll)=getnames(starts[1]+2,starts[2]-1,paste(hla_region,"[*]",sep=""), this = this)
+
+            first_row <- which(names(ll) == matches[, "allele"])
+            ##if (first_row != matches[, "first_row"]) {
+            ##    stop("Error in lining up")
+           ## }
             
             ##print("...done")
             
@@ -323,8 +328,7 @@ make_and_save_hla_full_alleles_filled_in <- function(
             temp=temp[,(spos+1):ncol(temp)]
             temp=temp[,temp[1,]!="|"]
             
-            if(matches[1,3]!=1){
-                
+            if(matches[1,"strand"]!=1){
                 temp[temp=="A"]="t"
                 temp[temp=="C"]="g"
                 temp[temp=="G"]="c"
@@ -337,16 +341,17 @@ make_and_save_hla_full_alleles_filled_in <- function(
             }
             
             
-            aligned=sum(temp[matches[1,1],] %in% c("A","C","G","T"))
+            aligned=sum(temp[first_row,] %in% c("A","C","G","T"))
             
-######perfect, now need to align to positions in the reference
-            ourrow=matches[1,1]
+            ##perfect, now need to align to positions in the reference
+            ourrow <- first_row
             ourpos=rep(0,ncol(temp))
-            
-            if(matches[1,3]!=1)
-                ourpos[1]=matches[1,2]-(aligned-1)
-            if(matches[1,3]==1)
-                ourpos[1]=matches[1,2]
+
+            if(matches[1,"strand"]==1) {
+                ourpos[1]=matches[1,"genome_pos"]
+            } else {
+                ourpos[1]=matches[1,"genome_pos"]-(aligned-1)
+            }
             
             curpos=ourpos[1]
             
@@ -491,8 +496,6 @@ make_and_save_hla_full_alleles_filled_in <- function(
 }
 
 
-
-
 make_quilt_hla_full <- function(
     outputdir,
     regs
@@ -610,11 +613,10 @@ make_and_save_hla_snpformatalleles <- function(
 
         hla_region <- ourfiles[zztop]
 
-        if (hla_region %in% supplementary_gene_info[, 1]) {
+        if (hla_region %in% supplementary_gene_info[, "gene"]) {
 
             matches <- supplementary_gene_info[
-                match(hla_region, supplementary_gene_info[, 1]),
-                -1
+                match(hla_region, supplementary_gene_info[, "gene"]),
                 ]
         
             print_message(paste0("Working on region:", hla_region))
@@ -641,8 +643,8 @@ make_and_save_hla_snpformatalleles <- function(
             )
             starts=c(starts,length(this)+2)
             
-###amount to trim for first codon
-###offset=as.double(this[starts[1]+1])
+            ##amount to trim for first codon
+            ##offset=as.double(this[starts[1]+1])
             
             for(k in 2:(length(starts)-1)) {
                 ll <- paste0(
@@ -657,8 +659,14 @@ make_and_save_hla_snpformatalleles <- function(
                 ##print(k)
             }
             names(ll)=getnames(starts[1]+2,starts[2]-1,paste(hla_region,"[*]",sep=""), this = this)
+
+            first_row <- which(names(ll) == matches[, "allele"])
+            ## perform check here
+            ##if (first_row != matches[, "first_row"]) {
+            ##    stop("Error in lining up")
+           ## }
             
-#######temp is matrix of alignments, stranded appropriately
+            ##temp is matrix of alignments, stranded appropriately
             
             temp=matrix(nrow=length(ll),ncol=nchar(ll[1]))
             
@@ -669,7 +677,7 @@ make_and_save_hla_snpformatalleles <- function(
             temp=temp[,(spos+1):ncol(temp)]
             temp=temp[,temp[1,]!="|"]
             
-            if(matches[1,3]!=1){
+            if(matches[1,"strand"]!=1){
                 temp[temp=="A"]="t"
                 temp[temp=="C"]="g"
                 temp[temp=="G"]="c"
@@ -685,21 +693,23 @@ make_and_save_hla_snpformatalleles <- function(
             ##where came from
             
             ##bases aligning to reference genome
-            aligned=sum(temp[matches[1,1],] %in% c("A","C","G","T"))
+            aligned <- sum(temp[first_row,] %in% c("A","C","G","T"))
             
             ##perfect, now need to align to positions in the reference
-            ourrow=matches[1,1]
+            ourrow=first_row
             ourpos=rep(0,ncol(temp))
+
+            if(matches[1,"strand"]==1) {
+                ourpos[1]=matches[1,"genome_pos"]
+            } else {
+                ourpos[1]=matches[1,"genome_pos"]-(aligned-1)
+            }
             
-            if(matches[1,3]!=1)
-                ourpos[1]=matches[1,2]-(aligned-1)
-            if(matches[1,3]==1)
-                ourpos[1]=matches[1,2]
-            
-            curpos=ourpos[1]
-            
+            curpos <- ourpos[1]
             for(i in 2:length(ourpos)){
-                if(temp[ourrow,i] %in% c("A","C","G","T","*")) curpos=curpos+1
+                if(temp[ourrow,i] %in% c("A","C","G","T","*")) {
+                    curpos <- curpos + 1
+                }
                 ourpos[i]=curpos
             }
             ##ourpos gives positions relative to the genome reference sequence

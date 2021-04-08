@@ -4,7 +4,7 @@
 #' @param hla_gene_region_file Path to file with gene boundaries. 4 columns, named Name Chr Start End, with respectively gene name (e.g. HLA-A), chromsome (e.g. chr6), and 1 based start and end positions of gene
 #' @param hla_types_panel Path to file with 1000 Genomes formatted HLA types (see example for format details)
 #' @param ipd_igmt_alignments_zip_file Path to zip file with alignments from IPD-IGMT (see README and example for more details)
-#' @param quilt_hla_supplementary_info_file Path to file with supplementary information about the genes, necessary for proper converstion. File is tab separated without header, with 4 columns, with the following entries. First is the HLA gene name (e.g. A for HLA-A). Second is the correponding row in the _gen.txt IPD-IMGT file. Third is the position of the first column in the reference genome. Fourth is the strand (options 1 or -1).
+#' @param quilt_hla_supplementary_info_file Path to file with supplementary information about the genes, necessary for proper converstion. File is tab separated with header, with 3 columns. First (allele) is the allele that matches the reference genome. Second (genome_pos) is the position of this allele in the reference genome, finally the strand (strand) (options 1 or -1)
 #' @param full_regionStart When building HLA full reference panel, start of maximal region spanning all HLA genes. The 1-based position x is kept if regionStart <= x <= regionEnd
 #' @param full_regionEnd As above, but end of maximal region spanning all HLA genes
 #' @param buffer Buffer of region to perform imputation over. So imputation is run form regionStart-buffer to regionEnd+buffer, and reported for regionStart to regionEnd, including the bases of regionStart and regionEnd
@@ -66,8 +66,9 @@ QUILT_HLA_prepare_reference <- function(
     regions <- hla_regions_to_prepare
 
 
-    supplementary_gene_info <- read.table(quilt_hla_supplementary_info_file)
-    colnames(supplementary_gene_info) <- c("gene", "first_row", "genome_pos", "strand")
+    supplementary_gene_info <- read.table(quilt_hla_supplementary_info_file, header = TRUE)
+    ## colnames(supplementary_gene_info) <- c("allele", "first_row", "genome_pos", "strand")
+    supplementary_gene_info[, "gene"] <- sapply(strsplit(supplementary_gene_info[, "allele"], "*", fixed = TRUE), function(x) x[1])
 
 
     hla_regions <- all_hla_regions

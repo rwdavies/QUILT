@@ -85,5 +85,3 @@ For a full list of options, query `?QUILT::QUILT_HLA`, or alternatively, type
 ## Preparing a reference package <a name="paragraph-preparing"></a>
 
 An example of this is presented in detail in [example/QUILT_hla_reference_panel_construction.Md](example/QUILT_hla_reference_panel_construction.Md), which was used to make the reference panel package from 1000 Genomes Project data presented above.
-
-[//]: # This can be run using either  `./example/run_example.sh example/QUILT_hla_reference_panel_construction.Md`

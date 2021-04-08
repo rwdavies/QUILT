@@ -42,7 +42,7 @@ QUILT_HLA_prepare_reference(
 
 \item{ipd_igmt_alignments_zip_file}{Path to zip file with alignments from IPD-IGMT (see README and example for more details)}
 
-\item{quilt_hla_supplementary_info_file}{Path to file with supplementary information about the genes, necessary for proper converstion. File is tab separated without header, with 4 columns, with the following entries. First is the HLA gene name (e.g. A for HLA-A). Second is the correponding row in the _gen.txt IPD-IMGT file. Third is the position of the first column in the reference genome. Fourth is the strand (options 1 or -1).}
+\item{quilt_hla_supplementary_info_file}{Path to file with supplementary information about the genes, necessary for proper converstion. File is tab separated with header, with 3 columns. First (allele) is the allele that matches the reference genome. Second (genome_pos) is the position of this allele in the reference genome, finally the strand (strand) (options 1 or -1)}
 
 \item{full_regionStart}{When building HLA full reference panel, start of maximal region spanning all HLA genes. The 1-based position x is kept if regionStart <= x <= regionEnd}
 

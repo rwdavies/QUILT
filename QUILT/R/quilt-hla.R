@@ -192,7 +192,8 @@ QUILT_HLA <- function(
         n_seek_its = n_seek_iterations,
         gamma_physically_closest_to = regmid,
         seed = quilt_seed,
-        hla_run = TRUE
+        hla_run = TRUE,
+        verbose = FALSE
     )
     load(outfile1)
     unlink(outfile1)

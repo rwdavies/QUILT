@@ -9,7 +9,7 @@ MARKDOWN_FILE="${1:-example/QUILT_usage.Md}"
 
 ## get start and end bits
 lines_temp_file=$(mktemp)
-grep -n "\`\`\`" example/README.Md > ${lines_temp_file}
+grep -n "\`\`\`" ${MARKDOWN_FILE} > ${lines_temp_file}
 
 n=`wc -l ${lines_temp_file} | cut -f1 --delimiter=" "`
 n=`echo $((${n} / 2))`

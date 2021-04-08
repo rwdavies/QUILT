@@ -1,19 +1,17 @@
 ## QUILT HLA reference panel construction example
 
-Here the code to generate the provided reference panel data package is provided and walked through.
+Here code to generate the provided reference panel data package is provided and walked through.
 
 ### Specify working directories
 
 Where you want to store the files as you work on them, and where the output files should go
 
 ```
-inputs_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/inputs_2021_03_29/
-test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_03_29/
+inputs_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_04_07/
+test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_04_07/
 mkdir -p ${test_dir}
 mkdir -p ${inputs_dir}
 ```
-
-
 
 ### Reference haplotype data including HLA alleles database
 
@@ -33,34 +31,53 @@ reference_sample_file=${inputs_dir}oneKG.samples
 sed -i 's/sample population group sex/SAMPLE POP GROUP SEX/g' ${reference_sample_file}
 ```
 
-Here we download the database of HLA alleles
+Here we download the IPD-IGMT data
 ```
 ## To download IPD-IGMT version 3.39, for example
 cd ${test_dir}
 wget https://github.com/ANHIG/IMGTHLA/blob/032815608e6312b595b4aaf9904d5b4c189dd6dc/Alignments_Rel_3390.zip?raw=true
 mv Alignments_Rel_3390.zip?raw=true Alignments_Rel_3390.zip
+```
+
+Here we download the database of HLA alleles
+```
+cd ${test_dir}
 wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HLA_types/20181129_HLA_types_full_1000_Genomes_Project_panel.txt
 ```
 
-Here we can optionally make an exclusion file of samples we want to test
+Here we can optionally make an exclusion file of samples we want to remove from constructing the reference panel (for example if using them to test performance)
 ```
-awk '{if ((($2 == "ASW") || ($2 == "CEU") || ($2 == "CHB") || ($2 == "PJL") || ($2 == "PUR"))) {print $0}}'  ${test_dir}/20181129_HLA_types_full_1000_Genomes_Project_panel.txt | cut -f3 > ${test_dir}exclude_ref_samples_for_testing.txt
+# exclude NA12878 and an ASW sample for example usage below
+echo NA12878 > ${test_dir}exclude_ref_samples_for_testing.txt
+echo NA19625 > ${test_dir}exclude_ref_samples_for_testing.txt
+echo NA19700 > ${test_dir}exclude_ref_samples_for_testing.txt
+
 ```
 
 
 ### Recombination rate
 
-```
-Download recomb, also possibly liftOver
-Put recomb online for chromosome 6?
+Here we use a CEU recombination rate, but any population can be used, or a cross-population recombination rate
 
-WELL_RECOMB_DIR=/well/davies/shared/recomb/CEU/
-rsync -av rescompNew2:${WELL_RECOMB_DIR}CEU-chr6-final.b38.txt.gz ${inputs_dir}
+```
+cd ${inputs_dir}
+wget ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/working/20130507_omni_recombination_rates/CEU_omni_recombination_20130507.tar
+tar -xvf CEU_omni_recombination_20130507.tar
+```
+
+In this particular case, we need to use liftOver, to lift over the recombination rate from build 37, to build 38. We do that using a helper R script available in the QUILT repository.
+
+```
+wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/liftOver
+chmod +x liftOver
+wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/liftOver/hg19ToHg38.over.chain.gz
+R -f ~/proj/QUILT/scripts/make_b38_recomb_map.R --args ${inputs_dir} CEU 6
+
 ```
 
 ### Make the reference data package
 
-Here we run a single large self-contained function to build the reference panel. There are two other dependencies used below not explained below (`hla_gene_region_file`, `quilt_hla_supplementary_info_file`), for which an explanation is given with the QUILT help i.e. by typing `./QUILT_HLA_prepare_reference.R --help`. You can get these by cloning the QUILT repository, if not already done so, or downloading the individual files and changing the paths below as appropriate.
+Here we run a single large self-contained function to build the reference panel. There are two other dependencies used below not explained below (`hla_gene_region_file`, `quilt_hla_supplementary_info_file`), for which an explanation is given with the QUILT help i.e. by typing `./QUILT_HLA_prepare_reference.R --help`. You can get current versions of these that work for GRCh38 by cloning the QUILT repository, if not already done so, or downloading the individual files and changing the paths below as appropriate.
 
 ```
 cd ~/proj/QUILT/ ## change to the directory where you've cloned QUILT
@@ -75,7 +92,7 @@ cd ~/proj/QUILT/ ## change to the directory where you've cloned QUILT
 --full_regionEnd=33629686 \
 --buffer=500000 \
 --region_exclude_file=hla_ancillary_files/hlagenes.txt \
---genetic_map_file=${inputs_dir}CEU-chr6-final.b38.txt.gz \
+--genetic_map_file=${inputs_dir}CEU/CEU-chr6-final.b38.txt.gz \
 --reference_haplotype_file=${reference_haplotype_file} \
 --reference_legend_file=${reference_legend_file} \
 --reference_sample_file=${reference_sample_file} \
@@ -83,8 +100,9 @@ cd ~/proj/QUILT/ ## change to the directory where you've cloned QUILT
 --reference_exclude_samples_for_initial_phasing=FALSE \
 --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
 --nCores=6
-```
 
+exit
+```
 
 ### Test the reference data package
 
@@ -93,27 +111,52 @@ Note in the below we need the reference sequence dictionary for `GRCh38_full_ana
 wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.dict
 ```
 
-Here we download some example BAM files
 ```
-## bam file
-rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA12878.mhc.2.0.bam* ${inputs_dir}
-rsync -av rescompNew2:/well/davies/shared/1000G/mhc_hla/NA18566.mhc.2.0.bam* ${inputs_dir}
+
+Here we download some example 1000 Genomes data, using links given in an index file. Since we're actually downloading CRAM files, we need the reference genome to decode and turn into bams
 ```
+cd ${inputs_dir}
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
+samtools faidx GRCh38_full_analysis_set_plus_decoy_hla.fa
+
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/1000G_2504_high_coverage.sequence.index
+for sample in NA12878 NA19625 NA19700
+do
+    link=`grep ${sample} 1000G_2504_high_coverage.sequence.index | cut -f1`
+    wget ${link}.crai
+    ## here first we download the sequence, then subsample to approximately 2X (assuming 30X input)
+    samtools view -b -T GRCh38_full_analysis_set_plus_decoy_hla.fa ${link} chr6:26000000-34000000 | samtools view -b -s 0.0667 > ${sample}.mhc.2.0X.bam
+    samtools index ${sample}.mhc.2.0X.bam
+done
+
+```
+
 
 Here we test it out by running QUILT_HLA
 ```
-echo -e ${inputs_dir}"NA12878.mhc.2.0.bam" > bamlist.txt
-echo -e ${inputs_dir}"NA18566.mhc.2.0.bam" >> bamlist.txt
+echo -e ${inputs_dir}"NA12878.mhc.2.0X.bam" > ${test_dir}bamlist.txt
+echo -e ${inputs_dir}"NA19625.mhc.2.0X.bam" >> ${test_dir}bamlist.txt
+echo -e ${inputs_dir}"NA19700.mhc.2.0X.bam" >> ${test_dir}bamlist.txt
+
 HLA_GENE="A"
-~/proj/QUILT/QUILT_HLA.R \
+cd ~/proj/QUILT/
+./QUILT_HLA.R \
 --outputdir=${test_dir} \
---bamlist=bamlist.txt \
+--bamlist=${test_dir}bamlist.txt \
 --region=${HLA_GENE} \
 --prepared_hla_reference_dir=${test_dir} \
 --quilt_hla_haplotype_panelfile=${test_dir}quilt.hrc.hla.${HLA_GENE}.haplotypes.RData \
 --hla_gene_region_file=hla_ancillary_files/hlagenes.txt \
 --dict_file=hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
-
-## perform some check here (one of them is off! try some more!)
 ```
 
+Here we test against known truth
+```
+echo Truth
+cut -f1-5 20181129_HLA_types_full_1000_Genomes_Project_panel.txt | head -n1
+cut -f1-5 20181129_HLA_types_full_1000_Genomes_Project_panel.txt | grep NA12878
+cut -f1-5 20181129_HLA_types_full_1000_Genomes_Project_panel.txt | grep NA19625
+cut -f1-5 20181129_HLA_types_full_1000_Genomes_Project_panel.txt | grep NA19700
+echo QUILT-HLA imputed
+cat ${test_dir}quilt.hla.output.combined.topresult.txt
+```
