@@ -37,13 +37,13 @@ wget something
 tar -xzvf 
 ```
 
-Next, download some example bam data
+Download some example bams
 ```
 wget something
 tar -xzvf 
 ```
 
-Now, HLA imputation for a particular region (here A) can be done as follows
+HLA imputation for a particular region (here A) can be done as follows
 ```
 HLA_GENE="A"
 ./QUILT_HLA.R \
@@ -56,22 +56,42 @@ HLA_GENE="A"
 --dict_file=hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
 ```
 
-This imputes three samples, with true HLA types of X. Here we take a look at the primary output file from the above run
+The above imputes three samples, with true HLA types as follows
+```
+Population Sample.ID HLA.A.1 HLA.A.2
+CEU   NA12878   01:01   11:01
+ASW   NA19625   02:01   23:17
+ASW   NA19700   03:01   30:01
 ```
 
+The output of QUILT-HLA will vary slightly run to run, as it uses random sampling, but should look approximately like the following (from file `quilt.hla.output.combined.all.txt`)
 ```
-Which should show that two samples (X and Y) are imputed correctly, while for the other, one allele is imputed correctly (X:), while the other allele is the second most likely.
+sample_number	sample_name	bestallele1	bestallele2	lhoods	sums
+1	NA12878	A*01:01	A*11:01	0.999996657444772	0.999996657444772
+2	NA19625	A*02:01	A*23:01	0.673515530204319	0.673515530204319
+2	NA19625	A*02:01	A*23:17	0.326258885270228	0.999774415474547
+3	NA19700	A*03:01	A*30:01	0.999999942895535	0.999999942895535
+```
+
+Here we see that NA12878 is correctly imputed, as is NA19700, while for NA19625, the first allele is imputed correctly (A*02:01), while the second one is imputed less confidently, and the second allele (confidence 0.3262) is in fact correct. More details about the output formats are given in [Output](#paragraph-io-output).
 
 ## Input and output formats <a name="paragraph-io"></a>
 
 ### Input <a name="paragraph-io-input"></a>
 
 - Bams. Given as a bamlist (i.e. a file with one row per sample, the path to the bam)
-- Reference package. For more detail, see [Preparing haplotype files](#paragraph-preparing-haplotypes). For making a reference package, for any questions, please email or file a bug report.
+- Reference package. For available pre-made options, see [Reference packages](#reference-packages). For more detail about building your own, see [Preparing haplotype files](#paragraph-preparing-haplotypes). For help in making a reference package, or any other questions or bugs, please feel free to email or file an issue on github.
 
 ### Output <a name="paragraph-io-output"></a>
 
-- Text files, explained here
+Text files
+
+quilt.hla.output.combined.topresult.txt
+quilt.hla.output.combined.all.txt
+
+-rw------- 1 rdavies academic  248 Apr  8 11:52 quilt.hla.output.onlystates.topresult.txt
+-rw------- 1 rdavies academic 1.2K Apr  8 11:52 quilt.hla.output.onlystates.all.txt
+
 ```
 ```
 
