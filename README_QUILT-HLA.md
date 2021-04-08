@@ -73,7 +73,7 @@ sample_number	sample_name	bestallele1	bestallele2	lhoods	sums
 3	NA19700	A*03:01	A*30:01	0.999999942895535	0.999999942895535
 ```
 
-Here we see that NA12878 is correctly imputed, as is NA19700, while for NA19625, the first allele is imputed correctly (A*02:01), while the second one is imputed less confidently, with the most confident allele (A*23:01, confidence 0.67) is incorrect, while the second allele (A*23:17, confidence 0.3262) is fact correct. More details about the output formats are given in [Output](#paragraph-io-output).
+Here we see that NA12878 is correctly imputed, as is NA19700, while for NA19625, the first allele is imputed correctly (A\*02:01), while the second one is imputed less confidently, with the most confident allele (A\*23:01, confidence 0.67) is incorrect, while the second allele (A*23:17, confidence 0.3262) is fact correct. More details about the output formats are given in [Output](#paragraph-io-output).
 
 ## Input and output formats <a name="paragraph-io"></a>
 
