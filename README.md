@@ -69,29 +69,15 @@ Note that currently the command like `QUILT.R` is not included with the bioconda
 
 A quick start to ensure QUILT is properly installed and working can be performed using the following
 
-Download data package, containing 1000 Genomes haplotypes, and NA12878 bams
+Download example data package, containing 1000 Genomes haplotypes, and NA12878 bams
 ```
 wget http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2021_01_15A.tgz ## or curl -O
 tar -xzvf QUILT_example_2021_01_15A.tgz
 ```
 
-Process reference panel and perform imputation in one step. Note that any parameters available jointly in `QUILT` and `QUILT_prepare_reference` that inform how the reference panel is processed must be set in `QUILT_prepare_reference` (for example, `maxRate` bounds the recombination rate, and must be set when running`QUILT_prepare_reference` as the recombination rate is processed in this step).
+Perform imputation. Note that reference panel data can be processed separately to speed up repeated imputation of the same region in independent jobs, see [Separating reference panel processing from imputation](#paragraph-separate).
 ```
 rm -r -f quilt_output
-./QUILT_prepare_reference.R \
---outputdir=quilt_output \
---chr=chr20 \
---nGen=100 \
---reference_haplotype_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.hap.gz \
---reference_legend_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.legend.gz \
---genetic_map_file=package_2021_01_15A/CEU-chr20-final.b38.txt.gz \
---regionStart=2000001 \
---regionEnd=2100000 \
---buffer=10000
-```
-
-Second, to perform imputation
-```
 ./QUILT.R \
 --outputdir=quilt_output \
 --chr=chr20 \
@@ -100,7 +86,11 @@ Second, to perform imputation
 --buffer=10000 \
 --bamlist=package_2021_01_15A/bamlist.1.0.txt \
 --posfile=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.posfile.txt \
---phasefile=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.phasefile.txt
+--phasefile=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.phasefile.txt \
+--reference_haplotype_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.hap.gz \
+--reference_legend_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.legend.gz \
+--genetic_map_file=package_2021_01_15A/CEU-chr20-final.b38.txt.gz \
+--nGen=100
 ```
 Succesful completion of this run results in a VCF at `quilt_output/quilt.chr20.2000001.2100000.vcf.gz`. For a slightly longer version of this example, see [Examples](#paragraph-examples)
 
@@ -135,7 +125,8 @@ For all of these, it can be useful to take a look at the example files provided 
 
 ## Separating reference panel processing from imputation <a name="paragraph-separate"></a>
 
-For large reference panels, and for many jobs involving imputing few samples, it can be computationally efficient to pre-process the reference panel and save the output, and use this output for multiple independent runs. Here is an example for how we would do this, for the case of the quick start example
+For large reference panels, and for many jobs involving imputing few samples, it can be computationally efficient to pre-process the reference panel and save the output, and use this output for multiple independent runs. Here is an example for how we would do this, for the case of the quick start example. Note that any parameters available jointly in `QUILT` and `QUILT_prepare_reference` that inform how the reference panel is processed must be set in `QUILT_prepare_reference` (for example, `maxRate` bounds the recombination rate, and must be set when running`QUILT_prepare_reference` as the recombination rate is processed in this step).
+
 
 First, to re-format the reference panel
 ```
