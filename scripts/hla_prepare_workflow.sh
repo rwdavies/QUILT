@@ -4,8 +4,6 @@ cd ~/proj/QUILT/
 
 set -e
 
-## Run twice, to make the two packages
-
 
 ##
 ## WITH exclusion of samples
@@ -18,16 +16,25 @@ bash ${script}
 ## grab directory specified in above
 reference_package_dir=`cat ${script} | grep reference_package_dir= | sed 's/reference_package_dir=//g'`
 current_dir=`pwd`
-(cd ${reference_package_dir} &&
-     rm -f quilt.hrc.hla.all.haplotypes.RData &&
-     tar -cvf QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar *RData 
-)
-## manually move the above
+cd ${reference_package_dir}
+rm -f quilt.hrc.hla.all.haplotypes.RData
+cd ..
+temp=`basename ${reference_package_dir}`
+temp2=`echo "${temp}/*.RData"`
+tar -cvf QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar ${temp2}
+chmod 755 QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar
+rsync -av QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar ~/pub_html/
+cd ${current_dir}
+
+## also bams
 inputs_dir=`cat ${script} | grep inputs_dir= | sed 's/inputs_dir=//g'`
 current_dir=`pwd`
-(cd ${inputs_dir} &&
-     tar -cvf QUILT_HLA_example_bams_2021_04_08.tar *2.0X*bam*
-)
+cd ${inputs_dir}
+cat bamlist.txt | xargs -l basename > bamlist2.txt
+mv bamlist2.txt bamlist.txt
+tar -cvf QUILT_HLA_example_bams_2021_04_08.tar *2.0X*bam* bamlist.txt
+chmod 755 QUILT_HLA_example_bams_2021_04_08.tar
+rsync -av QUILT_HLA_example_bams_2021_04_08.tar ~/pub_html/
 
 
 

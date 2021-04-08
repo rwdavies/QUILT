@@ -271,7 +271,7 @@ QUILT_HLA <- function(
                 summary_suffix <- "combined.all.txt"
             } else if (i == 4) {
                 only_take_top_result <- TRUE
-                what <- "joint_quiltresults"
+                what <- "joint_combinedresults"
                 summary_suffix <- "combined.topresult.txt"
             }
             summary_quilt_joint_results <- summarize_all_results_and_write_to_disk(
