@@ -12,6 +12,7 @@ test_dir=/data/smew1/rdavies/quilt_hla_2021_04_08/
 reference_package_dir=/data/smew1/rdavies/quilt_hla_reference_panel_files_2021_04_08/
 mkdir -p ${test_dir}
 mkdir -p ${inputs_dir}
+mkdir -p ${reference_package_dir}
 ```
 
 ### Reference haplotype data including HLA alleles database
@@ -101,7 +102,6 @@ cd ~/proj/QUILT/ ## change to the directory where you've cloned QUILT
 --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
 --nCores=6
 
-exit
 ```
 
 ### Test the reference data package

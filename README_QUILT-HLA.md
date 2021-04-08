@@ -66,7 +66,7 @@ ASW   NA19700   03:01   30:01
 
 The output of QUILT-HLA will vary slightly run to run, as it uses random sampling, but should look approximately like the following (from file `quilt.hla.output.combined.all.txt`)
 ```
-sample_number	sample_name	bestallele1	bestallele2	lhoods	sums
+sample_number	sample_name	bestallele1	bestallele2	post_prob	sums
 1	NA12878	A*01:01	A*11:01	0.999996657444772	0.999996657444772
 2	NA19625	A*02:01	A*23:01	0.673515530204319	0.673515530204319
 2	NA19625	A*02:01	A*23:17	0.326258885270228	0.999774415474547
@@ -84,16 +84,19 @@ Here we see that NA12878 is correctly imputed, as is NA19700, while for NA19625,
 
 ### Output <a name="paragraph-io-output"></a>
 
-Text files
-
-quilt.hla.output.combined.topresult.txt
-quilt.hla.output.combined.all.txt
-
--rw------- 1 rdavies academic  248 Apr  8 11:52 quilt.hla.output.onlystates.topresult.txt
--rw------- 1 rdavies academic 1.2K Apr  8 11:52 quilt.hla.output.onlystates.all.txt
-
+Output is given as text files, with default names `quilt.hla.output.<combined/onlystates>.<all/topresult>.txt`. Here we begin by revisiting `quilt.hla.output.combined.all.txt`, explaining the output, and then explain the variations in the other files
 ```
+sample_number	sample_name	bestallele1	bestallele2	lhoods	sums
+1	NA12878	A*01:01	A*11:01	0.999996657444772	0.999996657444772
+2	NA19625	A*02:01	A*23:01	0.673515530204319	0.673515530204319
+2	NA19625	A*02:01	A*23:17	0.326258885270228	0.999774415474547
+3	NA19700	A*03:01	A*30:01	0.999999942895535	0.999999942895535
 ```
+The first two columns are straightforward, of `sample_number`, being the 1-based integer index of the sample from the original bamlist, and `sample_name`, being the sample name of that sample as taken from the BAM header. Next, we have the pair of imputed alleles, given in columns `bestallele1` and `bestallele2`. Finally, `post_prob` gives the posterior probability of the combination of alleles, and `sums` gives the sum of posterior probabilities of successive alleles (i.e. cumulative sum of post_prob across pairs of alleles). Pairs of alleles are outputted until the `sums` argument exceeds the QUILT-HLA parameter `summary_best_alleles_threshold` with default value `0.99`.
+
+The difference between `all` and `topresult` is that `topresult` only outputs the single most likely pair of alleles for each sample, while `all` continues until the `sums` value exceeds the threshold as explained just above.
+
+The difference between `combined` and `onlystates` is that `combined` uses information from all reads using both read mapping and imputation using a labelled haplotype reference panel, while `onlystates` uses only the latter. As such you are recommended to use `combined` as your default file to use.
 
 ## Help, options and parameters <a name="paragraph-helpoptionsparams"></a>
 

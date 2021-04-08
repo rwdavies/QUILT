@@ -1593,6 +1593,8 @@ summarize_all_results_and_write_to_disk <- function(
             sample_name = sampleNames[iSample],
             x[[what]]
         )
+        ## re-name some of the output
+        colnames(y)[colnames(y) == "lhoods"] <- "post_prob"
         if (only_take_top_result) {
             y <- y[1, , drop = FALSE]
         }
