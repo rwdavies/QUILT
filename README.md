@@ -75,7 +75,7 @@ wget http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2021_01_15A.tgz ## or curl
 tar -xzvf QUILT_example_2021_01_15A.tgz
 ```
 
-Process reference panel and perform imputation in one step
+Process reference panel and perform imputation in one step. Note that any parameters available jointly in `QUILT` and `QUILT_prepare_reference` that inform how the reference panel is processed must be set in `QUILT_prepare_reference` (for example, `maxRate` bounds the recombination rate, and must be set when running`QUILT_prepare_reference` as the recombination rate is processed in this step).
 ```
 rm -r -f quilt_output
 ./QUILT_prepare_reference.R \

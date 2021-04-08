@@ -254,3 +254,35 @@ test_that("QUILT can use all combinations of posfile, genfile and phasfile in th
 
 
 
+
+
+test_that("QUILT can impute in one step", {
+    
+    outputdir <- STITCH::make_unique_tempdir()
+
+    regionName <- data_package$chr
+    QUILT(
+        outputdir = outputdir,
+        chr = data_package$chr,
+        bamlist = data_package$bamlist,
+        posfile = data_package$posfile,
+        nGibbsSamples = 3,
+        n_seek_its = 1,
+        nGen = 100,
+        reference_haplotype_file = refpack$reference_haplotype_file,
+        reference_legend_file = refpack$reference_legend_file,
+        genetic_map_file = refpack$reference_genetic_map_file
+    )
+
+    which_snps <- NULL
+    
+    ## now evaluate versus truth!
+    check_quilt_output(
+        file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+        data_package = data_package,
+        which_snps = which_snps,
+        tol = 0.1,
+        min_info = 0.9
+    )
+    
+})

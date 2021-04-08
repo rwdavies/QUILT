@@ -47,7 +47,22 @@ QUILT(
   seed = NA,
   hla_run = FALSE,
   downsampleToCov = 30,
-  minGLValue = 1e-10
+  minGLValue = 1e-10,
+  nGen = NA,
+  reference_haplotype_file = "",
+  reference_legend_file = "",
+  reference_sample_file = "",
+  reference_populations = NA,
+  reference_phred = 30,
+  reference_exclude_samplelist_file = "",
+  region_exclude_file = "",
+  genetic_map_file = "",
+  nMaxDH = 2^8 - 1,
+  make_fake_vcf_with_sites_list = FALSE,
+  output_sites_filename = NA,
+  expRate = 1,
+  maxRate = 100,
+  minRate = 0.1
 )
 }
 \arguments{
@@ -136,6 +151,36 @@ QUILT(
 \item{downsampleToCov}{What coverage to downsample individual sites to. This ensures no floating point errors at sites with really high coverage}
 
 \item{minGLValue}{For non-Gibbs full imputation, minimum allowed value in haplotype gl, after normalization. In effect, becomes 1/minGLValue becomes maximum difference allowed between genotype likelihoods}
+
+\item{nGen}{Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure}
+
+\item{reference_haplotype_file}{Path to reference haplotype file in IMPUTE format (file with no header and no rownames, one row per SNP, one column per reference haplotype, space separated, values must be 0 or 1)}
+
+\item{reference_legend_file}{Path to reference haplotype legend file in IMPUTE format (file with one row per SNP, and a header including position for the physical position in 1 based coordinates, a0 for the reference allele, and a1 for the alternate allele)}
+
+\item{reference_sample_file}{Path to reference sample file (file with header, one must be POP, corresponding to populations that can be specified using reference_populations)}
+
+\item{reference_populations}{Vector with character populations to include from reference_sample_file e.g. CHB, CHS}
+
+\item{reference_phred}{Phred scaled likelihood or an error of reference haplotype. Higher means more confidence in reference haplotype genotypes, lower means less confidence}
+
+\item{reference_exclude_samplelist_file}{File with one column of samples to exclude from reference samples e.g. in validation, the samples you are imputing}
+
+\item{region_exclude_file}{File with regions to exclude from constructing the reference panel. Particularly useful for QUILT_HLA, where you want to exclude SNPs in the HLA genes themselves, so that reads contribute either to the read mapping or state inference. This file is space separated with a header of Name, Chr, Start and End, with Name being the HLA gene name (e.g. HLA-A), Chr being the chromosome (e.g. chr6), and Start and End are the 1-based starts and ends of the genes (i.e. where we don't want to consider SNPs for the Gibbs sampling state inference)}
+
+\item{genetic_map_file}{Path to file with genetic map information, a file with 3 white-space delimited entries giving position (1-based), genetic rate map in cM/Mbp, and genetic map in cM. If no file included, rate is based on physical distance and expected rate (expRate)}
+
+\item{nMaxDH}{Integer Maximum number of distinct haplotypes to store in reduced form. Recommended to keep as 2 ** N - 1 where N is an integer greater than 0 i.e. 255, 511, etc}
+
+\item{make_fake_vcf_with_sites_list}{Whether to output a list of sites as a minimal VCF, for example to use with GATK 3 to genotype given sites}
+
+\item{output_sites_filename}{If make_fake_vcf_with_sites_list is TRUE, optional desired filename where to output sites VCF}
+
+\item{expRate}{Expected recombination rate in cM/Mb}
+
+\item{maxRate}{Maximum recomb rate cM/Mb}
+
+\item{minRate}{Minimum recomb rate cM/Mb}
 }
 \value{
 Results in properly formatted version

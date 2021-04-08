@@ -32,7 +32,7 @@ option_list <- list(
     make_option(
         "--quilt_hla_supplementary_info_file",
         type = "character",
-        help = "Path to file with supplementary information about the genes, necessary for proper converstion. File is tab separated without header, with 4 columns, with the following entries. First is the HLA gene name (e.g. A for HLA-A). Second is the correponding row in the _gen.txt IPD-IMGT file. Third is the position of the first column in the reference genome. Fourth is the strand (options 1 or -1)."
+        help = "Path to file with supplementary information about the genes, necessary for proper converstion. File is tab separated with header, with 3 columns. First (allele) is the allele that matches the reference genome. Second (genome_pos) is the position of this allele in the reference genome, finally the strand (strand) (options 1 or -1)"
     ), 
     make_option(
         "--full_regionStart",
