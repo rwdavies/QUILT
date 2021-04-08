@@ -21,12 +21,13 @@ For details of past changes please see [CHANGELOG](CHANGELOG.md).
     1. [Input](#paragraph-io-input)
     2. [Output](#paragraph-io-output)
 5. [Help, options and parameters](#paragraph-helpoptionsparams)
-6. [Important parameters that influence run time and accuracy](#paragraph-paramsimportant)
-7. [Examples and plots](#paragraph-examples)
-8. [License](#paragraph-license)
-9. [Citation](#paragraph-citation)
-10. [Testing](#paragraph-testing)
-11. [Bug reports](#paragraph-bugreports)
+6. [Separating reference panel processing from imputation](#paragraph-separate)
+7. [Important parameters that influence run time and accuracy](#paragraph-paramsimportant)
+8. [Examples and plots](#paragraph-examples)
+9. [License](#paragraph-license)
+10. [Citation](#paragraph-citation)
+11. [Testing](#paragraph-testing)
+12. [Bug reports](#paragraph-bugreports)
 
 
 ## Introduction <a name="paragraph-introduction"></a>
@@ -74,7 +75,7 @@ wget http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2021_01_15A.tgz ## or curl
 tar -xzvf QUILT_example_2021_01_15A.tgz
 ```
 
-First, to re-format the reference panel
+Process reference panel and perform imputation in one step
 ```
 rm -r -f quilt_output
 ./QUILT_prepare_reference.R \
@@ -132,6 +133,37 @@ For all of these, it can be useful to take a look at the example files provided 
 ```
 
 
+## Separating reference panel processing from imputation <a name="paragraph-separate"></a>
+
+For large reference panels, and for many jobs involving imputing few samples, it can be computationally efficient to pre-process the reference panel and save the output, and use this output for multiple independent runs. Here is an example for how we would do this, for the case of the quick start example
+
+First, to re-format the reference panel
+```
+rm -r -f quilt_output
+./QUILT_prepare_reference.R \
+--outputdir=quilt_output \
+--chr=chr20 \
+--nGen=100 \
+--reference_haplotype_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.hap.gz \
+--reference_legend_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.legend.gz \
+--genetic_map_file=package_2021_01_15A/CEU-chr20-final.b38.txt.gz \
+--regionStart=2000001 \
+--regionEnd=2100000 \
+--buffer=10000
+```
+
+Second, to perform imputation
+```
+./QUILT.R \
+--outputdir=quilt_output \
+--chr=chr20 \
+--regionStart=2000001 \
+--regionEnd=2100000 \
+--buffer=10000 \
+--bamlist=package_2021_01_15A/bamlist.1.0.txt \
+--posfile=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.posfile.txt \
+--phasefile=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.phasefile.txt
+```
 
 ## Help, options and parameters <a name="paragraph-helpoptionsparams"></a>
 

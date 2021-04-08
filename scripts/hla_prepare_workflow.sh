@@ -20,7 +20,13 @@ reference_package_dir=`cat ${script} | grep reference_package_dir= | sed 's/refe
 current_dir=`pwd`
 (cd ${reference_package_dir} &&
      rm -f quilt.hrc.hla.all.haplotypes.RData &&
-     tar -czvf QUILT_HLA_reference_package_samples_excluded_2021_04_08.tgz *RData 
+     tar -cvf QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar *RData 
+)
+## manually move the above
+inputs_dir=`cat ${script} | grep inputs_dir= | sed 's/inputs_dir=//g'`
+current_dir=`pwd`
+(cd ${inputs_dir} &&
+     tar -cvf QUILT_HLA_example_bams_2021_04_08.tar *2.0X*bam*
 )
 
 

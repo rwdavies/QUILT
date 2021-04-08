@@ -33,14 +33,14 @@ First, download some prepared reference panel data. This reference panel package
 This example uses a reference panel data package with some of the reference samples excluded(e.g. NA12878). For normal use, use a panel without samples removed. See [Reference packages](#reference-packages) for more details.
 
 ```
-wget something
-tar -xzvf 
+wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar ## or curl -O
+tar -xvf QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar
 ```
 
 Download some example bams
 ```
-wget something
-tar -xzvf 
+wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_example_bams_2021_04_08.tar
+tar -xvf QUILT_HLA_example_bams_2021_04_08.tar
 ```
 
 HLA imputation for a particular region (here A) can be done as follows
