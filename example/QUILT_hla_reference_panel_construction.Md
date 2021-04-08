@@ -7,8 +7,8 @@ Here code to generate the provided reference panel data package is provided and 
 Where you want to store the files as you work on them, and where the output files should go
 
 ```
-inputs_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_04_07/
-test_dir=/data/smew1/rdavies/quilt_hla_finalize_with_simon/HLA_TEST_2021_04_07/
+inputs_dir=/data/smew1/rdavies/quilt_hla_reference_panel_build_2021_04_08/
+test_dir=/data/smew1/rdavies/quilt_hla_reference_panel_build_2021_04_08/
 mkdir -p ${test_dir}
 mkdir -p ${inputs_dir}
 ```
@@ -47,10 +47,10 @@ wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HLA_types/201811
 
 Here we can optionally make an exclusion file of samples we want to remove from constructing the reference panel (for example if using them to test performance)
 ```
-# exclude NA12878 and an ASW sample for example usage below
+# exclude NA12878 and two ASW samples for example usage below
 echo NA12878 > ${test_dir}exclude_ref_samples_for_testing.txt
-echo NA19625 > ${test_dir}exclude_ref_samples_for_testing.txt
-echo NA19700 > ${test_dir}exclude_ref_samples_for_testing.txt
+echo NA19625 >> ${test_dir}exclude_ref_samples_for_testing.txt
+echo NA19700 >> ${test_dir}exclude_ref_samples_for_testing.txt
 ```
 
 

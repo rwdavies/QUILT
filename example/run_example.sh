@@ -18,6 +18,8 @@ n=`echo $((${n} / 2))`
 if [ "${SCRIPT_TEMP_FILE}" == "NA" ]
 then
     script_temp_file=$(mktemp)
+else
+    script_temp_file=${SCRIPT_TEMP_FILE}
 fi
 
 for i in $(seq 1 ${n})
@@ -33,9 +35,9 @@ done
 grep -v "^\[" ${script_temp_file} > ${script_temp_file}.temp
 mv ${script_temp_file}.temp ${script_temp_file}
 
-RUN
-bash -e ${script_temp_file}
-
-## clean up
-rm ${script_temp_file}
+if [ "${SCRIPT_TEMP_FILE}" == "NA" ]
+then
+    bash -e ${script_temp_file}
+    rm ${script_temp_file}
+fi
 rm ${lines_temp_file}

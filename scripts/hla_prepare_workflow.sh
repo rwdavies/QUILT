@@ -2,6 +2,8 @@ set -e
 
 cd ~/proj/QUILT/
 
+set -e
+
 ## Run twice, to make the two packages
 
 ## WITH exclusion of samples
@@ -9,7 +11,18 @@ cd ~/proj/QUILT/
 ## Make tar-ball of required outputs
 
 ## WITHOUT exclusion of samples
-./example/run_example.sh example/QUILT_hla_reference_panel_construction.Md example/reference_panel_no_exclusion.sh
+script=example/reference_panel_no_exclusion.sh
+rm -f ${script}
+./example/run_example.sh example/QUILT_hla_reference_panel_construction.Md ${script}
+## remove lines about exclusion, replace with empty file
+where=`grep -n "exclude NA12878 and two ASW samples for example usage below" ${script} | cut -f1 --delimiter=":"`
+cat ${script} | 
+    awk '{if(NR=='${where}') {print "echo  > ${test_dir}exclude_ref_samples_for_testing.txt"} else {print $0}}' | 
+    awk '{if(NR=='${where}' + 1) {print ""}else {print $0}}' | 
+    awk '{if(NR=='${where}' + 2) {print ""}else {print $0}}' | 
+    awk '{if(NR=='${where}' + 3) {print ""}else {print $0}}' > ${script}.temp
+mv ${script}.temp ${script}
+
 ## remove exclusion here
 example/reference_panel_no_exclusion.sh
 ## Make tar-ball of required outputs
