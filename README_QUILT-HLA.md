@@ -29,7 +29,8 @@ A quick start to ensure QUILT-HLA is properly installed and working can be perfo
 
 First, download some prepared reference panel data. This reference panel package was prepared as described in [Preparing a reference package](#paragraph-preparing), and uses data from IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129).
 
-<span style="color:red">IMPORTANT:</span> This example uses a reference panel data package with a few example samples removed (e.g. NA12878). For normal use, use a panel without samples removed. See [Reference packages](#reference-packages) for more details.
+<a><img src="important.png"/></a>
+This example uses a reference panel data package with a few example samples removed (e.g. NA12878). For normal use, use a panel without samples removed. See [Reference packages](#reference-packages) for more details.
 
 ```
 wget something
