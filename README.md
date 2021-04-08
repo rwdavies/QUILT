@@ -155,6 +155,7 @@ Second, to perform imputation
 --posfile=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.posfile.txt \
 --phasefile=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.phasefile.txt
 ```
+Note that when running multiple versions of QUILT against the same reference data, it is useful to set `output_filename` to change the default filename for each job, and to keep the temporary directories used independent (which is the behaviour for default `tempdir`).
 
 ## Help, options and parameters <a name="paragraph-helpoptionsparams"></a>
 
