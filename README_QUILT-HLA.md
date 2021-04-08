@@ -30,7 +30,7 @@ A quick start to ensure QUILT-HLA is properly installed and working can be perfo
 First, download some prepared reference panel data. This reference panel package was prepared as described in [Preparing a reference package](#paragraph-preparing), and uses data from IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129).
 
 <a><img src="important.png"/></a>
-This example uses a reference panel data package with a few example samples removed (e.g. NA12878). For normal use, use a panel without samples removed. See [Reference packages](#reference-packages) for more details.
+This example uses a reference panel data package with some of the reference samples excluded(e.g. NA12878). For normal use, use a panel without samples removed. See [Reference packages](#reference-packages) for more details.
 
 ```
 wget something
@@ -80,8 +80,7 @@ Here we see that NA12878 is correctly imputed, as is NA19700, while for NA19625,
 ### Input <a name="paragraph-io-input"></a>
 
 - Bams. Given as a bamlist (i.e. a file with one row per sample, the path to the bam)
-- Reference package. For available pre-made options, see [Reference packages](#reference-packages). For more detail about building your own, see [Preparing haplotype files](#paragraph-preparing-haplotypes). For help in making a reference package, or any other questions or bugs, please feel free to email or file an issue on github.
-- Ancillary files. For a particular reference genome and reference package. 
+- Reference package and ancillary files. For available pre-made options, see [Reference packages](#reference-packages). For more detail about building your own, see [Preparing haplotype files](#paragraph-preparing-haplotypes). For help in making a reference package, or any other questions or bugs, please feel free to email or file an issue on github.
 
 ### Output <a name="paragraph-io-output"></a>
 
@@ -95,9 +94,9 @@ sample_number	sample_name	bestallele1	bestallele2	lhoods	sums
 ```
 The first two columns are straightforward, of `sample_number`, being the 1-based integer index of the sample from the original bamlist, and `sample_name`, being the sample name of that sample as taken from the BAM header. Next, we have the pair of imputed alleles, given in columns `bestallele1` and `bestallele2`. Finally, `post_prob` gives the posterior probability of the combination of alleles, and `sums` gives the sum of posterior probabilities of successive alleles (i.e. cumulative sum of post_prob across pairs of alleles). Pairs of alleles are outputted until the `sums` argument exceeds the QUILT-HLA parameter `summary_best_alleles_threshold` with default value `0.99`.
 
-The difference between `all` and `topresult` is that `topresult` only outputs the single most likely pair of alleles for each sample, while `all` continues until the `sums` value exceeds the threshold as explained just above.
+The difference between `all/topresult` is that `topresult` only outputs the single most likely pair of alleles for each sample, while `all` continues until the `sums` value exceeds the threshold as explained just above.
 
-The difference between `combined` and `onlystates` is that `combined` uses information from all reads using both read mapping and imputation using a labelled haplotype reference panel, while `onlystates` uses only the latter. As such you are recommended to use `combined` as your default file to use.
+The difference between `combined/onlystates` is that `combined` uses information from all reads using both read mapping and imputation using a labelled haplotype reference panel, while `onlystates` uses only the imputation and not direct read mapping. As such you are recommended to use `combined` as your default file to use.
 
 ## Help, options and parameters <a name="paragraph-helpoptionsparams"></a>
 

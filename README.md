@@ -31,7 +31,7 @@ For details of past changes please see [CHANGELOG](CHANGELOG.md).
 
 ## Introduction <a name="paragraph-introduction"></a>
 
-Forthcoming. 
+QUILT is a program for rapid diploid genotype imputation from low-coverage sequence using a large reference panel. QUILT uses Gibbs sampling to partition reads into sets reflecting maternal and paternal origin, which facilitates rapid haploid imputation using large reference panels. This read label partioning is accurate over long distances, and this therefore enables highly accurate imputation, close to theoretical limits (i.e. QUILT is almost as accurate in imputing without knowing the true origin of each sequencing read, as if it had known it). Statistically, the QUILT model works on a per-read basis, and is base quality aware, meaning it can accurately impute from diverse inputs, including noisy long read sequencing (e.g. Oxford Nanopore Technologies), and barcoded Illumina sequencing (e.g. Haplotagging). Accuracy using QUILT and lc-WGS meets or exceeds other methods for lc-WGS imputation, particularly for high diversity regions or genomes (e.g. MHC, or non-human species). Relative to DNA genotyping microarrays, QUILT offers improved accuracy at reduced cost, particularly for diverse populations, with the potential for accuracy to nearly double at rare SNPs (e.g. 2.0X lc-WGS vs microarrays for SNPs at 0.1% frequency). Further details and detailed evaluations are available in the [QUILT paper](README.md#paragraph-citation).
 
 ## Installation <a name="paragraph-installation"></a>
 

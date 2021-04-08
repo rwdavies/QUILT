@@ -16,18 +16,21 @@ rm -f ${script}
 bash ${script}
 ## Once done, make tar-ball of required outputs
 ## grab directory specified in above
-
-exit
-
-
-/data/smew1/rdavies/quilt_hla_reference_panel_build_2021_04_08/
-
-exit
-
+reference_package_dir=`cat ${script} | grep reference_package_dir= | sed 's/reference_package_dir=//g'`
+current_dir=`pwd`
+(cd ${reference_package_dir} &&
+     rm -f quilt.hrc.hla.all.haplotypes.RData &&
+     tar -czvf QUILT_HLA_reference_package_samples_excluded_2021_04_08.tgz *RData 
+)
 
 
 
+
+
+
+##
 ## WITHOUT exclusion of samples
+##
 script=example/reference_panel_no_exclusion.sh
 rm -f ${script}
 ./example/run_example.sh example/QUILT_hla_reference_panel_construction.Md ${script}
