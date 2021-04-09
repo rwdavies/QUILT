@@ -7,9 +7,9 @@ Here code to generate the provided reference panel data package is provided and 
 Where you want to store the files as you work on them, and where the output files should go
 
 ```
-inputs_dir=/data/smew1/rdavies/quilt_hla_2021_04_08/
-test_dir=/data/smew1/rdavies/quilt_hla_2021_04_08/
-reference_package_dir=/data/smew1/rdavies/quilt_hla_reference_panel_files_2021_04_08/
+inputs_dir=/data/smew1/rdavies/quilt_hla_2021_04_08B/
+test_dir=/data/smew1/rdavies/quilt_hla_2021_04_08B/
+reference_package_dir=/data/smew1/rdavies/quilt_hla_reference_panel_files_2021_04_08B/
 mkdir -p ${test_dir}
 mkdir -p ${inputs_dir}
 mkdir -p ${reference_package_dir}

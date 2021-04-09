@@ -4,7 +4,7 @@ cd ~/proj/QUILT/
 
 set -e
 
-
+output_date=2021_04_08B
 ##
 ## WITH exclusion of samples
 ##
@@ -21,9 +21,9 @@ rm -f quilt.hrc.hla.all.haplotypes.RData
 cd ..
 temp=`basename ${reference_package_dir}`
 temp2=`echo "${temp}/*.RData"`
-tar -cvf QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar ${temp2}
-chmod 755 QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar
-rsync -av QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar ~/pub_html/
+tar -cvf QUILT_HLA_reference_package_samples_excluded_${output_date}.tar ${temp2}
+chmod 755 QUILT_HLA_reference_package_samples_excluded_${output_date}.tar
+rsync -av QUILT_HLA_reference_package_samples_excluded_${output_date}.tar ~/pub_html/
 cd ${current_dir}
 
 ## also bams
@@ -32,11 +32,11 @@ current_dir=`pwd`
 cd ${inputs_dir}
 cat bamlist.txt | xargs -l basename > bamlist2.txt
 mv bamlist2.txt bamlist.txt
-tar -cvf QUILT_HLA_example_bams_2021_04_08.tar *2.0X*bam* bamlist.txt
-chmod 755 QUILT_HLA_example_bams_2021_04_08.tar
-rsync -av QUILT_HLA_example_bams_2021_04_08.tar ~/pub_html/
+tar -cvf QUILT_HLA_example_bams_${output_date}.tar *2.0X*bam* bamlist.txt
+chmod 755 QUILT_HLA_example_bams_${output_date}.tar
+rsync -av QUILT_HLA_example_bams_${output_date}.tar ~/pub_html/
 
-
+exit
 
 
 
@@ -55,10 +55,8 @@ cat ${script} |
     awk '{if(NR=='${where}' + 2) {print ""}else {print $0}}' | 
     awk '{if(NR=='${where}' + 3) {print ""}else {print $0}}' > ${script}.temp
 mv ${script}.temp ${script}
-
-## remove exclusion here
-example/reference_panel_no_exclusion.sh
-## Make tar-ball of required outputs
+## run here
+bash example/reference_panel_no_exclusion.sh
 
 
 exit
