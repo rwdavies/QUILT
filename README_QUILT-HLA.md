@@ -50,8 +50,8 @@ HLA_GENE="A"
 --outputdir=quilt_output \
 --bamlist=bamlist.txt \
 --region=${HLA_GENE} \
---prepared_hla_reference_dir=quilt_hla_reference_data \
---quilt_hla_haplotype_panelfile=quilt_hla_reference_data/quilt.hrc.hla.${HLA_GENE}.haplotypes.RData \
+--prepared_hla_reference_dir=quilt_hla_reference_panel_files_2021_04_08 \
+--quilt_hla_haplotype_panelfile=quilt_hla_reference_panel_files_2021_04_08/quilt.hrc.hla.${HLA_GENE}.haplotypes.RData \
 --hla_gene_region_file=hla_ancillary_files/hlagenes.txt \
 --dict_file=hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
 ```
