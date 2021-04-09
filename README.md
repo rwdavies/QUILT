@@ -186,7 +186,7 @@ QUILT and the code in this repo is available under a GPL3 license. For more info
 
 ## Citation <a name="paragraph-citation"></a>
 
-Forthcoming
+Davies, R. W., Kucka M., Su D., Shi S., Flanagan M., Cunniff C. M., Chan Y. F. , Myers S. Rapid genotype imputation from sequence with reference panels. In press, Nature Genetics
 
 ## Testing <a name="paragraph-testing"></a>
 
