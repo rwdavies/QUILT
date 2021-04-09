@@ -47,11 +47,14 @@ git clone --recursive https://github.com/rwdavies/QUILT.git
 cd QUILT
 ./scripts/install-dependencies.sh
 cd releases
-wget https://github.com/rwdavies/quilt/releases/download/1.0.0/QUILT_1.0.0.tar.gz ## or curl -O
-R CMD INSTALL QUILT_1.0.0.tar.gz
+wget https://github.com/rwdavies/quilt/releases/download/0.1.6/QUILT_0.1.6.tar.gz ## or curl -O
+R CMD INSTALL QUILT_0.1.6.tar.gz
 ```
 
 ### conda <a name="paragraph-installation-conda"></a>
+
+Note: This is not yet available but will be made available shortly.
+
 QUILT (as r-quilt) can be installed using [conda](https://conda.io/miniconda.html). Full tutorials can be found elsewhere, but briefly, something like this should work
 ```
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
