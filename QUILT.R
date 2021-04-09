@@ -261,6 +261,12 @@ option_list <- list(
         default = 1e-10
     ), 
     make_option(
+        "--minimum_number_of_sample_reads",
+        type = "integer",
+        help = "Minimum number of sample reads a sample must have for imputation to proceed. Samples that have fewer reads than this will not be imputed in a given region and all output will be set to missing [default 2] ",
+        default = 2
+    ), 
+    make_option(
         "--nGen",
         type = "double",
         help = "Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure [default NA] ",
@@ -398,6 +404,7 @@ QUILT(
     hla_run = opt$hla_run,
     downsampleToCov = opt$downsampleToCov,
     minGLValue = opt$minGLValue,
+    minimum_number_of_sample_reads = opt$minimum_number_of_sample_reads,
     nGen = opt$nGen,
     reference_haplotype_file = opt$reference_haplotype_file,
     reference_legend_file = opt$reference_legend_file,

@@ -75,7 +75,6 @@ arma::imat inflate_fhb(
     Rcpp::IntegerVector& haps_to_get,
     const int nSNPs
 ) {
-    const int K = rhb.n_cols;
     const int nbSNPs = rhb.n_rows;
     // i think this function might work without kmax
     // but probably safer / simpler to keep it in
@@ -139,9 +138,11 @@ void rcpp_make_eMatRead_t(
     //
     // new variables
     //
-    double pR, pA, eps, x, d1;
+    double eps, x, d1;
+    double pR = 1;
+    double pA = 1; 
     double d2 = 1 / maxDifferenceBetweenReads;
-    int j, k, J, readSNP, jj, iRead;
+    int j, k, J, jj, iRead;
     //arma::mat eMatRead_t = arma::ones(K,nReads);
     //
     // now build
@@ -152,7 +153,7 @@ void rcpp_make_eMatRead_t(
         // note - this is no longer quite accurate
         // sampleReads.push_back(Rcpp::List::create(nU,d,phiU,pRU));
         J = as<int>(readData[0]); // number of Unique SNPs on read
-        readSNP = as<int>(readData[1]); // leading SNP from read
+        //int readSNP = as<int>(readData[1]); // leading SNP from read
         arma::ivec bqU = as<arma::ivec>(readData[2]); // bq for each SNP
         arma::ivec pRU = as<arma::ivec>(readData[3]); // position of each SNP from 0 to T-1
         // once each SNP is done, have P(read | k), can multiply to get P(read|(k1,k2))
@@ -316,8 +317,9 @@ Rcpp::List rcpp_make_fb_snp_offsets(
 ) {
     int s, e;
     arma::mat alphaHatBlocks_t = arma::zeros(alphaHat_t.n_rows, blocks_for_output.n_rows);
-    arma::mat betaHatBlocks_t = arma::zeros(betaHat_t.n_rows, blocks_for_output.n_rows);    
-    for(int i_output=0; i_output < blocks_for_output.n_rows; i_output++) {
+    arma::mat betaHatBlocks_t = arma::zeros(betaHat_t.n_rows, blocks_for_output.n_rows);
+    const int blocks_for_output_n_rows = blocks_for_output.n_rows;
+    for(int i_output=0; i_output < blocks_for_output_n_rows; i_output++) {
         s = blocks_for_output(i_output, 2); // these are 0-based. these are the grid entries
         e = blocks_for_output(i_output, 3);
         alphaHatBlocks_t.col(i_output) = alphaHat_t.col(s);

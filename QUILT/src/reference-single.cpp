@@ -267,7 +267,8 @@ void rcpp_internal_make_eMatRead_t_using_binary(
     double ref_one_minus_error = 1 - ref_error;
     //
     arma::imat hap;
-    int iRead, s, e, j;
+    int iRead, s, j;
+    int e = 0;
     int KL, ik, sh, eh, i;
     double prob, pR, pA;
     Rcpp::IntegerVector to_pass_in(1);
@@ -330,7 +331,8 @@ void Rcpp_haploid_reference_single_forward(
     const double maxEmissionMatrixDifference = 1e10,
     const bool normalize_emissions = false 
 ) {
-    double jump_prob, one_minus_jump_prob, not_jump_prob;
+    double jump_prob, not_jump_prob; //
+    double one_minus_jump_prob = 1;
     int s, e, nSNPsLocal, i, iGrid, k;
     double ref_one_minus_error = 1 - ref_error;
     //const int n_which_hapMatcher_0 = which_hapMatcher_0.n_rows;
@@ -351,7 +353,7 @@ void Rcpp_haploid_reference_single_forward(
     double min_emission_prob = 1;
     double prev_alphaHat_t_col_sum = 1;
     double jump_prob_plus = 1;
-    double one_over_maxEmissionMatrixDifference = 1 / maxEmissionMatrixDifference;
+    // double one_over_maxEmissionMatrixDifference = 1 / maxEmissionMatrixDifference;
     double emission_max = 1;
     //
     for(iGrid = 1; iGrid < nGrids; iGrid++) {
@@ -523,7 +525,8 @@ void Rcpp_haploid_reference_single_forward_version2(
     const double maxEmissionMatrixDifference = 1e10,
     const bool normalize_emissions = false
 ) {
-    double jump_prob, one_minus_jump_prob, not_jump_prob;
+    double jump_prob, not_jump_prob; //
+    double one_minus_jump_prob = 1;
     int s, e, nSNPsLocal, i, iGrid, k;
     double ref_one_minus_error = 1 - ref_error;
     //const int n_which_hapMatcher_0 = which_hapMatcher_0.n_rows;
@@ -546,7 +549,7 @@ void Rcpp_haploid_reference_single_forward_version2(
     double jump_prob_plus = 1;
     double jump_prob_plus_divided_by_not_jump = 1;
     double x = 0; // misc
-    double one_over_maxEmissionMatrixDifference = 1 / maxEmissionMatrixDifference;
+    // double one_over_maxEmissionMatrixDifference = 1 / maxEmissionMatrixDifference;
     double emission_max = 1;
     Rcpp::IntegerVector vals_to_redo;    
     //
@@ -605,7 +608,7 @@ void Rcpp_haploid_reference_single_forward_version2(
                 //
                 // this setting of this to be the max here should protect against situations where many of the haplotypes are poor matches, e.g. if all of them are 1x-20, then multiplying here by 1, and then re-inserting later, would lead to underflow problems. unlikely to be a problem for dense reference panels
                 //
-                double max_emission_prob = arma::max(eMatDH_col);
+                // double max_emission_prob = arma::max(eMatDH_col);
 		run_total = 0;
                 //
                 // first, do special cases
@@ -788,7 +791,8 @@ void Rcpp_haploid_reference_single_backward(
     // 
     //
     double ref_one_minus_error = 1 - ref_error;    
-    double jump_prob, one_minus_jump_prob, not_jump_prob;
+    double jump_prob, not_jump_prob;
+    double one_minus_jump_prob = 1;
     int b, s, e, nSNPsLocal, i, iGrid, k, dh;
     const double double_K = double(K);
     arma::mat gl_local(2, 32);
@@ -1043,7 +1047,8 @@ void Rcpp_haploid_reference_single_backward_version2(
     // 
     //
     double ref_one_minus_error = 1 - ref_error;    
-    double jump_prob, one_minus_jump_prob;
+    double jump_prob; //
+    double one_minus_jump_prob = 1;
     double not_jump_prob = 1;
     int b, s, e, nSNPsLocal, i, iGrid, k, dh;
     const double double_K = double(K);
@@ -1065,7 +1070,8 @@ void Rcpp_haploid_reference_single_backward_version2(
     arma::colvec prob_col(K);
     double sum_e_times_b = 0;
     //double prev_val = -1; // argh
-    double min_emission_prob, max_emission_prob;
+    double min_emission_prob = 1;
+    double max_emission_prob = 1;
     double B_prev = 1;
     double B_prev_star = 1;
     double emission_max = 1;

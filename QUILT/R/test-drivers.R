@@ -28,25 +28,27 @@ check_quilt_output <- function(
         sample_truth_gen <- sample_truth_haps[, 1] + sample_truth_haps[, 2]
         sample_results <- t(sapply(strsplit(per_col_vcf, ":"), I))
         ## check not too much missingness i.e. non-confident data
-        expect_true((sum(sample_results[ ,1] == "./.") / nSNPs) < max_missingness)
+        expect_true((sum(sample_results[ ,1] == "./.") / nSNPs) <= max_missingness)
         ## check genotypes that exist
         gt <- c(NA, 0, 1, 2)[match(sample_results[, 1], c("./.", "0/0", "0/1", "1/1"))]
         x <- gt != sample_truth_gen
-        expect_true(sum(x, na.rm = TRUE) / sum(!is.na(x)) < tol)
-        ## now check dosages
-        expect_true(max(abs(as.numeric(sample_results[, 3]) - sample_truth_gen)) < tol)
-        ## now check haplotype dosages - hmm, not sure if safe, could be recombs
-        ## should ideally be PSE based, but oh well, these are small tests
-        observed_haps <- t(sapply(strsplit(unlist(strsplit(sample_results[, 4], ":")), ","), I))
-        val1 <- max(c(
-            max(abs(as.numeric(observed_haps[, 1]) - sample_truth_haps[, 1])),
-            max(abs(as.numeric(observed_haps[, 2]) - sample_truth_haps[, 2]))
-        ))
-        val2 <- max(c(
-            max(abs(as.numeric(observed_haps[, 1]) - sample_truth_haps[, 2])),
-            max(abs(as.numeric(observed_haps[, 2]) - sample_truth_haps[, 1]))
-        ))
-        expect_true((val1 < tol) | (val2 < tol))
+        if (sum(!is.na(x)) > 0) {
+            expect_true(sum(x, na.rm = TRUE) / sum(!is.na(x)) <= tol)
+            ## now check dosages
+            expect_true(max(abs(as.numeric(sample_results[, 3]) - sample_truth_gen)) < tol)
+            ## now check haplotype dosages - hmm, not sure if safe, could be recombs
+            ## should ideally be PSE based, but oh well, these are small tests
+            observed_haps <- t(sapply(strsplit(unlist(strsplit(sample_results[, 4], ":")), ","), I))
+            val1 <- max(c(
+                max(abs(as.numeric(observed_haps[, 1]) - sample_truth_haps[, 1])),
+                max(abs(as.numeric(observed_haps[, 2]) - sample_truth_haps[, 2]))
+            ))
+            val2 <- max(c(
+                max(abs(as.numeric(observed_haps[, 1]) - sample_truth_haps[, 2])),
+                max(abs(as.numeric(observed_haps[, 2]) - sample_truth_haps[, 1]))
+            ))
+            expect_true((val1 < tol) | (val2 < tol))
+        }
     }
     return(NULL)
 }

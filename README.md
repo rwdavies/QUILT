@@ -23,7 +23,7 @@ For details of past changes please see [CHANGELOG](CHANGELOG.md).
 5. [Help, options and parameters](#paragraph-helpoptionsparams)
 6. [Separating reference panel processing from imputation](#paragraph-separate)
 7. [Important parameters that influence run time and accuracy](#paragraph-paramsimportant)
-8. [Examples and plots](#paragraph-examples)
+8. [Examples](#paragraph-examples)
 9. [License](#paragraph-license)
 10. [Citation](#paragraph-citation)
 11. [Testing](#paragraph-testing)
@@ -176,9 +176,9 @@ These parameters are most likely to influence run time and accuracy
 
 
 
-## Examples and plots <a name="paragraph-examples"></a>
+## Examples <a name="paragraph-examples"></a>
 
-In this directory you will find [example/QUILT_usage.Md](example/QUILT_usage.Md), with for now just one example, a larger version of the quick start example. This can be run using either  `./example/run_example.sh example/QUILT_usage.Md`, or can be run interactively line by line from the [example/QUILT_usage.Md](example/QUILT_usage.Md) file. It also contains an explanation of what the plots are, and why they might be useful.
+In this directory you will find [example/QUILT_usage.Md](example/QUILT_usage.Md), with for now just one example, a larger version of the quick start example. This can be run using either  `./example/run_example.sh example/QUILT_usage.Md`, or can be run interactively line by line from the [example/QUILT_usage.Md](example/QUILT_usage.Md) file. 
 
 ## License <a name="paragraph-license"></a>
 

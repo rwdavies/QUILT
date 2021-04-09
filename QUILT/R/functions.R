@@ -524,7 +524,8 @@ get_and_impute_one_sample <- function(
     gamma_physically_closest_to,
     hla_run,
     downsampleToCov,
-    minGLValue
+    minGLValue,
+    minimum_number_of_sample_reads
 ) {
 
     sample_name <- sampleNames[iSample]
@@ -542,9 +543,9 @@ get_and_impute_one_sample <- function(
         iSizeUpperLimit = iSizeUpperLimit,
         bqFilter = bqFilter,
         chr = chr,
-        N = 1,
+        N = length(sampleNames),
         downsampleToCov = downsampleToCov,
-        sampleNames = "sample",
+        sampleNames = sampleNames,
         inputdir = tempdir,
         regionName = regionName,
         tempdir = tempdir,
@@ -553,12 +554,30 @@ get_and_impute_one_sample <- function(
         chrLength = NA,
         save_sampleReadsInfo = TRUE,
         use_bx_tag = use_bx_tag,
-        bxTagUpperLimit = bxTagUpperLimit
+        bxTagUpperLimit = bxTagUpperLimit,
+        default_sample_no_read_behaviour = "return_null"
     )
 
     load(file_sampleReads(tempdir, iSample, regionName))
     load(file_sampleReadsInfo(tempdir, iSample, regionName))
 
+    if (length(sampleReads) < minimum_number_of_sample_reads) {
+        print_message(paste0("Sample number ", iSample, " with sample name ", sampleNames[iSample], " has ", length(sampleReads), " reads which is fewer than the minimum ", minimum_number_of_sample_reads, ". This sample will therefore not be imputed and all results will be set to missing"))
+        ## dummy up output here?
+        ## note - useful, see writers.R,
+        ## FORMAT <- "GT:GP:DS:HD" ## genotypes, posteriors, dosages, haploid-dosages
+        per_sample_vcf_col <- "./.:.,.,.:.:.,."
+        if (addOptimalHapsToVCF & have_truth_haplotypes) {
+            FORMAT <- "GT:GP:DS:HD:OHD" ## genotypes, posteriors, dosages, haploid-dosages, optimal haploid-dosages
+            per_sample_vcf_col <- paste0(per_sample_vcf_col, ":.,.")
+        }
+        to_return <- list(
+            sample_was_imputed = FALSE,
+            per_sample_vcf_col = per_sample_vcf_col
+        )
+        return(to_return)
+    }
+    
     sample_alleleCount <- get_alleleCount(sampleReads, nrow(pos))
     print_message(paste0("The average depth of this sample is:", mean(sample_alleleCount[, 2])))
     print_message(paste0("There are ", length(sampleReads), " reads under consideration"))
@@ -1062,6 +1081,7 @@ get_and_impute_one_sample <- function(
     
     ## what to return
     to_return <- list(
+        sample_was_imputed = TRUE,
         dosage = dosage,
         super_out_hap_dosages = super_out_hap_dosages,
         super_out_read_labels = super_out_read_labels,            

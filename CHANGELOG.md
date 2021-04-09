@@ -1,3 +1,5 @@
+* v0.1.6
+	* Discovered bug where only 1 read caused an error. Fix (obviate) this by requiring 2 of more reads through parameter minimum_number_of_sample_reads with default currently 2, where samples with fewer than 2 reads have all missing output
 * v0.1.5
 	* Export downsampleToCov and set to 30 to reduce underflow likelihood for high coverage regions
 	* Add minGLValue as bound on haplotype genotype likelihoods also to reduce underflow likelihood

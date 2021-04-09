@@ -286,3 +286,70 @@ test_that("QUILT can impute in one step", {
     )
     
 })
+
+
+test_that("QUILT can impute samples with very few reads", {
+
+    for(n_reads in c(0, 1, 2, 4)) {
+
+        n_snps <- 50
+        n_samples <- 2
+        data_package_local <- STITCH::make_acceptance_test_data_package(
+            reads_span_n_snps = reads_span_n_snps,
+            n_samples = n_samples,
+            n_snps = n_snps,
+            n_reads = n_reads,
+            seed = 2,
+            chr = chr,
+            K = K,
+            phasemaster = phasemaster
+        )
+
+        if (n_reads == 0) {
+            ## change MQ to 0, easier than fixing fixing test drivers...
+            j <- 1
+            inbam <- data_package_local$bam_files[j]
+            system(paste0("mv ", inbam, " ", inbam, ".temp"))
+            cmd <- paste0(
+                "samtools view -h ", inbam, ".temp | ",
+                "sed ", shQuote("s/60/0/g"), "|",
+                "samtools view -b -o ", inbam
+            )
+            system(cmd)
+            system(paste0("samtools index ", inbam))
+        }
+
+        for(addOptimalHapsToVCF in c(FALSE, TRUE)) {
+
+            outputdir <- STITCH::make_unique_tempdir()
+            regionName <- data_package_local$chr
+            QUILT(
+                outputdir = outputdir,
+                chr = data_package_local$chr,
+                bamlist = data_package_local$bamlist,
+                posfile = data_package_local$posfile,
+                nGibbsSamples = 3,
+                n_seek_its = 1,
+                nGen = 100,
+                reference_haplotype_file = refpack$reference_haplotype_file,
+                reference_legend_file = refpack$reference_legend_file,
+                genetic_map_file = refpack$reference_genetic_map_file,
+                addOptimalHapsToVCF = addOptimalHapsToVCF,
+                phasefile = data_package_local$phasefile
+            )
+            which_snps <- NULL
+            
+            ## now evaluate versus truth!
+            check_quilt_output(
+                file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+                data_package = data_package,
+                which_snps = which_snps,
+                tol = 1,
+                min_info = 0,
+                max_missingness = 1.1
+            )
+            
+        }
+    }
+    
+})

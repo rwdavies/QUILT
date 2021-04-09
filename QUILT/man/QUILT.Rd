@@ -48,6 +48,7 @@ QUILT(
   hla_run = FALSE,
   downsampleToCov = 30,
   minGLValue = 1e-10,
+  minimum_number_of_sample_reads = 2,
   nGen = NA,
   reference_haplotype_file = "",
   reference_legend_file = "",
@@ -151,6 +152,8 @@ QUILT(
 \item{downsampleToCov}{What coverage to downsample individual sites to. This ensures no floating point errors at sites with really high coverage}
 
 \item{minGLValue}{For non-Gibbs full imputation, minimum allowed value in haplotype gl, after normalization. In effect, becomes 1/minGLValue becomes maximum difference allowed between genotype likelihoods}
+
+\item{minimum_number_of_sample_reads}{Minimum number of sample reads a sample must have for imputation to proceed. Samples that have fewer reads than this will not be imputed in a given region and all output will be set to missing}
 
 \item{nGen}{Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure}
 

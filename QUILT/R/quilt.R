@@ -43,6 +43,7 @@
 #' @param hla_run Whether to use QUILT to generate posterior state probabilities as part of QUILT-HLA
 #' @param downsampleToCov What coverage to downsample individual sites to. This ensures no floating point errors at sites with really high coverage
 #' @param minGLValue For non-Gibbs full imputation, minimum allowed value in haplotype gl, after normalization. In effect, becomes 1/minGLValue becomes maximum difference allowed between genotype likelihoods
+#' @param minimum_number_of_sample_reads Minimum number of sample reads a sample must have for imputation to proceed. Samples that have fewer reads than this will not be imputed in a given region and all output will be set to missing
 #' @param nGen Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure
 #' @param reference_haplotype_file Path to reference haplotype file in IMPUTE format (file with no header and no rownames, one row per SNP, one column per reference haplotype, space separated, values must be 0 or 1)
 #' @param reference_legend_file Path to reference haplotype legend file in IMPUTE format (file with one row per SNP, and a header including position for the physical position in 1 based coordinates, a0 for the reference allele, and a1 for the alternate allele)
@@ -105,6 +106,7 @@ QUILT <- function(
     hla_run = FALSE,
     downsampleToCov = 30,
     minGLValue = 1e-10,
+    minimum_number_of_sample_reads = 2,
     nGen = NA,
     reference_haplotype_file = "",
     reference_legend_file = "",
@@ -163,6 +165,7 @@ QUILT <- function(
     ## local validate
     ##
     validate_panel_size(panel_size)
+    validate_minimum_number_of_sample_reads(minimum_number_of_sample_reads)     
     if (is.na(tempdir)) {
         tempdir <- tempdir()
     }
@@ -623,17 +626,20 @@ QUILT <- function(
                 gamma_physically_closest_to = gamma_physically_closest_to,
                 hla_run = hla_run,
                 downsampleToCov = downsampleToCov,
-                minGLValue = minGLValue
+                minGLValue = minGLValue,
+                minimum_number_of_sample_reads = minimum_number_of_sample_reads
             )
 
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out
 
-            ## for summarization
-            infoCount[, 1] <- infoCount[, 1, drop = FALSE] + out[["eij"]]
-            infoCount[, 2] <- infoCount[, 2, drop = FALSE] + (out[["fij"]] - out[["eij"]]**2)
-            afCount <- afCount + (out[["eij"]]) / 2
-            hweCount[out[["max_gen"]]] <- hweCount[out[["max_gen"]]] + 1 ## hmmmmm not ideal
-            alleleCount <- alleleCount + out[["per_sample_alleleCount"]]
+            if (out[["sample_was_imputed"]]) {
+                ## for summarization
+                infoCount[, 1] <- infoCount[, 1, drop = FALSE] + out[["eij"]]
+                infoCount[, 2] <- infoCount[, 2, drop = FALSE] + (out[["fij"]] - out[["eij"]]**2)
+                afCount <- afCount + (out[["eij"]]) / 2
+                hweCount[out[["max_gen"]]] <- hweCount[out[["max_gen"]]] + 1 ## hmmmmm not ideal
+                alleleCount <- alleleCount + out[["per_sample_alleleCount"]]
+            }
             
         }
 

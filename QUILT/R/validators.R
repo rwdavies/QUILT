@@ -1,3 +1,13 @@
+validate_minimum_number_of_sample_reads <- function(minimum_number_of_sample_reads) {
+    if (is.na(minimum_number_of_sample_reads)) {
+        stop(paste0("minimum_number_of_sample_reads must be an integer greater than 0"))
+    }
+    if (round(minimum_number_of_sample_reads) != minimum_number_of_sample_reads) {
+        stop(paste0("minimum_number_of_sample_reads must be an integer greater than 0 but you have input:", minimum_number_of_sample_reads))
+    }
+    return(NULL)
+}
+
 validate_nMaxDH <- function(nMaxDH) {
     if (is.na(nMaxDH)) {
         stop(paste0("nMaxDH must be an integer greater than 0"))
