@@ -17,7 +17,7 @@ For general details including installation of QUILT, citation, versions, and cha
 
 ## Introduction <a name="paragraph-introduction"></a>
 
-QUILT-HLA is program for rapid HLA imputation from low-coverage sequence. QUILT-HLA uses information from reads within an HLA locus through direct read mapping, and uses information from imputation using a labelled haplotype reference panel using reads outside an HLA locus. QUILT-HLA is highly accurate, including at low coverage, and has been tested with coverages as low as 0.1X, with higher coverage slightly increasing accuracy through direct read mapping. Imputation results are highest for samples most closely matching the reference panel, but are generally high across populations. Imputation results using low-coverage sequence and QUILT-HLA generally outperform imputation from genotyping microarray input. Further details and detailed evaluations are available in the [QUILT paper](README.md#paragraph-citation).
+QUILT-HLA is program for rapid HLA imputation from low-coverage sequence. QUILT-HLA uses information from reads within an HLA locus through direct read mapping, and uses information from imputation using a labelled haplotype reference panel using reads outside an HLA locus. QUILT-HLA is highly accurate, including at low coverage, and has been tested with coverages as low as 0.1X, with higher coverage slightly increasing accuracy through more reads being available to inform direct read mapping. Imputation results are most accurate for samples most closely matching the reference panel, but are generally high across populations. Imputation results using low-coverage sequence and QUILT-HLA generally outperform imputation from genotyping microarray input. Further details and detailed evaluations are available in the [QUILT paper](README.md#paragraph-citation).
 
 ## Installation <a name="paragraph-installation"></a>
 
@@ -64,7 +64,7 @@ ASW   NA19625   02:01   23:17
 ASW   NA19700   03:01   30:01
 ```
 
-The output of QUILT-HLA will vary slightly run to run, as it uses random sampling, but should look approximately like the following (from file `quilt.hla.output.combined.all.txt`)
+The output of QUILT-HLA will vary slightly run to run, as it uses random sampling, but should look approximately like the following (from file `quilt_output/quilt.hla.output.combined.all.txt`)
 ```
 sample_number	sample_name	bestallele1	bestallele2	post_prob	sums
 1	NA12878	A*01:01	A*11:01	0.999996657444772	0.999996657444772
@@ -105,9 +105,14 @@ For a full list of options, query `?QUILT::QUILT_HLA`, or alternatively, type
 ./QUILT_HLA.R --help
 ```
 
-
 ## Reference packages <a name="reference-packages"></a>
 
+Reference packages built
+
+Max N=X haplotyes built using QUILT 0.1.5, IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129). 
+```
+http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_2021_04_09.tar
+```
 
 ## Preparing a reference package <a name="paragraph-preparing"></a>
 
