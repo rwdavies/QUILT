@@ -190,6 +190,15 @@ QUILT <- function(
         print_message(paste0("Setting seed with seed:", seed))
         set.seed(seed)
     }
+
+    ## getting some weird non-reproducible problems on the cluster
+    ## hopefully this helps sort out what's going on
+    if (!dir.exists(tempdir)) {
+        dir.create(tempdir, showWarnings = FALSE)
+        tempfile <- tempfile(tmpdir = tempdir)
+        cat("test", file = tempfile)
+        unlink(tempfile)
+    }
     
 
     ##print(args)
