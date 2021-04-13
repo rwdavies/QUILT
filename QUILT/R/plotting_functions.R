@@ -381,16 +381,13 @@ plot_of_likelihoods_across_samplings_and_seek_its <- function(
     nGibbsSamples,
     n_gibbs_burn_in_its,
     block_gibbs_iterations,
-    n_seek_its
+    n_seek_its,
     sample_name,
     regionName,
     truth_likelihoods = NULL,
     ylab = "p_H_given_O_L_up_to_C"
 ) {
-
-
     cbPalette <- rep(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"), ceiling(nGibbsSamples / 8))
-
     ## each of nGibbssSamples is a different colour
     ## n_seek_its is blocks
     ##
@@ -466,7 +463,6 @@ plot_of_likelihoods_across_samplings_and_seek_its <- function(
         }
     }
     dev.off()
-    system(paste("rsync -av ", filename, " rescompNew2:~/"))
-    
+    ## system(paste("rsync -av ", filename, " rescompNew2:~/"))
 }
 

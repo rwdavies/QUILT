@@ -1048,13 +1048,17 @@ get_and_impute_one_sample <- function(
 
     ## optionally plot here
     if (plot_per_sample_likelihoods) {
-        stop("WER")
-        ## check out plot_of_likelihood_with_time_new
-        ## also do get for every read (is this reasonable?) (or bound above, e.g. 1M reads?)
-        ## shouldn't be too hard!
-        ## did I ever make this before? clearly yes, is code around?
-
-        
+        plot_of_likelihoods_across_samplings_and_seek_its(
+            for_likelihood_plotting = for_likelihood_plotting,
+            nGibbsSamples = nGibbsSamples,
+            n_gibbs_burn_in_its = n_gibbs_burn_in_its,
+            block_gibbs_iterations = block_gibbs_iterations,
+            n_seek_its = n_seek_its,
+            sample_name = sample_name,
+            regionName = regionName,
+            truth_likelihoods = NULL,
+            ylab = "p_H_given_O_L_up_to_C"
+        )
     }
 
     
