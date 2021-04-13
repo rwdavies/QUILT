@@ -3,6 +3,8 @@ QUILT
 **__Current Version: 0.1.6__**
 Release date: April 9 2021
 
+[![Build Status](https://img.shields.io/travis/rwdavies/QUILT/master.svg)](https://travis-ci.org/rwdavies/QUILT/)
+
 QUILT is an R and C++ program for rapid genotype imputation from low-coverage sequence using a large reference panel.
 
 QUILT-HLA is an R and C++ program for rapid HLA imputation from low-coverage sequence using a labelled reference panel.
