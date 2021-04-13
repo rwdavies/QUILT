@@ -59,6 +59,9 @@
 #' @param expRate Expected recombination rate in cM/Mb
 #' @param maxRate Maximum recomb rate cM/Mb
 #' @param minRate Minimum recomb rate cM/Mb
+#' @param print_extra_timing_information Print extra timing information, i.e. how long sub-processes take, to better understand why things take as long as they do
+#' @param block_gibbs_iterations What iterations to perform block Gibbs sampling for the Gibbs sampler
+#' @param n_gibbs_burn_in_its How many iterations to run the Gibbs sampler for each time it is run
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -121,7 +124,10 @@ QUILT <- function(
     output_sites_filename = NA,
     expRate = 1,
     maxRate = 100,
-    minRate = 0.1
+    minRate = 0.1,
+    print_extra_timing_information = FALSE,
+    block_gibbs_iterations = c(3,6,9),
+    n_gibbs_burn_in_its = 20
 ) {
 
 
@@ -636,7 +642,9 @@ QUILT <- function(
                 hla_run = hla_run,
                 downsampleToCov = downsampleToCov,
                 minGLValue = minGLValue,
-                minimum_number_of_sample_reads = minimum_number_of_sample_reads
+                minimum_number_of_sample_reads = minimum_number_of_sample_reads,
+                print_extra_timing_information = print_extra_timing_information,
+                n_gibbs_burn_in_its = n_gibbs_burn_in_its
             )
 
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out

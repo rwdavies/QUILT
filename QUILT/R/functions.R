@@ -525,11 +525,15 @@ get_and_impute_one_sample <- function(
     hla_run,
     downsampleToCov,
     minGLValue,
-    minimum_number_of_sample_reads
+    minimum_number_of_sample_reads,
+    print_extra_timing_information,
+    n_gibbs_burn_in_its
 ) {
 
+    
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
+    suppressOutput <- !print_extra_timing_information    
 
     ##
     ## sample read stuff - work off bam file!
@@ -717,7 +721,8 @@ get_and_impute_one_sample <- function(
                 regionStart = regionStart,
                 regionEnd = regionEnd,
                 buffer = buffer,
-                minGLValue = minGLValue                
+                minGLValue = minGLValue,
+                suppressOutput = suppressOutput
             )
 
         } else {
@@ -803,10 +808,10 @@ get_and_impute_one_sample <- function(
                 smooth_cm = smooth_cm,
                 which_haps_to_use = which_haps_to_use,
                 n_gibbs_starts = n_gibbs_starts,
-                n_gibbs_burn_in_its = 20,
+                n_gibbs_burn_in_its = n_gibbs_burn_in_its,
                 n_gibbs_sample_its = 1,
                 double_list_of_starting_read_labels = double_list_of_starting_read_labels,
-                block_gibbs_iterations = c(3, 6, 9),
+                block_gibbs_iterations = block_gibbs_iterations,
                 perform_block_gibbs = TRUE,
                 make_plots = make_plots,
                 ref_error = ref_error,
@@ -836,7 +841,7 @@ get_and_impute_one_sample <- function(
                 rescale_eMatRead_t = TRUE,
                 rescale_eMatGrid_t = FALSE,
                 Jmax = 10000,
-                suppressOutput = 1,
+                suppressOutput = suppressOutput,
                 shuffle_bin_radius = shuffle_bin_radius,
                 make_plots_block_gibbs = make_plots_block_gibbs,
                 sample_name = sample_name,
@@ -908,7 +913,8 @@ get_and_impute_one_sample <- function(
                 regionStart = regionStart,
                 regionEnd = regionEnd,
                 buffer = buffer,
-                minGLValue = minGLValue
+                minGLValue = minGLValue,
+                suppressOutput = suppressOutput
             )
             
             which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
@@ -1502,7 +1508,8 @@ impute_using_everything <- function(
     return_betaHat_t = FALSE,
     return_gamma_t = FALSE,
     K_top_matches = 5,
-    heuristic_match_thin = 0.01
+    heuristic_match_thin = 0.01,
+    suppressOutput = 1
 ) {
     ##
     K <- nrow(rhb_t)
@@ -1557,7 +1564,7 @@ impute_using_everything <- function(
             hapMatcher = hapMatcher,
             eMatDH_special_grid_which = eMatDH_special_grid_which,
             eMatDH_special_values_list = eMatDH_special_values_list,
-            suppressOutput = 1,
+            suppressOutput = suppressOutput,
             return_dosage = return_dosage,
             return_betaHat_t = return_betaHat_t,
             return_gamma_t = return_gamma_t,
