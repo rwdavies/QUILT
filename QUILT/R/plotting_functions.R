@@ -371,3 +371,102 @@ plot_of_likelihood_with_time_new <- function(
     }
 }
 
+
+
+
+
+## Modified from "benchnmark_functions"
+plot_of_likelihoods_across_samplings_and_seek_its <- function(
+    for_likelihood_plotting,
+    nGibbsSamples,
+    n_gibbs_burn_in_its,
+    block_gibbs_iterations,
+    n_seek_its
+    sample_name,
+    regionName,
+    truth_likelihoods = NULL,
+    ylab = "p_H_given_O_L_up_to_C"
+) {
+
+
+    cbPalette <- rep(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"), ceiling(nGibbsSamples / 8))
+
+    ## each of nGibbssSamples is a different colour
+    ## n_seek_its is blocks
+    ##
+    ## initialize
+    ##
+    filename <- file.path(
+        outputdir,
+        "plots",
+        paste0("likelihoods.", sample_name, ".",regionName, ".png")
+    )
+    png(filename, height = 2000, width = 1000 * n_seek_its, res = 300)
+    par(mfrow = c(2, 1))
+    for(ylab_option in c("zoomedout", "zoomedin")) {
+        ## first option is zoomed out
+        ## second option is zoomed in
+        ##
+        ## determine what ylimit should be?
+        ##
+        xlim <- c(0, 1)
+        y <- sapply(for_likelihood_plotting, function(x) {
+            sapply(x, function(y) {
+                if (ylab_option == "zoomedout") {
+                    if (n_gibbs_burn_in_its > 4) {            
+                        y[-c(1:2), ylab]
+                    }
+                    y[, ylab]
+                } else {
+                    ## just keep last 4 (or fewer)
+                    y[max(1, nrow(y) - 3):nrow(y), ylab]
+                }
+            })
+        })
+        ylim <- range(y)
+        plot(
+            x = 0, y = 0,
+            xlim = xlim, ylim = ylim,
+            col = "white",
+            xlab = "Progression through Gibbs sampling",
+            ylab = "- log likelihood + constant",
+            axes = FALSE
+        )
+        axis(2)
+        ## plot seek its
+        abline(v = 0, col = "black")    
+        for(i_seek_it in 1:n_seek_its) {
+            abline(v = i_seek_it / n_seek_its, col = "black")
+            ## plot block Gibbs
+            x <- seq(
+            (i_seek_it - 1) / n_seek_its,
+            (i_seek_it - 0)/ n_seek_its,
+            length.out = nrow(for_likelihood_plotting[[1]][[1]])
+            )
+            if (length(block_gibbs_iterations) > 0) {
+                for(val in x[block_gibbs_iterations]) {
+                    print(val)
+                    abline(v = val, col = "purple")
+                }
+            }
+        }
+        for(iGibbsSample in 1:nGibbsSamples) {
+            for(i_seek_it in 1:n_seek_its) {
+                data <- for_likelihood_plotting[[iGibbsSample]][[i_seek_it]]
+                y <- data[, ylab]
+                col <- cbPalette[iGibbsSample]
+                x <- seq(
+                (i_seek_it - 1) / n_seek_its,
+                (i_seek_it - 0)/ n_seek_its,
+                length.out = length(y)
+                )
+                points(x = x, y = y, type = "l", col = col)
+            }
+            ## 
+        }
+    }
+    dev.off()
+    system(paste("rsync -av ", filename, " rescompNew2:~/"))
+    
+}
+

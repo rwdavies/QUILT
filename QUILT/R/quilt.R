@@ -157,7 +157,7 @@ QUILT <- function(
         regionName <- paste0(chr, ".", regionStart,".", regionEnd)
     }
 
-    if (make_plots | make_plots_block_gibbs) {
+    if (make_plots | make_plots_block_gibbs | plot_per_sample_likelihoods) {
         dir.create(file.path(outputdir, "plots"), showWarnings = FALSE, recursive = TRUE)
     }
 

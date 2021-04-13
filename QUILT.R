@@ -355,6 +355,30 @@ option_list <- list(
         type = "double",
         help = "Minimum recomb rate cM/Mb [default 0.1] ",
         default = 0.1
+    ), 
+    make_option(
+        "--print_extra_timing_information",
+        type = "logical",
+        help = "Print extra timing information, i.e. how long sub-processes take, to better understand why things take as long as they do [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
+        "--block_gibbs_iterations",
+        type = "integer",
+        help = "What iterations to perform block Gibbs sampling for the Gibbs sampler [default c(3,6,9)] ",
+        default = "c(3,6,9)"
+    ), 
+    make_option(
+        "--n_gibbs_burn_in_its",
+        type = "integer",
+        help = "How many iterations to run the Gibbs sampler for each time it is run [default 20] ",
+        default = 20
+    ), 
+    make_option(
+        "--plot_per_sample_likelihoods",
+        type = "logical",
+        help = "Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations [default FALSE] ",
+        default = FALSE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -419,5 +443,9 @@ QUILT(
     output_sites_filename = opt$output_sites_filename,
     expRate = opt$expRate,
     maxRate = opt$maxRate,
-    minRate = opt$minRate
+    minRate = opt$minRate,
+    print_extra_timing_information = opt$print_extra_timing_information,
+    block_gibbs_iterations = eval(parse(text=opt$block_gibbs_iterations)),
+    n_gibbs_burn_in_its = opt$n_gibbs_burn_in_its,
+    plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods
 )
