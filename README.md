@@ -69,7 +69,6 @@ Note that currently the command like `QUILT.R` is not included with the bioconda
 
 
 
-
 ## Quick start run <a name="paragraph-quickstartrun"></a>
 
 A quick start to ensure QUILT is properly installed and working can be performed using the following
