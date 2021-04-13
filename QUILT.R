@@ -364,7 +364,7 @@ option_list <- list(
     ), 
     make_option(
         "--block_gibbs_iterations",
-        type = "integer",
+        type = "character",
         help = "What iterations to perform block Gibbs sampling for the Gibbs sampler [default c(3,6,9)] ",
         default = "c(3,6,9)"
     ), 
