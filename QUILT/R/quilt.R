@@ -62,6 +62,7 @@
 #' @param print_extra_timing_information Print extra timing information, i.e. how long sub-processes take, to better understand why things take as long as they do
 #' @param block_gibbs_iterations What iterations to perform block Gibbs sampling for the Gibbs sampler
 #' @param n_gibbs_burn_in_its How many iterations to run the Gibbs sampler for each time it is run
+#' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -127,7 +128,8 @@ QUILT <- function(
     minRate = 0.1,
     print_extra_timing_information = FALSE,
     block_gibbs_iterations = c(3,6,9),
-    n_gibbs_burn_in_its = 20
+    n_gibbs_burn_in_its = 20,
+    plot_per_sample_likelihoods = FALSE
 ) {
 
 
@@ -171,7 +173,9 @@ QUILT <- function(
     ## local validate
     ##
     validate_panel_size(panel_size)
-    validate_minimum_number_of_sample_reads(minimum_number_of_sample_reads)     
+    validate_minimum_number_of_sample_reads(minimum_number_of_sample_reads)
+    validate_niterations_and_block_gibbs(block_gibbs_iterations, n_gibbs_burn_in_its)
+    
     if (is.na(tempdir)) {
         tempdir <- tempdir()
     }
@@ -644,7 +648,9 @@ QUILT <- function(
                 minGLValue = minGLValue,
                 minimum_number_of_sample_reads = minimum_number_of_sample_reads,
                 print_extra_timing_information = print_extra_timing_information,
-                n_gibbs_burn_in_its = n_gibbs_burn_in_its
+                n_gibbs_burn_in_its = n_gibbs_burn_in_its,
+                block_gibbs_iterations = block_gibbs_iterations,
+                plot_per_sample_likelihoods = plot_per_sample_likelihoods
             )
 
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out

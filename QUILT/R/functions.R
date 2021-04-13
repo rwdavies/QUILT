@@ -527,7 +527,9 @@ get_and_impute_one_sample <- function(
     minGLValue,
     minimum_number_of_sample_reads,
     print_extra_timing_information,
-    n_gibbs_burn_in_its
+    n_gibbs_burn_in_its,
+    block_gibbs_iterations,
+    plot_per_sample_likelihoods
 ) {
 
     
@@ -635,10 +637,13 @@ get_and_impute_one_sample <- function(
         have_truth_genotypes <- FALSE
     }
 
+    ## leave NULL, add to it later if needed
+    if (plot_per_sample_likelihoods) {
+        for_likelihood_plotting <- as.list(1:(nGibbsSamples + 1))
+    }
     
     ## don't need this for routine use - or do better matching!
     ## truth_g <- as.integer(truth_gen[, sampleNames[iSample]])
-    
     for(i_gibbs_sample in 1:(nGibbsSamples + 1)) {
 
         if (i_gibbs_sample == (nGibbsSamples + 1)) {
@@ -862,6 +867,13 @@ get_and_impute_one_sample <- function(
                     return_gamma_t <- FALSE
                 }
             }
+
+            if (plot_per_sample_likelihoods) {
+                if (i_it == 1) {
+                    for_likelihood_plotting[[i_gibbs_sample]] <- as.list(1:n_seek_its)
+                }
+                for_likelihood_plotting[[i_gibbs_sample]][[i_it]] <- gibbs_iterate$per_it_likelihoods
+            }
             
             ## am here
             ## continue to work on this. weird error below hmm...
@@ -1034,7 +1046,17 @@ get_and_impute_one_sample <- function(
         print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))        
     }
 
+    ## optionally plot here
+    if (plot_per_sample_likelihoods) {
+        stop("WER")
+        ## check out plot_of_likelihood_with_time_new
+        ## also do get for every read (is this reasonable?) (or bound above, e.g. 1M reads?)
+        ## shouldn't be too hard!
+        ## did I ever make this before? clearly yes, is code around?
 
+    }
+
+    
     ##
     ## 
     ##

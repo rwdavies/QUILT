@@ -63,7 +63,11 @@ QUILT(
   output_sites_filename = NA,
   expRate = 1,
   maxRate = 100,
-  minRate = 0.1
+  minRate = 0.1,
+  print_extra_timing_information = FALSE,
+  block_gibbs_iterations = c(3, 6, 9),
+  n_gibbs_burn_in_its = 20,
+  plot_per_sample_likelihoods = FALSE
 )
 }
 \arguments{
@@ -184,6 +188,14 @@ QUILT(
 \item{maxRate}{Maximum recomb rate cM/Mb}
 
 \item{minRate}{Minimum recomb rate cM/Mb}
+
+\item{print_extra_timing_information}{Print extra timing information, i.e. how long sub-processes take, to better understand why things take as long as they do}
+
+\item{block_gibbs_iterations}{What iterations to perform block Gibbs sampling for the Gibbs sampler}
+
+\item{n_gibbs_burn_in_its}{How many iterations to run the Gibbs sampler for each time it is run}
+
+\item{plot_per_sample_likelihoods}{Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations}
 }
 \value{
 Results in properly formatted version

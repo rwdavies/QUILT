@@ -20,53 +20,34 @@ Rprof(file = profout, gc.profiling = TRUE, line.profiling = TRUE)
 
 profile_start <- Sys.time()
 ##################
-outputdir <- tempdir()
-setwd("~/Google\ Drive/Papers/2020\ -\ STITCH\ Haplotagging\ lcWGS/reviewer_package/QUILT_review_package_2020_07_27/")
-system("head -n1 bamlist.1.0.txt > bamlist.1.0.onesample.txt")
-if (1 == 0) {
-    load(file = "quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData")
-        nMaxDH <- 2 ** 8 - 1
-        ref_error <- 1e-3
-        out <- make_rhb_t_equality(
-            rhb_t = rhb_t,
-            nMaxDH = nMaxDH,
-            nSNPs = nSNPs,
-            ref_error = ref_error
-        )
-        distinctHapsB <- out[["distinctHapsB"]]
-        distinctHapsIE <- out[["distinctHapsIE"]]            
-        hapMatcher <- out[["hapMatcher"]]
-        eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
-        eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
-    
-    save(
-        eMatDH_special_grid_which,
-        eMatDH_special_values_list,
-        af, cM, cM_grid, distinctHapsB, distinctHapsIE, dl, grid, hapMatcher, inRegion2, L, L_grid, nGrids, nSNPs, pos, ref_alleleCount, ref_error, reference_samples, rh_in_L, rhb_t, sigmaCurrent_m,
-        file = "quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData"
-    )
-}
-##    
-## ARGH have_truth_haplotypes <- FALSE
-if (Sys.getenv("USE_PHASEFILE") == "TRUE") {
-    phasefile <- "phase.chr20.2000001.4000000.txt"
-} else {
-    phasefile <- ""
-}
+    library("QUILT")
+setwd("/data/smew1/rdavies/riyan_debug_2021_03_15")
+i_chr <- 20
+set.seed(i_chr)
+regionStart <- regionEnd <- buffer <- NA
+chr <- paste0("chr", i_chr)
+bams <- dir("bams")
+bams <- bams[-grep(".bai", bams)][1]
+write.table(
+    matrix(paste0("bams/", bams), ncol = 1),
+    file = "bamlist.txt",
+    row.names = FALSE,
+    col.names = FALSE,
+    quote = FALSE,
+    sep = ""
+)
+## 
 QUILT(
-    outputdir = "quilt_output",
-    chr = "chr20",
-    regionStart = 2000001,
-    regionEnd = 4000000,
-    buffer = 500000,
-    bamlist = "bamlist.1.0.txt",
-    posfile = "pos.chr20.2000001.4000000.txt",
-    phasefile = phasefile,
-    bqFilter = 10,
+    outputdir = "/data/smew1/rdavies/riyan_debug_2021_03_15",
+    chr = chr,
+    regionStart = regionStart,
+    regionEnd = regionEnd,
+    buffer = buffer,
+    bamlist = "bamlist.txt",
+    override_default_params_for_small_ref_panel = TRUE,
     nCores = 1,
-    prepared_reference_filename = "quilt_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData",
     nGibbsSamples = 3,
-    n_seek_its = 2
+    print_extra_timing_information = TRUE
 )
 ##################
 
