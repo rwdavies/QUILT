@@ -407,6 +407,38 @@ void Rcpp_run_backward_haploid(
 }
 
 
+// modified from above for when alphaMatCurrent_tc is a constant and is 1/K
+// also does something simpler when nothing in that grid
+
+//' @export
+// [[Rcpp::export]]
+void Rcpp_run_backward_haploid_QUILT_faster(
+    arma::mat& betaHat_t,
+    arma::rowvec& c,
+    const arma::mat& eMatGrid_t,
+    const arma::cube& transMatRate_tc_H,
+    const Rcpp::LogicalVector& grid_has_read,
+    const int s
+) {
+    const int nGrids = eMatGrid_t.n_cols;
+    const double one_over_K = 1 / double(eMatGrid_t.n_rows);
+    double x;
+    arma::colvec e_times_b;
+    for(int iGrid = nGrids - 2; iGrid >= 0; --iGrid) {
+        if (grid_has_read(iGrid + 1)) {
+            e_times_b = eMatGrid_t.col(iGrid + 1) % betaHat_t.col(iGrid + 1);
+            x = transMatRate_tc_H(1, iGrid, s) * sum(e_times_b) * one_over_K;
+            betaHat_t.col(iGrid) = c(iGrid) * (x + transMatRate_tc_H(0, iGrid, s) * e_times_b);
+        } else {
+            x = transMatRate_tc_H(1, iGrid, s) * sum(betaHat_t.col(iGrid + 1)) * one_over_K;
+            betaHat_t.col(iGrid) = c(iGrid) * (x + transMatRate_tc_H(0, iGrid, s) * betaHat_t.col(iGrid + 1));
+        }
+    }
+    return;
+}
+
+
+
 //' @export
 // [[Rcpp::export]]
 Rcpp::NumericVector rcpp_make_smoothed_rate(

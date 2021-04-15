@@ -101,6 +101,21 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// Rcpp_run_backward_haploid_QUILT_faster
+void Rcpp_run_backward_haploid_QUILT_faster(arma::mat& betaHat_t, arma::rowvec& c, const arma::mat& eMatGrid_t, const arma::cube& transMatRate_tc_H, const Rcpp::LogicalVector& grid_has_read, const int s);
+RcppExport SEXP _QUILT_Rcpp_run_backward_haploid_QUILT_faster(SEXP betaHat_tSEXP, SEXP cSEXP, SEXP eMatGrid_tSEXP, SEXP transMatRate_tc_HSEXP, SEXP grid_has_readSEXP, SEXP sSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t(betaHat_tSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec& >::type c(cSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type eMatGrid_t(eMatGrid_tSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type transMatRate_tc_H(transMatRate_tc_HSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::LogicalVector& >::type grid_has_read(grid_has_readSEXP);
+    Rcpp::traits::input_parameter< const int >::type s(sSEXP);
+    Rcpp_run_backward_haploid_QUILT_faster(betaHat_t, c, eMatGrid_t, transMatRate_tc_H, grid_has_read, s);
+    return R_NilValue;
+END_RCPP
+}
 // rcpp_make_smoothed_rate
 Rcpp::NumericVector rcpp_make_smoothed_rate(const Rcpp::NumericVector& sigma_rate, const Rcpp::IntegerVector& L_grid, const int shuffle_bin_radius, const bool verbose);
 RcppExport SEXP _QUILT_rcpp_make_smoothed_rate(SEXP sigma_rateSEXP, SEXP L_gridSEXP, SEXP shuffle_bin_radiusSEXP, SEXP verboseSEXP) {
@@ -532,6 +547,25 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// rcpp_alpha_forward_one_QUILT_faster
+void rcpp_alpha_forward_one_QUILT_faster(int s, const int iGrid, const int K, arma::mat& alphaHat_t, const arma::cube& transMatRate_tc_H, const arma::mat& eMatGrid_t, arma::rowvec& c, double& minus_log_c_sum, const Rcpp::LogicalVector& grid_has_read, const bool normalize);
+RcppExport SEXP _QUILT_rcpp_alpha_forward_one_QUILT_faster(SEXP sSEXP, SEXP iGridSEXP, SEXP KSEXP, SEXP alphaHat_tSEXP, SEXP transMatRate_tc_HSEXP, SEXP eMatGrid_tSEXP, SEXP cSEXP, SEXP minus_log_c_sumSEXP, SEXP grid_has_readSEXP, SEXP normalizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< const int >::type iGrid(iGridSEXP);
+    Rcpp::traits::input_parameter< const int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t(alphaHat_tSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type transMatRate_tc_H(transMatRate_tc_HSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type eMatGrid_t(eMatGrid_tSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec& >::type c(cSEXP);
+    Rcpp::traits::input_parameter< double& >::type minus_log_c_sum(minus_log_c_sumSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::LogicalVector& >::type grid_has_read(grid_has_readSEXP);
+    Rcpp::traits::input_parameter< const bool >::type normalize(normalizeSEXP);
+    rcpp_alpha_forward_one_QUILT_faster(s, iGrid, K, alphaHat_t, transMatRate_tc_H, eMatGrid_t, c, minus_log_c_sum, grid_has_read, normalize);
+    return R_NilValue;
+END_RCPP
+}
 // rcpp_reinitialize_in_iterations
 void rcpp_reinitialize_in_iterations(int& s, arma::mat& alphaHat_t, arma::rowvec& c, const arma::mat& priorCurrent_m, const arma::mat& eMatGrid_t, const int& K);
 RcppExport SEXP _QUILT_rcpp_reinitialize_in_iterations(SEXP sSEXP, SEXP alphaHat_tSEXP, SEXP cSEXP, SEXP priorCurrent_mSEXP, SEXP eMatGrid_tSEXP, SEXP KSEXP) {
@@ -721,8 +755,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // rcpp_gibbs_nipt_iterate
-void rcpp_gibbs_nipt_iterate(int s, std::string& prev_section, std::string& next_section, const int suppressOutput, double& prev, int iteration, const Rcpp::List& sampleReads, const arma::mat& priorCurrent_m, const arma::cube& transMatRate_tc_H, const arma::cube& alphaMatCurrent_tc, const int n_gibbs_full_its, const int nGrids, const int K, Rcpp::IntegerVector& H, const arma::mat& eMatRead_t, Rcpp::NumericVector& runif_reads, arma::mat& alphaHat_t1, arma::mat& betaHat_t1, arma::rowvec& c1, arma::mat& eMatGrid_t1, arma::mat& alphaHat_t2, arma::mat& betaHat_t2, arma::rowvec& c2, arma::mat& eMatGrid_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t3, arma::rowvec& c3, arma::mat& eMatGrid_t3, Rcpp::NumericMatrix& p_store, int& i_per_it_likelihoods, const bool verbose, const bool return_p_store, const bool run_fb_subset, const int i_gibbs_samplings, const int n_gibbs_starts, int i_result_it, const double ff, const bool record_read_set, const Rcpp::NumericMatrix& rlc, Rcpp::IntegerVector& H_class, const double class_sum_cutoff, const int run_fb_grid_offset, const Rcpp::NumericVector prior_probs, Rcpp::NumericMatrix& per_it_likelihoods, const bool gibbs_initialize_iteratively, const int first_read_for_gibbs_initialization, const bool do_block_resampling, const int artificial_relabel);
-RcppExport SEXP _QUILT_rcpp_gibbs_nipt_iterate(SEXP sSEXP, SEXP prev_sectionSEXP, SEXP next_sectionSEXP, SEXP suppressOutputSEXP, SEXP prevSEXP, SEXP iterationSEXP, SEXP sampleReadsSEXP, SEXP priorCurrent_mSEXP, SEXP transMatRate_tc_HSEXP, SEXP alphaMatCurrent_tcSEXP, SEXP n_gibbs_full_itsSEXP, SEXP nGridsSEXP, SEXP KSEXP, SEXP HSEXP, SEXP eMatRead_tSEXP, SEXP runif_readsSEXP, SEXP alphaHat_t1SEXP, SEXP betaHat_t1SEXP, SEXP c1SEXP, SEXP eMatGrid_t1SEXP, SEXP alphaHat_t2SEXP, SEXP betaHat_t2SEXP, SEXP c2SEXP, SEXP eMatGrid_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t3SEXP, SEXP c3SEXP, SEXP eMatGrid_t3SEXP, SEXP p_storeSEXP, SEXP i_per_it_likelihoodsSEXP, SEXP verboseSEXP, SEXP return_p_storeSEXP, SEXP run_fb_subsetSEXP, SEXP i_gibbs_samplingsSEXP, SEXP n_gibbs_startsSEXP, SEXP i_result_itSEXP, SEXP ffSEXP, SEXP record_read_setSEXP, SEXP rlcSEXP, SEXP H_classSEXP, SEXP class_sum_cutoffSEXP, SEXP run_fb_grid_offsetSEXP, SEXP prior_probsSEXP, SEXP per_it_likelihoodsSEXP, SEXP gibbs_initialize_iterativelySEXP, SEXP first_read_for_gibbs_initializationSEXP, SEXP do_block_resamplingSEXP, SEXP artificial_relabelSEXP) {
+void rcpp_gibbs_nipt_iterate(int s, std::string& prev_section, std::string& next_section, const int suppressOutput, double& prev, int iteration, const Rcpp::List& sampleReads, const arma::mat& priorCurrent_m, const arma::cube& transMatRate_tc_H, const arma::cube& alphaMatCurrent_tc, const int n_gibbs_full_its, const int nGrids, const int K, Rcpp::IntegerVector& H, const arma::mat& eMatRead_t, Rcpp::NumericVector& runif_reads, arma::mat& alphaHat_t1, arma::mat& betaHat_t1, arma::rowvec& c1, arma::mat& eMatGrid_t1, arma::mat& alphaHat_t2, arma::mat& betaHat_t2, arma::rowvec& c2, arma::mat& eMatGrid_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t3, arma::rowvec& c3, arma::mat& eMatGrid_t3, Rcpp::NumericMatrix& p_store, int& i_per_it_likelihoods, const bool verbose, const bool return_p_store, const bool run_fb_subset, const int i_gibbs_samplings, const int n_gibbs_starts, int i_result_it, const double ff, const bool record_read_set, const Rcpp::NumericMatrix& rlc, Rcpp::IntegerVector& H_class, const double class_sum_cutoff, const int run_fb_grid_offset, const Rcpp::NumericVector prior_probs, Rcpp::NumericMatrix& per_it_likelihoods, const Rcpp::LogicalVector& grid_has_read, const bool gibbs_initialize_iteratively, const int first_read_for_gibbs_initialization, const bool do_block_resampling, const int artificial_relabel);
+RcppExport SEXP _QUILT_rcpp_gibbs_nipt_iterate(SEXP sSEXP, SEXP prev_sectionSEXP, SEXP next_sectionSEXP, SEXP suppressOutputSEXP, SEXP prevSEXP, SEXP iterationSEXP, SEXP sampleReadsSEXP, SEXP priorCurrent_mSEXP, SEXP transMatRate_tc_HSEXP, SEXP alphaMatCurrent_tcSEXP, SEXP n_gibbs_full_itsSEXP, SEXP nGridsSEXP, SEXP KSEXP, SEXP HSEXP, SEXP eMatRead_tSEXP, SEXP runif_readsSEXP, SEXP alphaHat_t1SEXP, SEXP betaHat_t1SEXP, SEXP c1SEXP, SEXP eMatGrid_t1SEXP, SEXP alphaHat_t2SEXP, SEXP betaHat_t2SEXP, SEXP c2SEXP, SEXP eMatGrid_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t3SEXP, SEXP c3SEXP, SEXP eMatGrid_t3SEXP, SEXP p_storeSEXP, SEXP i_per_it_likelihoodsSEXP, SEXP verboseSEXP, SEXP return_p_storeSEXP, SEXP run_fb_subsetSEXP, SEXP i_gibbs_samplingsSEXP, SEXP n_gibbs_startsSEXP, SEXP i_result_itSEXP, SEXP ffSEXP, SEXP record_read_setSEXP, SEXP rlcSEXP, SEXP H_classSEXP, SEXP class_sum_cutoffSEXP, SEXP run_fb_grid_offsetSEXP, SEXP prior_probsSEXP, SEXP per_it_likelihoodsSEXP, SEXP grid_has_readSEXP, SEXP gibbs_initialize_iterativelySEXP, SEXP first_read_for_gibbs_initializationSEXP, SEXP do_block_resamplingSEXP, SEXP artificial_relabelSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type s(sSEXP);
@@ -769,11 +803,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type run_fb_grid_offset(run_fb_grid_offsetSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector >::type prior_probs(prior_probsSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix& >::type per_it_likelihoods(per_it_likelihoodsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::LogicalVector& >::type grid_has_read(grid_has_readSEXP);
     Rcpp::traits::input_parameter< const bool >::type gibbs_initialize_iteratively(gibbs_initialize_iterativelySEXP);
     Rcpp::traits::input_parameter< const int >::type first_read_for_gibbs_initialization(first_read_for_gibbs_initializationSEXP);
     Rcpp::traits::input_parameter< const bool >::type do_block_resampling(do_block_resamplingSEXP);
     Rcpp::traits::input_parameter< const int >::type artificial_relabel(artificial_relabelSEXP);
-    rcpp_gibbs_nipt_iterate(s, prev_section, next_section, suppressOutput, prev, iteration, sampleReads, priorCurrent_m, transMatRate_tc_H, alphaMatCurrent_tc, n_gibbs_full_its, nGrids, K, H, eMatRead_t, runif_reads, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, p_store, i_per_it_likelihoods, verbose, return_p_store, run_fb_subset, i_gibbs_samplings, n_gibbs_starts, i_result_it, ff, record_read_set, rlc, H_class, class_sum_cutoff, run_fb_grid_offset, prior_probs, per_it_likelihoods, gibbs_initialize_iteratively, first_read_for_gibbs_initialization, do_block_resampling, artificial_relabel);
+    rcpp_gibbs_nipt_iterate(s, prev_section, next_section, suppressOutput, prev, iteration, sampleReads, priorCurrent_m, transMatRate_tc_H, alphaMatCurrent_tc, n_gibbs_full_its, nGrids, K, H, eMatRead_t, runif_reads, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, p_store, i_per_it_likelihoods, verbose, return_p_store, run_fb_subset, i_gibbs_samplings, n_gibbs_starts, i_result_it, ff, record_read_set, rlc, H_class, class_sum_cutoff, run_fb_grid_offset, prior_probs, per_it_likelihoods, grid_has_read, gibbs_initialize_iteratively, first_read_for_gibbs_initialization, do_block_resampling, artificial_relabel);
     return R_NilValue;
 END_RCPP
 }
@@ -801,8 +836,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // rcpp_forwardBackwardGibbsNIPT
-Rcpp::List rcpp_forwardBackwardGibbsNIPT(const Rcpp::List& sampleReads, const arma::mat& priorCurrent_m, const arma::cube& alphaMatCurrent_tc, const arma::cube& eHapsCurrent_tc, const arma::cube& transMatRate_tc_H, const double ff, const arma::mat& blocks_for_output, arma::mat& alphaHat_t1, arma::mat& betaHat_t1, arma::mat& alphaHat_t2, arma::mat& betaHat_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t3, arma::cube& hapSum_tc, Rcpp::IntegerVector& wif0, Rcpp::IntegerVector& L_grid, Rcpp::NumericVector& smooth_cm, const int Jmax_local, const double maxDifferenceBetweenReads, const double maxEmissionMatrixDifference, const bool run_fb_subset, const int run_fb_grid_offset, const bool return_genProbs, const bool return_hapProbs, bool return_gamma, const bool return_alpha, const bool return_p_store, const bool return_extra, const Rcpp::IntegerVector& grid, int snp_start_1_based, int snp_end_1_based, const bool generate_fb_snp_offsets, const int suppressOutput, int n_gibbs_starts, const int n_gibbs_sample_its, const int n_gibbs_burn_in_its, const bool use_starting_read_labels, const bool verbose, const Rcpp::List& double_list_of_starting_read_labels, Rcpp::IntegerVector seed_vector, const Rcpp::List& prev_list_of_alphaBetaBlocks, const int i_snp_block_for_alpha_beta, const bool haploid_gibbs_equal_weighting, const bool gibbs_initialize_iteratively, const bool gibbs_initialize_at_first_read, const bool do_block_resampling, const int artificial_relabel, const bool pass_in_alphaBeta, const bool update_in_place, const bool update_hapSum, const bool record_read_set, const double class_sum_cutoff, const bool perform_block_gibbs, const int shuffle_bin_radius, const Rcpp::IntegerVector block_gibbs_iterations, const bool return_gibbs_block_output, const bool return_advanced_gibbs_block_output, const bool rescale_eMatRead_t, const bool use_smooth_cm_in_block_gibbs, const double block_gibbs_quantile_prob, const bool do_shard_ff0_block_gibbs);
-RcppExport SEXP _QUILT_rcpp_forwardBackwardGibbsNIPT(SEXP sampleReadsSEXP, SEXP priorCurrent_mSEXP, SEXP alphaMatCurrent_tcSEXP, SEXP eHapsCurrent_tcSEXP, SEXP transMatRate_tc_HSEXP, SEXP ffSEXP, SEXP blocks_for_outputSEXP, SEXP alphaHat_t1SEXP, SEXP betaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP betaHat_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t3SEXP, SEXP hapSum_tcSEXP, SEXP wif0SEXP, SEXP L_gridSEXP, SEXP smooth_cmSEXP, SEXP Jmax_localSEXP, SEXP maxDifferenceBetweenReadsSEXP, SEXP maxEmissionMatrixDifferenceSEXP, SEXP run_fb_subsetSEXP, SEXP run_fb_grid_offsetSEXP, SEXP return_genProbsSEXP, SEXP return_hapProbsSEXP, SEXP return_gammaSEXP, SEXP return_alphaSEXP, SEXP return_p_storeSEXP, SEXP return_extraSEXP, SEXP gridSEXP, SEXP snp_start_1_basedSEXP, SEXP snp_end_1_basedSEXP, SEXP generate_fb_snp_offsetsSEXP, SEXP suppressOutputSEXP, SEXP n_gibbs_startsSEXP, SEXP n_gibbs_sample_itsSEXP, SEXP n_gibbs_burn_in_itsSEXP, SEXP use_starting_read_labelsSEXP, SEXP verboseSEXP, SEXP double_list_of_starting_read_labelsSEXP, SEXP seed_vectorSEXP, SEXP prev_list_of_alphaBetaBlocksSEXP, SEXP i_snp_block_for_alpha_betaSEXP, SEXP haploid_gibbs_equal_weightingSEXP, SEXP gibbs_initialize_iterativelySEXP, SEXP gibbs_initialize_at_first_readSEXP, SEXP do_block_resamplingSEXP, SEXP artificial_relabelSEXP, SEXP pass_in_alphaBetaSEXP, SEXP update_in_placeSEXP, SEXP update_hapSumSEXP, SEXP record_read_setSEXP, SEXP class_sum_cutoffSEXP, SEXP perform_block_gibbsSEXP, SEXP shuffle_bin_radiusSEXP, SEXP block_gibbs_iterationsSEXP, SEXP return_gibbs_block_outputSEXP, SEXP return_advanced_gibbs_block_outputSEXP, SEXP rescale_eMatRead_tSEXP, SEXP use_smooth_cm_in_block_gibbsSEXP, SEXP block_gibbs_quantile_probSEXP, SEXP do_shard_ff0_block_gibbsSEXP) {
+Rcpp::List rcpp_forwardBackwardGibbsNIPT(const Rcpp::List& sampleReads, const arma::mat& priorCurrent_m, const arma::cube& alphaMatCurrent_tc, const arma::cube& eHapsCurrent_tc, const arma::cube& transMatRate_tc_H, const double ff, const arma::mat& blocks_for_output, arma::mat& alphaHat_t1, arma::mat& betaHat_t1, arma::mat& alphaHat_t2, arma::mat& betaHat_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t3, arma::cube& hapSum_tc, Rcpp::IntegerVector& wif0, Rcpp::LogicalVector& grid_has_read, Rcpp::IntegerVector& L_grid, Rcpp::NumericVector& smooth_cm, const int Jmax_local, const double maxDifferenceBetweenReads, const double maxEmissionMatrixDifference, const bool run_fb_subset, const int run_fb_grid_offset, const bool return_genProbs, const bool return_hapProbs, bool return_gamma, const bool return_alpha, const bool return_p_store, const bool return_extra, const Rcpp::IntegerVector& grid, int snp_start_1_based, int snp_end_1_based, const bool generate_fb_snp_offsets, const int suppressOutput, int n_gibbs_starts, const int n_gibbs_sample_its, const int n_gibbs_burn_in_its, const bool use_starting_read_labels, const bool verbose, const Rcpp::List& double_list_of_starting_read_labels, Rcpp::IntegerVector seed_vector, const Rcpp::List& prev_list_of_alphaBetaBlocks, const int i_snp_block_for_alpha_beta, const bool haploid_gibbs_equal_weighting, const bool gibbs_initialize_iteratively, const bool gibbs_initialize_at_first_read, const bool do_block_resampling, const int artificial_relabel, const bool pass_in_alphaBeta, const bool update_in_place, const bool update_hapSum, const bool record_read_set, const double class_sum_cutoff, const bool perform_block_gibbs, const int shuffle_bin_radius, const Rcpp::IntegerVector block_gibbs_iterations, const bool return_gibbs_block_output, const bool return_advanced_gibbs_block_output, const bool rescale_eMatRead_t, const bool use_smooth_cm_in_block_gibbs, const double block_gibbs_quantile_prob, const bool do_shard_ff0_block_gibbs);
+RcppExport SEXP _QUILT_rcpp_forwardBackwardGibbsNIPT(SEXP sampleReadsSEXP, SEXP priorCurrent_mSEXP, SEXP alphaMatCurrent_tcSEXP, SEXP eHapsCurrent_tcSEXP, SEXP transMatRate_tc_HSEXP, SEXP ffSEXP, SEXP blocks_for_outputSEXP, SEXP alphaHat_t1SEXP, SEXP betaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP betaHat_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t3SEXP, SEXP hapSum_tcSEXP, SEXP wif0SEXP, SEXP grid_has_readSEXP, SEXP L_gridSEXP, SEXP smooth_cmSEXP, SEXP Jmax_localSEXP, SEXP maxDifferenceBetweenReadsSEXP, SEXP maxEmissionMatrixDifferenceSEXP, SEXP run_fb_subsetSEXP, SEXP run_fb_grid_offsetSEXP, SEXP return_genProbsSEXP, SEXP return_hapProbsSEXP, SEXP return_gammaSEXP, SEXP return_alphaSEXP, SEXP return_p_storeSEXP, SEXP return_extraSEXP, SEXP gridSEXP, SEXP snp_start_1_basedSEXP, SEXP snp_end_1_basedSEXP, SEXP generate_fb_snp_offsetsSEXP, SEXP suppressOutputSEXP, SEXP n_gibbs_startsSEXP, SEXP n_gibbs_sample_itsSEXP, SEXP n_gibbs_burn_in_itsSEXP, SEXP use_starting_read_labelsSEXP, SEXP verboseSEXP, SEXP double_list_of_starting_read_labelsSEXP, SEXP seed_vectorSEXP, SEXP prev_list_of_alphaBetaBlocksSEXP, SEXP i_snp_block_for_alpha_betaSEXP, SEXP haploid_gibbs_equal_weightingSEXP, SEXP gibbs_initialize_iterativelySEXP, SEXP gibbs_initialize_at_first_readSEXP, SEXP do_block_resamplingSEXP, SEXP artificial_relabelSEXP, SEXP pass_in_alphaBetaSEXP, SEXP update_in_placeSEXP, SEXP update_hapSumSEXP, SEXP record_read_setSEXP, SEXP class_sum_cutoffSEXP, SEXP perform_block_gibbsSEXP, SEXP shuffle_bin_radiusSEXP, SEXP block_gibbs_iterationsSEXP, SEXP return_gibbs_block_outputSEXP, SEXP return_advanced_gibbs_block_outputSEXP, SEXP rescale_eMatRead_tSEXP, SEXP use_smooth_cm_in_block_gibbsSEXP, SEXP block_gibbs_quantile_probSEXP, SEXP do_shard_ff0_block_gibbsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -821,6 +856,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t3(betaHat_t3SEXP);
     Rcpp::traits::input_parameter< arma::cube& >::type hapSum_tc(hapSum_tcSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type wif0(wif0SEXP);
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector& >::type grid_has_read(grid_has_readSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type L_grid(L_gridSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type smooth_cm(smooth_cmSEXP);
     Rcpp::traits::input_parameter< const int >::type Jmax_local(Jmax_localSEXP);
@@ -867,7 +903,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const bool >::type use_smooth_cm_in_block_gibbs(use_smooth_cm_in_block_gibbsSEXP);
     Rcpp::traits::input_parameter< const double >::type block_gibbs_quantile_prob(block_gibbs_quantile_probSEXP);
     Rcpp::traits::input_parameter< const bool >::type do_shard_ff0_block_gibbs(do_shard_ff0_block_gibbsSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_forwardBackwardGibbsNIPT(sampleReads, priorCurrent_m, alphaMatCurrent_tc, eHapsCurrent_tc, transMatRate_tc_H, ff, blocks_for_output, alphaHat_t1, betaHat_t1, alphaHat_t2, betaHat_t2, alphaHat_t3, betaHat_t3, hapSum_tc, wif0, L_grid, smooth_cm, Jmax_local, maxDifferenceBetweenReads, maxEmissionMatrixDifference, run_fb_subset, run_fb_grid_offset, return_genProbs, return_hapProbs, return_gamma, return_alpha, return_p_store, return_extra, grid, snp_start_1_based, snp_end_1_based, generate_fb_snp_offsets, suppressOutput, n_gibbs_starts, n_gibbs_sample_its, n_gibbs_burn_in_its, use_starting_read_labels, verbose, double_list_of_starting_read_labels, seed_vector, prev_list_of_alphaBetaBlocks, i_snp_block_for_alpha_beta, haploid_gibbs_equal_weighting, gibbs_initialize_iteratively, gibbs_initialize_at_first_read, do_block_resampling, artificial_relabel, pass_in_alphaBeta, update_in_place, update_hapSum, record_read_set, class_sum_cutoff, perform_block_gibbs, shuffle_bin_radius, block_gibbs_iterations, return_gibbs_block_output, return_advanced_gibbs_block_output, rescale_eMatRead_t, use_smooth_cm_in_block_gibbs, block_gibbs_quantile_prob, do_shard_ff0_block_gibbs));
+    rcpp_result_gen = Rcpp::wrap(rcpp_forwardBackwardGibbsNIPT(sampleReads, priorCurrent_m, alphaMatCurrent_tc, eHapsCurrent_tc, transMatRate_tc_H, ff, blocks_for_output, alphaHat_t1, betaHat_t1, alphaHat_t2, betaHat_t2, alphaHat_t3, betaHat_t3, hapSum_tc, wif0, grid_has_read, L_grid, smooth_cm, Jmax_local, maxDifferenceBetweenReads, maxEmissionMatrixDifference, run_fb_subset, run_fb_grid_offset, return_genProbs, return_hapProbs, return_gamma, return_alpha, return_p_store, return_extra, grid, snp_start_1_based, snp_end_1_based, generate_fb_snp_offsets, suppressOutput, n_gibbs_starts, n_gibbs_sample_its, n_gibbs_burn_in_its, use_starting_read_labels, verbose, double_list_of_starting_read_labels, seed_vector, prev_list_of_alphaBetaBlocks, i_snp_block_for_alpha_beta, haploid_gibbs_equal_weighting, gibbs_initialize_iteratively, gibbs_initialize_at_first_read, do_block_resampling, artificial_relabel, pass_in_alphaBeta, update_in_place, update_hapSum, record_read_set, class_sum_cutoff, perform_block_gibbs, shuffle_bin_radius, block_gibbs_iterations, return_gibbs_block_output, return_advanced_gibbs_block_output, rescale_eMatRead_t, use_smooth_cm_in_block_gibbs, block_gibbs_quantile_prob, do_shard_ff0_block_gibbs));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1152,6 +1188,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_make_fb_snp_offsets", (DL_FUNC) &_QUILT_rcpp_make_fb_snp_offsets, 3},
     {"_QUILT_Rcpp_run_forward_haploid", (DL_FUNC) &_QUILT_Rcpp_run_forward_haploid, 10},
     {"_QUILT_Rcpp_run_backward_haploid", (DL_FUNC) &_QUILT_Rcpp_run_backward_haploid, 6},
+    {"_QUILT_Rcpp_run_backward_haploid_QUILT_faster", (DL_FUNC) &_QUILT_Rcpp_run_backward_haploid_QUILT_faster, 6},
     {"_QUILT_rcpp_make_smoothed_rate", (DL_FUNC) &_QUILT_rcpp_make_smoothed_rate, 4},
     {"_QUILT_rcpp_determine_where_to_stop", (DL_FUNC) &_QUILT_rcpp_determine_where_to_stop, 6},
     {"_QUILT_increment2N", (DL_FUNC) &_QUILT_increment2N, 4},
@@ -1170,6 +1207,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_calculate_gn_genProbs_and_hapProbs", (DL_FUNC) &_QUILT_rcpp_calculate_gn_genProbs_and_hapProbs, 12},
     {"_QUILT_rcpp_determine_label_probabilities", (DL_FUNC) &_QUILT_rcpp_determine_label_probabilities, 3},
     {"_QUILT_rcpp_alpha_forward_one", (DL_FUNC) &_QUILT_rcpp_alpha_forward_one, 10},
+    {"_QUILT_rcpp_alpha_forward_one_QUILT_faster", (DL_FUNC) &_QUILT_rcpp_alpha_forward_one_QUILT_faster, 10},
     {"_QUILT_rcpp_reinitialize_in_iterations", (DL_FUNC) &_QUILT_rcpp_reinitialize_in_iterations, 6},
     {"_QUILT_sample_reads_in_grid", (DL_FUNC) &_QUILT_sample_reads_in_grid, 43},
     {"_QUILT_rcpp_apply_mat_relabel", (DL_FUNC) &_QUILT_rcpp_apply_mat_relabel, 4},
@@ -1179,9 +1217,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_get_weights_for_entire_relabelling", (DL_FUNC) &_QUILT_rcpp_get_weights_for_entire_relabelling, 2},
     {"_QUILT_rcpp_consider_and_try_entire_relabelling", (DL_FUNC) &_QUILT_rcpp_consider_and_try_entire_relabelling, 3},
     {"_QUILT_rcpp_gibbs_nipt_initialize", (DL_FUNC) &_QUILT_rcpp_gibbs_nipt_initialize, 31},
-    {"_QUILT_rcpp_gibbs_nipt_iterate", (DL_FUNC) &_QUILT_rcpp_gibbs_nipt_iterate, 48},
+    {"_QUILT_rcpp_gibbs_nipt_iterate", (DL_FUNC) &_QUILT_rcpp_gibbs_nipt_iterate, 49},
     {"_QUILT_rcpp_fly_weighter", (DL_FUNC) &_QUILT_rcpp_fly_weighter, 14},
-    {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 61},
+    {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 62},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
     {"_QUILT_Rcpp_test", (DL_FUNC) &_QUILT_Rcpp_test, 3},
     {"_QUILT_Rcpp_make_gl_bound", (DL_FUNC) &_QUILT_Rcpp_make_gl_bound, 3},

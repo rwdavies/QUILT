@@ -103,6 +103,15 @@ void Rcpp_run_backward_haploid(
     const int s
 );
 
+void Rcpp_run_backward_haploid_QUILT_faster(
+    arma::mat& betaHat_t,
+    arma::rowvec& c,
+    const arma::mat& eMatGrid_t,
+    const arma::cube& transMatRate_tc_H,
+    const Rcpp::LogicalVector& grid_has_read,
+    const int s
+);
+
 
 
 
@@ -480,6 +489,93 @@ void rcpp_alpha_forward_one(
     }
     return;
 }
+
+
+
+// modified for faster QUILT usage with constant alphaMatCurrent_tc
+
+    
+
+//' @export
+// [[Rcpp::export]]
+void rcpp_alpha_forward_one_QUILT_faster(
+    int s,
+    const int iGrid,
+    const int K,
+    arma::mat& alphaHat_t,
+    const arma::cube& transMatRate_tc_H,
+    const arma::mat& eMatGrid_t,
+    arma::rowvec& c,
+    double& minus_log_c_sum,
+    const Rcpp::LogicalVector& grid_has_read,
+    const bool normalize = false
+) {
+    // t is 1-based
+    int iGrid_minus_1 = iGrid - 1;
+    const double one_over_K = 1 / double(alphaHat_t.n_rows);
+    double alphaConst = transMatRate_tc_H(1, iGrid_minus_1, s) * sum(alphaHat_t.col(iGrid_minus_1));
+    double a;
+    double x = transMatRate_tc_H(0, iGrid_minus_1, s);
+    double c2 = c(iGrid);
+    //
+    if (grid_has_read(iGrid)) {
+        alphaHat_t.col(iGrid) = eMatGrid_t.col(iGrid) %            \
+            ( x * alphaHat_t.col(iGrid_minus_1) + alphaConst * one_over_K);
+    } else {
+        alphaHat_t.col(iGrid) = ( x * alphaHat_t.col(iGrid_minus_1) + alphaConst * one_over_K);
+    }
+    if (normalize) {
+        a = 1 / (c2 * sum(alphaHat_t.col(iGrid)));
+        minus_log_c_sum -= std::log(a);
+        c(iGrid) *= a;
+        a *= c2;
+        alphaHat_t.col(iGrid) *= a;
+    }
+    return;
+}
+
+// //' @export
+// // [[Rcpp::export]]
+// void rcpp_alpha_forward_one_QUILT_faster(
+//     int s,
+//     const int iGrid,
+//     const int K,
+//     arma::mat& alphaHat_t,
+//     const arma::cube& transMatRate_tc_H,
+//     const arma::mat& eMatGrid_t,
+//     arma::rowvec& c,
+//     double& minus_log_c_sum,
+//     const Rcpp::LogicalVector& grid_has_read,
+//     const bool normalize = false
+// ) {
+//     // t is 1-based
+//     int iGrid_minus_1 = iGrid - 1;
+//     const double one_over_K = 1 / double(alphaHat_t.n_rows);
+//     // not sure -> we always normalize, so alphaHat_t columns always sum to 1    
+//     double alphaConst = transMatRate_tc_H(1, iGrid_minus_1, s) * sum(alphaHat_t.col(iGrid_minus_1)) * one_over_K;
+//     //double alphaConst = transMatRate_tc_H(1, iGrid_minus_1, s) * one_over_K;    
+//     double a;
+//     double x = transMatRate_tc_H(0, iGrid_minus_1, s);
+//     double c2 = c(iGrid);
+//     if (grid_has_read(iGrid)) {
+//         alphaHat_t.col(iGrid) = eMatGrid_t.col(iGrid) % \
+//              ( x * alphaHat_t.col(iGrid_minus_1) + alphaConst);
+//     } else {
+//         alphaHat_t.col(iGrid) = (x * alphaHat_t.col(iGrid_minus_1) + alphaConst);
+//     }
+//     if (normalize) {
+//         a = 1 / (c2 * sum(alphaHat_t.col(iGrid)));
+//         minus_log_c_sum -= std::log(a);
+//         c(iGrid) *= a;
+//         alphaHat_t.col(iGrid) *= a;
+//     } else {
+//         // same as above, but working the c2 differently, the original way
+//         if (c2 != 1) {
+//             alphaHat_t.col(iGrid) *= c2;
+//         }
+//     }
+//     return;
+// }
 
 
 //' @export
@@ -1390,6 +1486,7 @@ void rcpp_gibbs_nipt_iterate(
     const int run_fb_grid_offset,
     const Rcpp::NumericVector prior_probs,
     Rcpp::NumericMatrix & per_it_likelihoods,
+    const Rcpp::LogicalVector& grid_has_read,
     const bool gibbs_initialize_iteratively = false,
     const int first_read_for_gibbs_initialization = 0,
     const bool do_block_resampling = false,
@@ -1430,9 +1527,12 @@ void rcpp_gibbs_nipt_iterate(
         //
         if (iGrid > 0) {
             // move and normalize
-            rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t1, transMatRate_tc_H, eMatGrid_t1, alphaMatCurrent_tc, c1, minus_log_c1_sum, true);
-            rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t2, transMatRate_tc_H, eMatGrid_t2, alphaMatCurrent_tc, c2, minus_log_c2_sum, true);
-            rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t3, transMatRate_tc_H, eMatGrid_t3, alphaMatCurrent_tc, c3, minus_log_c3_sum, true);
+            rcpp_alpha_forward_one_QUILT_faster(s, iGrid, K, alphaHat_t1, transMatRate_tc_H, eMatGrid_t1, c1, minus_log_c1_sum, grid_has_read, true);
+            rcpp_alpha_forward_one_QUILT_faster(s, iGrid, K, alphaHat_t2, transMatRate_tc_H, eMatGrid_t2, c2, minus_log_c2_sum, grid_has_read, true);
+            rcpp_alpha_forward_one_QUILT_faster(s, iGrid, K, alphaHat_t3, transMatRate_tc_H, eMatGrid_t3, c3, minus_log_c3_sum, grid_has_read, true);
+            //rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t1, transMatRate_tc_H, eMatGrid_t1, alphaMatCurrent_tc, c1, minus_log_c1_sum, true);
+            //rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t2, transMatRate_tc_H, eMatGrid_t2, alphaMatCurrent_tc, c2, minus_log_c2_sum, true);
+            //rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t3, transMatRate_tc_H, eMatGrid_t3, alphaMatCurrent_tc, c3, minus_log_c3_sum, true);
         } else {
             rcpp_reinitialize_in_iterations(s, alphaHat_t1, c1, priorCurrent_m, eMatGrid_t1, K);
             rcpp_reinitialize_in_iterations(s, alphaHat_t2, c2, priorCurrent_m, eMatGrid_t2, K);
@@ -1482,9 +1582,12 @@ void rcpp_gibbs_nipt_iterate(
     betaHat_t2.col(nGrids - 1).fill(c2(nGrids-1));
     betaHat_t3.col(nGrids - 1).fill(c3(nGrids-1));
     //
-    Rcpp_run_backward_haploid(betaHat_t1, c1, eMatGrid_t1, alphaMatCurrent_tc, transMatRate_tc_H, s);
-    Rcpp_run_backward_haploid(betaHat_t2, c2, eMatGrid_t2, alphaMatCurrent_tc, transMatRate_tc_H, s);
-    Rcpp_run_backward_haploid(betaHat_t3, c3, eMatGrid_t3, alphaMatCurrent_tc, transMatRate_tc_H, s);
+    Rcpp_run_backward_haploid_QUILT_faster(betaHat_t1, c1, eMatGrid_t1, transMatRate_tc_H, grid_has_read, s);
+    Rcpp_run_backward_haploid_QUILT_faster(betaHat_t2, c2, eMatGrid_t2, transMatRate_tc_H, grid_has_read, s);
+    Rcpp_run_backward_haploid_QUILT_faster(betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, grid_has_read, s);
+    //Rcpp_run_backward_haploid(betaHat_t1, c1, eMatGrid_t1, alphaMatCurrent_tc, transMatRate_tc_H, s);
+    //Rcpp_run_backward_haploid(betaHat_t2, c2, eMatGrid_t2, alphaMatCurrent_tc, transMatRate_tc_H, s);
+    //Rcpp_run_backward_haploid(betaHat_t3, c3, eMatGrid_t3, alphaMatCurrent_tc, transMatRate_tc_H, s);
     //
     if (do_block_resampling) {
         next_section="Do block resampling";
@@ -1907,6 +2010,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     arma::mat& betaHat_t3,
     arma::cube& hapSum_tc,
     Rcpp::IntegerVector& wif0,
+    Rcpp::LogicalVector& grid_has_read,
     Rcpp::IntegerVector& L_grid,
     Rcpp::NumericVector& smooth_cm,
     const int Jmax_local = 100,
@@ -2309,7 +2413,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         p_store, i_per_it_likelihoods, verbose, return_p_store, run_fb_subset,
                         i_gibbs_samplings, n_gibbs_starts, i_result_it, ff,
                         record_read_set, rlc, H_class, class_sum_cutoff,
-                        run_fb_grid_offset, prior_probs, per_it_likelihoods,
+                        run_fb_grid_offset, prior_probs, per_it_likelihoods, grid_has_read,
                         gibbs_initialize_iteratively, first_read_for_gibbs_initialization,
                         do_block_resampling, artificial_relabel
                     );

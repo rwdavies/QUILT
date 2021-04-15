@@ -535,6 +535,7 @@ get_and_impute_one_sample <- function(
     
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
+    nGrids <- length(grid)    
     suppressOutput <- !print_extra_timing_information    
 
     ##
@@ -597,7 +598,9 @@ get_and_impute_one_sample <- function(
     dosage <- numeric(nSNPs)
     gp_t <- array(0, c(3, nSNPs))
     wif0 <- as.integer(sapply(sampleReads, function(x) x[[2]]))
-
+    grid_has_read <- rep(FALSE, nGrids)
+    grid_has_read[wif0 + 1] <- TRUE
+    
     nReads <- length(sampleReads)
     super_out_hap_dosages <- as.list(1:nGibbsSamples)
     super_out_read_labels <- as.list(1:nGibbsSamples)
@@ -821,6 +824,7 @@ get_and_impute_one_sample <- function(
                 make_plots = make_plots,
                 ref_error = ref_error,
                 wif0 = wif0,
+                grid_has_read = grid_has_read,                              
                 plot_description = paste0("it", i_it, ".gibbs"),
                 ancAlleleFreqAll = ancAlleleFreqAll,
                 grid = grid,
@@ -1049,6 +1053,7 @@ get_and_impute_one_sample <- function(
     ## optionally plot here
     if (plot_per_sample_likelihoods) {
         plot_of_likelihoods_across_samplings_and_seek_its(
+            outputdir = outputdir,
             for_likelihood_plotting = for_likelihood_plotting,
             nGibbsSamples = nGibbsSamples,
             n_gibbs_burn_in_its = n_gibbs_burn_in_its,
@@ -1855,6 +1860,7 @@ impute_one_sample <- function(
     maxDifferenceBetweenReads,
     ref_error,
     wif0,
+    grid_has_read,
     verbose,
     shuffle_bin_radius,
     outplotprefix,
@@ -1912,6 +1918,8 @@ impute_one_sample <- function(
     ## does have all options, so SHOULD be OK
     ##
     ## print(paste0("run = ", Sys.time()))
+    ## ugh, alphaMatCurrent_tc is a CONSTANT
+
     out <- rcpp_forwardBackwardGibbsNIPT(
         sampleReads = sampleReads,
         priorCurrent_m = small_priorCurrent_m,        
@@ -1962,6 +1970,7 @@ impute_one_sample <- function(
         class_sum_cutoff = 0.06, ## what is this
         record_read_set = TRUE, ## needed for block gibbs
         wif0 = wif0,
+        grid_has_read = grid_has_read,
         shuffle_bin_radius = shuffle_bin_radius,
         L_grid = L_grid,
         block_gibbs_iterations = block_gibbs_iterations,
@@ -1972,6 +1981,7 @@ impute_one_sample <- function(
         use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
         block_gibbs_quantile_prob = block_gibbs_quantile_prob
     )
+    
     ##
     genProbs_t <- out$genProbsM_t
     hapProbs_t <- out$happrobs_t

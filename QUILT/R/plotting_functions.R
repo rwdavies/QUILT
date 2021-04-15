@@ -377,6 +377,7 @@ plot_of_likelihood_with_time_new <- function(
 
 ## Modified from "benchnmark_functions"
 plot_of_likelihoods_across_samplings_and_seek_its <- function(
+    outputdir,
     for_likelihood_plotting,
     nGibbsSamples,
     n_gibbs_burn_in_its,

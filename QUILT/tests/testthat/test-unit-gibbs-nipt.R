@@ -3,7 +3,7 @@ if (1 == 0) {
     library("testthat"); library("STITCH"); library("rrbgen")
     dir <- "~/proj/QUILT/"
     setwd(paste0(dir, "/QUILT/R"))
-    a <- dir(pattern = "*R")
+    a <- dir(pattern = "*.R")
     b <- grep("~", a)
     if (length(b) > 0) {
         a <- a[-b]
@@ -625,47 +625,6 @@ test_that("gibbs-nipt initializing iteratively produces same alpha and beta, and
 
 
 
-
-test_that("speed X", {
-
-    skip("optional speedtest")
-    library(microbenchmark)
-
-     iGrid <- 100
-     K <- 100
-     nGrids <- 500
-     alphaHat_t <- array(runif(nGrids * K), c(K, nGrids))
-     transMatRate_t_H <- array(runif(nGrids * 2), c(2, nGrids))
-     eMatHapSNP_t <- array(runif(K * nGrids), c(K, nGrids))
-     alphaMat_t <- array(runif(K * nGrids), c(K, nGrids))
-     c <- array(runif(nGrids), nGrids)
-
-     print(microbenchmark(
-         rcpp_alpha_forward_oneORIGINAL(
-             iGrid = iGrid,
-             K = K,
-             alphaHat_t = alphaHat_t,
-             transMatRate_t_H = transMatRate_t_H,
-             eMatHapSNP_t = eMatHapSNP_t,
-             alphaMat_t = alphaMat_t,
-             c = c,
-             normalize = TRUE
-         ),
-         rcpp_alpha_forward_one(
-             iGrid = iGrid,
-             K = K,
-             alphaHat_t = alphaHat_t,
-             transMatRate_t_H = transMatRate_t_H,
-             eMatHapSNP_t = eMatHapSNP_t,
-             alphaMat_t = alphaMat_t,
-             c = c,
-             normalize = TRUE
-         ),
-         times = 100
-     ))
-
-
-})
 
 
 test_that("can do multiple gibbs samplings", {
