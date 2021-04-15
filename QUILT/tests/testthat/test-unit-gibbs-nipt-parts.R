@@ -1,6 +1,6 @@
 test_that("small Gibbs forwards one step including profiling", {
 
-    speed_test <- TRUE
+    speed_test <- FALSE
 
     if (speed_test) {
         ## adjust to see differences
