@@ -177,7 +177,9 @@ QUILT <- function(
     validate_niterations_and_block_gibbs(block_gibbs_iterations, n_gibbs_burn_in_its)
     
     if (is.na(tempdir)) {
-        tempdir <- tempdir()
+        ## tempdir <- tempdir()
+        tempdir <- tempfile()
+        dir.create(tempdir)
     }
     if (!is.null(output_filename)) {
         if (!dir.exists(dirname(output_filename))) {
