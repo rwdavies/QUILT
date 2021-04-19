@@ -798,6 +798,13 @@ get_and_impute_one_sample <- function(
                 ## weird that this is needed on phasing it?
                 return_good_haps <- TRUE
             }
+            if (record_interim_dosages) {
+                return_genProbs <- TRUE
+                return_hapProbs <- TRUE
+            } else {
+                return_genProbs <- FALSE
+                return_hapProbs <- FALSE
+            }
 
             gibbs_iterate <- impute_one_sample(
                 rhb_t = rhb_t,
@@ -841,8 +848,8 @@ get_and_impute_one_sample <- function(
                 maxEmissionMatrixDifference = 1e100,
                 return_p_store = FALSE,
                 return_extra = FALSE,
-                return_genProbs = TRUE,
-                return_hapProbs = TRUE,
+                return_genProbs = return_genProbs,
+                return_hapProbs = return_hapProbs,
                 return_gibbs_block_output = TRUE,
                 gibbs_initialize_iteratively = gibbs_initialize_iteratively,
                 gibbs_initialize_at_first_read = FALSE,
@@ -1920,6 +1927,7 @@ impute_one_sample <- function(
     ## print(paste0("run = ", Sys.time()))
     ## ugh, alphaMatCurrent_tc is a CONSTANT
 
+    print(paste0("return_genPRobs = ", return_genProbs))
     out <- rcpp_forwardBackwardGibbsNIPT(
         sampleReads = sampleReads,
         priorCurrent_m = small_priorCurrent_m,        

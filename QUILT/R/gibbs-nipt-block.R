@@ -3,6 +3,7 @@ helper_block_gibbs_resampler <- function(
     blocked_snps,
     grid,
     wif0,
+    grid_has_read,
     ff,
     s,
     eHapsCurrent_tc,
@@ -168,6 +169,7 @@ helper_block_gibbs_resampler <- function(
         runif_proposed = runif_proposed,
         grid = grid,
         wif0 = wif0,
+        grid_has_read = grid_has_read,
         ff = ff,
         s = s,
         alphaMatCurrent_tc = alphaMatCurrent_tc,
@@ -180,7 +182,11 @@ helper_block_gibbs_resampler <- function(
         verbose = verbose,
         fpp_stuff = fpp_stuff,
         use_cpp_bits_in_R = use_cpp_bits_in_R,
-        block_approach = block_approach
+        block_approach = block_approach,
+        prev_section = "prev_section",
+        next_section = "next_section", 
+        suppressOutput = 1,
+        prev = 0
     )
 
     if (language == "Rcpp") {
@@ -228,6 +234,7 @@ R_gibbs_block_forward_one_master <- function(
     approach2_iRead,
     iGrid,
     s,
+    ff,
     alphaStore,
     log_cStore,
     rr,
@@ -267,6 +274,7 @@ R_gibbs_block_forward_one_master <- function(
         approach2_iRead = approach2_iRead,
         iGrid = iGrid,
         s = s,
+        ff = ff,
         alphaStore = alphaStore,
         log_cStore = log_cStore,
         rr = rr,
@@ -304,10 +312,12 @@ R_gibbs_block_forward_one_master <- function(
     ##
     if (do_checks && (block_approach == 1)) {
         for(ir in 1:6) {
-            for(i in 1:3) {
-                h <- rr[ir, i]
-                expect_equal(all_packages[[ir]][[h]]$alphaHat_t[, iGrid], alphaStore[, h, ir])
-                expect_equal(log(all_packages[[ir]][[h]]$c[iGrid]), log_cStore[iGrid, h, ir])
+            if ((ff > 0) | ((ff == 0) & ((ir == 1) | (ir == 3)))) {            
+                for(i in 1:3) {
+                    h <- rr[ir, i]
+                    expect_equal(all_packages[[ir]][[h]]$alphaHat_t[, iGrid], alphaStore[, h, ir])
+                    expect_equal(log(all_packages[[ir]][[h]]$c[iGrid]), log_cStore[iGrid, h, ir])
+                }
             }
         }
     }
@@ -321,18 +331,20 @@ R_gibbs_block_forward_one_master <- function(
         re <- approach2_iRead[1] - 1
         w <- rs:re
         for(ir in 1:6) {
-            Htemp <- H
-            ## ONLY if change makes sense
-            if (rs <= re) {
-                Htemp[w] <- rr[ir, proposed_H[ir, w]]
+            if ((ff > 0) | ((ff == 0) & ((ir == 1) | (ir == 3)))) {            
+                Htemp <- H
+                ## ONLY if change makes sense
+                if (rs <= re) {
+                    Htemp[w] <- rr[ir, proposed_H[ir, w]]
+                }
+                cur_package <- for_testing_get_full_package_probabilities(Htemp, fpp_stuff)
+                ## check alphas
+                m <- cbind(cur_package[[rr[ir, 1]]]$eMatGrid_t[, iGrid], cur_package[[rr[ir, 2]]]$eMatGrid_t[, iGrid], cur_package[[rr[ir, 3]]]$eMatGrid_t[, iGrid])
+                expect_equal(eMatGridLocalc[, , ir], m)
+                ## 
+                m <- cbind(cur_package[[1]]$alphaHat_t[, iGrid], cur_package[[2]]$alphaHat_t[, iGrid], cur_package[[3]]$alphaHat_t[, iGrid])
+                expect_equal(alphaStore[, , ir], m)
             }
-            cur_package <- for_testing_get_full_package_probabilities(Htemp, fpp_stuff)
-            ## check alphas
-            m <- cbind(cur_package[[rr[ir, 1]]]$eMatGrid_t[, iGrid], cur_package[[rr[ir, 2]]]$eMatGrid_t[, iGrid], cur_package[[rr[ir, 3]]]$eMatGrid_t[, iGrid])
-            expect_equal(eMatGridLocalc[, , ir], m)
-            ## 
-            m <- cbind(cur_package[[1]]$alphaHat_t[, iGrid], cur_package[[2]]$alphaHat_t[, iGrid], cur_package[[3]]$alphaHat_t[, iGrid])
-            expect_equal(alphaStore[, , ir], m)
         }
     }
     return(
@@ -374,6 +386,7 @@ R_block_gibbs_resampler <- function(
     runif_proposed,
     grid,
     wif0,
+    grid_has_read,
     ff,
     s,
     alphaMatCurrent_tc,
@@ -382,6 +395,10 @@ R_block_gibbs_resampler <- function(
     log_cStore,
     maxDifferenceBetweenReads,
     Jmax,
+    prev_section,
+    next_section, 
+    suppressOutput,
+    prev,
     do_checks = FALSE,
     initial_package = NULL,
     verbose = FALSE,
@@ -565,7 +582,7 @@ R_block_gibbs_resampler <- function(
         eMatGridLocal[, 2] <- eMatGrid_t2[, iGrid]
         eMatGridLocal[, 3] <- eMatGrid_t3[, iGrid]
         ##
-        out <- R_gibbs_block_forward_one_master(approach2_iRead = approach2_iRead, iGrid =iGrid, s = s, alphaStore = alphaStore, log_cStore = log_cStore, rr = rr, rr0 = rr0, eMatGridLocal = eMatGridLocal, eMatGridLocalc = eMatGridLocalc, transMatRate_tc_H = transMatRate_tc_H, alphaMatCurrent_tc = alphaMatCurrent_tc, priorCurrent_m = priorCurrent_m, read_is_uninformative = read_is_uninformative, block_approach = block_approach, wif0 = wif0, eMatRead_t = eMatRead_t, nReads = nReads, H = H, proposed_H = proposed_H, H_class = H_class, rlc = rlc, rlcM = rlcM, runif_proposed = runif_proposed, use_cpp_bits_in_R = use_cpp_bits_in_R, do_checks = do_checks, all_packages = all_packages, cur_package = cur_package, read_end_0_based = read_end_0_based, fpp_stuff = fpp_stuff)
+        out <- R_gibbs_block_forward_one_master(approach2_iRead = approach2_iRead, iGrid =iGrid, s = s, ff = ff, alphaStore = alphaStore, log_cStore = log_cStore, rr = rr, rr0 = rr0, eMatGridLocal = eMatGridLocal, eMatGridLocalc = eMatGridLocalc, transMatRate_tc_H = transMatRate_tc_H, alphaMatCurrent_tc = alphaMatCurrent_tc, priorCurrent_m = priorCurrent_m, read_is_uninformative = read_is_uninformative, block_approach = block_approach, wif0 = wif0, eMatRead_t = eMatRead_t, nReads = nReads, H = H, proposed_H = proposed_H, H_class = H_class, rlc = rlc, rlcM = rlcM, runif_proposed = runif_proposed, use_cpp_bits_in_R = use_cpp_bits_in_R, do_checks = do_checks, all_packages = all_packages, cur_package = cur_package, read_end_0_based = read_end_0_based, fpp_stuff = fpp_stuff)
         approach2_iRead <- out[["approach2_iRead"]]
         cur_package <- out[["cur_package"]]
         alphaStore <- out[["alphaStore"]]
@@ -816,10 +833,12 @@ R_block_gibbs_resampler <- function(
                     ## (the alpha with the all packages)
                     ## print(paste0("check iGrid=", iGrid, ", h = ", h, ", ir = ", ir, " i = ", i))
                     for(ir in 1:6) {
-                        for(i in 1:3) {
-                            h <- rr[ir, i]
-                            expect_equal(all_packages[[ir]][[h]]$alphaHat_t[, iGrid], alphaStore[, h, ir])
-                            expect_equal(log(all_packages[[ir]][[h]]$c[iGrid]), log_cStore[iGrid, h, ir])
+                        if ((ff > 0) | ((ff == 0) & ((ir == 1) | (ir == 3)))) {
+                            for(i in 1:3) {
+                                h <- rr[ir, i]
+                                expect_equal(all_packages[[ir]][[h]]$alphaHat_t[, iGrid], alphaStore[, h, ir])
+                                expect_equal(log(all_packages[[ir]][[h]]$c[iGrid]), log_cStore[iGrid, h, ir])
+                            }
                         }
                     }
                 }
@@ -2045,6 +2064,7 @@ R_gibbs_block_forward_one <- function(
     approach2_iRead,
     iGrid,
     s,
+    ff,
     alphaStore,
     log_cStore,
     rr,

@@ -4,7 +4,7 @@ if ( 1 == 0 ) {
     library("QUILT")
     dir <- "~/proj/QUILT/"
     setwd(paste0(dir, "/QUILT/R"))
-    a <- dir(pattern = "*R")
+    a <- dir(pattern = "*.R")
     b <- grep("~", a)
     if (length(b) > 0) {
         a <- a[-b]

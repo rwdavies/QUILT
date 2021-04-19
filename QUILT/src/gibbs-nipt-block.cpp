@@ -34,6 +34,15 @@ void Rcpp_run_backward_haploid(
     const int s
 );
 
+void Rcpp_run_backward_haploid_QUILT_faster(
+    arma::mat& betaHat_t,
+    arma::rowvec& c,
+    const arma::mat& eMatGrid_t,
+    const arma::cube& transMatRate_tc_H,
+    const Rcpp::LogicalVector& grid_has_read,
+    const int s
+);
+
 Rcpp::NumericVector rcpp_make_smoothed_rate(
     const Rcpp::NumericVector & sigma_rate,
     const Rcpp::IntegerVector & L_grid,
@@ -825,6 +834,7 @@ void Rcpp_gibbs_block_forward_one(
     Rcpp::IntegerVector& approach2_iRead,
     const int iGrid,
     const int s,
+    double ff,    
     arma::cube& alphaStore,
     arma::cube& log_cStore,
     const arma::imat& rr,    
@@ -852,6 +862,7 @@ void Rcpp_gibbs_block_forward_one(
     //eMatGridLocal.col(2) = eMatGrid_t3.col(iGrid);
     int wif_read = -1;
     int Hl, Hori, Hc;
+    const double one_over_K = 1 / double(eMatRead_t.n_rows);
     arma::colvec el, eMatRead_t_col;
     if ((block_approach == 2) | (block_approach == 4)) {
         // so here, just work directly on eMatGridLocal
@@ -930,18 +941,22 @@ void Rcpp_gibbs_block_forward_one(
         }
     } else {
         for(int ir = 0; ir < 6; ir++) {
-            if (block_approach == 4) {
-                eMatGridLocal = eMatGridLocalc.slice(ir);
-            }
-            for(int i = 0; i < 3; i++) {
-                int h = rr0(ir, i);
-                alphaStore.slice(ir).col(h) = eMatGridLocal.col(i) % (  \
-                    transMatRate_tc_H(0, iGrid - 1, s) * alphaStore.slice(ir).col(h) + \
-                    transMatRate_tc_H(1, iGrid - 1, s) * alphaMatCurrent_tc.slice(s).col(iGrid - 1) \
-                );
-                double d = 1 / sum(alphaStore.slice(ir).col(h));
-                log_cStore(iGrid, h, ir) = log(d);
-                alphaStore.slice(ir).col(h) = d * alphaStore.slice(ir).col(h);
+            // this is OK for ff > 0 OR (ff == 0 & ir == 0 | (ir == 2))
+            if ((ff > 0) | ((ff == 0) & ((ir == 0) | (ir == 2)))) {
+                if (block_approach == 4) {
+                    eMatGridLocal = eMatGridLocalc.slice(ir);
+                }
+                for(int i = 0; i < 3; i++) {
+                    int h = rr0(ir, i);
+                    alphaStore.slice(ir).col(h) = eMatGridLocal.col(i) % ( \
+                        transMatRate_tc_H(0, iGrid - 1, s) * alphaStore.slice(ir).col(h) + \
+                        transMatRate_tc_H(1, iGrid - 1, s) * one_over_K \
+                    );
+                    // transMatRate_tc_H(1, iGrid - 1, s) * alphaMatCurrent_tc.slice(s).col(iGrid - 1)
+                    double d = 1 / sum(alphaStore.slice(ir).col(h));
+                    log_cStore(iGrid, h, ir) = log(d);
+                    alphaStore.slice(ir).col(h) = d * alphaStore.slice(ir).col(h);
+                }
             }
         }
     }
@@ -1349,6 +1364,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     Rcpp::NumericMatrix& runif_proposed,
     const Rcpp::IntegerVector& grid,
     Rcpp::IntegerVector& wif0,
+    Rcpp::LogicalVector& grid_has_read,
     double ff,
     int s, // this is 0-based
     const arma::cube& alphaMatCurrent_tc,
@@ -1356,6 +1372,10 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     const arma::cube& transMatRate_tc_H,
     const int maxDifferenceBetweenReads,
     const int Jmax,
+    std::string& prev_section,
+    std::string& next_section, 
+    const int suppressOutput,
+    double& prev,
     bool do_checks = false,
     Rcpp::List initial_package = R_NilValue,
     bool verbose = false,
@@ -1365,9 +1385,9 @@ Rcpp::List Rcpp_block_gibbs_resampler(
 ) {
     //
     //
-    if (verbose) {
-        std::cout << "begin Rcpp block gibbs sampler" << std::endl;
-    }
+    next_section="block gibbs - begin";
+    prev=print_times(prev, suppressOutput, prev_section, next_section);
+    prev_section=next_section;
     Rcpp::List to_return;
     Rcpp::List all_packages;
     const Rcpp::LogicalVector read_is_uninformative(1);
@@ -1380,9 +1400,9 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     const Rcpp::NumericVector prior_probs = NumericVector::create(0.5, (1 - ff) / 2, (ff / 2)); 
     Rcpp::NumericVector log_prior_probs = NumericVector::create(log(0.5), log((1 - ff) / 2), log((ff / 2)));
     //
-    if (verbose) {
-        std::cout << "make considers" << std::endl;
-    }
+    next_section="block gibbs - make considers";
+    prev=print_times(prev, suppressOutput, prev_section, next_section);
+    prev_section=next_section;
     //
     Rcpp::List out = Rcpp_make_gibbs_considers(
         blocked_snps,
@@ -1401,8 +1421,10 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     const int n_blocks = as<int>(out["n_blocks"]);
     //
     //
+    next_section="block gibbs - check considers";
+    prev=print_times(prev, suppressOutput, prev_section, next_section);
+    prev_section=next_section;
     if (verbose) {
-        std::cout << "check considers" << std::endl;
         if (consider_grid_start_0_based(0) != 0) {
             std::cout << "problem with consider grid start entry" << std::endl;
             return(to_return);
@@ -1419,9 +1441,9 @@ Rcpp::List Rcpp_block_gibbs_resampler(
         }
     }
     //
-    if (verbose) {
-        std::cout << "initialize containers" << std::endl;
-    }
+    next_section="block gibbs - initialize containers";
+    prev=print_times(prev, suppressOutput, prev_section, next_section);
+    prev_section=next_section;
     //
     Rcpp::NumericMatrix block_results;
     Rcpp::CharacterVector block_results_columns;
@@ -1510,6 +1532,9 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     proposed_H.fill(-1);
     Rcpp::IntegerVector approach2_iRead(1);
     approach2_iRead = 0; // here 0-based
+    next_section="block gibbs - go forwards";
+    prev=print_times(prev, suppressOutput, prev_section, next_section);
+    prev_section=next_section;
     //
     // more initializations
     //
@@ -1529,7 +1554,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
         //
         // go forward one
         //
-        Rcpp_gibbs_block_forward_one(approach2_iRead, iGrid, s, alphaStore, log_cStore, rr, rr0, eMatGridLocal, eMatGridLocalc, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, read_is_uninformative, block_approach, wif0, eMatRead_t, nReads, H, proposed_H, H_class, rlc, rlcM, runif_proposed);
+        Rcpp_gibbs_block_forward_one(approach2_iRead, iGrid, s, ff, alphaStore, log_cStore, rr, rr0, eMatGridLocal, eMatGridLocalc, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, read_is_uninformative, block_approach, wif0, eMatRead_t, nReads, H, proposed_H, H_class, rlc, rlcM, runif_proposed);
         //
         if ((-1) < consider_grid_where_0_based(iGrid)) {
             iBlock = consider_grid_where_0_based(iGrid);
@@ -1574,9 +1599,9 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     //
     // re-run backward
     //
-    if (verbose) {
-        std::cout << "finalize by re-running backward" << std::endl;
-    }
+    next_section="block gibbs - finalize by re-running backwards";
+    prev=print_times(prev, suppressOutput, prev_section, next_section);
+    prev_section=next_section;
     betaHat_t1.col(nGrids - 1).fill(c1(nGrids-1));
     betaHat_t2.col(nGrids - 1).fill(c2(nGrids-1));
     betaHat_t3.col(nGrids - 1).fill(c3(nGrids-1));
@@ -1584,6 +1609,10 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     Rcpp_run_backward_haploid(betaHat_t1, c1, eMatGrid_t1, alphaMatCurrent_tc, transMatRate_tc_H, s);
     Rcpp_run_backward_haploid(betaHat_t2, c2, eMatGrid_t2, alphaMatCurrent_tc, transMatRate_tc_H, s);
     Rcpp_run_backward_haploid(betaHat_t3, c3, eMatGrid_t3, alphaMatCurrent_tc, transMatRate_tc_H, s);
+    // yes for the long term, not sure what I will ultimately do with this though
+    Rcpp_run_backward_haploid_QUILT_faster(betaHat_t1, c1, eMatGrid_t1, transMatRate_tc_H, grid_has_read, s);    
+    Rcpp_run_backward_haploid_QUILT_faster(betaHat_t2, c2, eMatGrid_t2, transMatRate_tc_H, grid_has_read, s);    
+    Rcpp_run_backward_haploid_QUILT_faster(betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, grid_has_read, s);
     if (verbose) {
         std::cout << "done rcpp block gibbs sampling" << std::endl;
     }

@@ -296,13 +296,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // Rcpp_gibbs_block_forward_one
-void Rcpp_gibbs_block_forward_one(Rcpp::IntegerVector& approach2_iRead, const int iGrid, const int s, arma::cube& alphaStore, arma::cube& log_cStore, const arma::imat& rr, const arma::imat& rr0, arma::mat& eMatGridLocal, arma::cube& eMatGridLocalc, const arma::cube& transMatRate_tc_H, const arma::cube& alphaMatCurrent_tc, const arma::mat& priorCurrent_m, const Rcpp::LogicalVector& read_is_uninformative, const int block_approach, Rcpp::IntegerVector& wif0, const arma::mat& eMatRead_t, const int nReads, Rcpp::IntegerVector& H, arma::imat& proposed_H, Rcpp::IntegerVector& H_class, arma::mat& rlc, arma::cube& rlcM, const Rcpp::NumericMatrix& runif_proposed);
-RcppExport SEXP _QUILT_Rcpp_gibbs_block_forward_one(SEXP approach2_iReadSEXP, SEXP iGridSEXP, SEXP sSEXP, SEXP alphaStoreSEXP, SEXP log_cStoreSEXP, SEXP rrSEXP, SEXP rr0SEXP, SEXP eMatGridLocalSEXP, SEXP eMatGridLocalcSEXP, SEXP transMatRate_tc_HSEXP, SEXP alphaMatCurrent_tcSEXP, SEXP priorCurrent_mSEXP, SEXP read_is_uninformativeSEXP, SEXP block_approachSEXP, SEXP wif0SEXP, SEXP eMatRead_tSEXP, SEXP nReadsSEXP, SEXP HSEXP, SEXP proposed_HSEXP, SEXP H_classSEXP, SEXP rlcSEXP, SEXP rlcMSEXP, SEXP runif_proposedSEXP) {
+void Rcpp_gibbs_block_forward_one(Rcpp::IntegerVector& approach2_iRead, const int iGrid, const int s, double ff, arma::cube& alphaStore, arma::cube& log_cStore, const arma::imat& rr, const arma::imat& rr0, arma::mat& eMatGridLocal, arma::cube& eMatGridLocalc, const arma::cube& transMatRate_tc_H, const arma::cube& alphaMatCurrent_tc, const arma::mat& priorCurrent_m, const Rcpp::LogicalVector& read_is_uninformative, const int block_approach, Rcpp::IntegerVector& wif0, const arma::mat& eMatRead_t, const int nReads, Rcpp::IntegerVector& H, arma::imat& proposed_H, Rcpp::IntegerVector& H_class, arma::mat& rlc, arma::cube& rlcM, const Rcpp::NumericMatrix& runif_proposed);
+RcppExport SEXP _QUILT_Rcpp_gibbs_block_forward_one(SEXP approach2_iReadSEXP, SEXP iGridSEXP, SEXP sSEXP, SEXP ffSEXP, SEXP alphaStoreSEXP, SEXP log_cStoreSEXP, SEXP rrSEXP, SEXP rr0SEXP, SEXP eMatGridLocalSEXP, SEXP eMatGridLocalcSEXP, SEXP transMatRate_tc_HSEXP, SEXP alphaMatCurrent_tcSEXP, SEXP priorCurrent_mSEXP, SEXP read_is_uninformativeSEXP, SEXP block_approachSEXP, SEXP wif0SEXP, SEXP eMatRead_tSEXP, SEXP nReadsSEXP, SEXP HSEXP, SEXP proposed_HSEXP, SEXP H_classSEXP, SEXP rlcSEXP, SEXP rlcMSEXP, SEXP runif_proposedSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type approach2_iRead(approach2_iReadSEXP);
     Rcpp::traits::input_parameter< const int >::type iGrid(iGridSEXP);
     Rcpp::traits::input_parameter< const int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< double >::type ff(ffSEXP);
     Rcpp::traits::input_parameter< arma::cube& >::type alphaStore(alphaStoreSEXP);
     Rcpp::traits::input_parameter< arma::cube& >::type log_cStore(log_cStoreSEXP);
     Rcpp::traits::input_parameter< const arma::imat& >::type rr(rrSEXP);
@@ -323,7 +324,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat& >::type rlc(rlcSEXP);
     Rcpp::traits::input_parameter< arma::cube& >::type rlcM(rlcMSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type runif_proposed(runif_proposedSEXP);
-    Rcpp_gibbs_block_forward_one(approach2_iRead, iGrid, s, alphaStore, log_cStore, rr, rr0, eMatGridLocal, eMatGridLocalc, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, read_is_uninformative, block_approach, wif0, eMatRead_t, nReads, H, proposed_H, H_class, rlc, rlcM, runif_proposed);
+    Rcpp_gibbs_block_forward_one(approach2_iRead, iGrid, s, ff, alphaStore, log_cStore, rr, rr0, eMatGridLocal, eMatGridLocalc, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, read_is_uninformative, block_approach, wif0, eMatRead_t, nReads, H, proposed_H, H_class, rlc, rlcM, runif_proposed);
     return R_NilValue;
 END_RCPP
 }
@@ -376,8 +377,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // Rcpp_block_gibbs_resampler
-Rcpp::List Rcpp_block_gibbs_resampler(arma::mat& alphaHat_t1, arma::mat& alphaHat_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t1, arma::mat& betaHat_t2, arma::mat& betaHat_t3, arma::rowvec& c1, arma::rowvec& c2, arma::rowvec& c3, arma::mat& eMatGrid_t1, arma::mat& eMatGrid_t2, arma::mat& eMatGrid_t3, Rcpp::IntegerVector& H, Rcpp::IntegerVector& H_class, const arma::mat& eMatRead_t, Rcpp::IntegerVector& blocked_snps, Rcpp::NumericVector& runif_block, Rcpp::NumericVector& runif_total, Rcpp::NumericMatrix& runif_proposed, const Rcpp::IntegerVector& grid, Rcpp::IntegerVector& wif0, double ff, int s, const arma::cube& alphaMatCurrent_tc, const arma::mat& priorCurrent_m, const arma::cube& transMatRate_tc_H, const int maxDifferenceBetweenReads, const int Jmax, bool do_checks, Rcpp::List initial_package, bool verbose, Rcpp::List fpp_stuff, bool use_cpp_bits_in_R, int block_approach);
-RcppExport SEXP _QUILT_Rcpp_block_gibbs_resampler(SEXP alphaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t1SEXP, SEXP betaHat_t2SEXP, SEXP betaHat_t3SEXP, SEXP c1SEXP, SEXP c2SEXP, SEXP c3SEXP, SEXP eMatGrid_t1SEXP, SEXP eMatGrid_t2SEXP, SEXP eMatGrid_t3SEXP, SEXP HSEXP, SEXP H_classSEXP, SEXP eMatRead_tSEXP, SEXP blocked_snpsSEXP, SEXP runif_blockSEXP, SEXP runif_totalSEXP, SEXP runif_proposedSEXP, SEXP gridSEXP, SEXP wif0SEXP, SEXP ffSEXP, SEXP sSEXP, SEXP alphaMatCurrent_tcSEXP, SEXP priorCurrent_mSEXP, SEXP transMatRate_tc_HSEXP, SEXP maxDifferenceBetweenReadsSEXP, SEXP JmaxSEXP, SEXP do_checksSEXP, SEXP initial_packageSEXP, SEXP verboseSEXP, SEXP fpp_stuffSEXP, SEXP use_cpp_bits_in_RSEXP, SEXP block_approachSEXP) {
+Rcpp::List Rcpp_block_gibbs_resampler(arma::mat& alphaHat_t1, arma::mat& alphaHat_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t1, arma::mat& betaHat_t2, arma::mat& betaHat_t3, arma::rowvec& c1, arma::rowvec& c2, arma::rowvec& c3, arma::mat& eMatGrid_t1, arma::mat& eMatGrid_t2, arma::mat& eMatGrid_t3, Rcpp::IntegerVector& H, Rcpp::IntegerVector& H_class, const arma::mat& eMatRead_t, Rcpp::IntegerVector& blocked_snps, Rcpp::NumericVector& runif_block, Rcpp::NumericVector& runif_total, Rcpp::NumericMatrix& runif_proposed, const Rcpp::IntegerVector& grid, Rcpp::IntegerVector& wif0, Rcpp::LogicalVector& grid_has_read, double ff, int s, const arma::cube& alphaMatCurrent_tc, const arma::mat& priorCurrent_m, const arma::cube& transMatRate_tc_H, const int maxDifferenceBetweenReads, const int Jmax, std::string& prev_section, std::string& next_section, const int suppressOutput, double& prev, bool do_checks, Rcpp::List initial_package, bool verbose, Rcpp::List fpp_stuff, bool use_cpp_bits_in_R, int block_approach);
+RcppExport SEXP _QUILT_Rcpp_block_gibbs_resampler(SEXP alphaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t1SEXP, SEXP betaHat_t2SEXP, SEXP betaHat_t3SEXP, SEXP c1SEXP, SEXP c2SEXP, SEXP c3SEXP, SEXP eMatGrid_t1SEXP, SEXP eMatGrid_t2SEXP, SEXP eMatGrid_t3SEXP, SEXP HSEXP, SEXP H_classSEXP, SEXP eMatRead_tSEXP, SEXP blocked_snpsSEXP, SEXP runif_blockSEXP, SEXP runif_totalSEXP, SEXP runif_proposedSEXP, SEXP gridSEXP, SEXP wif0SEXP, SEXP grid_has_readSEXP, SEXP ffSEXP, SEXP sSEXP, SEXP alphaMatCurrent_tcSEXP, SEXP priorCurrent_mSEXP, SEXP transMatRate_tc_HSEXP, SEXP maxDifferenceBetweenReadsSEXP, SEXP JmaxSEXP, SEXP prev_sectionSEXP, SEXP next_sectionSEXP, SEXP suppressOutputSEXP, SEXP prevSEXP, SEXP do_checksSEXP, SEXP initial_packageSEXP, SEXP verboseSEXP, SEXP fpp_stuffSEXP, SEXP use_cpp_bits_in_RSEXP, SEXP block_approachSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -402,6 +403,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix& >::type runif_proposed(runif_proposedSEXP);
     Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type grid(gridSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type wif0(wif0SEXP);
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector& >::type grid_has_read(grid_has_readSEXP);
     Rcpp::traits::input_parameter< double >::type ff(ffSEXP);
     Rcpp::traits::input_parameter< int >::type s(sSEXP);
     Rcpp::traits::input_parameter< const arma::cube& >::type alphaMatCurrent_tc(alphaMatCurrent_tcSEXP);
@@ -409,13 +411,17 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::cube& >::type transMatRate_tc_H(transMatRate_tc_HSEXP);
     Rcpp::traits::input_parameter< const int >::type maxDifferenceBetweenReads(maxDifferenceBetweenReadsSEXP);
     Rcpp::traits::input_parameter< const int >::type Jmax(JmaxSEXP);
+    Rcpp::traits::input_parameter< std::string& >::type prev_section(prev_sectionSEXP);
+    Rcpp::traits::input_parameter< std::string& >::type next_section(next_sectionSEXP);
+    Rcpp::traits::input_parameter< const int >::type suppressOutput(suppressOutputSEXP);
+    Rcpp::traits::input_parameter< double& >::type prev(prevSEXP);
     Rcpp::traits::input_parameter< bool >::type do_checks(do_checksSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type initial_package(initial_packageSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type fpp_stuff(fpp_stuffSEXP);
     Rcpp::traits::input_parameter< bool >::type use_cpp_bits_in_R(use_cpp_bits_in_RSEXP);
     Rcpp::traits::input_parameter< int >::type block_approach(block_approachSEXP);
-    rcpp_result_gen = Rcpp::wrap(Rcpp_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, do_checks, initial_package, verbose, fpp_stuff, use_cpp_bits_in_R, block_approach));
+    rcpp_result_gen = Rcpp::wrap(Rcpp_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, do_checks, initial_package, verbose, fpp_stuff, use_cpp_bits_in_R, block_approach));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1196,11 +1202,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly", (DL_FUNC) &_QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly, 21},
     {"_QUILT_Rcpp_consider_block_relabelling", (DL_FUNC) &_QUILT_Rcpp_consider_block_relabelling, 48},
     {"_QUILT_Rcpp_consider_total_relabelling", (DL_FUNC) &_QUILT_Rcpp_consider_total_relabelling, 26},
-    {"_QUILT_Rcpp_gibbs_block_forward_one", (DL_FUNC) &_QUILT_Rcpp_gibbs_block_forward_one, 23},
+    {"_QUILT_Rcpp_gibbs_block_forward_one", (DL_FUNC) &_QUILT_Rcpp_gibbs_block_forward_one, 24},
     {"_QUILT_Rcpp_reset_local_variables", (DL_FUNC) &_QUILT_Rcpp_reset_local_variables, 11},
     {"_QUILT_Rcpp_make_gibbs_considers", (DL_FUNC) &_QUILT_Rcpp_make_gibbs_considers, 6},
     {"_QUILT_Rcpp_fill_rlcM", (DL_FUNC) &_QUILT_Rcpp_fill_rlcM, 3},
-    {"_QUILT_Rcpp_block_gibbs_resampler", (DL_FUNC) &_QUILT_Rcpp_block_gibbs_resampler, 34},
+    {"_QUILT_Rcpp_block_gibbs_resampler", (DL_FUNC) &_QUILT_Rcpp_block_gibbs_resampler, 39},
     {"_QUILT_Rcpp_ff0_shard_block_gibbs_resampler", (DL_FUNC) &_QUILT_Rcpp_ff0_shard_block_gibbs_resampler, 25},
     {"_QUILT_rcpp_make_rescaled_on_fly_eMatGrid_t", (DL_FUNC) &_QUILT_rcpp_make_rescaled_on_fly_eMatGrid_t, 11},
     {"_QUILT_rcpp_initialize_gibbs_forward_backward", (DL_FUNC) &_QUILT_rcpp_initialize_gibbs_forward_backward, 11},

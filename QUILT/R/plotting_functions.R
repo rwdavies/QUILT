@@ -399,7 +399,12 @@ plot_of_likelihoods_across_samplings_and_seek_its <- function(
         "plots",
         paste0("likelihoods.", sample_name, ".",regionName, ".png")
     )
-    png(filename, height = 2000, width = 1000 * n_seek_its, res = 300)
+    png(
+        filename,
+        height = 2000,
+        width = 2000 * n_seek_its * (n_gibbs_burn_in_its / 100),
+        res = 300
+    )
     par(mfrow = c(2, 1))
     for(ylab_option in c("zoomedout", "zoomedin")) {
         ## first option is zoomed out
@@ -416,8 +421,8 @@ plot_of_likelihoods_across_samplings_and_seek_its <- function(
                     }
                     y[, ylab]
                 } else {
-                    ## just keep last 4 (or fewer)
-                    y[max(1, nrow(y) - 3):nrow(y), ylab]
+                    ## just keep last 20% (or fewer)
+                    y[max(1, round(0.20 * nrow(y)) - 3):nrow(y), ylab]
                 }
             })
         })
@@ -443,7 +448,6 @@ plot_of_likelihoods_across_samplings_and_seek_its <- function(
             )
             if (length(block_gibbs_iterations) > 0) {
                 for(val in x[block_gibbs_iterations]) {
-                    print(val)
                     abline(v = val, col = "purple")
                 }
             }

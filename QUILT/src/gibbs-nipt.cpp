@@ -162,6 +162,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     Rcpp::NumericMatrix& runif_proposed,
     const Rcpp::IntegerVector& grid,
     Rcpp::IntegerVector& wif0,
+    Rcpp::LogicalVector& grid_has_read,
     double ff,
     int s, // this is 0-based
     const arma::cube& alphaMatCurrent_tc,
@@ -169,6 +170,10 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     const arma::cube& transMatRate_tc_H,
     const int maxDifferenceBetweenReads,
     const int Jmax,
+    std::string& prev_section,
+    std::string& next_section,    
+    const int suppressOutput,
+    double& prev,
     bool do_checks = false,
     Rcpp::List initial_package = R_NilValue,
     bool verbose = false,
@@ -513,7 +518,9 @@ void rcpp_alpha_forward_one_QUILT_faster(
     // t is 1-based
     int iGrid_minus_1 = iGrid - 1;
     const double one_over_K = 1 / double(alphaHat_t.n_rows);
-    double alphaConst = transMatRate_tc_H(1, iGrid_minus_1, s) * sum(alphaHat_t.col(iGrid_minus_1));
+    //double alphaConst = transMatRate_tc_H(1, iGrid_minus_1, s);
+    // not sure - do I need this?
+    double alphaConst = transMatRate_tc_H(1, iGrid_minus_1, s) * sum(alphaHat_t.col(iGrid_minus_1));    
     double a;
     double x = transMatRate_tc_H(0, iGrid_minus_1, s);
     double c2 = c(iGrid);
@@ -533,49 +540,6 @@ void rcpp_alpha_forward_one_QUILT_faster(
     }
     return;
 }
-
-// //' @export
-// // [[Rcpp::export]]
-// void rcpp_alpha_forward_one_QUILT_faster(
-//     int s,
-//     const int iGrid,
-//     const int K,
-//     arma::mat& alphaHat_t,
-//     const arma::cube& transMatRate_tc_H,
-//     const arma::mat& eMatGrid_t,
-//     arma::rowvec& c,
-//     double& minus_log_c_sum,
-//     const Rcpp::LogicalVector& grid_has_read,
-//     const bool normalize = false
-// ) {
-//     // t is 1-based
-//     int iGrid_minus_1 = iGrid - 1;
-//     const double one_over_K = 1 / double(alphaHat_t.n_rows);
-//     // not sure -> we always normalize, so alphaHat_t columns always sum to 1    
-//     double alphaConst = transMatRate_tc_H(1, iGrid_minus_1, s) * sum(alphaHat_t.col(iGrid_minus_1)) * one_over_K;
-//     //double alphaConst = transMatRate_tc_H(1, iGrid_minus_1, s) * one_over_K;    
-//     double a;
-//     double x = transMatRate_tc_H(0, iGrid_minus_1, s);
-//     double c2 = c(iGrid);
-//     if (grid_has_read(iGrid)) {
-//         alphaHat_t.col(iGrid) = eMatGrid_t.col(iGrid) % \
-//              ( x * alphaHat_t.col(iGrid_minus_1) + alphaConst);
-//     } else {
-//         alphaHat_t.col(iGrid) = (x * alphaHat_t.col(iGrid_minus_1) + alphaConst);
-//     }
-//     if (normalize) {
-//         a = 1 / (c2 * sum(alphaHat_t.col(iGrid)));
-//         minus_log_c_sum -= std::log(a);
-//         c(iGrid) *= a;
-//         alphaHat_t.col(iGrid) *= a;
-//     } else {
-//         // same as above, but working the c2 differently, the original way
-//         if (c2 != 1) {
-//             alphaHat_t.col(iGrid) *= c2;
-//         }
-//     }
-//     return;
-// }
 
 
 //' @export
@@ -1830,11 +1794,12 @@ Rcpp::NumericMatrix unpack_gammas(
     const bool generate_fb_snp_offsets,
     const bool haploid_gibbs_equal_weighting,
     const bool return_gamma,
+    const bool return_genProbs,
     const bool return_hapProbs,
     const Rcpp::NumericVector prior_probs,
     Rcpp::NumericVector& hg_log_mult,
     Rcpp::NumericVector& hg_ll_rescaled,
-    const int log_mult_max = 40    
+    const int log_mult_max = 40
 ) {
     //
     next_section="unpack gammas";
@@ -1913,28 +1878,27 @@ Rcpp::NumericMatrix unpack_gammas(
         }
     }
     //
-    next_section="calculate genProbs";
-    prev=print_times(prev, suppressOutput, prev_section, next_section);
-    prev_section=next_section;
     // these are over-written entirely
-    //genProbsM_t_local.fill(0); // ugh, this could be fixed I think
-    //genProbsF_t_local.fill(0);
-    //hapProbs_t_local.fill(0);
     // could do re-weighting on the build, but that might be exhausting
-    rcpp_calculate_gn_genProbs_and_hapProbs(
-        genProbsM_t_local,
-        genProbsF_t_local,    
-        hapProbs_t_local,
-        s,
-        eHapsCurrent_tc,
-        gammaMT_t_local,
-        gammaMU_t_local,
-        gammaP_t_local,
-        grid,
-        snp_start_1_based,
-        snp_end_1_based,
-        run_fb_grid_offset
-    );
+    //if (return_genProbs | return_hapProbs) {
+        next_section="calculate genProbs";
+        prev=print_times(prev, suppressOutput, prev_section, next_section);
+        prev_section=next_section;
+        rcpp_calculate_gn_genProbs_and_hapProbs(
+            genProbsM_t_local,
+            genProbsF_t_local,    
+            hapProbs_t_local,
+            s,
+            eHapsCurrent_tc,
+            gammaMT_t_local,
+            gammaMU_t_local,
+            gammaP_t_local,
+            grid,
+            snp_start_1_based,
+            snp_end_1_based,
+            run_fb_grid_offset
+        );
+        //}
     // duplicate sometimes, but OK, is easy
     next_section="fly weighter";
     prev=print_times(prev, suppressOutput, prev_section, next_section);
@@ -2386,7 +2350,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                     ff, run_fb_subset, i_snp_block_for_alpha_beta,
                     previous_hap_label_prob_matrix, i_gibbs_samplings, i_result_it,
                     generate_fb_snp_offsets, haploid_gibbs_equal_weighting,
-                    return_gamma, return_hapProbs,
+                    return_gamma, return_genProbs, return_hapProbs,
                     prior_probs, hg_log_mult, hg_ll_rescaled
                 );
                 //
@@ -2468,7 +2432,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         next_section="Block gibbs - sample";
                         prev=print_times(prev, suppressOutput, prev_section, next_section);
                         prev_section=next_section;
-                        Rcpp::List out2 = Rcpp_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax_local);
+                        Rcpp::List out2 = Rcpp_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax_local, prev_section, next_section, suppressOutput, prev);
                         //
                         if (return_gibbs_block_output & return_advanced_gibbs_block_output) {
                             // be super greedy with saving, but who cares, this is not normally run
@@ -2485,6 +2449,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         }
                         Rcpp::List out3;
                         if (do_shard_ff0_block_gibbs & (ff == 0)) {
+                            next_section="Block gibbs - ff0 shard resampler";
+                            prev=print_times(prev, suppressOutput, prev_section, next_section);
+                            prev_section=next_section;
                             out3 = Rcpp_ff0_shard_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H);
                         }
                         //
@@ -2530,7 +2497,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             ff, run_fb_subset, i_snp_block_for_alpha_beta,
                             previous_hap_label_prob_matrix, i_gibbs_samplings, i_result_it,
                             generate_fb_snp_offsets, haploid_gibbs_equal_weighting,
-                            return_gamma, return_hapProbs,
+                            return_gamma, return_genProbs, return_hapProbs,
                             prior_probs, hg_log_mult, hg_ll_rescaled
                         );
                         list_of_ending_read_labels.push_back(Rcpp::clone(H), "H") ;

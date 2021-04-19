@@ -232,6 +232,8 @@ test_that("can perform block gibbs when ff is 0", {
     K <- test_package$K
     transMatRate_tc_H <- test_package$transMatRate_tc_H
     alphaMatCurrent_tc <- test_package$alphaMatCurrent_tc
+    ## for here, these are the same (no prior)
+    alphaMatCurrent_tc[] <- 1 / K
     priorCurrent_m <- test_package$priorCurrent_m
     eHapsCurrent_tc <- test_package$eHapsCurrent_tc
     true_H <- as.integer(test_package$true_H) ## always keep as 1-based integer, EVEN in cpp
@@ -244,6 +246,9 @@ test_that("can perform block gibbs when ff is 0", {
     sampleReads <- test_package$sampleReads
     ## re-size the reads to feature more random length
     wif0 <- as.integer(sapply(sampleReads, function(x) x[[2]]))
+    grid_has_read <- rep(FALSE, nGrids)
+    grid_has_read[wif0 + 1] <- TRUE
+    
     nReads <- length(sampleReads)
     ##
     rr <- rbind(
@@ -305,6 +310,7 @@ test_that("can perform block gibbs when ff is 0", {
                 blocked_snps = blocked_snps,
                 grid = grid,
                 wif0 = wif0,
+                grid_has_read = grid_has_read,
                 ff = ff,
                 s = s,
                 eHapsCurrent_tc = eHapsCurrent_tc,
@@ -333,6 +339,10 @@ test_that("can perform block gibbs when ff is 0", {
 
 
 })
+
+
+
+
 
 
 
@@ -384,6 +394,7 @@ test_that("can perform block gibbs", {
     K <- test_package$K
     transMatRate_tc_H <- test_package$transMatRate_tc_H
     alphaMatCurrent_tc <- test_package$alphaMatCurrent_tc
+    alphaMatCurrent_tc[] <- 1 / K
     priorCurrent_m <- test_package$priorCurrent_m
     eHapsCurrent_tc <- test_package$eHapsCurrent_tc
     true_H <- as.integer(test_package$true_H) ## always keep as 1-based integer, EVEN in cpp
@@ -397,6 +408,8 @@ test_that("can perform block gibbs", {
     sampleReads <- test_package$sampleReads
     ## re-size the reads to feature more random length
     wif0 <- as.integer(sapply(sampleReads, function(x) x[[2]]))
+    grid_has_read <- rep(FALSE, nGrids)
+    grid_has_read[wif0 + 1] <- TRUE
     nReads <- length(sampleReads)
     ##
     rr <- rbind(
@@ -505,6 +518,7 @@ test_that("can perform block gibbs", {
                 blocked_snps = blocked_snps,
                 grid = grid,
                 wif0 = wif0,
+                grid_has_read = grid_has_read,
                 ff = ff,
                 s = s,
                 eHapsCurrent_tc = eHapsCurrent_tc,
