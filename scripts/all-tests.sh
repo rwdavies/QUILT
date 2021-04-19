@@ -13,3 +13,5 @@ cd "${script_dir}"/../
 ./scripts/build-and-install.R
 ./scripts/test-cli.R
 ./example/run_example.sh example/QUILT_usage.Md
+./scripts/run_hla_example.sh
+
