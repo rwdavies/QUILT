@@ -47,7 +47,7 @@ QUILT(
     override_default_params_for_small_ref_panel = TRUE,
     nCores = 1,
     nGibbsSamples = 3,
-    print_extra_timing_information = TRUE
+    print_extra_timing_information = FALSE
 )
 ##################
 

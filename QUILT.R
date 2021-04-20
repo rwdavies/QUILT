@@ -123,6 +123,12 @@ option_list <- list(
         default = ""
     ), 
     make_option(
+        "--save_prepared_reference",
+        type = "logical",
+        help = "If preparing reference as part of running QUILT, whether to save the prepared reference output file. Note that if the reference was already made using QUILT_prepare_reference, this is ignored [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
         "--tempdir",
         type = "character",
         help = "What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/ [default NA] ",
@@ -323,8 +329,8 @@ option_list <- list(
     make_option(
         "--nMaxDH",
         type = "integer",
-        help = "Integer Maximum number of distinct haplotypes to store in reduced form. Recommended to keep as 2 ** N - 1 where N is an integer greater than 0 i.e. 255, 511, etc [default 2 ** 8 - 1] ",
-        default = 2 ** 8 - 1
+        help = "Integer Maximum number of distinct haplotypes to store in reduced form. Recommended to keep as 2 ** N - 1 where N is an integer greater than 0 i.e. 255, 511, etc [default NA] ",
+        default = NA
     ), 
     make_option(
         "--make_fake_vcf_with_sites_list",
@@ -405,6 +411,7 @@ QUILT(
     RData_objects_to_save = eval(parse(text=opt$RData_objects_to_save)),
     output_RData_filename = opt$output_RData_filename,
     prepared_reference_filename = opt$prepared_reference_filename,
+    save_prepared_reference = opt$save_prepared_reference,
     tempdir = opt$tempdir,
     bqFilter = opt$bqFilter,
     panel_size = opt$panel_size,

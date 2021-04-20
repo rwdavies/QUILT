@@ -495,7 +495,6 @@ get_and_impute_one_sample <- function(
     Knew,
     K_top_matches,
     heuristic_match_thin,
-    record_dosage_each_round,
     record_interim_dosages,
     have_truth_haplotypes,
     bqFilter,
@@ -780,7 +779,7 @@ get_and_impute_one_sample <- function(
             } else {
                 ## if phasing it will suck these up! same for "which_haps_to_use" (though is that bad?)
                 ## which_haps_to_use <- which_haps_to_use
-                double_list_of_starting_read_labels <- list(list(read_labels))                
+                double_list_of_starting_read_labels <- list(list(read_labels))
                 gibbs_initialize_iteratively <- FALSE
             }
 
@@ -792,12 +791,6 @@ get_and_impute_one_sample <- function(
                 print_message(paste0("i_gibbs=", i_gibbs_sample, ", i_it = ", i_it, " small gibbs"))
             }
 
-            if (i_it < n_seek_its) {
-                return_good_haps <- TRUE
-            } else {
-                ## weird that this is needed on phasing it?
-                return_good_haps <- TRUE
-            }
             if (record_interim_dosages) {
                 return_genProbs <- TRUE
                 return_hapProbs <- TRUE
@@ -891,6 +884,14 @@ get_and_impute_one_sample <- function(
             if (verbose) {
                 print_message(paste0("i_gibbs=", i_gibbs_sample, ", i_it = ", i_it, " full"))
             }
+
+            if (i_it < n_seek_its) {
+                return_good_haps <- TRUE
+            } else {
+                ## keep on, keep selecting good haps, phasing sucks these up
+                return_good_haps <- TRUE
+            }
+
             read_labels <- gibbs_iterate$double_list_of_ending_read_labels[[1]][[1]]
             previously_selected_haplotypes <- sample(which_haps_to_use, Ksubset - Knew)
             return_dosage <- (have_truth_haplotypes | record_interim_dosages | (i_it == n_seek_its))
@@ -939,6 +940,8 @@ get_and_impute_one_sample <- function(
                 minGLValue = minGLValue,
                 suppressOutput = suppressOutput
             )
+
+            ## for next time
             
             which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
             hap1 <- impute_all[["dosage1"]]
@@ -1011,7 +1014,6 @@ get_and_impute_one_sample <- function(
         }
 
         if (hla_run) {
-            ## print_message("SPECIAL CODE FOR HLA SIMON")
             gamma1 <- impute_all$fbsoL$gammaMT_t
             gamma2 <- impute_all$fbsoL$gammaMU_t
             if (is.na(gamma_physically_closest_to)) {
@@ -1027,8 +1029,8 @@ get_and_impute_one_sample <- function(
             if (i_gibbs_sample <= nGibbsSamples) {
                 list_of_gammas[[i_gibbs_sample]] <- list(gamma1, gamma2)
             }
-            ## print_message("END SPECIAL CODE FOR HLA SIMON")
         }
+         
     }
 
     if(have_truth_haplotypes) {
@@ -1920,14 +1922,8 @@ impute_one_sample <- function(
         return_gibbs_block_output <- TRUE
         return_advanced_gibbs_block_output <- TRUE
     }
-    ## sort(apply(small_eHapsCurrent_tc[, , 1], 2, function(x) paste0(round(x), collapse = "")))
-    ## table(sort(apply(small_eHapsCurrent_tc[, , 1], 1, function(x) paste0(round(x), collapse=  ""))))
-    ## does have all options, so SHOULD be OK
-    ##
-    ## print(paste0("run = ", Sys.time()))
     ## ugh, alphaMatCurrent_tc is a CONSTANT
 
-    print(paste0("return_genPRobs = ", return_genProbs))
     out <- rcpp_forwardBackwardGibbsNIPT(
         sampleReads = sampleReads,
         priorCurrent_m = small_priorCurrent_m,        

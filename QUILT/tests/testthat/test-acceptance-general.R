@@ -288,6 +288,101 @@ test_that("QUILT can impute in one step", {
 })
 
 
+test_that("QUILT can use specified or inferred nMaxDH", {
+
+    set.seed(3210)
+    
+    for(nMaxDH in c(NA, 2 ** 4 - 1, 2 ** 8 - 1, 34)) {
+        
+        outputdir <- STITCH::make_unique_tempdir()
+        regionName <- data_package$chr
+        QUILT(
+            outputdir = outputdir,
+            chr = data_package$chr,
+            bamlist = data_package$bamlist,
+            posfile = data_package$posfile,
+            nGibbsSamples = 3,
+            n_seek_its = 1,
+            nGen = 100,
+            reference_haplotype_file = refpack$reference_haplotype_file,
+            reference_legend_file = refpack$reference_legend_file,
+            genetic_map_file = refpack$reference_genetic_map_file,
+            nMaxDH = nMaxDH
+        )
+
+        which_snps <- NULL
+        
+        ## now evaluate versus truth!
+        check_quilt_output(
+            file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+            data_package = data_package,
+            which_snps = which_snps,
+            tol = 0.1,
+            min_info = 0.9
+        )
+    }
+    
+})
+
+
+test_that("QUILT can save or not save prepared reference data", {
+
+    for(i in 1:3) {
+        if (i == 1) {
+            prepared_reference_filename <- ""
+            save_prepared_reference <- FALSE            
+        } else if (i == 2) {
+            prepared_reference_filename <- ""
+            save_prepared_reference <- TRUE
+        } else if (i == 3) {
+            prepared_reference_filename <- tempfile()
+            save_prepared_reference <- TRUE            
+        }
+
+        outputdir <- STITCH::make_unique_tempdir()
+        regionName <- data_package$chr
+        
+        QUILT(
+            outputdir = outputdir,
+            chr = data_package$chr,
+            bamlist = data_package$bamlist,
+            posfile = data_package$posfile,
+            nGibbsSamples = 3,
+            n_seek_its = 1,
+            nGen = 100,
+            reference_haplotype_file = refpack$reference_haplotype_file,
+            reference_legend_file = refpack$reference_legend_file,
+            genetic_map_file = refpack$reference_genetic_map_file,
+            save_prepared_reference = save_prepared_reference,
+            prepared_reference_filename = prepared_reference_filename
+        )
+
+        if (save_prepared_reference) {
+            if (prepared_reference_filename == "") {
+                expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
+            } else {
+                expect_true(file.exists(prepared_reference_filename))
+            }
+        } else {
+            expect_false(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
+        }
+
+
+        which_snps <- NULL
+        
+        ## now evaluate versus truth!
+        check_quilt_output(
+            file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+            data_package = data_package,
+            which_snps = which_snps,
+            tol = 0.1,
+            min_info = 0.9
+        )
+    }
+    
+})
+
+
 test_that("QUILT can impute samples with very few reads", {
 
     for(n_reads in c(0, 1, 2, 4)) {

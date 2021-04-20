@@ -19,6 +19,7 @@
 #' @param RData_objects_to_save Can be used to name interim and misc results from imputation to save an an RData file. Default NULL means do not save such output
 #' @param output_RData_filename Override the default location for miscellaneous outputs saved in RData format
 #' @param prepared_reference_filename Optional path to prepared RData file with reference objects. Can be used instead of outputdir to coordinate use of QUILT_prepare_reference and QUILT
+#' @param save_prepared_reference If preparing reference as part of running QUILT, whether to save the prepared reference output file. Note that if the reference was already made using QUILT_prepare_reference, this is ignored
 #' @param tempdir What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/
 #' @param bqFilter Minimum BQ for a SNP in a read. Also, the algorithm uses bq<=mq, so if mapping quality is less than this, the read isnt used
 #' @param panel_size Integer number of reference haplotypes to use, set to NA to use all of them
@@ -87,6 +88,7 @@ QUILT <- function(
     RData_objects_to_save = NULL,
     output_RData_filename = NULL,
     prepared_reference_filename = "",
+    save_prepared_reference = FALSE,
     tempdir = NA,
     bqFilter = as.integer(17),
     panel_size = NA,
@@ -120,7 +122,7 @@ QUILT <- function(
     reference_exclude_samplelist_file = "",
     region_exclude_file = "",
     genetic_map_file = "",
-    nMaxDH = 2 ** 8 - 1,
+    nMaxDH = NA,
     make_fake_vcf_with_sites_list = FALSE,
     output_sites_filename = NA,
     expRate = 1,
@@ -241,11 +243,17 @@ QUILT <- function(
     ##
     ## load quilt prepared filename
     ##
+    ## if we are building this here, assume we don't want to save the prepared output
+    ## this also removes the problem of a collision if two jobs use the same files with the same output directories from different locations
+    ##
     if (prepared_reference_filename == "") {
         prepared_reference_filename <- file_quilt_prepared_reference(outputdir, regionName)
     }
     if (!file.exists(prepared_reference_filename)) {
         if (!reference_haplotype_file == "") {
+            if (!save_prepared_reference) {
+                prepared_reference_filename <- tempfile(fileext = ".RData")
+            }
             QUILT_prepare_reference(
                 outputdir = outputdir,
                 chr = chr,
@@ -267,7 +275,8 @@ QUILT <- function(
                 output_sites_filename = output_sites_filename,
                 expRate = expRate,
                 maxRate = maxRate,
-                minRate = minRate
+                minRate = minRate,
+                output_file = prepared_reference_filename
             )
         } else {
             stop(paste0("Cannot find prepared haplotype reference file, expecting:", prepared_reference_filename))
@@ -397,7 +406,7 @@ QUILT <- function(
     if (!is.na(panel_size)) {
         rhb_t <- rhb_t[1:as.integer(panel_size), ] ## this is the number of HAPLOTYPES
         reference_samples <- reference_samples[1:as.integer(panel_size), ]
-        nMaxDH <- 2 ** 8 - 1
+        ##nMaxDH <- 2 ** 8 - 1
         out <- make_rhb_t_equality(
             rhb_t = rhb_t,
             nMaxDH = nMaxDH,
@@ -665,6 +674,14 @@ QUILT <- function(
                 hweCount[out[["max_gen"]]] <- hweCount[out[["max_gen"]]] + 1 ## hmmmmm not ideal
                 alleleCount <- alleleCount + out[["per_sample_alleleCount"]]
             }
+
+            ## optionally, do some gc here, if longer running job
+            if (as.numeric(K) * as.numeric(nSNPs) > (1e8)) {
+                for(i in 1:5) {
+                    gc(reset = TRUE)
+                }
+            }
+                
             
         }
 

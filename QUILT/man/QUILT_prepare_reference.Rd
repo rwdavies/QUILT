@@ -20,7 +20,7 @@ QUILT_prepare_reference(
   reference_exclude_samplelist_file = "",
   region_exclude_file = "",
   genetic_map_file = "",
-  nMaxDH = 2^8 - 1,
+  nMaxDH = NA,
   tempdir = NA,
   make_fake_vcf_with_sites_list = FALSE,
   output_sites_filename = NA,

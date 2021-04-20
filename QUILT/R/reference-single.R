@@ -366,8 +366,15 @@ make_rhb_t_equality <- function(
     rhb_t,
     nSNPs,
     ref_error,
-    nMaxDH
+    nMaxDH = NA
 ) {
+    if (is.na(nMaxDH)) {
+        nMaxDH_default <- 2 ** 8 - 1
+        infer_nMaxDH <- TRUE
+    } else {
+        nMaxDH_default <- nMaxDH
+        infer_nMaxDH <- FALSE
+    }
     K <- nrow(rhb_t)
     nGrids <- ncol(rhb_t)
     ## --- hapMatcher
@@ -375,22 +382,48 @@ make_rhb_t_equality <- function(
     ## 0 = no match
     ## i is match to ith haplotype in distinctHaps i.e. i
     hapMatcher <- array(0L, c(K, nGrids))
+    if (infer_nMaxDH) {
+        temp_counter <- array(0L, c(nMaxDH_default, nGrids))
+    }
     ## --- distinctHapsB
     ## matrix with nMaxDH x nGrids
     ## matrix with the distinct haplotypes
-    distinctHapsB <- array(0, c(nMaxDH, nGrids)) ## store encoded binary
+    distinctHapsB <- array(0, c(nMaxDH_default, nGrids)) ## store encoded binary
     for(iGrid in 1:nGrids) {
         ## can safely ignore the end, it will be zeros what is not captured
         a <- table(rhb_t[, iGrid], useNA = "always")
         a <- a[order(-a)]
+        if (infer_nMaxDH) {
+            if (length(a) > nMaxDH_default) {
+                temp_counter[, iGrid] <- a[1:nMaxDH_default]
+            } else {
+                temp_counter[1:length(a), iGrid] <- a
+            }
+        }
         names_a <- as.integer(names(a))
-        w <- names_a[1:min(length(names_a), nMaxDH)]
+        w <- names_a[1:min(length(names_a), nMaxDH_default)]
         distinctHapsB[1:length(w), iGrid] <- w
         ## match against
         hapMatcher[, iGrid] <- as.integer(match(rhb_t[, iGrid], distinctHapsB[, iGrid]))
         hapMatcher[which(is.na(hapMatcher[, iGrid])), iGrid] <- 0L
     }
+    ##
+    ## now, if we're inferring this, choose appropriate re-value downwards
+    ##
+    if (infer_nMaxDH) {
+        running_count <- cumsum(rowSums(temp_counter) / (nrow(rhb_t) * nGrids))
+        suggested_value <- which.max(running_count > 0.99)
+        nMaxDH <- min(
+            max(c(2 ** 4 - 1, suggested_value)),
+            nMaxDH_default
+        )
+        print_message(paste0("Using nMaxDH = ", nMaxDH))
+        distinctHapsB <- distinctHapsB[1:nMaxDH, ]
+        hapMatcher[hapMatcher > (nMaxDH)] <- 0
+    }
+    ##
     ## inflate them too, they're pretty small
+    ##
     distinctHapsIE <- array(0L, c(nMaxDH, nSNPs)) ## inflated, with ref_error
     for(iGrid in 0:(nGrids - 1)) {
         s <- 32 * iGrid + 1 ## 1-based start
@@ -400,6 +433,7 @@ make_rhb_t_equality <- function(
             distinctHapsIE[k, s:e] <- rcpp_int_expand(distinctHapsB[k, iGrid + 1], nSNPsLocal)
         }
     }
+    ##
     distinctHapsIE[distinctHapsIE == 0] <- ref_error
     distinctHapsIE[distinctHapsIE == 1] <- 1 - ref_error
     ##

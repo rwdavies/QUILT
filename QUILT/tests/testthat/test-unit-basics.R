@@ -1,11 +1,13 @@
-test_that("dummy unit test", {
+test_that("can detect failed jobs where processes died", {
 
-    expect_equal(1, 1)
+    y <- suppressWarnings(parallel::mclapply(1:2, FUN = function(x) x))
+    expect_null(check_mclapply_OK(y))
+    
+    y <- suppressWarnings(parallel::mclapply(1:2, FUN = function(x) if (x == 1) stop("no") else x))
+    expect_error(check_mclapply_OK(y))
+    
+    y <- suppressWarnings(parallel::mclapply(1:2, FUN = function(x) if (x == 1) quit("no") else x))
+    expect_error(check_mclapply_OK(y))
     
 })
 
-test_that("dummy cpp unit test", {
-
-    expect_equal(Rcpp_quilt_test_doubler(2), 4)
-    
-})

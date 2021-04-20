@@ -18,7 +18,7 @@ print_message <- function(x, include_mem = FALSE) {
 
 
 check_mclapply_OK <- function(out, stop_message = "An error occured during QUILT. The first such error is above") {
-    te <- sapply(out, class) == "try-error"
+    te <- (sapply(out, class) == "try-error") | sapply(out, is.null)
     if (sum(te) > 0) {
         print_message(out[[which(te)[1]]]) # print first error
         stop(stop_message)

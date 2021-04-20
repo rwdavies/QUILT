@@ -25,6 +25,7 @@ QUILT(
   RData_objects_to_save = NULL,
   output_RData_filename = NULL,
   prepared_reference_filename = "",
+  save_prepared_reference = FALSE,
   tempdir = NA,
   bqFilter = as.integer(17),
   panel_size = NA,
@@ -58,7 +59,7 @@ QUILT(
   reference_exclude_samplelist_file = "",
   region_exclude_file = "",
   genetic_map_file = "",
-  nMaxDH = 2^8 - 1,
+  nMaxDH = NA,
   make_fake_vcf_with_sites_list = FALSE,
   output_sites_filename = NA,
   expRate = 1,
@@ -110,6 +111,8 @@ QUILT(
 \item{output_RData_filename}{Override the default location for miscellaneous outputs saved in RData format}
 
 \item{prepared_reference_filename}{Optional path to prepared RData file with reference objects. Can be used instead of outputdir to coordinate use of QUILT_prepare_reference and QUILT}
+
+\item{save_prepared_reference}{If preparing reference as part of running QUILT, whether to save the prepared reference output file. Note that if the reference was already made using QUILT_prepare_reference, this is ignored}
 
 \item{tempdir}{What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/}
 

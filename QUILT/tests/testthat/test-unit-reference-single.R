@@ -163,7 +163,7 @@ test_that("can build necessary components from make_rhb_t_equality", {
     ref_one_minus_error <- 1 - ref_error
     nMaxDH <- 3
     
-    for(nMaxDH in c(3, 255)) {
+    for(nMaxDH in c(3, 255, NA)) {
     
         ## make haplotype matching objects
         out <- make_rhb_t_equality(
@@ -172,6 +172,7 @@ test_that("can build necessary components from make_rhb_t_equality", {
             nSNPs = nSNPs,
             ref_error = ref_error
         )
+        
         distinctHapsB <- out[["distinctHapsB"]]
         distinctHapsIE <- out[["distinctHapsIE"]]            
         hapMatcher <- out[["hapMatcher"]]

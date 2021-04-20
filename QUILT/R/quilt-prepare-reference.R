@@ -40,7 +40,7 @@ QUILT_prepare_reference <- function(
     reference_exclude_samplelist_file = "",
     region_exclude_file = "",
     genetic_map_file = "",
-    nMaxDH = 2 ** 8 - 1,
+    nMaxDH = NA,
     tempdir = NA,
     make_fake_vcf_with_sites_list = FALSE,
     output_sites_filename = NA,
@@ -89,7 +89,9 @@ QUILT_prepare_reference <- function(
     ##
     ## new validations
     ##
-    validate_nMaxDH(nMaxDH)
+    if (!is.na(nMaxDH)) {
+        validate_nMaxDH(nMaxDH)
+    }
     ref_error <- 10 ** (-reference_phred / 10)
     dir.create(outputdir, showWarnings = FALSE)
     dir.create(file.path(outputdir, "RData"), showWarnings = FALSE)
@@ -366,7 +368,8 @@ QUILT_prepare_reference <- function(
 
     ##
     ## do compression here
-    ##
+    ## note now can work out recommended nMaxDH on the fly
+    ## 
     out <- make_rhb_t_equality(
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,

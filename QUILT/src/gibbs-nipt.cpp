@@ -1880,7 +1880,7 @@ Rcpp::NumericMatrix unpack_gammas(
     //
     // these are over-written entirely
     // could do re-weighting on the build, but that might be exhausting
-    //if (return_genProbs | return_hapProbs) {
+    if (return_genProbs | return_hapProbs) {
         next_section="calculate genProbs";
         prev=print_times(prev, suppressOutput, prev_section, next_section);
         prev_section=next_section;
@@ -1898,7 +1898,7 @@ Rcpp::NumericMatrix unpack_gammas(
             snp_end_1_based,
             run_fb_grid_offset
         );
-        //}
+    }
     // duplicate sometimes, but OK, is easy
     next_section="fly weighter";
     prev=print_times(prev, suppressOutput, prev_section, next_section);
@@ -2036,11 +2036,11 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     // initialize variables 
     //
     //
-    int n_gibbs_full_its = n_gibbs_burn_in_its + n_gibbs_sample_its;    
+    int n_gibbs_full_its = n_gibbs_burn_in_its + n_gibbs_sample_its;
     int nReads = sampleReads.size();
     int nGrids = transMatRate_tc_H.n_cols + 1;
-    int K = eHapsCurrent_tc.n_rows;
-    const int S = eHapsCurrent_tc.n_slices;
+    int K = priorCurrent_m.n_rows;
+    const int S = priorCurrent_m.n_cols;
     if ((snp_start_1_based == -1) & (snp_end_1_based == -1)) {
         snp_start_1_based = 1;
         snp_end_1_based = grid.size();

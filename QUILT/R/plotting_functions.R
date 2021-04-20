@@ -402,7 +402,7 @@ plot_of_likelihoods_across_samplings_and_seek_its <- function(
     png(
         filename,
         height = 2000,
-        width = 2000 * n_seek_its * (n_gibbs_burn_in_its / 100),
+        width = 2000 * n_seek_its * (n_gibbs_burn_in_its / 10),
         res = 300
     )
     par(mfrow = c(2, 1))

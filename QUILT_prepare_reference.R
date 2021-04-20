@@ -94,8 +94,8 @@ option_list <- list(
     make_option(
         "--nMaxDH",
         type = "integer",
-        help = "Integer Maximum number of distinct haplotypes to store in reduced form. Recommended to keep as 2 ** N - 1 where N is an integer greater than 0 i.e. 255, 511, etc [default 2 ** 8 - 1] ",
-        default = 2 ** 8 - 1
+        help = "Integer Maximum number of distinct haplotypes to store in reduced form. Recommended to keep as 2 ** N - 1 where N is an integer greater than 0 i.e. 255, 511, etc [default NA] ",
+        default = NA
     ), 
     make_option(
         "--tempdir",

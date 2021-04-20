@@ -572,6 +572,7 @@ test_that("can perform block gibbs", {
                 }
             }
         }
+        1
     })
     
     check_mclapply_OK(out)
