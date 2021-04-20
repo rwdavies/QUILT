@@ -153,6 +153,7 @@ test_that("can build necessary components from make_rhb_t_equality", {
     ## make them mostly one of three options, with a few small changes
     K <- 500
     nSNPs <- 100
+    
     reference_haps <- array(as.integer(runif(nSNPs * K) > 0.5), c(nSNPs, K))
     rhi <- reference_haps
     rhi_t <- t(rhi)

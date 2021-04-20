@@ -1922,7 +1922,9 @@ impute_one_sample <- function(
         return_gibbs_block_output <- TRUE
         return_advanced_gibbs_block_output <- TRUE
     }
+    ##
     ## ugh, alphaMatCurrent_tc is a CONSTANT
+    ##
 
     out <- rcpp_forwardBackwardGibbsNIPT(
         sampleReads = sampleReads,

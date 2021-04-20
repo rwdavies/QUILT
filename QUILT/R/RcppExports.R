@@ -187,6 +187,11 @@ rcpp_forwardBackwardGibbsNIPT <- function(sampleReads, priorCurrent_m, alphaMatC
 }
 
 #' @export
+Rcpp_make_eMatRead_t_for_gibbs_using_objects <- function(eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads) {
+    invisible(.Call('_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects', PACKAGE = 'QUILT', eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads))
+}
+
+#' @export
 Rcpp_quilt_test_doubler <- function(a) {
     .Call('_QUILT_Rcpp_quilt_test_doubler', PACKAGE = 'QUILT', a)
 }

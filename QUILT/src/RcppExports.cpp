@@ -913,6 +913,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// Rcpp_make_eMatRead_t_for_gibbs_using_objects
+void Rcpp_make_eMatRead_t_for_gibbs_using_objects(arma::mat& eMatRead_t, const Rcpp::List& sampleReads, const arma::imat& hapMatcher, const Rcpp::IntegerVector& grid, const arma::imat& rhb_t, const arma::mat& distinctHapsIE, const double ref_error, const Rcpp::IntegerVector& which_haps_to_use, const bool rescale_eMatRead_t, const int Jmax, const double maxDifferenceBetweenReads);
+RcppExport SEXP _QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects(SEXP eMatRead_tSEXP, SEXP sampleReadsSEXP, SEXP hapMatcherSEXP, SEXP gridSEXP, SEXP rhb_tSEXP, SEXP distinctHapsIESEXP, SEXP ref_errorSEXP, SEXP which_haps_to_useSEXP, SEXP rescale_eMatRead_tSEXP, SEXP JmaxSEXP, SEXP maxDifferenceBetweenReadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type eMatRead_t(eMatRead_tSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type sampleReads(sampleReadsSEXP);
+    Rcpp::traits::input_parameter< const arma::imat& >::type hapMatcher(hapMatcherSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type grid(gridSEXP);
+    Rcpp::traits::input_parameter< const arma::imat& >::type rhb_t(rhb_tSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type distinctHapsIE(distinctHapsIESEXP);
+    Rcpp::traits::input_parameter< const double >::type ref_error(ref_errorSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type which_haps_to_use(which_haps_to_useSEXP);
+    Rcpp::traits::input_parameter< const bool >::type rescale_eMatRead_t(rescale_eMatRead_tSEXP);
+    Rcpp::traits::input_parameter< const int >::type Jmax(JmaxSEXP);
+    Rcpp::traits::input_parameter< const double >::type maxDifferenceBetweenReads(maxDifferenceBetweenReadsSEXP);
+    Rcpp_make_eMatRead_t_for_gibbs_using_objects(eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads);
+    return R_NilValue;
+END_RCPP
+}
 // Rcpp_quilt_test_doubler
 double Rcpp_quilt_test_doubler(double a);
 RcppExport SEXP _QUILT_Rcpp_quilt_test_doubler(SEXP aSEXP) {
@@ -1226,6 +1246,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_gibbs_nipt_iterate", (DL_FUNC) &_QUILT_rcpp_gibbs_nipt_iterate, 49},
     {"_QUILT_rcpp_fly_weighter", (DL_FUNC) &_QUILT_rcpp_fly_weighter, 14},
     {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 62},
+    {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 11},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
     {"_QUILT_Rcpp_test", (DL_FUNC) &_QUILT_Rcpp_test, 3},
     {"_QUILT_Rcpp_make_gl_bound", (DL_FUNC) &_QUILT_Rcpp_make_gl_bound, 3},

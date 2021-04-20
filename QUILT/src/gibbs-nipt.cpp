@@ -218,6 +218,7 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
 
 
 
+
 //' @export
 // [[Rcpp::export]]
 void rcpp_make_rescaled_on_fly_eMatGrid_t(
