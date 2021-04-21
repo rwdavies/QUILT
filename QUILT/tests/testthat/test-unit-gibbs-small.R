@@ -1,4 +1,4 @@
-test_that("", {
+test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
 
     ## OK am here
     ## want to test this function
@@ -15,7 +15,8 @@ test_that("", {
     ref_error <- 0.01
     maxDifferenceBetweenReads <- 1e100
     rescale_eMatRead_t <- TRUE
-    
+    snp_start_1_based <- 1
+    snp_end_1_based <- nSNPs
     ## make some test data
     which_haps_to_use <- sort(sample(K, Ksmall)) ## 1-based
     out <- make_fb_test_package(
@@ -24,31 +25,95 @@ test_that("", {
         nSNPs = nSNPs,
         gridWindowSize = 32
     )
+    grid <- out$grid
+    nGrids <- out$nGrids
     rhi <- t(round(out$eHapsCurrent_tc[, , 1]))
     rhi_t <- t(rhi)
     rhb_t <- make_rhb_t_from_rhi_t(rhi_t)
     rhb <- t(rhb_t)
+    
     ##
+    f <- function() {
+        gammaMT_t <- array(runif(K * nGrids), c(Ksmall, nGrids))
+        for(iGrid in 1:nGrids) {
+            gammaMT_t[, iGrid] <- gammaMT_t[, iGrid] / sum(gammaMT_t[, iGrid])
+        }
+        gammaMT_t
+    }
+    gammaMT_t <- f()
+    gammaMU_t <- f()
+    gammaP_t <- f()
+    ## this is on subse
+    small_eHapsCurrent_tc <- array(NA, c(Ksmall, nSNPs, 1))
+    small_eHapsCurrent_tc[, , 1] <- rhi_t[which_haps_to_use, ]
+    small_eHapsCurrent_tc[small_eHapsCurrent_tc == 1] <- 1 - ref_error
+    small_eHapsCurrent_tc[small_eHapsCurrent_tc == 0] <- ref_error    
 
 
-    stop("WER")
+    ##
+    ## original version, using eHapsCurrent_tc
+    ##
+    genProbsM_t <- array(0, c(3, nSNPs))
+    genProbsF_t <- array(0, c(3, nSNPs))
+    hapProbs_t <- array(0, c(3, nSNPs))
+    
     ## ame here, write this first 
     ## 
     rcpp_calculate_gn_genProbs_and_hapProbs(
-        genProbsM_t,
-        genProbsF_t,    
-        hapProbs_t,
+        genProbsM_t = genProbsM_t,
+        genProbsF_t = genProbsF_t,
+        hapProbs_t = hapProbs_t,
         s = 0,
-        eHapsCurrent_tc,
-        gammaMT_t,
-        gammaMU_t,
-        gammaP_t,
-        grid,
-        snp_start_1_based,
-        snp_end_1_based,
+        eHapsCurrent_tc = small_eHapsCurrent_tc,
+        gammaMT_t = gammaMT_t,
+        gammaMU_t = gammaMU_t,
+        gammaP_t = gammaP_t,
+        grid = grid,
+        snp_start_1_based = snp_start_1_based,
+        snp_end_1_based = snp_end_1_based,
         grid_offset = 0
     )
 
+
+
+    
+    ##
+    ## new version
+    ##
+    out <- make_rhb_t_equality(
+        rhb_t = rhb_t,
+        nMaxDH = nMaxDH,
+        nSNPs = nSNPs,
+        ref_error = ref_error
+    )
+    distinctHapsB <- out[["distinctHapsB"]]
+    distinctHapsIE <- out[["distinctHapsIE"]]            
+    hapMatcher <- out[["hapMatcher"]]
+    eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
+    eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
+    nrow_which_hapMatcher_0 <- out[["nrow_which_hapMatcher_0"]]
+    
+    genProbsM_t_new <- array(0, c(3, nSNPs))
+    genProbsF_t_new <- array(0, c(3, nSNPs))
+    hapProbs_t_new <- array(0, c(3, nSNPs))
+    
+    rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
+        genProbsM_t = genProbsM_t_new,
+        genProbsF_t = genProbsF_t_new,
+        hapProbs_t = hapProbs_t_new,
+        gammaMT_t = gammaMT_t,
+        gammaMU_t = gammaMU_t,
+        gammaP_t = gammaP_t,
+        hapMatcher = hapMatcher,
+        distinctHapsIE = distinctHapsIE,
+        which_haps_to_use = which_haps_to_use,
+        ref_error = ref_error,
+        rhb_t = rhb_t
+    )
+
+    expect_equal( genProbsM_t_new,  genProbsM_t)
+    expect_equal( genProbsF_t_new,  genProbsF_t)
+    expect_equal( hapProbs_t_new, hapProbs_t)
     
 })
 

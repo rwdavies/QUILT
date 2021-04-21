@@ -128,3 +128,99 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
     }
     return;
 }
+
+
+
+
+//' @export
+// [[Rcpp::export]]
+void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
+    arma::mat& genProbsM_t,
+    arma::mat& genProbsF_t,    
+    arma::mat& hapProbs_t,
+    const arma::mat& gammaMT_t,
+    const arma::mat& gammaMU_t,
+    const arma::mat& gammaP_t,
+    const arma::imat& hapMatcher,
+    const arma::mat& distinctHapsIE,
+    const Rcpp::IntegerVector& which_haps_to_use,
+    const double ref_error,
+    const arma::imat& rhb_t
+) {
+    // loop over grids
+    int k, iGrid, s, e, b, dh, nSNPsLocal;
+    const int K = gammaMT_t.n_rows;
+    const int nGrids = gammaMT_t.n_cols;
+    const int nSNPs = genProbsM_t.n_cols;
+    const double ref_one_minus_error = 1 - ref_error;
+    arma::icolvec dh_col(K);
+    arma::vec g0(32);
+    g0.fill(0);
+    arma::vec g1(32);
+    g1.fill(0);
+    arma::vec g2(32);
+    g2.fill(0);
+    double gk0, gk1, gk2;
+    //
+    for(iGrid = 0; iGrid < nGrids; iGrid++) {
+        s = 32 * (iGrid); // 0-based here
+        e = 32 * (iGrid + 1) - 1;
+        if (e > (nSNPs - 1)) {
+            e = nSNPs - 1;
+        }
+        nSNPsLocal = e - s + 1;
+        for(k = 0; k < K; k++) {
+            dh_col(k) = hapMatcher(which_haps_to_use(k) - 1, iGrid);
+        }
+        g0.fill(0);
+        g1.fill(0);
+        g2.fill(0);
+        //
+        // loop
+        //
+        for(k = 0; k < K; k++) {
+            dh = dh_col(k);
+            if (dh == 0) {
+                // need to build this one
+                gk0 = gammaMT_t(k, iGrid);
+                gk1 = gammaMU_t(k, iGrid);
+                gk2 = gammaP_t(k, iGrid);                
+                std::uint32_t tmp(rhb_t(which_haps_to_use(k) - 1, iGrid));
+                for(b = 0; b < nSNPsLocal; b++) {
+                    if (tmp & (1<<b)) {
+                        // alternate
+                        g0(b) += gk0 * (ref_one_minus_error);
+                        g1(b) += gk1 * (ref_one_minus_error);
+                        g2(b) += gk2 * (ref_one_minus_error);                        
+                    } else {
+                        // reference
+                        g0(b) += gk0 * (ref_error);
+                        g1(b) += gk1 * (ref_error);
+                        g2(b) += gk2 * (ref_error);
+                    }
+                }
+            } else {
+                for(b = 0; b < nSNPsLocal; b++) {
+                    g0(b) += distinctHapsIE(dh - 1, s + b) * gammaMT_t(k, iGrid);
+                    g1(b) += distinctHapsIE(dh - 1, s + b) * gammaMU_t(k, iGrid);
+                    g2(b) += distinctHapsIE(dh - 1, s + b) * gammaP_t(k, iGrid);
+                }
+            }
+        }
+        // add back in properly
+        for(b = 0; b < nSNPsLocal; b++) {
+            genProbsM_t(0, s + b) = (1 - g0(b)) * (1 - g1(b));
+            genProbsM_t(1, s + b) = (g0(b) * (1 - g1(b)) + (1 - g0(b)) * g1(b));
+            genProbsM_t(2, s + b) = g0(b) * g1(b);
+            //
+            genProbsF_t(0, s + b) = (1 - g0(b)) * (1 - g2(b));
+            genProbsF_t(1, s + b) = (g0(b) * (1 - g2(b)) + (1 - g0(b)) * g2(b));
+            genProbsF_t(2, s + b) = g0(b) * g2(b);
+            //
+            hapProbs_t(0, s + b) = g0(b);
+            hapProbs_t(1, s + b) = g1(b);
+            hapProbs_t(2, s + b) = g2(b);
+        }
+    }
+    return;
+}

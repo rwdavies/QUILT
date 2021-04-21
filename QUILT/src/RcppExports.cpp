@@ -933,6 +933,26 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects
+void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(arma::mat& genProbsM_t, arma::mat& genProbsF_t, arma::mat& hapProbs_t, const arma::mat& gammaMT_t, const arma::mat& gammaMU_t, const arma::mat& gammaP_t, const arma::imat& hapMatcher, const arma::mat& distinctHapsIE, const Rcpp::IntegerVector& which_haps_to_use, const double ref_error, const arma::imat& rhb_t);
+RcppExport SEXP _QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(SEXP genProbsM_tSEXP, SEXP genProbsF_tSEXP, SEXP hapProbs_tSEXP, SEXP gammaMT_tSEXP, SEXP gammaMU_tSEXP, SEXP gammaP_tSEXP, SEXP hapMatcherSEXP, SEXP distinctHapsIESEXP, SEXP which_haps_to_useSEXP, SEXP ref_errorSEXP, SEXP rhb_tSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type genProbsM_t(genProbsM_tSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type genProbsF_t(genProbsF_tSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type hapProbs_t(hapProbs_tSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type gammaMT_t(gammaMT_tSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type gammaMU_t(gammaMU_tSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type gammaP_t(gammaP_tSEXP);
+    Rcpp::traits::input_parameter< const arma::imat& >::type hapMatcher(hapMatcherSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type distinctHapsIE(distinctHapsIESEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type which_haps_to_use(which_haps_to_useSEXP);
+    Rcpp::traits::input_parameter< const double >::type ref_error(ref_errorSEXP);
+    Rcpp::traits::input_parameter< const arma::imat& >::type rhb_t(rhb_tSEXP);
+    rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, distinctHapsIE, which_haps_to_use, ref_error, rhb_t);
+    return R_NilValue;
+END_RCPP
+}
 // Rcpp_quilt_test_doubler
 double Rcpp_quilt_test_doubler(double a);
 RcppExport SEXP _QUILT_Rcpp_quilt_test_doubler(SEXP aSEXP) {
@@ -1247,6 +1267,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_fly_weighter", (DL_FUNC) &_QUILT_rcpp_fly_weighter, 14},
     {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 62},
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 11},
+    {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 11},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
     {"_QUILT_Rcpp_test", (DL_FUNC) &_QUILT_Rcpp_test, 3},
     {"_QUILT_Rcpp_make_gl_bound", (DL_FUNC) &_QUILT_Rcpp_make_gl_bound, 3},

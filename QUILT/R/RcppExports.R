@@ -192,6 +192,11 @@ Rcpp_make_eMatRead_t_for_gibbs_using_objects <- function(eMatRead_t, sampleReads
 }
 
 #' @export
+rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects <- function(genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, distinctHapsIE, which_haps_to_use, ref_error, rhb_t) {
+    invisible(.Call('_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects', PACKAGE = 'QUILT', genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, distinctHapsIE, which_haps_to_use, ref_error, rhb_t))
+}
+
+#' @export
 Rcpp_quilt_test_doubler <- function(a) {
     .Call('_QUILT_Rcpp_quilt_test_doubler', PACKAGE = 'QUILT', a)
 }
