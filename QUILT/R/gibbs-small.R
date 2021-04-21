@@ -66,3 +66,87 @@ R_make_eMatRead_t_for_gibbs_using_objects <- function(
     }
     eMatRead_t
 }
+
+
+
+
+temp_compare_two_versions <- function(
+            rhb_t,
+            small_eHapsCurrent_tc,
+            which_haps_to_use,
+            nSNPs,
+            ref_error,
+            maxDifferenceBetweenReads,
+            Jmax,
+            hapMatcher,
+            grid,
+            distinctHapsIE,
+            sampleReads
+) {
+
+    K <- length(which_haps_to_use)
+    rescale_eMatRead_t <- TRUE
+    nReads <- length(sampleReads)
+    
+    f1 <- function() {
+        ##
+        S <- 1
+        ## argh
+        ## print(paste0("start = ", Sys.time()))
+        inflate_fhb_t_in_place(
+            rhb_t,
+            small_eHapsCurrent_tc,
+            haps_to_get = which_haps_to_use - 1,
+            nSNPs = nSNPs,
+            ref_error = ref_error
+        )
+        eMatRead_t_old <- array(1, c(K, nReads))        
+        rcpp_make_eMatRead_t(
+            eMatRead_t = eMatRead_t_old,
+            sampleReads = sampleReads,
+            eHapsCurrent_tc = small_eHapsCurrent_tc,
+            s = 0,
+            maxDifferenceBetweenReads = maxDifferenceBetweenReads,
+            Jmax = Jmax,
+            eMatHapOri_t = matrix(0, nrow = 0, ncol = 0),
+            pRgivenH1 = vector(),
+            pRgivenH2 = vector(),
+            prev = 1,
+            suppressOutput = 1,
+            prev_section = "N/A",
+            next_section = "N/A",
+            run_pseudo_haploid = FALSE,
+            rescale_eMatRead_t = rescale_eMatRead_t
+        )
+        eMatRead_t_old
+    }
+
+
+    f2 <- function() {
+        eMatRead_t_new <- array(1, c(K, nReads))
+        Rcpp_make_eMatRead_t_for_gibbs_using_objects(
+            eMatRead_t = eMatRead_t_new,
+            sampleReads = sampleReads,
+            hapMatcher = hapMatcher,
+            grid = grid,
+            rhb_t = rhb_t,
+            distinctHapsIE = distinctHapsIE,
+            ref_error = ref_error,
+            which_haps_to_use = which_haps_to_use,
+            rescale_eMatRead_t = rescale_eMatRead_t,
+            Jmax = Jmax,
+            maxDifferenceBetweenReads = maxDifferenceBetweenReads
+        )
+        eMatRead_t_new
+    }
+
+    library("testthat")
+    expect_equal(f1(), f2())
+
+    library("microbenchmark")
+    ## can be slower (on tall data, HRC sized)
+    ## so can be faster (on wide data)
+    print(microbenchmark(f1(), f2(), times = 2))
+    ## so def slower. hmm
+
+}
