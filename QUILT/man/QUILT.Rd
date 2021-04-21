@@ -68,7 +68,8 @@ QUILT(
   print_extra_timing_information = FALSE,
   block_gibbs_iterations = c(3, 6, 9),
   n_gibbs_burn_in_its = 20,
-  plot_per_sample_likelihoods = FALSE
+  plot_per_sample_likelihoods = FALSE,
+  use_small_eHapsCurrent_tc = TRUE
 )
 }
 \arguments{
@@ -199,6 +200,8 @@ QUILT(
 \item{n_gibbs_burn_in_its}{How many iterations to run the Gibbs sampler for each time it is run}
 
 \item{plot_per_sample_likelihoods}{Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations}
+
+\item{use_small_eHapsCurrent_tc}{For testing purposes only}
 }
 \value{
 Results in properly formatted version

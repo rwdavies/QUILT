@@ -528,7 +528,8 @@ get_and_impute_one_sample <- function(
     print_extra_timing_information,
     n_gibbs_burn_in_its,
     block_gibbs_iterations,
-    plot_per_sample_likelihoods
+    plot_per_sample_likelihoods,
+    use_small_eHapsCurrent_tc
 ) {
 
     
@@ -803,6 +804,7 @@ get_and_impute_one_sample <- function(
                 distinctHapsIE = distinctHapsIE,
                 hapMatcher = hapMatcher,
                 rhb_t = rhb_t,
+                ref_error = ref_error,
                 nSNPs = nSNPs,
                 sampleReads = sampleReads,
                 small_eHapsCurrent_tc = small_eHapsCurrent_tc,
@@ -824,7 +826,6 @@ get_and_impute_one_sample <- function(
                 block_gibbs_iterations = block_gibbs_iterations,
                 perform_block_gibbs = TRUE,
                 make_plots = make_plots,
-                ref_error = ref_error,
                 wif0 = wif0,
                 grid_has_read = grid_has_read,                              
                 plot_description = paste0("it", i_it, ".gibbs"),
@@ -858,7 +859,8 @@ get_and_impute_one_sample <- function(
                 sample_name = sample_name,
                 regionStart = regionStart,
                 regionEnd = regionEnd,
-                buffer = buffer
+                buffer = buffer,
+                use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc
             )
 
             if (hla_run) {            
@@ -1849,6 +1851,7 @@ impute_one_sample <- function(
     distinctHapsIE,
     hapMatcher,
     rhb_t,
+    ref_error,    
     nSNPs,
     sampleReads,
     small_eHapsCurrent_tc,
@@ -1871,7 +1874,6 @@ impute_one_sample <- function(
     perform_block_gibbs,
     make_plots,
     maxDifferenceBetweenReads,
-    ref_error,
     wif0,
     grid_has_read,
     verbose,
@@ -1908,7 +1910,8 @@ impute_one_sample <- function(
     suppressOutput = 1,
     use_smooth_cm_in_block_gibbs = TRUE,
     block_gibbs_quantile_prob = 0.95,
-    make_plots_block_gibbs = FALSE
+    make_plots_block_gibbs = FALSE,
+    use_small_eHapsCurrent_tc = TRUE
 ) {
     ##
     K <- length(which_haps_to_use)
@@ -1950,13 +1953,15 @@ impute_one_sample <- function(
     
     ## argh
     ## print(paste0("start = ", Sys.time()))
-    inflate_fhb_t_in_place(
-        rhb_t,
-        small_eHapsCurrent_tc,
-        haps_to_get = which_haps_to_use - 1,
-        nSNPs = nSNPs,
-        ref_error = ref_error
-    )
+    if (use_small_eHapsCurrent_tc) {
+        inflate_fhb_t_in_place(
+            rhb_t,
+            small_eHapsCurrent_tc,
+            haps_to_get = which_haps_to_use - 1,
+            nSNPs = nSNPs,
+            ref_error = ref_error
+        )
+    }
     if (make_plots_block_gibbs) {
         return_gibbs_block_output <- TRUE
         return_advanced_gibbs_block_output <- TRUE
@@ -1964,13 +1969,37 @@ impute_one_sample <- function(
     ##
     ## ugh, alphaMatCurrent_tc is a CONSTANT
     ##
-
+    ## param_list <- list(
+    ##     return_alpha = FALSE,
+    ##     return_p_store = FALSE,
+    ##     return_extra = FALSE,        
+    ##     return_genProbs = TRUE,
+    ##     return_hapProbs = TRUE,
+    ##     return_gamma = TRUE,
+    ##     return_gibbs_block_output = FALSE,
+    ##     return_advanced_gibbs_block_output = FALSE
+    ## )
+    param_list <- list(
+        return_alpha = FALSE,
+        return_extra = FALSE,
+        return_genProbs = return_genProbs,
+        return_gamma = as.logical(return_gamma | make_plots),
+        return_hapProbs = return_hapProbs,
+        return_p_store = return_p_store,
+        return_gibbs_block_output = return_gibbs_block_output,
+        return_advanced_gibbs_block_output = return_advanced_gibbs_block_output
+    )
     out <- rcpp_forwardBackwardGibbsNIPT(
         sampleReads = sampleReads,
         priorCurrent_m = small_priorCurrent_m,        
         alphaMatCurrent_tc = small_alphaMatCurrent_tc,
         eHapsCurrent_tc = small_eHapsCurrent_tc,
         transMatRate_tc_H = small_transMatRate_tc_H,
+        hapMatcher = hapMatcher,
+        distinctHapsIE = distinctHapsIE,
+        rhb_t = rhb_t,
+        ref_error = ref_error,
+        which_haps_to_use = which_haps_to_use,
         ff = 0,
         maxDifferenceBetweenReads = maxDifferenceBetweenReads,
         Jmax = Jmax,
@@ -1978,12 +2007,6 @@ impute_one_sample <- function(
         run_fb_subset = FALSE,
         run_fb_grid_offset = FALSE,
         blocks_for_output = array(0, c(1, 1)),
-        return_alpha = FALSE,
-        return_extra = FALSE,
-        return_genProbs = return_genProbs,
-        return_gamma = as.logical(return_gamma | make_plots),
-        return_hapProbs = return_hapProbs,
-        return_p_store = return_p_store, ## return_p_store
         grid = grid,
         pass_in_alphaBeta = TRUE,
         alphaHat_t1 = alphaHat_t1,
@@ -2019,14 +2042,13 @@ impute_one_sample <- function(
         shuffle_bin_radius = shuffle_bin_radius,
         L_grid = L_grid,
         block_gibbs_iterations = block_gibbs_iterations,
-        return_gibbs_block_output = return_gibbs_block_output,
-        return_advanced_gibbs_block_output = return_advanced_gibbs_block_output,
         rescale_eMatRead_t = rescale_eMatRead_t,
         smooth_cm = smooth_cm,
+        param_list = param_list,
         use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
-        block_gibbs_quantile_prob = block_gibbs_quantile_prob
+        block_gibbs_quantile_prob = block_gibbs_quantile_prob,
+        use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc
     )
-    
     ##
     genProbs_t <- out$genProbsM_t
     hapProbs_t <- out$happrobs_t

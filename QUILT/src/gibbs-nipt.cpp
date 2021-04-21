@@ -42,7 +42,33 @@ void rcpp_make_eMatRead_t(
     const bool rescale_eMatRead_t = true
 );
 
+void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
+    arma::mat& eMatRead_t,
+    const Rcpp::List& sampleReads,
+    const arma::imat& hapMatcher,
+    const Rcpp::IntegerVector& grid,
+    const arma::imat& rhb_t,
+    const arma::mat& distinctHapsIE,
+    const double ref_error,
+    const Rcpp::IntegerVector& which_haps_to_use,
+    const bool rescale_eMatRead_t,
+    const int Jmax,
+    const double maxDifferenceBetweenReads
+);
 
+void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
+    arma::mat& genProbsM_t,
+    arma::mat& genProbsF_t,    
+    arma::mat& hapProbs_t,
+    const arma::mat& gammaMT_t,
+    const arma::mat& gammaMU_t,
+    const arma::mat& gammaP_t,
+    const arma::imat& hapMatcher,
+    const arma::mat& distinctHapsIE,
+    const Rcpp::IntegerVector& which_haps_to_use,
+    const double ref_error,
+    const arma::imat& rhb_t
+);
 
 void rcpp_make_eMatGrid_t(
     arma::mat& eMatGrid_t,
@@ -1748,6 +1774,12 @@ void set_seed(double seed) {
 
 
 Rcpp::NumericMatrix unpack_gammas(
+    const bool use_small_eHapsCurrent_tc,
+    const arma::imat& hapMatcher,
+    const arma::mat& distinctHapsIE,
+    const Rcpp::IntegerVector& which_haps_to_use,    
+    const double ref_error,
+    const arma::imat& rhb_t,
     int s,
     std::string& prev_section,
     std::string& next_section,    
@@ -1885,20 +1917,20 @@ Rcpp::NumericMatrix unpack_gammas(
         next_section="calculate genProbs";
         prev=print_times(prev, suppressOutput, prev_section, next_section);
         prev_section=next_section;
-        rcpp_calculate_gn_genProbs_and_hapProbs(
-            genProbsM_t_local,
-            genProbsF_t_local,    
-            hapProbs_t_local,
-            s,
-            eHapsCurrent_tc,
-            gammaMT_t_local,
-            gammaMU_t_local,
-            gammaP_t_local,
-            grid,
-            snp_start_1_based,
-            snp_end_1_based,
-            run_fb_grid_offset
-        );
+        if (use_small_eHapsCurrent_tc) {
+            rcpp_calculate_gn_genProbs_and_hapProbs(
+                genProbsM_t_local, genProbsF_t_local, hapProbs_t_local,
+                s, eHapsCurrent_tc,
+                gammaMT_t_local, gammaMU_t_local, gammaP_t_local,
+                grid, snp_start_1_based, snp_end_1_based, run_fb_grid_offset
+            );
+        } else {
+            rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
+                genProbsM_t_local, genProbsF_t_local, hapProbs_t_local,
+                gammaMT_t_local, gammaMU_t_local, gammaP_t_local,
+                hapMatcher, distinctHapsIE, which_haps_to_use, ref_error, rhb_t
+            );
+        }
     }
     // duplicate sometimes, but OK, is easy
     next_section="fly weighter";
@@ -1974,21 +2006,21 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     arma::mat& alphaHat_t3, 
     arma::mat& betaHat_t3,
     arma::cube& hapSum_tc,
+    arma::imat& hapMatcher,
+    arma::mat& distinctHapsIE,
+    const arma::imat& rhb_t,
+    double ref_error,
+    const Rcpp::IntegerVector& which_haps_to_use,    
     Rcpp::IntegerVector& wif0,
     Rcpp::LogicalVector& grid_has_read,
     Rcpp::IntegerVector& L_grid,
     Rcpp::NumericVector& smooth_cm,
+    Rcpp::List param_list,
     const int Jmax_local = 100,
     const double maxDifferenceBetweenReads = 1000,
     const double maxEmissionMatrixDifference = 10000000000,
     const bool run_fb_subset = false,
     const int run_fb_grid_offset = 0,
-    const bool return_genProbs = true,
-    const bool return_hapProbs = true,
-    bool return_gamma = true,
-    const bool return_alpha = false,
-    const bool return_p_store = false,
-    const bool return_extra = false,
     const Rcpp::IntegerVector& grid = 0,
     int snp_start_1_based = -1,
     int snp_end_1_based = -1,
@@ -2016,12 +2048,11 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool perform_block_gibbs = false,
     const int shuffle_bin_radius = 5000,
     const Rcpp::IntegerVector block_gibbs_iterations = Rcpp::IntegerVector::create(0),
-    const bool return_gibbs_block_output = false,
-    const bool return_advanced_gibbs_block_output = false,
     const bool rescale_eMatRead_t = true,
     const bool use_smooth_cm_in_block_gibbs = false,
     const double block_gibbs_quantile_prob = 0.9,
-    const bool do_shard_ff0_block_gibbs = true
+    const bool do_shard_ff0_block_gibbs = true,
+    const bool use_small_eHapsCurrent_tc = true
 ) {
     // I think these break the gibbs-ness - disable for now!
     // rescale_eMatRead_t should be fine to reset - will be constant across reads - only the read not per-base input considered
@@ -2032,6 +2063,28 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     std::string next_section="Initialize variables";
     prev=print_times(prev, suppressOutput, prev_section, next_section);
     prev_section=next_section;
+    //
+    // unpack list elements
+    //
+    // ## R code for the below
+    // ## param_list <- list(
+    // ##     return_alpha = FALSE,
+    // ##     return_p_store = FALSE,
+    // ##     return_extra = FALSE,        
+    // ##     return_genProbs = TRUE,
+    // ##     return_hapProbs = TRUE,
+    // ##     return_gamma = TRUE,
+    // ##     return_gibbs_block_output = FALSE,
+    // ##     return_advanced_gibbs_block_output = FALSE
+    // ## )
+    const bool return_alpha = as<bool>(param_list["return_alpha"]);
+    const bool return_p_store = as<bool>(param_list["return_p_store"]);
+    const bool return_extra = as<bool>(param_list["return_extra"]);
+    const bool return_genProbs = as<bool>(param_list["return_genProbs"]);
+    const bool return_hapProbs = as<bool>(param_list["return_hapProbs"]);
+    const bool return_gamma = as<bool>(param_list["return_gamma"]);
+    const bool return_gibbs_block_output = as<bool>(param_list["return_gibbs_block_output"]);
+    const bool return_advanced_gibbs_block_output = as<bool>(param_list["return_advanced_gibbs_block_output"]);
     //
     //
     // initialize variables 
@@ -2265,7 +2318,11 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         next_section="Initialize eMatRead_t";
         prev=print_times(prev, suppressOutput, prev_section, next_section);
         prev_section=next_section;
-        rcpp_make_eMatRead_t(eMatRead_t, sampleReads, eHapsCurrent_tc, s, maxDifferenceBetweenReads, Jmax_local, eMatHapOri_t, pRgivenH1, pRgivenH2, prev, suppressOutput, prev_section, next_section, run_pseudo_haploid, rescale_eMatRead_t);
+        if (use_small_eHapsCurrent_tc) {
+            rcpp_make_eMatRead_t(eMatRead_t, sampleReads, eHapsCurrent_tc, s, maxDifferenceBetweenReads, Jmax_local, eMatHapOri_t, pRgivenH1, pRgivenH2, prev, suppressOutput, prev_section, next_section, run_pseudo_haploid, rescale_eMatRead_t);
+        } else {
+            Rcpp_make_eMatRead_t_for_gibbs_using_objects(eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax_local, maxDifferenceBetweenReads);
+        }
         //
         //
         //
@@ -2338,6 +2395,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                 i_result_it = i_outer;
                 i_ever_it = i_outer;
                 hap_label_prob_matrix = unpack_gammas(
+                    use_small_eHapsCurrent_tc, hapMatcher, distinctHapsIE, which_haps_to_use, ref_error, rhb_t,
                     s, prev_section, next_section, suppressOutput, prev,
                     verbose, nReads, H, nGrids,
                     eHapsCurrent_tc, grid, snp_start_1_based, snp_end_1_based, run_fb_grid_offset,
@@ -2485,6 +2543,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                     // 
                     if ((iteration + 1) > n_gibbs_burn_in_its) {
                         hap_label_prob_matrix = unpack_gammas(
+                            use_small_eHapsCurrent_tc, hapMatcher, distinctHapsIE, which_haps_to_use, ref_error, rhb_t,
                             s, prev_section, next_section, suppressOutput, prev,
                             verbose, nReads, H, nGrids,
                             eHapsCurrent_tc, grid, snp_start_1_based, snp_end_1_based, run_fb_grid_offset,

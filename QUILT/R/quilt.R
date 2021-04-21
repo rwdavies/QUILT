@@ -64,6 +64,7 @@
 #' @param block_gibbs_iterations What iterations to perform block Gibbs sampling for the Gibbs sampler
 #' @param n_gibbs_burn_in_its How many iterations to run the Gibbs sampler for each time it is run
 #' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
+#' @param use_small_eHapsCurrent_tc For testing purposes only
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -131,7 +132,8 @@ QUILT <- function(
     print_extra_timing_information = FALSE,
     block_gibbs_iterations = c(3,6,9),
     n_gibbs_burn_in_its = 20,
-    plot_per_sample_likelihoods = FALSE
+    plot_per_sample_likelihoods = FALSE,
+    use_small_eHapsCurrent_tc = TRUE
 ) {
 
 
@@ -579,7 +581,11 @@ QUILT <- function(
         betaHat_t3 <- array(0, c(K, nGrids))
         small_priorCurrent_m <- array(1 / K, c(K, S))
         small_alphaMatCurrent_tc <- array(1 / K, c(K, nGrids - 1, S))
-        small_eHapsCurrent_tc <- array(0, c(K, nSNPs, S))
+        if (use_small_eHapsCurrent_tc) {
+            small_eHapsCurrent_tc <- array(0, c(K, nSNPs, S))
+        } else {
+            small_eHapsCurrent_tc <- array(0, c(1, 1, 1))
+        }
 
         results_across_samples <- as.list(sampleRange[2] - sampleRange[1] + 1)
         
@@ -661,7 +667,8 @@ QUILT <- function(
                 print_extra_timing_information = print_extra_timing_information,
                 n_gibbs_burn_in_its = n_gibbs_burn_in_its,
                 block_gibbs_iterations = block_gibbs_iterations,
-                plot_per_sample_likelihoods = plot_per_sample_likelihoods
+                plot_per_sample_likelihoods = plot_per_sample_likelihoods,
+                use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc
             )
 
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out

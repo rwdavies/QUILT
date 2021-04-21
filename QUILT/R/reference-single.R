@@ -366,7 +366,8 @@ make_rhb_t_equality <- function(
     rhb_t,
     nSNPs,
     ref_error,
-    nMaxDH = NA
+    nMaxDH = NA,
+    verbose = TRUE
 ) {
     if (is.na(nMaxDH)) {
         nMaxDH_default <- 2 ** 8 - 1
@@ -417,7 +418,9 @@ make_rhb_t_equality <- function(
             max(c(2 ** 4 - 1, suggested_value)),
             nMaxDH_default
         )
-        print_message(paste0("Using nMaxDH = ", nMaxDH))
+        if (verbose) {
+            print_message(paste0("Using nMaxDH = ", nMaxDH))
+        }
         distinctHapsB <- distinctHapsB[1:nMaxDH, ]
         hapMatcher[hapMatcher > (nMaxDH)] <- 0
     }
