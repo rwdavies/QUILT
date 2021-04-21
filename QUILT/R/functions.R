@@ -800,6 +800,8 @@ get_and_impute_one_sample <- function(
             }
 
             gibbs_iterate <- impute_one_sample(
+                distinctHapsIE = distinctHapsIE,
+                hapMatcher = hapMatcher,
                 rhb_t = rhb_t,
                 nSNPs = nSNPs,
                 sampleReads = sampleReads,
@@ -1844,6 +1846,8 @@ everything_select_good_haps <- function(
 
 
 impute_one_sample <- function(
+    distinctHapsIE,
+    hapMatcher,
     rhb_t,
     nSNPs,
     sampleReads,
@@ -1909,6 +1913,41 @@ impute_one_sample <- function(
     ##
     K <- length(which_haps_to_use)
     S <- 1
+
+    ## print("TEMPORARY")
+    ## print(paste0("/dev/shm/rwdavies/", sample_name, ".RData"))
+    ## save(
+    ##     rhb_t,
+    ##     small_eHapsCurrent_tc,
+    ##     which_haps_to_use,
+    ##     nSNPs,
+    ##     ref_error,
+    ##     maxDifferenceBetweenReads,
+    ##     Jmax,
+    ##     hapMatcher,
+    ##     grid,
+    ##     distinctHapsIE,
+    ##     sampleReads,
+    ##     file = paste0("/dev/shm/rwdavies/", sample_name, ".RData"),
+    ##     compress = FALSE
+    ## )
+    ## stop("WER")
+    ## load("~/temp.RData")
+    ## temp_compare_two_versions(
+    ##         rhb_t,
+    ##         small_eHapsCurrent_tc,
+    ##         which_haps_to_use,
+    ##         nSNPs,
+    ##         ref_error,
+    ##         maxDifferenceBetweenReads,
+    ##         Jmax,
+    ##         hapMatcher,
+    ##         grid,
+    ##     distinctHapsIE,
+    ##     sampleReads
+    ## )
+    ## print("TEMPORARY")
+    
     ## argh
     ## print(paste0("start = ", Sys.time()))
     inflate_fhb_t_in_place(
