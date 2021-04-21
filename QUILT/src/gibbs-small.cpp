@@ -81,8 +81,8 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
 	        if (haps_at_grid(k) > 0) {
 		  e = distinctHapsIE(haps_at_grid(k) - 1, u(j));
 		} else {
-                    // pretty efficient, not perfect, but meh
-                    std::uint32_t tmp(rhb_t(which_haps_to_use(k) - 1, iGrid0));
+		  // pretty efficient, not perfect, but meh
+		  std::uint32_t tmp(rhb_t(which_haps_to_use(k) - 1, iGrid0));
 		  int j2 = 0;
 		  for (int i = 0; i < 32; i++, tmp >>= 1) {
 		      hap(j2++) = tmp & 0x1;

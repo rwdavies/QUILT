@@ -20,26 +20,34 @@ Rprof(file = profout, gc.profiling = TRUE, line.profiling = TRUE)
 
 profile_start <- Sys.time()
 ##################
-prepared_reference_filename <- Sys.getenv("prepared_reference_filename")
-##     phasefile = phasefile,
-setwd("/data/smew1/rdavies/quilt_data/hrc_2021_04_20/")
-dir <- "/data/smew1/rdavies/quilt_data/hrc_2021_04_20/2021_04_20_bams"
-f <- dir(dir)[grep(".1.0.bam", dir(dir))]
-f <- f[-grep("bai", f)]
-bamlist <- tempfile()
-write.table(matrix(paste0(dir, "/", f), ncol = 1), file = bamlist, row.names = FALSE, col.names = FALSE, quote = FALSE)
+    library("QUILT")
+setwd("/data/smew1/rdavies/riyan_debug_2021_03_15")
+i_chr <- 20
+set.seed(i_chr)
+regionStart <- regionEnd <- buffer <- NA
+chr <- paste0("chr", i_chr)
+bams <- dir("bams")
+bams <- bams[-grep(".bai", bams)][1]
+write.table(
+    matrix(paste0("bams/", bams), ncol = 1),
+    file = "bamlist.txt",
+    row.names = FALSE,
+    col.names = FALSE,
+    quote = FALSE,
+    sep = ""
+)
+## 
 QUILT(
-    outputdir = "/data/smew1/rdavies/quilt_data/hrc_2021_04_20/",
-    chr = "chr20",
-    regionStart = 2000000,
-    regionEnd = 4000000,
-    buffer = 500000,
-    bamlist = bamlist,
-    bqFilter = 10,
+    outputdir = "/data/smew1/rdavies/riyan_debug_2021_03_15",
+    chr = chr,
+    regionStart = regionStart,
+    regionEnd = regionEnd,
+    buffer = buffer,
+    bamlist = "bamlist.txt",
+    override_default_params_for_small_ref_panel = TRUE,
     nCores = 1,
-    prepared_reference_filename = prepared_reference_filename,
     nGibbsSamples = 3,
-    n_seek_its = 2
+    print_extra_timing_information = FALSE
 )
 ##################
 
