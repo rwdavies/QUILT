@@ -385,6 +385,12 @@ option_list <- list(
         type = "logical",
         help = "Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--use_small_eHapsCurrent_tc",
+        type = "integer",
+        help = "For testing purposes only [default TRUE] ",
+        default = TRUE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -454,5 +460,6 @@ QUILT(
     print_extra_timing_information = opt$print_extra_timing_information,
     block_gibbs_iterations = eval(parse(text=opt$block_gibbs_iterations)),
     n_gibbs_burn_in_its = opt$n_gibbs_burn_in_its,
-    plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods
+    plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods,
+    use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc
 )
