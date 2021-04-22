@@ -133,7 +133,7 @@ QUILT <- function(
     block_gibbs_iterations = c(3,6,9),
     n_gibbs_burn_in_its = 20,
     plot_per_sample_likelihoods = FALSE,
-    use_small_eHapsCurrent_tc = TRUE
+    use_small_eHapsCurrent_tc = FALSE
 ) {
 
 
@@ -575,10 +575,17 @@ QUILT <- function(
         S <- 1
         alphaHat_t1 <- array(0, c(K, nGrids))
         betaHat_t1 <- array(0, c(K, nGrids))
+        eMatGrid_t1 <- array(0, c(K, nGrids))
         alphaHat_t2 <- array(0, c(K, nGrids))
         betaHat_t2 <- array(0, c(K, nGrids))
+        eMatGrid_t2 <- array(0, c(K, nGrids))        
         alphaHat_t3 <- array(0, c(K, nGrids))
         betaHat_t3 <- array(0, c(K, nGrids))
+        eMatGrid_t3 <- array(0, c(K, nGrids))
+        gammaMT_t_local <- array(0, c(K, nGrids))
+        gammaMU_t_local <- array(0, c(K, nGrids))
+        gammaP_t_local <- array(0, c(K, nGrids))
+        ## 
         small_priorCurrent_m <- array(1 / K, c(K, S))
         small_alphaMatCurrent_tc <- array(1 / K, c(K, nGrids - 1, S))
         if (use_small_eHapsCurrent_tc) {
@@ -586,6 +593,9 @@ QUILT <- function(
         } else {
             small_eHapsCurrent_tc <- array(0, c(1, 1, 1))
         }
+
+
+        
 
         results_across_samples <- as.list(sampleRange[2] - sampleRange[1] + 1)
         
@@ -606,10 +616,16 @@ QUILT <- function(
                 small_transMatRate_tc_H = small_transMatRate_tc_H,
                 alphaHat_t1 = alphaHat_t1,
                 betaHat_t1 = betaHat_t1,
+                eMatGrid_t1 = eMatGrid_t1,                
                 alphaHat_t2 = alphaHat_t2,
                 betaHat_t2 = betaHat_t2,
+                eMatGrid_t2 = eMatGrid_t2,
                 alphaHat_t3 = alphaHat_t3,
                 betaHat_t3 = betaHat_t3,
+                eMatGrid_t3 = eMatGrid_t3,
+                gammaMT_t_local = gammaMT_t_local,
+                gammaMU_t_local = gammaMU_t_local,
+                gammaP_t_local = gammaP_t_local,
                 small_alphaMatCurrent_tc = small_alphaMatCurrent_tc,
                 small_priorCurrent_m = small_priorCurrent_m,
                 small_eHapsCurrent_tc = small_eHapsCurrent_tc,
@@ -683,12 +699,11 @@ QUILT <- function(
             }
 
             ## optionally, do some gc here, if longer running job
-            if (as.numeric(K) * as.numeric(nSNPs) > (1e8)) {
+            if (as.numeric(K) * as.numeric(nSNPs) > (1e6)) {
                 for(i in 1:5) {
                     gc(reset = TRUE)
                 }
             }
-                
             
         }
 

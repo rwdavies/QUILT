@@ -413,7 +413,19 @@ make_rhb_t_equality <- function(
     ##
     if (infer_nMaxDH) {
         running_count <- cumsum(rowSums(temp_counter) / (nrow(rhb_t) * nGrids))
-        suggested_value <- which.max(running_count > 0.99)
+        ## really need to tune this better
+        ## basically, larger K, important to set large
+        if (K > 50000) {
+            thresh <- 0.9999
+        } else if (K > 10000) {
+            thresh <- 0.9995
+        } else if (K > 1000) {
+            thresh <- 0.999
+        } else {
+            thresh <- 0.99
+        }
+        ## really want to almost never need this, within reason, for large K
+        suggested_value <- which.max(running_count > thresh)
         nMaxDH <- min(
             max(c(2 ** 4 - 1, suggested_value)),
             nMaxDH_default
@@ -422,7 +434,7 @@ make_rhb_t_equality <- function(
             print_message(paste0("Using nMaxDH = ", nMaxDH))
         }
         distinctHapsB <- distinctHapsB[1:nMaxDH, ]
-        hapMatcher[hapMatcher > (nMaxDH)] <- 0
+        hapMatcher[hapMatcher > (nMaxDH)] <- 0L
     }
     ##
     ## inflate them too, they're pretty small

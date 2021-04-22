@@ -388,9 +388,9 @@ option_list <- list(
     ), 
     make_option(
         "--use_small_eHapsCurrent_tc",
-        type = "integer",
-        help = "For testing purposes only [default TRUE] ",
-        default = TRUE
+        type = "logical",
+        help = "For testing purposes only [default FALSE] ",
+        default = FALSE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))

@@ -467,10 +467,16 @@ get_and_impute_one_sample <- function(
     small_transMatRate_tc_H,
     alphaHat_t1,
     betaHat_t1,
+    eMatGrid_t1,
     alphaHat_t2,
     betaHat_t2,
+    eMatGrid_t2,    
     alphaHat_t3,
     betaHat_t3,
+    eMatGrid_t3,
+    gammaMT_t_local,
+    gammaMU_t_local,
+    gammaP_t_local,
     small_alphaMatCurrent_tc,
     small_priorCurrent_m,
     small_eHapsCurrent_tc,
@@ -811,10 +817,16 @@ get_and_impute_one_sample <- function(
                 small_transMatRate_tc_H = small_transMatRate_tc_H,
                 alphaHat_t1 = alphaHat_t1,
                 betaHat_t1 = betaHat_t1,
+                eMatGrid_t1 = eMatGrid_t1,                
                 alphaHat_t2 = alphaHat_t2,
                 betaHat_t2 = betaHat_t2,
+                eMatGrid_t2 = eMatGrid_t2,
                 alphaHat_t3 = alphaHat_t3,
                 betaHat_t3 = betaHat_t3,
+                eMatGrid_t3 = eMatGrid_t3,
+                gammaMT_t_local = gammaMT_t_local,
+                gammaMU_t_local = gammaMU_t_local,
+                gammaP_t_local = gammaP_t_local,
                 small_alphaMatCurrent_tc = small_alphaMatCurrent_tc,
                 small_priorCurrent_m = small_priorCurrent_m,
                 smooth_cm = smooth_cm,
@@ -846,7 +858,7 @@ get_and_impute_one_sample <- function(
                 return_extra = FALSE,
                 return_genProbs = return_genProbs,
                 return_hapProbs = return_hapProbs,
-                return_gibbs_block_output = TRUE,
+                return_gibbs_block_output = FALSE,
                 gibbs_initialize_iteratively = gibbs_initialize_iteratively,
                 gibbs_initialize_at_first_read = FALSE,
                 maxDifferenceBetweenReads = maxDifferenceBetweenReads,
@@ -962,7 +974,7 @@ get_and_impute_one_sample <- function(
 
             if (have_truth_haplotypes) {
                 w <- i_it + n_seek_its * (i_gibbs_sample - 1)
-                x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = FALSE)
+                x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose)
                 pse_mat[w, ] <- c(i_gibbs_sample, i_it, as.integer(phasing_it), x)
             }
         }
@@ -1858,10 +1870,16 @@ impute_one_sample <- function(
     small_transMatRate_tc_H,
     alphaHat_t1,
     betaHat_t1,
+    eMatGrid_t1,
     alphaHat_t2,
     betaHat_t2,
+    eMatGrid_t2,    
     alphaHat_t3,
     betaHat_t3,
+    eMatGrid_t3,
+    gammaMT_t_local,
+    gammaMU_t_local,
+    gammaP_t_local,
     small_alphaMatCurrent_tc,
     small_priorCurrent_m,
     smooth_cm,
@@ -1916,42 +1934,6 @@ impute_one_sample <- function(
     ##
     K <- length(which_haps_to_use)
     S <- 1
-
-    ## print("TEMPORARY")
-    ## print(paste0("/dev/shm/rwdavies/", sample_name, ".RData"))
-    ## save(
-    ##     rhb_t,
-    ##     small_eHapsCurrent_tc,
-    ##     which_haps_to_use,
-    ##     nSNPs,
-    ##     ref_error,
-    ##     maxDifferenceBetweenReads,
-    ##     Jmax,
-    ##     hapMatcher,
-    ##     grid,
-    ##     distinctHapsIE,
-    ##     sampleReads,
-    ##     file = paste0("/dev/shm/rwdavies/", sample_name, ".RData"),
-    ##     compress = FALSE
-    ## )
-    ## stop("WER")
-    ## load("~/temp.RData")
-    ## temp_compare_two_versions(
-    ##         rhb_t,
-    ##         small_eHapsCurrent_tc,
-    ##         which_haps_to_use,
-    ##         nSNPs,
-    ##         ref_error,
-    ##         maxDifferenceBetweenReads,
-    ##         Jmax,
-    ##         hapMatcher,
-    ##         grid,
-    ##     distinctHapsIE,
-    ##     sampleReads
-    ## )
-    ## print("TEMPORARY")
-    
-    ## argh
     ## print(paste0("start = ", Sys.time()))
     if (use_small_eHapsCurrent_tc) {
         inflate_fhb_t_in_place(
@@ -1977,7 +1959,10 @@ impute_one_sample <- function(
     ##     return_hapProbs = TRUE,
     ##     return_gamma = TRUE,
     ##     return_gibbs_block_output = FALSE,
-    ##     return_advanced_gibbs_block_output = FALSE
+    ##     return_advanced_gibbs_block_output = FALSE,
+    ##     use_starting_read_labels = FALSE,
+    ##     verbose = FALSE,
+    ##     run_fb_subset = FALSE
     ## )
     param_list <- list(
         return_alpha = FALSE,
@@ -1987,8 +1972,12 @@ impute_one_sample <- function(
         return_hapProbs = return_hapProbs,
         return_p_store = return_p_store,
         return_gibbs_block_output = return_gibbs_block_output,
-        return_advanced_gibbs_block_output = return_advanced_gibbs_block_output
+        return_advanced_gibbs_block_output = return_advanced_gibbs_block_output,
+        use_starting_read_labels = TRUE,
+        verbose = verbose,
+        run_fb_subset = FALSE
     )
+    ## 
     out <- rcpp_forwardBackwardGibbsNIPT(
         sampleReads = sampleReads,
         priorCurrent_m = small_priorCurrent_m,        
@@ -2004,7 +1993,6 @@ impute_one_sample <- function(
         maxDifferenceBetweenReads = maxDifferenceBetweenReads,
         Jmax = Jmax,
         maxEmissionMatrixDifference = maxEmissionMatrixDifference,
-        run_fb_subset = FALSE,
         run_fb_grid_offset = FALSE,
         blocks_for_output = array(0, c(1, 1)),
         grid = grid,
@@ -2015,6 +2003,12 @@ impute_one_sample <- function(
         betaHat_t1 = betaHat_t1,
         betaHat_t2 = betaHat_t2,
         betaHat_t3 = betaHat_t3,
+        eMatGrid_t1 = eMatGrid_t1,
+        eMatGrid_t2 = eMatGrid_t2,
+        eMatGrid_t3 = eMatGrid_t3,
+        gammaMT_t_local = gammaMT_t_local,
+        gammaMU_t_local = gammaMU_t_local,
+        gammaP_t_local = gammaP_t_local,
         hapSum_tc = array(0, c(1, 1, 1)),
         snp_start_1_based = -1,
         snp_end_1_based = -1,
@@ -2022,13 +2016,11 @@ impute_one_sample <- function(
         suppressOutput = suppressOutput,
         n_gibbs_burn_in_its = n_gibbs_burn_in_its,
         n_gibbs_sample_its = n_gibbs_sample_its,            
-        use_starting_read_labels = TRUE,
         n_gibbs_starts = n_gibbs_starts,
         double_list_of_starting_read_labels = double_list_of_starting_read_labels,
         prev_list_of_alphaBetaBlocks = as.list(c(1, 2)),
         i_snp_block_for_alpha_beta = -1,
         haploid_gibbs_equal_weighting = TRUE,
-        verbose = verbose,
         gibbs_initialize_iteratively = gibbs_initialize_iteratively,
         gibbs_initialize_at_first_read = gibbs_initialize_at_first_read, ## experiment with
         do_block_resampling = FALSE, ## turn off for now

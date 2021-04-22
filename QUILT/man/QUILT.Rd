@@ -69,7 +69,7 @@ QUILT(
   block_gibbs_iterations = c(3, 6, 9),
   n_gibbs_burn_in_its = 20,
   plot_per_sample_likelihoods = FALSE,
-  use_small_eHapsCurrent_tc = TRUE
+  use_small_eHapsCurrent_tc = FALSE
 )
 }
 \arguments{

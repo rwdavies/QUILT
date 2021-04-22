@@ -2005,6 +2005,12 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     arma::mat& betaHat_t2, 
     arma::mat& alphaHat_t3, 
     arma::mat& betaHat_t3,
+    arma::mat& eMatGrid_t1,
+    arma::mat& eMatGrid_t2,
+    arma::mat& eMatGrid_t3,
+    arma::mat& gammaMT_t_local,
+    arma::mat& gammaMU_t_local,
+    arma::mat& gammaP_t_local,
     arma::cube& hapSum_tc,
     arma::imat& hapMatcher,
     arma::mat& distinctHapsIE,
@@ -2019,7 +2025,6 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const int Jmax_local = 100,
     const double maxDifferenceBetweenReads = 1000,
     const double maxEmissionMatrixDifference = 10000000000,
-    const bool run_fb_subset = false,
     const int run_fb_grid_offset = 0,
     const Rcpp::IntegerVector& grid = 0,
     int snp_start_1_based = -1,
@@ -2029,8 +2034,6 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     int n_gibbs_starts = 1,    
     const int n_gibbs_sample_its = 1,
     const int n_gibbs_burn_in_its = 1,    
-    const bool use_starting_read_labels = false,
-    const bool verbose = false,
     const Rcpp::List& double_list_of_starting_read_labels = R_NilValue,
     Rcpp::IntegerVector seed_vector = -1,
     const Rcpp::List& prev_list_of_alphaBetaBlocks = R_NilValue,
@@ -2075,7 +2078,10 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     // ##     return_hapProbs = TRUE,
     // ##     return_gamma = TRUE,
     // ##     return_gibbs_block_output = FALSE,
-    // ##     return_advanced_gibbs_block_output = FALSE
+    // ##     return_advanced_gibbs_block_output = FALSE,
+    // ##     use_starting_read_labels = FALSE,
+    // ##     verbose = FALSE,
+    // ##     run_fb_subset = FALSE
     // ## )
     const bool return_alpha = as<bool>(param_list["return_alpha"]);
     const bool return_p_store = as<bool>(param_list["return_p_store"]);
@@ -2085,6 +2091,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool return_gamma = as<bool>(param_list["return_gamma"]);
     const bool return_gibbs_block_output = as<bool>(param_list["return_gibbs_block_output"]);
     const bool return_advanced_gibbs_block_output = as<bool>(param_list["return_advanced_gibbs_block_output"]);
+    const bool use_starting_read_labels = as<bool>(param_list["use_starting_read_labels"]);
+    const bool verbose = as<bool>(param_list["verbose"]);
+    const bool run_fb_subset = as<bool>(param_list["run_fb_subset"]);    
     //
     //
     // initialize variables 
@@ -2126,9 +2135,11 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         gammaMU_t = arma::zeros(K, nGrids);
         gammaP_t = arma::zeros(K, nGrids);
     }
-    arma::mat gammaMT_t_local = arma::zeros(K, nGrids);
-    arma::mat gammaMU_t_local = arma::zeros(K, nGrids);
-    arma::mat gammaP_t_local = arma::zeros(K, nGrids);
+    if (!pass_in_alphaBeta) {    
+        gammaMT_t_local = arma::zeros(K, nGrids);
+        gammaMU_t_local = arma::zeros(K, nGrids);
+        gammaP_t_local = arma::zeros(K, nGrids);
+    }    
     arma::mat genProbsM_t_master = arma::zeros(3, nSNPsLocal);
     arma::mat genProbsF_t_master = arma::zeros(3, nSNPsLocal);
     arma::mat genProbsM_t = arma::zeros(3, nSNPsLocal);
@@ -2196,13 +2207,13 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         betaHat_t2 = arma::zeros(K, nGrids);
         alphaHat_t3 = arma::zeros(K, nGrids);
         betaHat_t3 = arma::zeros(K, nGrids);
+        eMatGrid_t1 = arma::ones(K, nGrids);    
+        eMatGrid_t2 = arma::ones(K, nGrids);    
+        eMatGrid_t3 = arma::ones(K, nGrids);
     }
     arma::rowvec c1 = arma::zeros(1, nGrids);
-    arma::mat eMatGrid_t1 = arma::ones(K, nGrids);    
     arma::rowvec c2 = arma::zeros(1, nGrids);
-    arma::mat eMatGrid_t2 = arma::ones(K, nGrids);    
     arma::rowvec c3 = arma::zeros(1, nGrids);
-    arma::mat eMatGrid_t3 = arma::ones(K, nGrids);
     if (update_hapSum & !update_in_place) {
         hapSum_tc = arma::zeros(K, nGrids, S);
     }

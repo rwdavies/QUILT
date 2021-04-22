@@ -1,3 +1,20 @@
+if ( 1 == 0 ) {
+    
+    library("testthat")
+    library("QUILT")
+    dir <- "~/proj/QUILT/"
+    setwd(paste0(dir, "/QUILT/R"))
+    a <- dir(pattern = "*.R")
+    b <- grep("~", a)
+    if (length(b) > 0) {
+        a <- a[-b]
+    }
+    o <- sapply(a, source)
+
+}
+
+
+
 test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
 
     ## OK am here
@@ -254,7 +271,7 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
 
 test_that("profile using riyan fish data", {
 
-    skip("WER")
+    skip("speed test")
     setwd("/data/smew1/rdavies/riyan_debug_2021_03_15")
 
     i_chr <- 2
@@ -316,7 +333,7 @@ test_that("profile using riyan fish data", {
 
 test_that("profile using HRC data", {
 
-    skip("WER")
+    skip("speed test")
     
     setwd("~/proj/QUILT/")
     dir <- "/data/smew1/rdavies/quilt_data/hrc_2021_04_20/2021_04_20_bams"
@@ -336,6 +353,88 @@ test_that("profile using HRC data", {
 
     if (1 == 0) {
 
+        temp_compare_two_versions <- function(
+                                              rhb_t,
+                                              small_eHapsCurrent_tc,
+                                              which_haps_to_use,
+                                              nSNPs,
+                                              ref_error,
+                                              maxDifferenceBetweenReads,
+                                              Jmax,
+                                              hapMatcher,
+                                              grid,
+                                              distinctHapsIE,
+                                              sampleReads
+                                              ) {
+
+            K <- length(which_haps_to_use)
+            rescale_eMatRead_t <- TRUE
+            nReads <- length(sampleReads)
+            
+            f1 <- function() {
+                ##
+                S <- 1
+                ## argh
+                ## print(paste0("start = ", Sys.time()))
+                inflate_fhb_t_in_place(
+                    rhb_t,
+                    small_eHapsCurrent_tc,
+                    haps_to_get = which_haps_to_use - 1,
+                    nSNPs = nSNPs,
+                    ref_error = ref_error
+                )
+                eMatRead_t_old <- array(1, c(K, nReads))        
+                rcpp_make_eMatRead_t(
+                    eMatRead_t = eMatRead_t_old,
+                    sampleReads = sampleReads,
+                    eHapsCurrent_tc = small_eHapsCurrent_tc,
+                    s = 0,
+                    maxDifferenceBetweenReads = maxDifferenceBetweenReads,
+                    Jmax = Jmax,
+                    eMatHapOri_t = matrix(0, nrow = 0, ncol = 0),
+                    pRgivenH1 = vector(),
+                    pRgivenH2 = vector(),
+                    prev = 1,
+                    suppressOutput = 1,
+                    prev_section = "N/A",
+                    next_section = "N/A",
+                    run_pseudo_haploid = FALSE,
+                    rescale_eMatRead_t = rescale_eMatRead_t
+                )
+                eMatRead_t_old
+            }
+
+
+            f2 <- function() {
+                eMatRead_t_new <- array(1, c(K, nReads))
+                Rcpp_make_eMatRead_t_for_gibbs_using_objects(
+                    eMatRead_t = eMatRead_t_new,
+                    sampleReads = sampleReads,
+                    hapMatcher = hapMatcher,
+                    grid = grid,
+                    rhb_t = rhb_t,
+                    distinctHapsIE = distinctHapsIE,
+                    ref_error = ref_error,
+                    which_haps_to_use = which_haps_to_use,
+                    rescale_eMatRead_t = rescale_eMatRead_t,
+                    Jmax = Jmax,
+                    maxDifferenceBetweenReads = maxDifferenceBetweenReads
+                )
+                eMatRead_t_new
+            }
+
+            library("testthat")
+            expect_equal(f1(), f2())
+
+            library("microbenchmark")
+            ## can be slower (on tall data, HRC sized)
+            ## so can be faster (on wide data)
+            print(microbenchmark(f1(), f2(), times = 2))
+            ## so def slower. hmm
+
+        }
+
+        
         skip("woo")
         for(sample_name in c("NA12878", "NA12878HT", "NA12878ONT")) {
             print(sample_name)
@@ -358,5 +457,118 @@ test_that("profile using HRC data", {
         ## slower but no problems!
 
     }
+
+})
+
+
+test_that("profile genProbs making with or without eHapsCurrent_tc", {
+
+    skip("test")
+    
+    for(sample_name in c("NA12878", "NA12878HT", "NA12878ONT")) {
+        
+            print(sample_name)
+            load(paste0("/dev/shm/rwdavies/", sample_name, ".RData")    )
+snp_start_1_based <- 1
+    snp_end_1_based <- nSNPs    
+class(hapMatcher) <- "integer"
+    
+            f1 <- function() {
+        inflate_fhb_t_in_place(
+            rhb_t,
+            small_eHapsCurrent_tc,
+            haps_to_get = which_haps_to_use - 1,
+            nSNPs = nSNPs,
+            ref_error = ref_error
+        )
+        rcpp_calculate_gn_genProbs_and_hapProbs(
+            genProbsM_t = genProbsM_t,
+            genProbsF_t = genProbsF_t,
+            hapProbs_t = hapProbs_t,
+            s = 0,
+            eHapsCurrent_tc = small_eHapsCurrent_tc,
+            gammaMT_t = gammaMT_t,
+            gammaMU_t = gammaMU_t,
+            gammaP_t = gammaP_t,
+            grid = grid,
+            snp_start_1_based = snp_start_1_based,
+            snp_end_1_based = snp_end_1_based,
+            grid_offset = 0
+        )
+        list(genProbsM_t = genProbsM_t,
+            genProbsF_t = genProbsF_t,
+            hapProbs_t = hapProbs_t)
+    }
+
+
+        
+        f2 <- function() {
+            ## rhb_t_subset <- rhb_t[which_haps_to_use, ]
+    rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
+        genProbsM_t = genProbsM_t_new,
+        genProbsF_t = genProbsF_t_new,
+        hapProbs_t = hapProbs_t_new,
+        gammaMT_t = gammaMT_t,
+        gammaMU_t = gammaMU_t,
+        gammaP_t = gammaP_t,
+        hapMatcher = hapMatcher,
+        distinctHapsIE = distinctHapsIE,
+        which_haps_to_use = which_haps_to_use,
+        ref_error = ref_error,
+        rhb_t = rhb_t
+    )
+        list(genProbsM_t = genProbsM_t_new,
+            genProbsF_t = genProbsF_t_new,
+            hapProbs_t = hapProbs_t_new)
+    }
+
+    genProbsM_t <- array(0, c(3, nSNPs))
+    genProbsF_t <- array(0, c(3, nSNPs))
+    hapProbs_t <- array(0, c(3, nSNPs))
+    
+    
+    genProbsM_t_new <- array(0, c(3, nSNPs))
+    genProbsF_t_new <- array(0, c(3, nSNPs))
+    hapProbs_t_new <- array(0, c(3, nSNPs))
+
+        inflate_fhb_t_in_place(
+            rhb_t,
+            small_eHapsCurrent_tc,
+            haps_to_get = which_haps_to_use - 1,
+            nSNPs = nSNPs,
+            ref_error = ref_error
+        )
+    
+    f <- function() {
+        K <- nrow(small_eHapsCurrent_tc)
+        nGrids <- ncol(rhb_t)
+        gammaMT_t <- array(runif(K * nGrids), c(K, nGrids))
+        for(iGrid in 1:nGrids) {
+            gammaMT_t[, iGrid] <- gammaMT_t[, iGrid] / sum(gammaMT_t[, iGrid])
+        }
+        gammaMT_t
+    }
+    gammaMT_t <- f()
+    gammaMU_t <- f()
+    gammaP_t <- f()
+    library("testthat")
+    expect_equal(f1(), f2(), tol = 1e-5)
+
+
+    library("microbenchmark")
+    ## can be slower (on tall data, HRC sized)
+    ## so can be faster (on wide data)
+    print(microbenchmark(f1(), f2(), times = 2))
+    ## so DEF slower, much. hmm
+
+
+        }
+
+        ## other one
+        
+        ## slower but no problems!
+        ## hmm, though does add up, when run repeatedly
+        ## can I make faster, or is it just what it is?
+
 
 })
