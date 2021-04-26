@@ -101,7 +101,7 @@ QUILT <- function(
     verbose = TRUE,
     shuffle_bin_radius = 5000,
     iSizeUpperLimit = 1e6,
-    record_read_label_usage = TRUE,
+    record_read_label_usage = FALSE,
     record_interim_dosages = FALSE,
     use_bx_tag = TRUE,
     bxTagUpperLimit = 50000,
@@ -687,8 +687,6 @@ QUILT <- function(
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc
             )
 
-            results_across_samples[[iSample - sampleRange[1] + 1]] <- out
-
             if (out[["sample_was_imputed"]]) {
                 ## for summarization
                 infoCount[, 1] <- infoCount[, 1, drop = FALSE] + out[["eij"]]
@@ -696,10 +694,23 @@ QUILT <- function(
                 afCount <- afCount + (out[["eij"]]) / 2
                 hweCount[out[["max_gen"]]] <- hweCount[out[["max_gen"]]] + 1 ## hmmmmm not ideal
                 alleleCount <- alleleCount + out[["per_sample_alleleCount"]]
+                ## drop now - not useful anymore
+                out[["eij"]] <- NULL
+                out[["fij"]] <- NULL
+                out[["per_sample_alleleCount"]] <- NULL
+                out[["max_gen"]] <- NULL
             }
+
+            results_across_samples[[iSample - sampleRange[1] + 1]] <- out
+
+            rm(out)
 
             ## optionally, do some gc here, if longer running job
             if (as.numeric(K) * as.numeric(nSNPs) > (1e6)) {
+                ## print("temporary")
+                ## print(head(sort( sapply(ls(),function(x){object.size(get(x))}), decreasing = TRUE)))
+                ## print(object.size(results_across_samples))
+                ## print(gc(reset = TRUE))
                 for(i in 1:5) {
                     gc(reset = TRUE)
                 }

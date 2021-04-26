@@ -197,8 +197,8 @@ option_list <- list(
     make_option(
         "--record_read_label_usage",
         type = "logical",
-        help = "Whether to store what read labels were used during the Gibbs samplings (i.e. whether reads were assigned to arbitrary labelled haplotype 1 or 2) [default TRUE] ",
-        default = TRUE
+        help = "Whether to store what read labels were used during the Gibbs samplings (i.e. whether reads were assigned to arbitrary labelled haplotype 1 or 2) [default FALSE] ",
+        default = FALSE
     ), 
     make_option(
         "--record_interim_dosages",

@@ -1,3 +1,5 @@
+* v0.1.8
+	* RAM decrease when running many samples
 * v0.1.7
 	* Speedups and RAM decrease when using reference panels with fewer haplotypes
 * v0.1.6

@@ -37,7 +37,7 @@ QUILT(
   verbose = TRUE,
   shuffle_bin_radius = 5000,
   iSizeUpperLimit = 1e+06,
-  record_read_label_usage = TRUE,
+  record_read_label_usage = FALSE,
   record_interim_dosages = FALSE,
   use_bx_tag = TRUE,
   bxTagUpperLimit = 50000,

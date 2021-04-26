@@ -1,7 +1,7 @@
 QUILT
 =====
-**__Current Version: 0.1.7__**
-Release date: April 22 2021
+**__Current Version: 0.1.8__**
+Release date: April 26 2021
 
 [![Build Status](https://img.shields.io/travis/rwdavies/QUILT/master.svg)](https://travis-ci.org/rwdavies/QUILT/)
 
@@ -49,8 +49,8 @@ git clone --recursive https://github.com/rwdavies/QUILT.git
 cd QUILT
 ./scripts/install-dependencies.sh
 cd releases
-wget https://github.com/rwdavies/quilt/releases/download/0.1.7/QUILT_0.1.7.tar.gz ## or curl -O
-R CMD INSTALL QUILT_0.1.7.tar.gz
+wget https://github.com/rwdavies/quilt/releases/download/0.1.8/QUILT_0.1.8.tar.gz ## or curl -O
+R CMD INSTALL QUILT_0.1.8.tar.gz
 ```
 
 ### conda <a name="paragraph-installation-conda"></a>

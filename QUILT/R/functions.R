@@ -608,8 +608,8 @@ get_and_impute_one_sample <- function(
     grid_has_read[wif0 + 1] <- TRUE
     
     nReads <- length(sampleReads)
-    super_out_hap_dosages <- as.list(1:nGibbsSamples)
-    super_out_read_labels <- as.list(1:nGibbsSamples)
+    ## super_out_hap_dosages <- as.list(1:nGibbsSamples)
+    ## super_out_read_labels <- as.list(1:nGibbsSamples)
     super_out_dosage_matrix <- as.list(1:nGibbsSamples)    
     read_label_matrix_all <- array(NA, c(nReads, nGibbsSamples)) ## need this for phasing - store final read labels in it
     read_label_matrix_conf <- array(FALSE, c(nReads, nGibbsSamples)) ## need this for phasing - store whether these are confident reads
@@ -993,7 +993,7 @@ get_and_impute_one_sample <- function(
                 minrp = 0.95,
                 minmp = 0.95
             )
-            super_out_hap_dosages[[i_gibbs_sample]] <- cbind(impute_all[["dosage1"]], impute_all[["dosage2"]])
+            ##super_out_hap_dosages[[i_gibbs_sample]] <- cbind(impute_all[["dosage1"]], impute_all[["dosage2"]])
             if (record_read_label_usage) {            
                 super_out_read_labels[[i_gibbs_sample]] <- read_label_matrix
             }
@@ -1145,16 +1145,6 @@ get_and_impute_one_sample <- function(
     ## what to return
     to_return <- list(
         sample_was_imputed = TRUE,
-        dosage = dosage,
-        super_out_hap_dosages = super_out_hap_dosages,
-        super_out_read_labels = super_out_read_labels,            
-        super_out_dosage_matrix = super_out_dosage_matrix,
-        phasing_haps = phasing_haps,
-        phasing_dosage = phasing_dosage,
-        pse_mat = pse_mat,
-        phasing_read_labels = phasing_read_labels,
-        imputed_truth_haplotypes = imputed_truth_haplotypes,
-        gp_t = gp_t,
         eij = eij,
         fij = fij,
         max_gen = max_gen,
@@ -1162,6 +1152,17 @@ get_and_impute_one_sample <- function(
         per_sample_vcf_col = per_sample_vcf_col
     )
 
+    ## phasing_read_labels = phasing_read_labels,
+    ## imputed_truth_haplotypes = imputed_truth_haplotypes,
+    ## pse_mat = pse_mat,
+    ## dosage = dosage,
+    ## super_out_dosage_matrix = super_out_dosage_matrix,
+    ## phasing_haps = phasing_haps,
+    ## phasing_dosage = phasing_dosage,
+    ## gp_t = gp_t,
+    ## super_out_hap_dosages = super_out_hap_dosages,
+    ## super_out_read_labels = super_out_read_labels,            
+    
     if (hla_run) {
         ## print_message("More HLA SIMON code")
         to_return[["gamma1"]] <- gamma1
