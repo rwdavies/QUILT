@@ -14,6 +14,7 @@
 #' @param Ksubset How many haplotypes to use in the faster Gibbs sampling
 #' @param Knew How many haplotypes to replace per-iteration after doing the full reference panel imputation
 #' @param K_top_matches How many top haplotypes to store in each grid site when looking for good matches in the full haplotype reference panel. Large values potentially bring in more haplotype diversity, but risk losing haplotypes that are good matches over shorter distances
+#' @param output_gt_phased_genotypes When TRUE, output GT entry contains phased genotypes (haplotypes). When FALSE, it is from the genotype posteriors, and masked when the maximum genotype posterior entry is less than 0.9
 #' @param heuristic_match_thin What fraction of grid sites to use when looking for good matches in the full haplotype reference panel. Smaller values run faster but potentially miss haplotypes
 #' @param output_filename Override the default bgzip-VCF / bgen output name with this given file name. Please note that this does not change the names of inputs or outputs (e.g. RData, plots), so if outputdir is unchanged and if multiple QUILT runs are processing on the same region then they may over-write each others inputs and outputs.
 #' @param RData_objects_to_save Can be used to name interim and misc results from imputation to save an an RData file. Default NULL means do not save such output
@@ -65,6 +66,7 @@
 #' @param n_gibbs_burn_in_its How many iterations to run the Gibbs sampler for each time it is run
 #' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
 #' @param use_small_eHapsCurrent_tc For testing purposes only
+
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -84,6 +86,7 @@ QUILT <- function(
     Ksubset = 400,
     Knew = 100,
     K_top_matches = 5,
+    output_gt_phased_genotypes = TRUE,
     heuristic_match_thin = 0.1,
     output_filename = NULL,
     RData_objects_to_save = NULL,
@@ -684,7 +687,8 @@ QUILT <- function(
                 n_gibbs_burn_in_its = n_gibbs_burn_in_its,
                 block_gibbs_iterations = block_gibbs_iterations,
                 plot_per_sample_likelihoods = plot_per_sample_likelihoods,
-                use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc
+                use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
+                output_gt_phased_genotypes = output_gt_phased_genotypes
             )
 
             if (out[["sample_was_imputed"]]) {
@@ -745,7 +749,8 @@ QUILT <- function(
         complete_set_of_results = complete_set_of_results,
         inRegion2 = inRegion2,
         sampleRanges = sampleRanges,
-        addOptimalHapsToVCF = addOptimalHapsToVCF
+        addOptimalHapsToVCF = addOptimalHapsToVCF,
+        output_gt_phased_genotypes = output_gt_phased_genotypes
     )    
 
     
