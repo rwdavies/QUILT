@@ -8,7 +8,8 @@ make_and_write_output_file <- function(
     complete_set_of_results,
     inRegion2,
     sampleRanges,
-    addOptimalHapsToVCF
+    addOptimalHapsToVCF,
+    output_gt_phased_genotypes
 ) {
 
     print_message("Begin making and writing output file")
@@ -19,7 +20,8 @@ make_and_write_output_file <- function(
     make_and_write_quilt_header(
         output_vcf_header_file = output_unbgzipped,
         sampleNames = sampleNames,
-        addOptimalHapsToVCF = addOptimalHapsToVCF
+        addOptimalHapsToVCF = addOptimalHapsToVCF,
+        output_gt_phased_genotypes = output_gt_phased_genotypes
     )
 
     ##
@@ -103,8 +105,15 @@ make_and_write_output_file <- function(
     )
 
     print_message("bgzip output file")
-    system(paste0("bgzip --threads ", nCores, " -f ", shQuote(output_unbgzipped)))
-    system(paste0("tabix ", shQuote(output_filename)))
+    if (length(grep("~", output_unbgzipped)) > 0) {
+        ## not entirely sure why this system call isn't working otherwise
+        system(paste0("bgzip --threads ", nCores, " -f ", output_unbgzipped))
+        system(paste0("tabix ", output_filename))
+    } else {
+        system(paste0("bgzip --threads ", nCores, " -f ", shQuote(output_unbgzipped)))
+        system(paste0("tabix ", shQuote(output_filename)))                
+    }
+
     
     print_message("Done making and writing output file")
 
@@ -195,7 +204,8 @@ get_per_snp_annot <- function(
 make_and_write_quilt_header <- function(
     output_vcf_header_file,
     sampleNames,
-    addOptimalHapsToVCF
+    addOptimalHapsToVCF,
+    output_gt_phased_genotypes
 ) {
     ## annotations now constant
     annot_header <- paste0(
@@ -206,11 +216,16 @@ make_and_write_quilt_header <- function(
         '##INFO=<ID=EAC,Number=.,Type=Float,Description="Estimated number of copies of the alternate allele from the pileup">\n',
         '##INFO=<ID=PAF,Number=.,Type=Float,Description="Estimated allele frequency using the pileup of reference and alternate alleles">\n'
     )
-    ## 
+    ##
+    if (output_gt_phased_genotypes) {
+        gt_annot <- '##FORMAT=<ID=GT,Number=1,Type=String,Description="Phased genotypes">\n'
+    } else {
+        gt_annot <- '##FORMAT=<ID=GT,Number=1,Type=String,Description="Most likely genotype, given posterior probability of at least 0.90">\n'
+    }
     header <- paste0(
         '##fileformat=VCFv4.0\n',
         annot_header,        
-        '##FORMAT=<ID=GT,Number=1,Type=String,Description="Most likely genotype, given posterior probability of at least 0.90">\n',
+        gt_annot,
         '##FORMAT=<ID=GP,Number=3,Type=Float,Description="Posterior genotype probability of 0/0, 0/1, and 1/1">\n',
         '##FORMAT=<ID=DS,Number=1,Type=Float,Description="Diploid dosage">\n',
         '##FORMAT=<ID=HD,Number=2,Type=Float,Description="Haploid dosages">\n'

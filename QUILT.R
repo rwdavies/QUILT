@@ -93,6 +93,12 @@ option_list <- list(
         default = 5
     ), 
     make_option(
+        "--output_gt_phased_genotypes",
+        type = "logical",
+        help = "When TRUE, output GT entry contains phased genotypes (haplotypes). When FALSE, it is from the genotype posteriors, and masked when the maximum genotype posterior entry is less than 0.9 [default TRUE] ",
+        default = TRUE
+    ), 
+    make_option(
         "--heuristic_match_thin",
         type = "double",
         help = "What fraction of grid sites to use when looking for good matches in the full haplotype reference panel. Smaller values run faster but potentially miss haplotypes [default 0.1] ",
@@ -412,6 +418,7 @@ QUILT(
     Ksubset = opt$Ksubset,
     Knew = opt$Knew,
     K_top_matches = opt$K_top_matches,
+    output_gt_phased_genotypes = opt$output_gt_phased_genotypes,
     heuristic_match_thin = opt$heuristic_match_thin,
     output_filename = opt$output_filename,
     RData_objects_to_save = eval(parse(text=opt$RData_objects_to_save)),

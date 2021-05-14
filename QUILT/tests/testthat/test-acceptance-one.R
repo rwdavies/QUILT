@@ -43,6 +43,7 @@ set.seed(010)
 test_that("QUILT can impute a few samples in a standard way, using a large panel", {
     
     outputdir <- STITCH::make_unique_tempdir()
+    
     regionStart <- 11
     regionEnd <- 40
     buffer <- 5
@@ -80,7 +81,7 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
             n_seek_its = 2,
             nCores = 1,
             RData_objects_to_save = "final_set_of_results",
-            addOptimalHapsToVCF = TRUE
+            addOptimalHapsToVCF = FALSE
         )
 
         ## Ksubset = 100,

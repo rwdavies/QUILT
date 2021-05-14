@@ -1,6 +1,6 @@
 ## Example
 
-For now there is only one example, a slightly larger version of the quick start example, with imputation performed over a more reasonable chunk size.
+This example is a slightly larger version of the quick start example, with imputation performed over a more reasonable chunk size.
 
 Here we first walk through downloading some data, preparing the reference package using a haplotype reference file, and imputing samples using the prepared reference package. 
 

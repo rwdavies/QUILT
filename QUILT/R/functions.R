@@ -535,7 +535,8 @@ get_and_impute_one_sample <- function(
     n_gibbs_burn_in_its,
     block_gibbs_iterations,
     plot_per_sample_likelihoods,
-    use_small_eHapsCurrent_tc
+    use_small_eHapsCurrent_tc,
+    output_gt_phased_genotypes
 ) {
 
     
@@ -581,7 +582,7 @@ get_and_impute_one_sample <- function(
         ## FORMAT <- "GT:GP:DS:HD" ## genotypes, posteriors, dosages, haploid-dosages
         per_sample_vcf_col <- "./.:.,.,.:.:.,."
         if (addOptimalHapsToVCF & have_truth_haplotypes) {
-            FORMAT <- "GT:GP:DS:HD:OHD" ## genotypes, posteriors, dosages, haploid-dosages, optimal haploid-dosages
+            FORMAT <- "GT:GP:DS:HD:OHD" ## (phased) genotypes, genotype posteriors, dosages, haploid-dosages, optimal haploid-dosages
             per_sample_vcf_col <- paste0(per_sample_vcf_col, ":.,.")
         }
         to_return <- list(
@@ -1140,7 +1141,15 @@ get_and_impute_one_sample <- function(
         q_t = t(phasing_haps),
         add_x_2_cols = add_x_2_cols,
         x_t = x_t
-    )    
+    )
+    ## annoying but shouldn't be that slow I hope
+    if (output_gt_phased_genotypes) {
+        per_sample_vcf_col <-
+            paste0(
+                round(phasing_haps[, 1]), "|", round(phasing_haps[, 2]),
+                substring(per_sample_vcf_col, first = 4, last = 100L)
+            )
+    }
     
     ## what to return
     to_return <- list(
@@ -1978,70 +1987,87 @@ impute_one_sample <- function(
         verbose = verbose,
         run_fb_subset = FALSE
     )
-    ## 
-    out <- rcpp_forwardBackwardGibbsNIPT(
-        sampleReads = sampleReads,
-        priorCurrent_m = small_priorCurrent_m,        
-        alphaMatCurrent_tc = small_alphaMatCurrent_tc,
-        eHapsCurrent_tc = small_eHapsCurrent_tc,
-        transMatRate_tc_H = small_transMatRate_tc_H,
-        hapMatcher = hapMatcher,
-        distinctHapsIE = distinctHapsIE,
-        rhb_t = rhb_t,
-        ref_error = ref_error,
-        which_haps_to_use = which_haps_to_use,
-        ff = 0,
-        maxDifferenceBetweenReads = maxDifferenceBetweenReads,
-        Jmax = Jmax,
-        maxEmissionMatrixDifference = maxEmissionMatrixDifference,
-        run_fb_grid_offset = FALSE,
-        blocks_for_output = array(0, c(1, 1)),
-        grid = grid,
-        pass_in_alphaBeta = TRUE,
-        alphaHat_t1 = alphaHat_t1,
-        alphaHat_t2 = alphaHat_t2,
-        alphaHat_t3 = alphaHat_t3,
-        betaHat_t1 = betaHat_t1,
-        betaHat_t2 = betaHat_t2,
-        betaHat_t3 = betaHat_t3,
-        eMatGrid_t1 = eMatGrid_t1,
-        eMatGrid_t2 = eMatGrid_t2,
-        eMatGrid_t3 = eMatGrid_t3,
-        gammaMT_t_local = gammaMT_t_local,
-        gammaMU_t_local = gammaMU_t_local,
-        gammaP_t_local = gammaP_t_local,
-        hapSum_tc = array(0, c(1, 1, 1)),
-        snp_start_1_based = -1,
-        snp_end_1_based = -1,
-        generate_fb_snp_offsets = FALSE,
-        suppressOutput = suppressOutput,
-        n_gibbs_burn_in_its = n_gibbs_burn_in_its,
-        n_gibbs_sample_its = n_gibbs_sample_its,            
-        n_gibbs_starts = n_gibbs_starts,
-        double_list_of_starting_read_labels = double_list_of_starting_read_labels,
-        prev_list_of_alphaBetaBlocks = as.list(c(1, 2)),
-        i_snp_block_for_alpha_beta = -1,
-        haploid_gibbs_equal_weighting = TRUE,
-        gibbs_initialize_iteratively = gibbs_initialize_iteratively,
-        gibbs_initialize_at_first_read = gibbs_initialize_at_first_read, ## experiment with
-        do_block_resampling = FALSE, ## turn off for now
-        perform_block_gibbs = perform_block_gibbs,
-        seed_vector = 0,
-        update_hapSum = FALSE, ## do not bother for now
-        class_sum_cutoff = 0.06, ## what is this
-        record_read_set = TRUE, ## needed for block gibbs
-        wif0 = wif0,
-        grid_has_read = grid_has_read,
-        shuffle_bin_radius = shuffle_bin_radius,
-        L_grid = L_grid,
-        block_gibbs_iterations = block_gibbs_iterations,
-        rescale_eMatRead_t = rescale_eMatRead_t,
-        smooth_cm = smooth_cm,
-        param_list = param_list,
-        use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
-        block_gibbs_quantile_prob = block_gibbs_quantile_prob,
-        use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc
-    )
+
+    ## this should catch hopefully rare underflow problems and re-run the samples
+    done_imputing <- FALSE
+    n_imputing <- 0
+    while(!done_imputing) {
+        out <- rcpp_forwardBackwardGibbsNIPT(
+            sampleReads = sampleReads,
+            priorCurrent_m = small_priorCurrent_m,        
+            alphaMatCurrent_tc = small_alphaMatCurrent_tc,
+            eHapsCurrent_tc = small_eHapsCurrent_tc,
+            transMatRate_tc_H = small_transMatRate_tc_H,
+            hapMatcher = hapMatcher,
+            distinctHapsIE = distinctHapsIE,
+            rhb_t = rhb_t,
+            ref_error = ref_error,
+            which_haps_to_use = which_haps_to_use,
+            ff = 0,
+            maxDifferenceBetweenReads = maxDifferenceBetweenReads,
+            Jmax = Jmax,
+            maxEmissionMatrixDifference = maxEmissionMatrixDifference,
+            run_fb_grid_offset = FALSE,
+            blocks_for_output = array(0, c(1, 1)),
+            grid = grid,
+            pass_in_alphaBeta = TRUE,
+            alphaHat_t1 = alphaHat_t1,
+            alphaHat_t2 = alphaHat_t2,
+            alphaHat_t3 = alphaHat_t3,
+            betaHat_t1 = betaHat_t1,
+            betaHat_t2 = betaHat_t2,
+            betaHat_t3 = betaHat_t3,
+            eMatGrid_t1 = eMatGrid_t1,
+            eMatGrid_t2 = eMatGrid_t2,
+            eMatGrid_t3 = eMatGrid_t3,
+            gammaMT_t_local = gammaMT_t_local,
+            gammaMU_t_local = gammaMU_t_local,
+            gammaP_t_local = gammaP_t_local,
+            hapSum_tc = array(0, c(1, 1, 1)),
+            snp_start_1_based = -1,
+            snp_end_1_based = -1,
+            generate_fb_snp_offsets = FALSE,
+            suppressOutput = suppressOutput,
+            n_gibbs_burn_in_its = n_gibbs_burn_in_its,
+            n_gibbs_sample_its = n_gibbs_sample_its,            
+            n_gibbs_starts = n_gibbs_starts,
+            double_list_of_starting_read_labels = double_list_of_starting_read_labels,
+            prev_list_of_alphaBetaBlocks = as.list(c(1, 2)),
+            i_snp_block_for_alpha_beta = -1,
+            haploid_gibbs_equal_weighting = TRUE,
+            gibbs_initialize_iteratively = gibbs_initialize_iteratively,
+            gibbs_initialize_at_first_read = gibbs_initialize_at_first_read, ## experiment with
+            do_block_resampling = FALSE, ## turn off for now
+            perform_block_gibbs = perform_block_gibbs,
+            seed_vector = 0,
+            update_hapSum = FALSE, ## do not bother for now
+            class_sum_cutoff = 0.06, ## what is this
+            record_read_set = TRUE, ## needed for block gibbs
+            wif0 = wif0,
+            grid_has_read = grid_has_read,
+            shuffle_bin_radius = shuffle_bin_radius,
+            L_grid = L_grid,
+            block_gibbs_iterations = block_gibbs_iterations,
+            rescale_eMatRead_t = rescale_eMatRead_t,
+            smooth_cm = smooth_cm,
+            param_list = param_list,
+            use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
+            block_gibbs_quantile_prob = block_gibbs_quantile_prob,
+            use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc
+        )
+        if (out[["underflow_problem"]]) {
+            new_maxDifferenceBetweenReads <- max(1, maxDifferenceBetweenReads / 10)        
+            print_message(paste0("Underflow problem observed for sample ", sample_name, ". Re-setting maxDifferenceBetweenReads from ", maxDifferenceBetweenReads, " (log10 of ", log10(maxDifferenceBetweenReads), ") to ", new_maxDifferenceBetweenReads, " (log10 of ", log10(new_maxDifferenceBetweenReads), "). If this problem persists please reset maxDifferenceBetweenReads or downsampleToCov to lower coverage and/or reduce the impact of individual reads"))
+            maxDifferenceBetweenReads <- new_maxDifferenceBetweenReads
+            n_imputing <- n_imputing + 1
+            if (n_imputing > 10) {
+                stop(paste0("There were 5 consecutive underflow problems for sample ", sample_name, ". This is likely due to high coverage (at least locally) and/or reads that are very long. Please try setting downsampleToCov to a lower value and/or reduce maxDifferenceBetweenReads to decrease the probability of this happening again"))
+            }
+        } else {
+            done_imputing <- TRUE
+        }
+    }
+    
     ##
     genProbs_t <- out$genProbsM_t
     hapProbs_t <- out$happrobs_t
@@ -2100,7 +2126,7 @@ impute_one_sample <- function(
             )
         }
     }
-    ## 
+
     return(out)
 }
 

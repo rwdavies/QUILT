@@ -44,6 +44,7 @@ refpack <- STITCH::make_reference_package(
 
 
 
+
 test_that("QUILT can impute a few samples in a standard way, using a small panel, with or without a genetic map", {
     
     outputdir <- STITCH::make_unique_tempdir()
@@ -448,3 +449,8 @@ test_that("QUILT can impute samples with very few reads", {
     }
     
 })
+
+
+
+
+

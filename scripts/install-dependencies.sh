@@ -14,7 +14,7 @@ export PATH=${PATH}:`pwd`/
 # Curl seems always installed?
 http_stem="https://github.com/samtools/samtools/releases/download/"
 samv=1.10
-bcftoolsv=1.10
+bcftoolsv=1.12
 htslibv=1.10
 mkdir -p dependencies
 

@@ -20,6 +20,7 @@ QUILT(
   Ksubset = 400,
   Knew = 100,
   K_top_matches = 5,
+  output_gt_phased_genotypes = TRUE,
   heuristic_match_thin = 0.1,
   output_filename = NULL,
   RData_objects_to_save = NULL,
@@ -102,6 +103,8 @@ QUILT(
 \item{Knew}{How many haplotypes to replace per-iteration after doing the full reference panel imputation}
 
 \item{K_top_matches}{How many top haplotypes to store in each grid site when looking for good matches in the full haplotype reference panel. Large values potentially bring in more haplotype diversity, but risk losing haplotypes that are good matches over shorter distances}
+
+\item{output_gt_phased_genotypes}{When TRUE, output GT entry contains phased genotypes (haplotypes). When FALSE, it is from the genotype posteriors, and masked when the maximum genotype posterior entry is less than 0.9}
 
 \item{heuristic_match_thin}{What fraction of grid sites to use when looking for good matches in the full haplotype reference panel. Smaller values run faster but potentially miss haplotypes}
 

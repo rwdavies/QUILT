@@ -2103,6 +2103,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     int nReads = sampleReads.size();
     int nGrids = transMatRate_tc_H.n_cols + 1;
     int K = priorCurrent_m.n_rows;
+    bool check = true;
     const int S = priorCurrent_m.n_cols;
     if ((snp_start_1_based == -1) & (snp_end_1_based == -1)) {
         snp_start_1_based = 1;
@@ -2451,6 +2452,20 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         gibbs_initialize_iteratively, first_read_for_gibbs_initialization,
                         do_block_resampling, artificial_relabel
                     );
+                    //
+                    // do check here for underflow/overflow
+                    // 
+                    for(int a = 0; a <= 2; a++) {
+                        if (a == 0) { check = arma::is_finite(arma::sum(c1)); }
+                        if (a == 1) { check = arma::is_finite(arma::sum(c2)); }
+                        if ((ff == 0) & (a == 2)) { check = arma::is_finite(arma::sum(c3)); }
+                        if (!check) {
+                            // std::cout << "Underflow problems observed" << std::endl;
+                            to_return.push_back(true, "underflow_problem");
+                            return(to_return);
+                        } else {
+                        }
+                    }
                     // check
                     bool to_block_gibbs = false;
                     if (perform_block_gibbs) {
@@ -2671,6 +2686,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     //
     //
     //
+    to_return.push_back(false, "underflow_problem");    
     gamma_temp = 1 / double(S);
     if (return_gamma) {
         if (1 < S) {
