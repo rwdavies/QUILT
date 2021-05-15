@@ -1,3 +1,6 @@
+* v0.1.9
+	* Change default output of GT entry to phased value to facilitate ligating phase reslts together
+	* Add code to try and re-run samples with different parameter values when underflow happens
 * v0.1.8
 	* RAM decrease when running many samples
 * v0.1.7

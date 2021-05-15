@@ -1,7 +1,7 @@
 QUILT
 =====
-**__Current Version: 0.1.8__**
-Release date: April 26 2021
+**__Current Version: 0.1.9__**
+Release date: May 15, 2021
 
 [![Build Status](https://img.shields.io/travis/rwdavies/QUILT/master.svg)](https://travis-ci.org/rwdavies/QUILT/)
 
@@ -113,17 +113,30 @@ For all of these, it can be useful to take a look at the example files provided 
 
 ### Output <a name="paragraph-io-output"></a>
 
-- VCF. Details are given in the VCF header, which is copied here
+- VCF with both SNP annotation information (see below) and per-sample genotype information. Per-sample genotype information includes the following entries
+
+- GT **Phased genotypes** Phased genotype, where each allele is the rounded per-haplotype posterior probability (HD below)
+- GP **Genotype posteriors** Posterior probabilities of the three genotypes given the data
+- DS **Diploid dosage** Posterior expectation of the diploid genotype i.e. the expected number of copies of the alternate allele
+- HD **Haploid dosages** Per-haplotype posterior probability of an alternate allele
+
+Note that in QUILT, genotype posteriors (GP) and dosages (DS) are taken from the main Gibbs sampling, while the phasing results (GT and HD) are taken from an additional special phasing Gibbs sample. As such, phasing results (GT and HD) might not be consistent with genotype information (GP and DS). If consistency is necessary, note that you can create a consistent GP and DS from HD.
+
+Per-SNP annotation is available as follows
+```
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Phased genotypes">,
+##FORMAT=<ID=GP,Number=3,Type=Float,Description="Posterior genotype probability of 0/0, 0/1, and 1/1">
+##FORMAT=<ID=DS,Number=1,Type=Float,Description="Diploid dosage">
+##FORMAT=<ID=HD,Number=2,Type=Float,Description="Haploid dosages">
+```
+
+SNP annotation information
 ```
 ##INFO=<ID=EAF,Number=.,Type=Float,Description="Estimated allele frequency">
 ##INFO=<ID=HWE,Number=.,Type=Float,Description="Hardy-Weinberg p-value">
 ##INFO=<ID=ERC,Number=.,Type=Float,Description="Estimated number of copies of the reference allele from the pileup">
 ##INFO=<ID=EAC,Number=.,Type=Float,Description="Estimated number of copies of the alternate allele from the pileup">
 ##INFO=<ID=PAF,Number=.,Type=Float,Description="Estimated allele frequency using the pileup of reference and alternate alleles">
-##FORMAT=<ID=GT,Number=1,Type=String,Description="Most likely genotype, given posterior probability of at least 0.90">
-##FORMAT=<ID=GP,Number=3,Type=Float,Description="Posterior genotype probability of 0/0, 0/1, and 1/1">
-##FORMAT=<ID=DS,Number=1,Type=Float,Description="Diploid dosage">
-##FORMAT=<ID=HD,Number=2,Type=Float,Description="Haploid dosages">
 ```
 
 
@@ -182,7 +195,8 @@ These parameters are most likely to influence run time and accuracy
 
 ## Examples <a name="paragraph-examples"></a>
 
-In this directory you will find [example/QUILT_usage.Md](example/QUILT_usage.Md), with for now just one example, a larger version of the quick start example. This can be run using either  `./example/run_example.sh example/QUILT_usage.Md`, or can be run interactively line by line from the [example/QUILT_usage.Md](example/QUILT_usage.Md) file. 
+- ** [example/QUILT_usage.Md](example/QUILT_usage.Md)** A larger version of the quick start example. This can be run using either  `./example/run_example.sh example/QUILT_usage.Md`, or can be run interactively line by line from the [example/QUILT_usage.Md](example/QUILT_usage.Md) file.
+- ** [example/QUILT_usage.Md](example/ligation.Md)** An example of how to run QUILT in chunks and ligate results together to get correctly oriented phased results across VCFs.
 
 ## License <a name="paragraph-license"></a>
 
