@@ -196,7 +196,7 @@ These parameters are most likely to influence run time and accuracy
 ## Examples <a name="paragraph-examples"></a>
 
 - **[example/QUILT_usage.Md](example/QUILT_usage.Md)** A larger version of the quick start example. This can be run using either  `./example/run_example.sh example/QUILT_usage.Md`, or can be run interactively line by line from the [example/QUILT_usage.Md](example/QUILT_usage.Md) file.
-- **[example/QUILT_usage.Md](example/ligation.Md)** An example of how to run QUILT in chunks and ligate results together to get correctly oriented phased results across VCFs.
+- **[example/ligation.Md](example/ligation.Md)** An example of how to run QUILT in chunks and ligate results together to get correctly oriented phased results across VCFs.
 
 ## License <a name="paragraph-license"></a>
 
