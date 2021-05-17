@@ -109,7 +109,7 @@ For a full list of options, query `?QUILT::QUILT_HLA`, or alternatively, type
 
 Reference packages built
 
-Max N=X haplotyes built using QUILT 0.1.5, IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129). 
+Max N=5132 haplotyes built using QUILT 0.1.5, IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129). 
 ```
 http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_2021_04_09.tar
 ```
