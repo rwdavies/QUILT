@@ -48,7 +48,9 @@ done
 ```
 
 ## Ligate results 
-Here we ligate the results together using `bcftools` (see the [bcftools](https://samtools.github.io/bcftools/) site for installation). This ligation process uses the overlapping region to determine if the phased haplotypes are given in the correct orientation or not between two overlapping files, and flips the orientation in the second one if necessary. Note that this does **not** change the HD entry which thereafter is not useable. The GP and DS entries remain useable as they phase invariant.
+Here we ligate the results together using `bcftools` (see the [bcftools](https://samtools.github.io/bcftools/) site for installation). This ligation process uses the overlapping region to determine if the phased haplotypes are given in the correct orientation or not between two overlapping files, and flips the orientation in the second one if necessary. 
+<a><img src="../important.png"/></a>
+Note that this does **not** change the HD entry (haplotype dosages) which thereafter is not useable. The GP (genotype posterior) and DS (dosage) entries remain useable as they are phase invariant.
 
 ```
 bcftools concat \
