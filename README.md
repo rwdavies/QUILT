@@ -55,8 +55,6 @@ R CMD INSTALL QUILT_0.1.8.tar.gz
 
 ### conda <a name="paragraph-installation-conda"></a>
 
-Note: This is not yet available but will be made available shortly.
-
 QUILT (as r-quilt) can be installed using [conda](https://conda.io/miniconda.html). Full tutorials can be found elsewhere, but briefly, something like this should work
 ```
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
