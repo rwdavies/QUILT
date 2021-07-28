@@ -3,7 +3,7 @@ QUILT
 **__Current Version: 0.1.9__**
 Release date: May 15, 2021
 
-[![Build Status](https://img.shields.io/travis/rwdavies/QUILT/master.svg)](https://travis-ci.org/rwdavies/QUILT/)
+[![Build Status](https://img.shields.io/travis/rwdavies/QUILT/master.svg)](https://travis-ci.com/rwdavies/QUILT/)
 
 QUILT is an R and C++ program for rapid genotype imputation from low-coverage sequence using a large reference panel.
 
