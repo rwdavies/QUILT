@@ -16,7 +16,9 @@ check_quilt_output <- function(
     ## check columns
     N <- ncol(vcf) - 9
     nSNPs <- nrow(vcf)
+    expect_equal(length(unique(vcf[, 9])), 1)
     truth_phase <- data_package$phase
+    per_sample_entries <- strsplit(vcf[1, 9], ":")[[1]]
     for(iSample in 1:N) {
         ## check things in turn
         per_col_vcf <- vcf[, iSample + 9]
@@ -27,18 +29,33 @@ check_quilt_output <- function(
         }
         sample_truth_gen <- sample_truth_haps[, 1] + sample_truth_haps[, 2]
         sample_results <- t(sapply(strsplit(per_col_vcf, ":"), I))
-        ## check not too much missingness i.e. non-confident data
-        expect_true((sum(sample_results[ ,1] == "./.") / nSNPs) <= max_missingness)
+        colnames(sample_results) <- per_sample_entries
+        ## check not too much missingness i.e.b non-confident data
+        expect_true((sum(sample_results[ , "GP"] == "./.") / nSNPs) <= max_missingness)
         ## check genotypes that exist
-        gt <- c(NA, 0, 1, 2)[match(sample_results[, 1], c("./.", "0/0", "0/1", "1/1"))]
+        gt <- c(NA, NA, 0, 1, 1, 2)[match(sample_results[, "GT"], c("./.", ".|.", "0|0", "0|1", "1|0", "1|1"))]
         x <- gt != sample_truth_gen
+        ## can't all be 0
         if (sum(!is.na(x)) > 0) {
             expect_true(sum(x, na.rm = TRUE) / sum(!is.na(x)) <= tol)
-            ## now check dosages
-            expect_true(max(abs(as.numeric(sample_results[, 3]) - sample_truth_gen)) < tol)
+        }
+        ## don't continue if all the dosages are also missing
+        if (sum(sample_results[, "DS"] != ".") > 0) {
+            ##
+            ## check genotype posteriors sum to 1 and are between 0 and 1
+            ##
+            gps <- t(sapply(strsplit(sample_results[, "GP"], ","), as.numeric))
+            expect_true(0.998 <= min(rowSums(gps)))
+            expect_true(max(rowSums(gps)) <= 1.002)
+            expect_true(0 <= min(gps))
+            expect_true(max(gps) <= 1)
+            ##
+            ## check dosages are close to truth
+            ## 
+            expect_true(max(abs(as.numeric(sample_results[, "DS"]) - sample_truth_gen)) < tol)
             ## now check haplotype dosages - hmm, not sure if safe, could be recombs
             ## should ideally be PSE based, but oh well, these are small tests
-            observed_haps <- t(sapply(strsplit(unlist(strsplit(sample_results[, 4], ":")), ","), I))
+            observed_haps <- t(sapply(strsplit(unlist(strsplit(sample_results[, "HD"], ":")), ","), I))
             val1 <- max(c(
                 max(abs(as.numeric(observed_haps[, 1]) - sample_truth_haps[, 1])),
                 max(abs(as.numeric(observed_haps[, 2]) - sample_truth_haps[, 2]))

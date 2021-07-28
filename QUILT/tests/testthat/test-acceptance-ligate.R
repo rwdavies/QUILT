@@ -69,13 +69,15 @@ test_that("can concatenate using external software", {
             chr = data_package$chr,
             regionStart = regionStart,
             regionEnd = regionEnd,
-            buffer = 10,
+            buffer = buffer,
             bamlist = data_package$bamlist,
             nGibbsSamples = 3,
             reference_haplotype_file = refpack$reference_haplotype_file,
             reference_legend_file = refpack$reference_legend_file,
             genetic_map_file = refpack$reference_genetic_map_file,
-            nGen = 100
+            nGen = 100,
+            phasefile = data_package$phasefile,
+            posfile = data_package$posfile
         )
 
         ## OK so can build new VCF using bcftools hack
@@ -99,7 +101,6 @@ test_that("can concatenate using external software", {
     }
 
 
-    
     ## yes ligation option
     newfile <- file.path(outputdir, paste0("quilt.phased.vcf.gz"))            
     system(paste0("bcftools concat --output-type z --ligate ", paste0(shQuote(to_ligate2), collapse = " "), " > ", shQuote(newfile))) #, ignore.stderr = TRUE)
@@ -107,7 +108,7 @@ test_that("can concatenate using external software", {
 
     ## no ligation option
     newfile2 <- file.path(outputdir, paste0("quilt.phasedwrong.vcf.gz"))            
-    system(paste0("bcftools concat --output-type z  ", paste0(shQuote(to_ligate3), collapse = " "), " > ", shQuote(newfile2))) #, ignore.stderr = TRUE)
+    system(paste0("bcftools concat --output-type z ", paste0(shQuote(to_ligate3), collapse = " "), " > ", shQuote(newfile2)), ignore.stderr = TRUE)
     system(paste0("tabix -f ", shQuote(newfile2)))    
 
     ## check it is OK! especially phase
@@ -126,16 +127,18 @@ test_that("can concatenate using external software", {
         })
     }
 
+    ## check no phasing errors in individual files
+    for(file in to_ligate) {
+        expect_true(sum(colSums(check_orientation(file) == 0) != 1) == 0)
+    }
+    
     ## check that each of them has a 0 i.e. is phased across entire length correctly
     expect_true(sum(colSums(check_orientation(newfile) == 0) != 1) == 0)
     ## check that by contrast that WITHOUT ligate this is not true
     expect_false(sum(colSums(check_orientation(newfile2) == 0) != 1) == 0)    
         
     ## check_orientation(newfile2)
-
-    ## for(file in to_ligate) {
-    ##     print(check_orientation(file))
-    ## }
+    ## OK! phasing error in second file! HMM, why?
     ## ## ## OK looks good
     
     ## ## OK, see what happened here
