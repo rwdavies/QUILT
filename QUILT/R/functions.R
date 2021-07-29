@@ -1645,6 +1645,11 @@ impute_using_everything <- function(
             is_version_2 = TRUE,
             normalize_emissions = TRUE
         )
+        ## do some checks here
+        if ((min(dosage) < -1e-5) | (1 + 1e-5) < max(dosage)) {
+            print(range(dosage))
+            stop("Dosage observed outside of range of 0 to 1 on forward-backward full iteration. Something has gone wrong. Please report this")
+        }
         dosageNew <- numeric(nSNPs)
         dosageNew <- dosage[]
         if (i_hap == 1) { dosage1 <- dosageNew}

@@ -1004,8 +1004,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // Rcpp_get_top_K_or_more_matches_while_building_gamma
-Rcpp::List Rcpp_get_top_K_or_more_matches_while_building_gamma(arma::mat& alphaHat_t, arma::colvec& betaHat_t_col, arma::colvec& gamma_t_col, int iGrid, int K, int K_top_matches);
-RcppExport SEXP _QUILT_Rcpp_get_top_K_or_more_matches_while_building_gamma(SEXP alphaHat_tSEXP, SEXP betaHat_t_colSEXP, SEXP gamma_t_colSEXP, SEXP iGridSEXP, SEXP KSEXP, SEXP K_top_matchesSEXP) {
+Rcpp::List Rcpp_get_top_K_or_more_matches_while_building_gamma(arma::mat& alphaHat_t, arma::colvec& betaHat_t_col, arma::colvec& gamma_t_col, int iGrid, int K, int K_top_matches, double special_multiplication_value);
+RcppExport SEXP _QUILT_Rcpp_get_top_K_or_more_matches_while_building_gamma(SEXP alphaHat_tSEXP, SEXP betaHat_t_colSEXP, SEXP gamma_t_colSEXP, SEXP iGridSEXP, SEXP KSEXP, SEXP K_top_matchesSEXP, SEXP special_multiplication_valueSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -1015,7 +1015,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type iGrid(iGridSEXP);
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
     Rcpp::traits::input_parameter< int >::type K_top_matches(K_top_matchesSEXP);
-    rcpp_result_gen = Rcpp::wrap(Rcpp_get_top_K_or_more_matches_while_building_gamma(alphaHat_t, betaHat_t_col, gamma_t_col, iGrid, K, K_top_matches));
+    Rcpp::traits::input_parameter< double >::type special_multiplication_value(special_multiplication_valueSEXP);
+    rcpp_result_gen = Rcpp::wrap(Rcpp_get_top_K_or_more_matches_while_building_gamma(alphaHat_t, betaHat_t_col, gamma_t_col, iGrid, K, K_top_matches, special_multiplication_value));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1274,7 +1275,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_Rcpp_test", (DL_FUNC) &_QUILT_Rcpp_test, 3},
     {"_QUILT_Rcpp_make_gl_bound", (DL_FUNC) &_QUILT_Rcpp_make_gl_bound, 3},
     {"_QUILT_rcpp_nth_partial_sort", (DL_FUNC) &_QUILT_rcpp_nth_partial_sort, 2},
-    {"_QUILT_Rcpp_get_top_K_or_more_matches_while_building_gamma", (DL_FUNC) &_QUILT_Rcpp_get_top_K_or_more_matches_while_building_gamma, 6},
+    {"_QUILT_Rcpp_get_top_K_or_more_matches_while_building_gamma", (DL_FUNC) &_QUILT_Rcpp_get_top_K_or_more_matches_while_building_gamma, 7},
     {"_QUILT_Rcpp_build_eMatDH", (DL_FUNC) &_QUILT_Rcpp_build_eMatDH, 7},
     {"_QUILT_rcpp_internal_make_eMatRead_t_using_binary", (DL_FUNC) &_QUILT_rcpp_internal_make_eMatRead_t_using_binary, 13},
     {"_QUILT_Rcpp_haploid_reference_single_forward", (DL_FUNC) &_QUILT_Rcpp_haploid_reference_single_forward, 18},
