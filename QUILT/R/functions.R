@@ -609,8 +609,8 @@ get_and_impute_one_sample <- function(
     grid_has_read[wif0 + 1] <- TRUE
     
     nReads <- length(sampleReads)
-    ## super_out_hap_dosages <- as.list(1:nGibbsSamples)
-    ## super_out_read_labels <- as.list(1:nGibbsSamples)
+    super_out_hap_dosages <- as.list(1:nGibbsSamples)
+    super_out_read_labels <- as.list(1:nGibbsSamples)
     super_out_dosage_matrix <- as.list(1:nGibbsSamples)    
     read_label_matrix_all <- array(NA, c(nReads, nGibbsSamples)) ## need this for phasing - store final read labels in it
     read_label_matrix_conf <- array(FALSE, c(nReads, nGibbsSamples)) ## need this for phasing - store whether these are confident reads
@@ -1158,7 +1158,9 @@ get_and_impute_one_sample <- function(
         fij = fij,
         max_gen = max_gen,
         per_sample_alleleCount = per_sample_alleleCount,
-        per_sample_vcf_col = per_sample_vcf_col
+        per_sample_vcf_col = per_sample_vcf_col,
+        super_out_hap_dosages = super_out_hap_dosages,
+        super_out_read_labels = super_out_read_labels
     )
 
     ## phasing_read_labels = phasing_read_labels,
@@ -1169,8 +1171,7 @@ get_and_impute_one_sample <- function(
     ## phasing_haps = phasing_haps,
     ## phasing_dosage = phasing_dosage,
     ## gp_t = gp_t,
-    ## super_out_hap_dosages = super_out_hap_dosages,
-    ## super_out_read_labels = super_out_read_labels,            
+    ## 
     
     if (hla_run) {
         ## print_message("More HLA SIMON code")
