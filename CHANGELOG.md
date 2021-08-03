@@ -1,3 +1,6 @@
+* v1.0.0
+	* Bump major version number as first version post paper release
+	* Fix bugs related to rare haplotypes in full panel HMM
 * v0.1.9
 	* Change default output of GT entry to phased value to facilitate ligating phase reslts together
 	* Add code to try and re-run samples with different parameter values when underflow happens
