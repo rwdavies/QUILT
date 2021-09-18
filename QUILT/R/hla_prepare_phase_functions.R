@@ -165,6 +165,7 @@ phase_hla_haplotypes <- function(
             region_exclude_file = region_exclude_file,
             minRate = minRate
         )
+        return("Done")
     })
     check_mclapply_OK(out)
 
