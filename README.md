@@ -1,14 +1,13 @@
 QUILT
 =====
-**__Current Version: 1.0.0__**
-Release date: Aug 3, 2021
+**__Current Version: 1.0.1__**
+Release date: Sept 20, 2021
 
 [![Build Status](https://img.shields.io/travis/rwdavies/QUILT/master.svg)](https://travis-ci.com/rwdavies/QUILT/)
 
 Changes in latest version
 
-1. Bump major version number as first version post paper release
-2. Fix bugs related to rare haplotypes in full reference panel HMM
+1. Fix minor but that prevented HLA reference panel from building
 
 For details of past changes please see [CHANGELOG](CHANGELOG.md).
 

@@ -1,3 +1,5 @@
+* v1.0.1
+	* Fix minor but that prevented HLA reference panel from building
 * v1.0.0
 	* Bump major version number as first version post paper release
 	* Fix bugs related to rare haplotypes in full panel HMM
