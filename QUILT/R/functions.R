@@ -2078,7 +2078,7 @@ impute_one_sample <- function(
     genProbs_t <- out$genProbsM_t
     hapProbs_t <- out$happrobs_t
     dosage <- genProbs_t[2, ] + 2 * genProbs_t[3, ]
-    out$dosage <- out
+    out$dosage <- dosage
     ##
     if (make_plots) {
         plot_single_gamma_dosage(
