@@ -361,7 +361,7 @@ R_haploid_dosage_versus_refs <- function(
 
 
 
-
+#' @export
 make_rhb_t_equality <- function(
     rhb_t,
     nSNPs,
