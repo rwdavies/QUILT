@@ -96,7 +96,8 @@ rm -r -f quilt_output
 --reference_haplotype_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.hap.gz \
 --reference_legend_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.legend.gz \
 --genetic_map_file=package_2021_01_15A/CEU-chr20-final.b38.txt.gz \
---nGen=100
+--nGen=100 \
+--save_prepared_reference=TRUE
 ```
 Succesful completion of this run results in a VCF at `quilt_output/quilt.chr20.2000001.2100000.vcf.gz`. For a slightly longer version of this example, see [Examples](#paragraph-examples)
 
