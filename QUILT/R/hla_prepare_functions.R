@@ -267,6 +267,7 @@ make_and_save_hla_full_alleles_filled_in <- function(
         ##gives where each allele comes from, which is reference allele, and strand
         
         ##print(hla_region)
+        
         if (hla_region %in% supplementary_gene_info[, "gene"]) {
 
             print_message(paste0("Processing HLA-", hla_region))
@@ -288,7 +289,6 @@ make_and_save_hla_full_alleles_filled_in <- function(
             temp=grep("Please",this)
             this=this[1:(temp-1)]
             
-            
             starts=grep("gDNA",this)
             ll=getseqs(
                 starts[1]+2,
@@ -298,8 +298,8 @@ make_and_save_hla_full_alleles_filled_in <- function(
             )
             starts=c(starts,length(this)+2)
             
-###amount to trim for first codon
-####offset=as.double(this[starts[1]+1])
+            ## amount to trim for first codon
+            ## offset=as.double(this[starts[1]+1])
             
             for(k in 2:(length(starts)-1)) {
                 ll=paste(ll,getseqs(starts[k]+2,starts[k+1]-1,paste(hla_region,"[*]",sep=""), this = this),sep="")
@@ -308,19 +308,19 @@ make_and_save_hla_full_alleles_filled_in <- function(
             names(ll)=getnames(starts[1]+2,starts[2]-1,paste(hla_region,"[*]",sep=""), this = this)
 
             first_row <- which(names(ll) == matches[, "allele"])
-            ##if (first_row != matches[, "first_row"]) {
-            ##    stop("Error in lining up")
-           ## }
+            ## if (first_row != matches[, "first_row"]) {
+            ##   stop("Error in lining up")
+            ## }
             
             ##print("...done")
             
-#######find a match
+            ## find a match
             
             temp=matrix(nrow=length(ll),ncol=nchar(ll[1]))
             
             for(i in 1:ncol(temp)) temp[,i]=substring(ll,i,i)
             for(i in 1:ncol(temp)) temp[temp[,i]=="-",i]=temp[1,i]
-#####need to alter
+            ##need to alter
             
             ##for(i in 1:ncol(temp)) temp[temp[,i]=="*",i]=temp[1,i]
             
@@ -392,25 +392,29 @@ make_and_save_hla_full_alleles_filled_in <- function(
         temp=temp[,ourpos>=qq[1] & ourpos<=qq[2]]
         ourpos=ourpos[ourpos>=qq[1] & ourpos<=qq[2]]
         
-####fill in
+        ##fill in
         
-####space separated
+        ##space separated
         oldvalue=nrow(temp)*ncol(temp)
         newvalue=sum(temp=="*")
+        
         while(oldvalue>newvalue){
+            
             hapstore=haps
             tempstore=temp
-###guess missing values
+            
+            ##guess missing values
             ##print("Total missing still:")
             ##print(sum(temp=="*"))
             ##print("Total columns: ")
             ##print(ncol(haps))
             ##print("Processing column to find nearest neighbour:")
+            
             for(i in 1:ncol(haps)){
                 
                 if(sum(temp[i,]=="*")){
                     
-                    ##                    if(!i%%20) {print(c(i,sum(temp[i,]=="*")))}
+                    ## if(!i%%20) {print(c(i,sum(temp[i,]=="*")))}
 ####use haplotypes to find match
                     cond2=(temp[i,]!="*")
                     cond=haps[,i]!=-1
@@ -428,7 +432,7 @@ make_and_save_hla_full_alleles_filled_in <- function(
                     rownames(allelemat)=c("A","C","G","T","-","*")
                     for(k in 1:nrow(allelemat)) allelemat[k,]=colSums(newalleles==rownames(allelemat)[k])
                     best=1:ncol(allelemat);for(k in 1:ncol(allelemat)) best[k]=rownames(allelemat)[1:5][which(allelemat[1:5,k]==max(allelemat[1:5,k]))[1]]
-                    best[colSums(allelemat[1:5,])==0]="*"
+                    best[colSums(allelemat[1:5,, drop = FALSE])==0]="*"
                     temp[i,!cond2]=best	
                     
                     

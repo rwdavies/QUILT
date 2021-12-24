@@ -7,9 +7,9 @@ Here code to generate the provided reference panel data package is provided and 
 Where you want to store the files as you work on them, and where the output files should go
 
 ```
-inputs_dir=/data/smew1/rdavies/quilt_hla_2021_09_18/
-test_dir=/data/smew1/rdavies/quilt_hla_2021_09_18/
-reference_package_dir=/data/smew1/rdavies/quilt_hla_reference_panel_files_2021_09_18/
+inputs_dir=/data/smew1/rdavies/quilt_hla_2021_12_24_3430/
+test_dir=/data/smew1/rdavies/quilt_hla_2021_12_24_3430/
+reference_package_dir=/data/smew1/rdavies/quilt_hla_2021_12_24_3430/quilt_hla_reference_panel_files/
 mkdir -p ${test_dir}
 mkdir -p ${inputs_dir}
 mkdir -p ${reference_package_dir}
@@ -36,9 +36,15 @@ sed -i 's/sample population group sex/SAMPLE POP GROUP SEX/g' ${reference_sample
 Here we download the IPD-IGMT data
 ```
 ## To download IPD-IGMT version 3.39, for example
+ipdigmt_link=https://github.com/ANHIG/IMGTHLA/blob/032815608e6312b595b4aaf9904d5b4c189dd6dc/Alignments_Rel_3390.zip?raw=true
+## To download IPD-IGMT version 3.43
+ipdigmt_link=https://github.com/ANHIG/IMGTHLA/blob/3430/Alignments_Rel_3430.zip?raw=true
+
+
 cd ${test_dir}
-wget https://github.com/ANHIG/IMGTHLA/blob/032815608e6312b595b4aaf9904d5b4c189dd6dc/Alignments_Rel_3390.zip?raw=true
-mv Alignments_Rel_3390.zip?raw=true Alignments_Rel_3390.zip
+wget ${ipdigmt_link}
+ipdigmt_filename=`basename ${ipdigmt_link} | sed 's/?raw=true//g'`
+mv Alignments_Rel_3430.zip?raw=true ${ipdigmt_filename}
 ```
 
 Here we download the database of HLA alleles
@@ -87,7 +93,7 @@ cd ~/proj/QUILT/ ## change to the directory where you've cloned QUILT
 --nGen=100 \
 --hla_gene_region_file=hla_ancillary_files/hlagenes.txt \
 --hla_types_panel=${test_dir}/20181129_HLA_types_full_1000_Genomes_Project_panel.txt \
---ipd_igmt_alignments_zip_file=${test_dir}Alignments_Rel_3390.zip \
+--ipd_igmt_alignments_zip_file=${test_dir}${ipdigmt_filename} \
 --quilt_hla_supplementary_info_file=hla_ancillary_files/quilt_hla_supplementary_info.txt \
 --full_regionStart=25587319 \
 --full_regionEnd=33629686 \

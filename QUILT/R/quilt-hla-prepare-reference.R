@@ -47,6 +47,7 @@ QUILT_HLA_prepare_reference <- function(
     nCores = 1
 ) {
 
+    
     x <- as.list(environment())
     command_line <- paste0(
         "QUILT_HLA_prepare_reference(",
