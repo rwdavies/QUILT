@@ -43,8 +43,9 @@ ipdigmt_link=https://github.com/ANHIG/IMGTHLA/blob/3430/Alignments_Rel_3430.zip?
 
 cd ${test_dir}
 wget ${ipdigmt_link}
+ipdigmt_filename_extra=`basename ${ipdigmt_link}`
 ipdigmt_filename=`basename ${ipdigmt_link} | sed 's/?raw=true//g'`
-mv Alignments_Rel_3430.zip?raw=true ${ipdigmt_filename}
+mv ${ipdigmt_filename_extra} ${ipdigmt_filename}
 ```
 
 Here we download the database of HLA alleles
