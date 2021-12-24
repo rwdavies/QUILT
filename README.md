@@ -1,13 +1,13 @@
 QUILT
 =====
-**__Current Version: 1.0.1__**
-Release date: Sept 20, 2021
+**__Current Version: 1.0.2__**
+Release date: Dec 24, 2021
 
 [![Build Status](https://img.shields.io/travis/rwdavies/QUILT/master.svg)](https://travis-ci.com/rwdavies/QUILT/)
 
 Changes in latest version
 
-1. Fix minor but that prevented HLA reference panel from building
+1. Fix minor but that prevented HLA reference panel from building on new reference data
 
 For details of past changes please see [CHANGELOG](CHANGELOG.md).
 
@@ -53,8 +53,8 @@ git clone --recursive https://github.com/rwdavies/QUILT.git
 cd QUILT
 ./scripts/install-dependencies.sh
 cd releases
-wget https://github.com/rwdavies/quilt/releases/download/1.0.0/QUILT_1.0.0.tar.gz ## or curl -O
-R CMD INSTALL QUILT_1.0.0.tar.gz
+wget https://github.com/rwdavies/quilt/releases/download/1.0.2/QUILT_1.0.2.tar.gz ## or curl -O
+R CMD INSTALL QUILT_1.0.2.tar.gz
 ```
 
 ### conda <a name="paragraph-installation-conda"></a>

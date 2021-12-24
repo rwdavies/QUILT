@@ -9,7 +9,7 @@ Where you want to store the files as you work on them, and where the output file
 ```
 inputs_dir=/data/smew1/rdavies/quilt_hla_2021_12_24_3430/
 test_dir=/data/smew1/rdavies/quilt_hla_2021_12_24_3430/
-reference_package_dir=/data/smew1/rdavies/quilt_hla_2021_12_24_3430/quilt_hla_reference_panel_files/
+reference_package_dir=/data/smew1/rdavies/quilt_hla_2021_12_24_3430/quilt_hla_reference_panel_files_2021_12_24/
 mkdir -p ${test_dir}
 mkdir -p ${inputs_dir}
 mkdir -p ${reference_package_dir}

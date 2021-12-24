@@ -114,6 +114,12 @@ Max N=5132 haplotyes built using QUILT 0.1.5, IPD-IGMT version 3.39, 1000 Genome
 http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_2021_04_09.tar
 ```
 
+Max N=5132 haplotyes built using QUILT 1.0.1, IPD-IGMT version 3.43, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129). 
+```
+http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_2021_12_24.tar
+```
+
+
 ## Preparing a reference package <a name="paragraph-preparing"></a>
 
 An example of this is presented in detail in [example/QUILT_hla_reference_panel_construction.Md](example/QUILT_hla_reference_panel_construction.Md), which was used to make the reference panel package from 1000 Genomes Project data presented above.

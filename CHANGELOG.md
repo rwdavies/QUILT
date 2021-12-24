@@ -1,3 +1,5 @@
+* v1.0.2
+	* Fix minor but that prevented HLA reference panel from building on new reference data
 * v1.0.1
 	* Fix minor but that prevented HLA reference panel from building
 * v1.0.0
