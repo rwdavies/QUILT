@@ -1,10 +1,10 @@
 #' @title QUILT_HLA_prepare_reference
 #' @param outputdir What output directory to use
 #' @param nGen Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure, where K is number of haplotypes.
-#' @param hla_gene_region_file Path to file with gene boundaries. 4 columns, named Name Chr Start End, with respectively gene name (e.g. HLA-A), chromsome (e.g. chr6), and 1 based start and end positions of gene
 #' @param hla_types_panel Path to file with 1000 Genomes formatted HLA types (see example for format details)
 #' @param ipd_igmt_alignments_zip_file Path to zip file with alignments from IPD-IGMT (see README and example for more details)
-#' @param quilt_hla_supplementary_info_file Path to file with supplementary information about the genes, necessary for proper converstion. File is tab separated with header, with 3 columns. First (allele) is the allele that matches the reference genome. Second (genome_pos) is the position of this allele in the reference genome, finally the strand (strand) (options 1 or -1)
+#' @param ref_fasta Path to reference genome fasta 
+#' @param refseq_table_file Path to file with UCSC refseq gene information (see README and example for more details)
 #' @param full_regionStart When building HLA full reference panel, start of maximal region spanning all HLA genes. The 1-based position x is kept if regionStart <= x <= regionEnd
 #' @param full_regionEnd As above, but end of maximal region spanning all HLA genes
 #' @param buffer Buffer of region to perform imputation over. So imputation is run form regionStart-buffer to regionEnd+buffer, and reported for regionStart to regionEnd, including the bases of regionStart and regionEnd
@@ -26,10 +26,10 @@
 QUILT_HLA_prepare_reference <- function(
     outputdir,
     nGen,
-    hla_gene_region_file,
     hla_types_panel,
     ipd_igmt_alignments_zip_file,
-    quilt_hla_supplementary_info_file,
+    ref_fasta,
+    refseq_table_file,
     full_regionStart,
     full_regionEnd,
     buffer,
@@ -47,6 +47,14 @@ QUILT_HLA_prepare_reference <- function(
     nCores = 1
 ) {
 
+
+    ## DEPRECATED
+    ## ' @param hla_gene_region_file Path to file with gene boundaries. 4 columns, named Name Chr Start End, with respectively gene name (e.g. HLA-A), chromsome (e.g. chr6), and 1 based start and end positions of gene
+    ## ' @param quilt_hla_supplementary_info_file Path to file with supplementary information about the genes, necessary for proper converstion. File is tab separated with header, with 3 columns. First (allele) is the allele that matches the reference genome. Second (genome_pos) is the position of this allele in the reference genome, finally the strand (strand) (options 1 or -1)
+
+    ## INTEGRATED
+    ## ref_fasta <- "/data/smew1/rdavies/quilt_hla_2021_12_24_3430//GRCh38_full_analysis_set_plus_decoy_hla.fa"
+    ## refseq_table_file <- "hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz"
     
     x <- as.list(environment())
     command_line <- paste0(
@@ -56,54 +64,37 @@ QUILT_HLA_prepare_reference <- function(
     )
     print_message(paste0("Running ", command_line))
 
-    
-    ## outputdir = "~/proj/QUILT/hla-data/",
-    ## hla_zip_file = "~/proj/QUILT/HLA_input_2021_01_04.zip"
-    
     system(paste0("rsync -av ", ipd_igmt_alignments_zip_file, " ", outputdir))
     system(paste0("cd ", outputdir, " && unzip -u ", basename(ipd_igmt_alignments_zip_file)))
 
-    
-    regions <- hla_regions_to_prepare
-
-
-    supplementary_gene_info <- read.table(quilt_hla_supplementary_info_file, header = TRUE)
-    ## colnames(supplementary_gene_info) <- c("allele", "first_row", "genome_pos", "strand")
-    supplementary_gene_info[, "gene"] <- sapply(strsplit(supplementary_gene_info[, "allele"], "*", fixed = TRUE), function(x) x[1])
-
-
-    hla_regions <- all_hla_regions
-    regs <- hla_regions_to_prepare
-    ourfiles <- hla_regions
+    hla_gene_information <- get_hla_gene_information(
+        table_file = refseq_table_file,
+        all_hla_regions = all_hla_regions,
+        chr = chr,
+        what = "refseq"
+    )
 
     make_and_save_hla_all_alleles_kmers(
         outputdir = outputdir,
-        ourfiles = ourfiles
-    )
-    
-    make_and_save_hla_snpformatalleles(
-        outputdir = outputdir,
-        regs = regs,
-        supplementary_gene_info = supplementary_gene_info
+        all_hla_regions = all_hla_regions,
+        hla_gene_information = hla_gene_information
     )
 
-    make_and_save_hla_full_alleles_filled_in (
+    make_and_save_hla_files_for_imputation(
         outputdir = outputdir,
-        regs = regs,
-        supplementary_gene_info = supplementary_gene_info
-    )
-
-    make_quilt_hla_full(
-        outputdir = outputdir,
-        regs = regs
+        hla_regions_to_prepare = hla_regions_to_prepare,
+        hla_gene_information = hla_gene_information,
+        ref_fasta = ref_fasta,
+        nCores = nCores
     )
 
     ## this is somewhat distinct in flavour, uses above, but also HRC haplotypes
     ## could remove steps and put in here conceivably, or wrap up above
+    regions <- hla_regions_to_prepare
     phase_hla_haplotypes(    
         outputdir = outputdir,
         chr = chr,
-        hla_gene_region_file = hla_gene_region_file,
+        hla_gene_information = hla_gene_information,
         full_regionStart = full_regionStart,
         full_regionEnd = full_regionEnd,
         buffer = buffer,
@@ -121,7 +112,6 @@ QUILT_HLA_prepare_reference <- function(
         nCores = nCores
     )
 
-    
     print_message("Done preparing HLA reference")
     
 }
