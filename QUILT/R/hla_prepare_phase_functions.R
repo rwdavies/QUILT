@@ -1,7 +1,7 @@
 phase_hla_haplotypes <- function(
     outputdir,
     chr,
-    hla_gene_information,
+    hla_gene_region_file,
     full_regionStart,
     full_regionEnd,
     buffer,
@@ -138,10 +138,11 @@ phase_hla_haplotypes <- function(
     ## what actually changes?
     ## exclude individuals, SNPs?
     ## for now, just operationalize, then fix later?
+    hla_gene_regions <- read.table(hla_gene_region_file, header = TRUE)
     out <- parallel::mclapply(regions, mc.cores = nCores, function(region) {
-        i <- match(paste0("HLA-", region), hla_gene_information[, "Name"])
-        regionStart <- hla_gene_information[i, "Start"]
-        regionEnd <- hla_gene_information[i, "End"]
+        i <- match(paste0("HLA-", region), hla_gene_regions[, "Name"])
+        regionStart <- hla_gene_regions[i, "Start"]
+        regionEnd <- hla_gene_regions[i, "End"]
         ## if (region == "A")    {regionStart=29942554; regionEnd=29945741}
         ## if (region == "B")    {regionStart=31353367; regionEnd=31357155}
         ## if (region == "C")    {regionStart=31268257; regionEnd=31353367}

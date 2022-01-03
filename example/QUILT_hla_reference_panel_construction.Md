@@ -22,15 +22,11 @@ Here we show how we get reference haplotype data, in this case 1000 Genomes proj
 ```
 cd ${inputs_dir}
 oneKG_vcf_name=CCDG_14151_B01_GRM_WGS_2020-08-05_chr6.filtered.shapeit2-duohmm-phased.vcf.gz
-#wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/${oneKG_vcf_name}
-#wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/${oneKG_vcf_name}.tbi
-
-rsync -av /data/smew1/rdavies/quilt_hla_2021_12_24_3430/one* ${inputs_dir}
-rsync -av /data/smew1/rdavies/quilt_hla_2021_12_24_3430/*vcf* ${inputs_dir}
-
-#bcftools view --output-file oneKG.temp.vcf.gz --output-type z --min-alleles 2 --max-alleles 2 --types snps ${oneKG_vcf_name} chr6:25000000-34000000
-#tabix oneKG.temp.vcf.gz
-#bcftools convert --haplegendsample oneKG oneKG.temp.vcf.gz
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/${oneKG_vcf_name}
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/${oneKG_vcf_name}.tbi
+bcftools view --output-file oneKG.temp.vcf.gz --output-type z --min-alleles 2 --max-alleles 2 --types snps ${oneKG_vcf_name} chr6:25000000-34000000
+tabix oneKG.temp.vcf.gz
+bcftools convert --haplegendsample oneKG oneKG.temp.vcf.gz
 reference_haplotype_file=${inputs_dir}oneKG.hap.gz
 reference_legend_file=${inputs_dir}oneKG.legend.gz
 reference_sample_file=${inputs_dir}oneKG.samples
@@ -44,11 +40,10 @@ Here we download the IPD-IGMT data. These links can be determined from the IPD-I
 ipdigmt_link=https://github.com/ANHIG/IMGTHLA/blob/032815608e6312b595b4aaf9904d5b4c189dd6dc/Alignments_Rel_3390.zip?raw=true
 
 cd ${test_dir}
-#wget ${ipdigmt_link}
-rsync -av /data/smew1/rdavies/quilt_hla_2021_12_24_3430/Align* ${inputs_dir}
+wget ${ipdigmt_link}
 ipdigmt_filename_extra=`basename ${ipdigmt_link}`
 ipdigmt_filename=`basename ${ipdigmt_link} | sed 's/?raw=true//g'`
-#mv ${ipdigmt_filename_extra} ${ipdigmt_filename}
+mv ${ipdigmt_filename_extra} ${ipdigmt_filename}
 ```
 
 Here we download the database of HLA alleles
@@ -106,9 +101,8 @@ We need the reference genome to determine which allele is carried by the referen
 
 ```
 cd ${inputs_dir}
-#wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
-#samtools faidx GRCh38_full_analysis_set_plus_decoy_hla.fa
-rsync -av /data/smew1/rdavies/quilt_hla_2021_12_24_3430/GRCh38* ${inputs_dir}
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
+samtools faidx GRCh38_full_analysis_set_plus_decoy_hla.fa
 ref_fasta=${inputs_dir}GRCh38_full_analysis_set_plus_decoy_hla.fa
 ```
 
@@ -153,7 +147,7 @@ wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_refere
 Here we download some example 1000 Genomes data, using links given in an index file. Since we're actually downloading CRAM files, we'll use the reference genome we downloaded earlier to turn them into bams
 ```
 cd ${inputs_dir}
-#wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
 samtools faidx GRCh38_full_analysis_set_plus_decoy_hla.fa
 ref_fasta=${inputs_dir}GRCh38_full_analysis_set_plus_decoy_hla.fa
 

@@ -7,10 +7,10 @@
 QUILT_HLA_prepare_reference(
   outputdir,
   nGen,
+  hla_gene_region_file,
   hla_types_panel,
   ipd_igmt_alignments_zip_file,
-  ref_fasta,
-  refseq_table_file,
+  quilt_hla_supplementary_info_file,
   full_regionStart,
   full_regionEnd,
   buffer,
@@ -36,13 +36,13 @@ QUILT_HLA_prepare_reference(
 
 \item{nGen}{Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure, where K is number of haplotypes.}
 
+\item{hla_gene_region_file}{Path to file with gene boundaries. 4 columns, named Name Chr Start End, with respectively gene name (e.g. HLA-A), chromsome (e.g. chr6), and 1 based start and end positions of gene}
+
 \item{hla_types_panel}{Path to file with 1000 Genomes formatted HLA types (see example for format details)}
 
 \item{ipd_igmt_alignments_zip_file}{Path to zip file with alignments from IPD-IGMT (see README and example for more details)}
 
-\item{ref_fasta}{Path to reference genome fasta}
-
-\item{refseq_table_file}{Path to file with UCSC refseq gene information (see README and example for more details)}
+\item{quilt_hla_supplementary_info_file}{Path to file with supplementary information about the genes, necessary for proper converstion. File is tab separated with header, with 3 columns. First (allele) is the allele that matches the reference genome. Second (genome_pos) is the position of this allele in the reference genome, finally the strand (strand) (options 1 or -1)}
 
 \item{full_regionStart}{When building HLA full reference panel, start of maximal region spanning all HLA genes. The 1-based position x is kept if regionStart <= x <= regionEnd}
 

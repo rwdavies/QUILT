@@ -1,8 +1,8 @@
 #' @title QUILT_HLA
 #' @param bamlist Path to file with bam file locations. File is one row per entry, path to bam files. Bam index files should exist in same directory as for each bam, suffixed either .bam.bai or .bai
 #' @param region HLA region to be analyzed, for example A for HLA-A
+#' @param hla_gene_region_file Path to file with gene boundaries. 4 columns, named Name Chr Start End, with respectively gene name (e.g. HLA-A), chromsome (e.g. chr6), and 1 based start and end positions of gene
 #' @param dict_file Path to dictionary file for reference build
-#' @param hla_gene_region_file For reference packages built after QUILT 1.0.2, this is not used. For older reference packages, this is needed, and is a path to file with gene boundaries. 4 columns, named Name Chr Start End, with respectively gene name (e.g. HLA-A), chromsome (e.g. chr6), and 1 based start and end positions of gene
 #' @param outputdir What output directory to use. Otherwise defaults to current directory
 #' @param summary_output_file_prefix Prefix for output text summary files
 #' @param nCores How many cores to use
@@ -23,8 +23,8 @@
 QUILT_HLA <- function(
     bamlist,
     region,
+    hla_gene_region_file,
     dict_file,
-    hla_gene_region_file = NULL,
     outputdir = "",
     summary_output_file_prefix = 'quilt.hla.output',
     nCores = 1,
@@ -105,9 +105,20 @@ QUILT_HLA <- function(
 
     
     ##
-    ## Load various pre-made files
+    ## pre-made file, with boundaries
     ##
     print_message("Load input files")
+    ## load(file.path(prepared_hla_reference_dir, "hlageneboundaries.out"))
+    ## regstart <- ourpos[region,1]
+    ## regend <- ourpos[region,2]
+    if (!file.exists(hla_gene_region_file)) {
+        stop(paste0("Cannot find file with HLA gene boundaries (hla_gene_region_file):", hla_gene_region_file))
+    }
+    ourpos2 <- read.table(hla_gene_region_file, header = TRUE)
+    regstart <- ourpos2[ourpos2[, "Name"] == paste0("HLA-", region), "Start"]
+    regend <- ourpos2[ourpos2[, "Name"] == paste0("HLA-", region), "End"]
+    regmid <- (regstart + regend) / 2
+
 
     ##
     ## inputs from sequences
@@ -116,26 +127,10 @@ QUILT_HLA <- function(
     load(file_quilt_hla_all_alleles_kmers(prepared_hla_reference_dir))
     load(file_quilt_hla_full_alleles_filled_in(prepared_hla_reference_dir, region))
     load(file_quilt_hla_full(prepared_hla_reference_dir, region))
+
     ## load(file.path(ancillary_file_dir, "HLAallalleleskmers.out")) ## from simon file, now incorporated
     ##load(file.path(ancillary_file_dir, paste0("HLA", region, "fullallelesfilledin.out"))) ## from simon file, now incorporated
     ## load(file.path(ancillary_file_dir, paste0("hla", region, "full.out"))) ## from simon file, now incorporated
-    
-    if (!exists("hla_gene_information")) {
-        if (!file.exists(hla_gene_region_file)) {
-            stop(paste0("An older reference package is being used, so you need to supply the file with gene boundaries. Cannot find file with HLA gene boundaries (hla_gene_region_file):", hla_gene_region_file))
-        }
-        ourpos2 <- read.table(hla_gene_region_file, header = TRUE)
-        regstart <- ourpos2[ourpos2[, "Name"] == paste0("HLA-", region), "Start"]
-        regend <- ourpos2[ourpos2[, "Name"] == paste0("HLA-", region), "End"]
-        regmid <- (regstart + regend) / 2
-    } else {
-        regstart <- hla_gene_information[hla_gene_information[, "Name"] == paste0("HLA-", region), "Start"]
-        regend <- hla_gene_information[hla_gene_information[, "Name"] == paste0("HLA-", region), "End"]        
-        regmid <- (regstart + regend) / 2
-    }
-    
-
-
 
 
     ##
