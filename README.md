@@ -1,13 +1,13 @@
 QUILT
 =====
-**__Current Version: 1.0.2__**
-Release date: Dec 24, 2021
+**__Current Version: 1.0.3__**
+Release date: Dec 26, 2021
 
 [![Build Status](https://img.shields.io/travis/rwdavies/QUILT/master.svg)](https://travis-ci.com/rwdavies/QUILT/)
 
 Changes in latest version
 
-1. Fix minor but that prevented HLA reference panel from building on new reference data
+1. Simplify how QUILT HLA reference packages are built
 
 For details of past changes please see [CHANGELOG](CHANGELOG.md).
 

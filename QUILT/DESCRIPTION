@@ -1,8 +1,8 @@
 Package: QUILT
 Type: Package
 Title: QUILT
-Version: 1.0.2
-Date: 2021-12-24
+Version: 1.0.3
+Date: 2021-12-26
 Author: Robert William Davies
 Maintainer: Robert William Davies <robertwilliamdavies@gmail.com>
 Description: QUILT performs imputation of individuals sequenced to low coverage
