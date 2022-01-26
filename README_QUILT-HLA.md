@@ -11,7 +11,7 @@ For general details including installation of QUILT, citation, versions, and cha
     1. [Input](#paragraph-io-input)
     2. [Output](#paragraph-io-output)
 5. [Help, options and parameters](#paragraph-helpoptionsparams)
-6. [Reference packages](#paragraph-reference-package)
+6. [Reference packages](#paragraph-reference-packages)
 7. [Preparing a reference package](#paragraph-preparing)
 
 
@@ -30,7 +30,7 @@ A quick start to ensure QUILT-HLA is properly installed and working can be perfo
 First, download some prepared reference panel data. This reference panel package was prepared as described in [Preparing a reference package](#paragraph-preparing), and uses data from IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129).
 
 <a><img src="important.png"/></a>
-This example uses a reference panel data package with some of the reference samples excluded(e.g. NA12878). For normal use, use a panel without samples removed. See [Reference packages](#reference-packages) for more details.
+This example uses a reference panel data package with some of the reference samples excluded(e.g. NA12878). For normal use, use a panel without samples removed. See [Reference packages](#paragraph-reference-packages) for more details.
 
 ```
 wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_demonstration_3.43_2021_12_26.tar.gz ## or curl -O
@@ -105,7 +105,7 @@ For a full list of options, query `?QUILT::QUILT_HLA`, or alternatively, type
 ./QUILT_HLA.R --help
 ```
 
-## Reference packages <a name="reference-packages"></a>
+## Reference packages <a name="paragraph-reference-packages"></a>
 
 Reference packages built
 
