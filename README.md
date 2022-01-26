@@ -3,7 +3,7 @@ QUILT
 **__Current Version: 1.0.3__**
 Release date: Dec 26, 2021
 
-[![Build Status](https://img.shields.io/travis/rwdavies/QUILT/master.svg)](https://travis-ci.com/rwdavies/QUILT/)
+[![Build Status](https://img.shields.io/travis/rwdavies/QUILT/master.svg)](https://app.travis-ci.com/github/rwdavies/QUILT)
 
 Changes in latest version
 
