@@ -6,7 +6,7 @@ then
 fi
 tar -xvf QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar.gz
 
-if [ ! -f QUILT_HLA_example_bams_2021_04_08.tar.gz ]
+if [ ! -f QUILT_HLA_example_bams_2021_04_08.tar ]
 then
     wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_example_bams_2021_04_08.tar
 fi
