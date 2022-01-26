@@ -33,8 +33,8 @@ First, download some prepared reference panel data. This reference panel package
 This example uses a reference panel data package with some of the reference samples excluded(e.g. NA12878). For normal use, use a panel without samples removed. See [Reference packages](#reference-packages) for more details.
 
 ```
-wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_demonstration_3.43_2021_12_26.tar ## or curl -O
-tar -xvf QUILT_HLA_reference_package_demonstration_3.43_2021_12_26.tar
+wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_demonstration_3.43_2021_12_26.tar.gz ## or curl -O
+tar -xvfz QUILT_HLA_reference_package_demonstration_3.43_2021_12_26.tar.gz
 ```
 
 Download some example bams
@@ -111,12 +111,12 @@ Reference packages built
 
 Max N=5132 haplotyes built using QUILT 0.1.5, IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129). 
 ```
-http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_2021_04_09.tar
+http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_2021_04_09.tar.gz
 ```
 
-Max N=5132 haplotyes built using QUILT 1.0.1, IPD-IGMT version 3.43, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129). 
+Max N=5132 haplotyes built using QUILT 1.0.3, IPD-IGMT version 3.43, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129). 
 ```
-http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_2021_12_24.tar
+http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_full_3.43_2021_12_28.tar.gz
 ```
 
 

@@ -3,11 +3,11 @@ set -e
 QUILT_DIR=~/proj/QUILT/
 cd "${QUILT_DIR}"
 
-SAVE_DIR="/data/smew1/rdavies/quilt_hla_packages/"
+SAVE_DIR="/well/davies/users/dcc832/quilt_hla_packages/"
     
 set -e
 
-output_date=2021_12_28
+output_date=2022_01_26
 
 ipdigmt_version=3.39
 ipdigmt_link=https://github.com/ANHIG/IMGTHLA/blob/032815608e6312b595b4aaf9904d5b4c189dd6dc/Alignments_Rel_3390.zip?raw=true
