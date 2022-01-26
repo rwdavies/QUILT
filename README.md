@@ -53,8 +53,8 @@ git clone --recursive https://github.com/rwdavies/QUILT.git
 cd QUILT
 ./scripts/install-dependencies.sh
 cd releases
-wget https://github.com/rwdavies/quilt/releases/download/1.0.2/QUILT_1.0.2.tar.gz ## or curl -O
-R CMD INSTALL QUILT_1.0.2.tar.gz
+wget https://github.com/rwdavies/quilt/releases/download/1.0.3/QUILT_1.0.3.tar.gz ## or curl -O
+R CMD INSTALL QUILT_1.0.3.tar.gz
 ```
 
 ### conda <a name="paragraph-installation-conda"></a>
