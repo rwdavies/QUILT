@@ -7,7 +7,7 @@ Release date: Dec 26, 2021
 
 Changes in latest version
 
-1. Simplify how QUILT HLA reference packages are built
+1. Simplify how QUILT HLA reference packages are built 
 
 For details of past changes please see [CHANGELOG](CHANGELOG.md).
 
