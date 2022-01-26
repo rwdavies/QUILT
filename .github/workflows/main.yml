@@ -24,10 +24,6 @@ jobs:
         with:
           use-public-rspm: true
 
-      - uses: r-lib/actions/setup-r-dependencies@v1
-        with:
-          extra-packages: rcmdcheck
-
       - name: Install dependencies
         run: ./scripts/install-dependencies.sh
 
