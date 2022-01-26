@@ -12,15 +12,15 @@ output_date=2021_12_28
 ipdigmt_version=3.39
 ipdigmt_link=https://github.com/ANHIG/IMGTHLA/blob/032815608e6312b595b4aaf9904d5b4c189dd6dc/Alignments_Rel_3390.zip?raw=true
 
-ipdigmt_version=3.43
-ipdigmt_link=https://github.com/ANHIG/IMGTHLA/blob/3430/Alignments_Rel_3430.zip?raw=true
+##ipdigmt_version=3.43
+##ipdigmt_link=https://github.com/ANHIG/IMGTHLA/blob/3430/Alignments_Rel_3430.zip?raw=true
 
 
 ##
 ## change some things here, potentially
 ##
 
-for i in $(seq 2 3)
+for i in 2 3 1
 do
 
     echo ========================= i=${i} ======================== 
@@ -104,7 +104,7 @@ do
 	cat bamlist.txt | xargs -l basename > bamlist2.txt
 	mv bamlist2.txt bamlist.txt
 	tar -cvf QUILT_HLA_example_bams_${output_date}.tar *2.0X*bam* bamlist.txt
-v	chmod 755 QUILT_HLA_example_bams_${output_date}.tar
+	chmod 755 QUILT_HLA_example_bams_${output_date}.tar
 	rsync -av QUILT_HLA_example_bams_${output_date}.tar ${SAVE_DIR}
 	cd "${QUILT_DIR}"	
     fi

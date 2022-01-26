@@ -7,7 +7,7 @@ Here code to generate the provided reference panel data package is provided and 
 Where you want to store the files as you work on them, and where the output files should go. Here the files are keyed on an output date, to make it easier
 
 ```
-output_date=2021_12_26test
+output_date=2021_12_27
 inputs_dir=/data/smew1/rdavies/quilt_hla_${output_date}/
 test_dir=/data/smew1/rdavies/quilt_hla_${output_date}/
 reference_package_dir=${inputs_dir}quilt_hla_reference_panel_files/
@@ -44,11 +44,10 @@ Here we download the IPD-IGMT data. These links can be determined from the IPD-I
 ipdigmt_link=https://github.com/ANHIG/IMGTHLA/blob/032815608e6312b595b4aaf9904d5b4c189dd6dc/Alignments_Rel_3390.zip?raw=true
 
 cd ${test_dir}
-#wget ${ipdigmt_link}
-rsync -av /data/smew1/rdavies/quilt_hla_2021_12_24_3430/Align* ${inputs_dir}
+wget ${ipdigmt_link}
 ipdigmt_filename_extra=`basename ${ipdigmt_link}`
 ipdigmt_filename=`basename ${ipdigmt_link} | sed 's/?raw=true//g'`
-#mv ${ipdigmt_filename_extra} ${ipdigmt_filename}
+mv ${ipdigmt_filename_extra} ${ipdigmt_filename}
 ```
 
 Here we download the database of HLA alleles

@@ -33,26 +33,26 @@ First, download some prepared reference panel data. This reference panel package
 This example uses a reference panel data package with some of the reference samples excluded(e.g. NA12878). For normal use, use a panel without samples removed. See [Reference packages](#reference-packages) for more details.
 
 ```
-wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar ## or curl -O
-tar -xvf QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar
+wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_demonstration_3.43_2021_12_26.tar ## or curl -O
+tar -xvf QUILT_HLA_reference_package_demonstration_3.43_2021_12_26.tar
 ```
 
 Download some example bams
 ```
-wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_example_bams_2021_04_08.tar
-tar -xvf QUILT_HLA_example_bams_2021_04_08.tar
+wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_example_bams_2021_12_28.tar
+tar -xvf QUILT_HLA_example_bams_2021_12_28.tar
 ```
 
 HLA imputation for a particular region (here A) can be done as follows
 ```
 HLA_GENE="A"
+REF_DIR="quilt_hla_reference_panel_files_2021_12_26_demonstration_3.43"
 ./QUILT_HLA.R \
 --outputdir=quilt_output \
 --bamlist=bamlist.txt \
 --region=${HLA_GENE} \
---prepared_hla_reference_dir=quilt_hla_reference_panel_files_2021_04_08 \
---quilt_hla_haplotype_panelfile=quilt_hla_reference_panel_files_2021_04_08/quilt.hrc.hla.${HLA_GENE}.haplotypes.RData \
---hla_gene_region_file=hla_ancillary_files/hlagenes.txt \
+--prepared_hla_reference_dir=${REF_DIR} \
+--quilt_hla_haplotype_panelfile=${REF_DIR}/quilt.hrc.hla.${HLA_GENE}.haplotypes.RData \
 --dict_file=hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
 ```
 
