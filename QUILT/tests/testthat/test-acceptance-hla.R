@@ -2,6 +2,7 @@ simulate_hla_pseudo_acceptance_test_dataset <- function(
     hla_gene,
     ref_dir,
     ref_fasta,
+    dict_entries,
     nSamples = 1,
     cov = 1,
     readLength = 150,
@@ -44,10 +45,10 @@ simulate_hla_pseudo_acceptance_test_dataset <- function(
         reads <- lapply(1:nPairedReads, function(iRead) {
             ## choose start of first read
             r1s <- round(start + 2 * insert_size + runif(1) * (end - start - 4 * insert_size)) - start
-            r1e <- r1s + readLength
+            r1e <- r1s + readLength - 1
             ## 
             r2s <- r1e + insert_size
-            r2e <- r2s + readLength
+            r2e <- r2s + readLength - 1
             ## choose haplotype
             if (H[iRead] == 1) {
                 seq1 <- paste0(hap1[r1s:r1e], collapse = "")
@@ -57,32 +58,39 @@ simulate_hla_pseudo_acceptance_test_dataset <- function(
                 seq2 <- paste0(hap2[r2s:r2e], collapse = "")
             }
             ## now write out the bits
-            r1 <- paste0(c(
-                paste0("r00", iRead), "0", "chr6", r1s, "60",
+            r1 <- list(
+                paste0("r00", iRead), "0", "chr6", r1s + start - 1, "60",
                 cigar, "*", "0", "0",
                 seq1, bq
-            ), collapse = "\t")
-            r2 <- paste0(c(
-                paste0("r00", iRead), "0", "chr6", r2s, "60",
+            )
+            r2 <- list(
+                paste0("r00", iRead), "0", "chr6", r2s + start - 1, "60",
                 cigar, "*", "0", "0",
                 seq2, bq
-            ), collapse = "\t")
-            paste0(r1, "\n", r2, "\n")
+            )
+            list(r1, r2)
         })
+        ## make one read per
+        reads <- c(lapply(reads, function(x) x[[1]]), lapply(reads, function(x) x[[2]]))
+        reads <- reads[order(sapply(reads, function(x) x[[4]]))]
+        ##
+        reads <- sapply(reads, function(x) paste0(x, collapse = "\t"))
+        reads <- paste0(reads, collapse = "\n")
+        
         
         sam <- paste0(
             "@HD\tVN:1.5\tSO:coordinate\n",
-            sam_head,
+            sam_head, "\n",
             "@RG\tID:7369_8x15\tSM:sample", iSample, "\n",
-            paste0(reads, sep = "\n"), collapse = ""
+            reads
         )
-        
+
         ## normal sequencing reads OK
         bam_file <- make_simple_bam(
             file_stem = tempfile(),
             sam = sam
         )
-
+        
         ## for those in the gene itself
         ## put into header
         
@@ -118,6 +126,22 @@ simulate_hla_pseudo_acceptance_test_dataset <- function(
 }
 
 
+if ( 1 == 0 ) {
+    
+    library("testthat")
+    library("QUILT")
+    dir <- "~/proj/QUILT/"
+    setwd(paste0(dir, "/QUILT/R"))
+    a <- dir(pattern = "*.R")
+    b <- grep("~", a)
+    if (length(b) > 0) {
+        a <- a[-b]
+    }
+    o <- sapply(a, source)
+
+
+}
+
 
 ## can start using real data (run test if it exists)
 ## then can simulate what haplotypes to carry
@@ -126,14 +150,10 @@ simulate_hla_pseudo_acceptance_test_dataset <- function(
 
 test_that("can run acceptance test on HLA", {
 
-    skip("wip")
-
-    ## AM HERE
-    ## Not quite working yet it seems
-    ## Not sure I got the sam bit right in particular the header
+    ## this is quite a big file!
+    ref_dir <- "/well/davies/users/dcc832/quilt_hla_packages/quilt_hla_reference_panel_files_2021_12_28_benchmarking_3.43/"
 
     
-    ref_dir <- "/well/davies/users/dcc832/quilt_hla_packages/quilt_hla_reference_panel_files_2021_12_28_benchmarking_3.43/"
     hla_gene <- "A"
     ref_fasta <- "/well/davies/users/dcc832/single_imp/2020_10_25/refs/GRCh38_full_analysis_set_plus_decoy_hla.fa"
     
@@ -141,19 +161,19 @@ test_that("can run acceptance test on HLA", {
         skip("input data not available to test QUILT HLA")
     }
 
-    if (!file.exists(ref)) {
+    if (!file.exists(ref_fasta)) {
         skip("input data not available to test QUILT HLA")
     }
 
     outputdir <- tempdir()
     dict_entries <- read.table("~/proj/QUILT/hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict", sep = "\t", comment.char = "", skip = 1)
-    ## where do these go in here
-    tail(dict_file)
 
+    ## source("~/proj/QUILT/QUILT/tests/testthat/test-acceptance-hla.R")
     data_package <- simulate_hla_pseudo_acceptance_test_dataset(
         hla_gene = hla_gene,
         ref_dir = ref_dir,
         ref_fasta = ref_fasta,
+        dict_entries = dict_entries,
         nSamples = 1,
         cov = 1,
         readLength = 150,
@@ -162,6 +182,10 @@ test_that("can run acceptance test on HLA", {
     )
 
     bamlist <- data_package$bamlist
+
+    ## UGH am here
+    ## some stupid error somehow!
+    ## really would benefit from running faster!
     
     ## 
     QUILT_HLA(
@@ -172,5 +196,10 @@ test_that("can run acceptance test on HLA", {
         quilt_hla_haplotype_panelfile = file.path(ref_dir, paste0("quilt.hrc.hla.", hla_gene, ".haplotypes.RData")),
         dict_file = file.path("~/proj/QUILT/hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict")
     )
+    ## 
+    
+    ## check that the inferred type is correct
 
+    
+    
 })
