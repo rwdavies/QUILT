@@ -22,15 +22,15 @@ Here we show how we get reference haplotype data, in this case 1000 Genomes proj
 ```
 cd ${inputs_dir}
 oneKG_vcf_name=CCDG_14151_B01_GRM_WGS_2020-08-05_chr6.filtered.shapeit2-duohmm-phased.vcf.gz
-#wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/${oneKG_vcf_name}
-#wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/${oneKG_vcf_name}.tbi
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/${oneKG_vcf_name}
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/${oneKG_vcf_name}.tbi
 
-rsync -av /data/smew1/rdavies/quilt_hla_2021_12_24_3430/one* ${inputs_dir}
-rsync -av /data/smew1/rdavies/quilt_hla_2021_12_24_3430/*vcf* ${inputs_dir}
+#rsync -av /data/smew1/rdavies/quilt_hla_2021_12_24_3430/one* ${inputs_dir}
+#rsync -av /data/smew1/rdavies/quilt_hla_2021_12_24_3430/*vcf* ${inputs_dir}
 
-#bcftools view --output-file oneKG.temp.vcf.gz --output-type z --min-alleles 2 --max-alleles 2 --types snps ${oneKG_vcf_name} chr6:25000000-34000000
-#tabix oneKG.temp.vcf.gz
-#bcftools convert --haplegendsample oneKG oneKG.temp.vcf.gz
+bcftools view --output-file oneKG.temp.vcf.gz --output-type z --min-alleles 2 --max-alleles 2 --types snps ${oneKG_vcf_name} chr6:25000000-34000000
+tabix oneKG.temp.vcf.gz
+bcftools convert --haplegendsample oneKG oneKG.temp.vcf.gz
 reference_haplotype_file=${inputs_dir}oneKG.hap.gz
 reference_legend_file=${inputs_dir}oneKG.legend.gz
 reference_sample_file=${inputs_dir}oneKG.samples
