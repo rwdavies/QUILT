@@ -26,6 +26,16 @@ check_mclapply_OK <- function(out, stop_message = "An error occured during QUILT
     return(NULL)
 }
 
+check_system_OK <- function(out, stop_message = "An error occured during QUILT. The first such error is above") {
+    status <- attr(out, "status")    
+    if (length(status) > 0) {
+        if (status > 0) {
+            stop(stop_message)
+        }
+    }
+    NULL
+}
+
 
 ## for this in the future use from STITCH
 ## am too lazy to export and re-version STITCH right now
