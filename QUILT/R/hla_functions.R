@@ -540,9 +540,9 @@ get_that2 <- function(
     ## find all the hla-a cases to pull reads in
     ## only for the canonical six regions is below helpful!!
     temp <- as.vector(this[(grep(paste("HLA-", region,sep=""),this[,2])),2:3])
-    temp[,1] <- gsub("SN:","",temp[,1])
-    temp[,2] <- gsub("LN:","",temp[,2])
     if(nrow(temp) > 0){
+        temp[, 1] <- gsub("SN:","",temp[,1])
+        temp[, 2] <- gsub("LN:","",temp[,2])
         temp2 <- paste(temp[, 1],collapse=" ")
         temp2 <- gsub("[*]",'\\\\*',temp2)
         ## needs samtools 1.10 or greater

@@ -2,15 +2,15 @@ set -e
 
 if [ ! -f QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar.gz ]
 then
-    wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar.gz ## or curl -O
+    wget https://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar.gz ## or curl -O
 fi
 tar -xvf QUILT_HLA_reference_package_samples_excluded_2021_04_08.tar.gz
 
-if [ ! -f QUILT_HLA_example_bams_2021_04_08.tar ]
+if [ ! -f QUILT_HLA_example_bams_2021_12_28.tar ]
 then
-    wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_example_bams_2021_04_08.tar
+    wget https://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_example_bams_2021_12_28.tar
 fi
-tar -xvf QUILT_HLA_example_bams_2021_04_08.tar
+tar -xvf QUILT_HLA_example_bams_2021_12_28.tar
 
 HLA_GENE="A"
 ./QUILT_HLA.R \
