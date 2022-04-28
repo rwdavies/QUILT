@@ -179,6 +179,12 @@ QUILT_HLA <- function(
     ##
     ## do the normal QUILT part first. don't need to save this per-se
     ##
+    dir.create(tempdir(), showWarnings = FALSE) ## shouldn't need to create?
+    if (!dir.exists(tempdir())) {
+        stop("R Cannot create a useable tempdir using tempdir(). Please investigate this")
+    }
+
+    
     outfile1 <- tempfile()    
     QUILT(
         outputdir = tempdir(),
