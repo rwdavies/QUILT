@@ -549,6 +549,14 @@ get_that2 <- function(
                 temp[, 1] <- gsub("SN:","",temp[,1])
             },
             error = function(e){
+                print("---this check---")
+                print(class(this))
+                print(head(this))
+                print("---intermediate check---")
+                print(w)
+                print(class(head(this[w, 2:3, drop = FALSE])))
+                print(class(as.vector(head(this[w, 2:3, drop = FALSE]))))
+                print("temp check")
                 print(temp)
                 print(class(temp))
                 print(length(temp))
