@@ -540,7 +540,8 @@ get_that2 <- function(
     ## find all the hla-a cases to pull reads in
     ## only for the canonical six regions is below helpful!!
     w <- grep(paste("HLA-", region,sep=""), this[,2])
-    temp <- as.vector(this[w, 2:3, drop = FALSE])
+    ##temp <- as.vector(this[w, 2:3, drop = FALSE])
+    temp <- this[w, 2:3, drop = FALSE]
     that2 <- that
     check <- length(w) > 0
     if (is.logical(check) && length(check) == 1 && !is.na(check) && check) {
