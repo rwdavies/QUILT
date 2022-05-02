@@ -539,43 +539,43 @@ get_that2 <- function(
 ) {
     ## find all the hla-a cases to pull reads in
     ## only for the canonical six regions is below helpful!!
-    temp <- as.vector(this[(grep(paste("HLA-", region,sep=""),this[,2])),2:3])
+    w <- grep(paste("HLA-", region,sep=""), this[,2])
+    temp <- as.vector(this[w, 2:3])
     that2 <- that
-    if(length(temp) > 0) {
-        if (nrow(temp) > 0) {
-            temp[, 1] <- gsub("SN:","",temp[,1])
-            temp[, 2] <- gsub("LN:","",temp[,2])
-            temp2 <- paste(temp[, 1],collapse=" ")
-            temp2 <- gsub("[*]",'\\\\*',temp2)
-            ## needs samtools 1.10 or greater
-            ## file2 <- file.path(outputdir, paste0(bamfile,"hla",region,"othermapping.txt"))
-            file2 <- tempfile()
-            cmd <- paste0(
-                "samtools view ", bamfile, " ",
-                temp2,
-                " > ",
-                file2
-            )
-            system(cmd, intern = TRUE, wait = TRUE)
-            if (!file.exists(file2)) {
-                Sys.sleep(4)
-            }
-            ## reads mapping to our chosen region
-            ## read in, first check if empty
-            aa <- system(paste0("ls -las ",file2), intern = TRUE)
-            aa <- substring(aa, 1, 1)
-            if(aa==0) {
-                that2 <- matrix(nrow=0,ncol=ncol(that))
-            }
-            if(aa!=0){
-                that2 <- read.delim(file2,header = FALSE)
-                that2 <- as.matrix(that2)
-                if(is.vector(that2)) {
-                    that2 <- matrix(that2, nrow = 1)
-                }
-            }
-            unlink(file2)
+    check <- length(w) > 0
+    if (is.logical(check) && length(check) == 1 && !is.na(check) && check) {
+        temp[, 1] <- gsub("SN:","",temp[,1])
+        temp[, 2] <- gsub("LN:","",temp[,2])
+        temp2 <- paste(temp[, 1],collapse=" ")
+        temp2 <- gsub("[*]",'\\\\*',temp2)
+        ## needs samtools 1.10 or greater
+        ## file2 <- file.path(outputdir, paste0(bamfile,"hla",region,"othermapping.txt"))
+        file2 <- tempfile()
+        cmd <- paste0(
+            "samtools view ", bamfile, " ",
+            temp2,
+            " > ",
+            file2
+        )
+        system(cmd, intern = TRUE, wait = TRUE)
+        if (!file.exists(file2)) {
+            Sys.sleep(4)
         }
+        ## reads mapping to our chosen region
+        ## read in, first check if empty
+        aa <- system(paste0("ls -las ",file2), intern = TRUE)
+        aa <- substring(aa, 1, 1)
+        if(aa==0) {
+            that2 <- matrix(nrow=0,ncol=ncol(that))
+        }
+        if(aa!=0){
+            that2 <- read.delim(file2,header = FALSE)
+            that2 <- as.matrix(that2)
+            if(is.vector(that2)) {
+                that2 <- matrix(that2, nrow = 1)
+            }
+        }
+        unlink(file2)
     }
     that2
 }
