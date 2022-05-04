@@ -3,7 +3,7 @@ QUILT
 **__Current Version: 1.0.3__**
 Release date: Dec 26, 2021
 
-![Build Status](https://github.com/rwdavies/QUILT/actions/workflows/main.yml/badge.svg)
+![Build Status](https://github.com/rwdavies/QUILT/workflows/CI/badge.svg)
 
 Changes in latest version
 
