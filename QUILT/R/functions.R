@@ -1160,7 +1160,8 @@ get_and_impute_one_sample <- function(
         per_sample_alleleCount = per_sample_alleleCount,
         per_sample_vcf_col = per_sample_vcf_col,
         super_out_hap_dosages = super_out_hap_dosages,
-        super_out_read_labels = super_out_read_labels
+        super_out_read_labels = super_out_read_labels,
+        super_out_dosage_matrix = super_out_dosage_matrix
     )
 
     ## phasing_read_labels = phasing_read_labels,
