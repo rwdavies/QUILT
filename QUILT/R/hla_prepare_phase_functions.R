@@ -511,7 +511,7 @@ hla_perform_step_1_phasing <- function(
 
         ##106 left to phase
 
-        temp=cbind(ourtypes1,ourtypes2,dist11,dist12,dist21,dist22,phase1,phase2)[!phased,][1:20,]
+        ##temp=cbind(ourtypes1,ourtypes2,dist11,dist12,dist21,dist22,phase1,phase2)[!phased,][1:20,]
 
         ##2388 phased alleles
         ##to phase rest, try using known phases to remake predictions,  using all sites
@@ -626,7 +626,7 @@ hla_perform_step_1_phasing <- function(
             ##print(table(phased2b[phased1 | phased2],phased2[phased1 | phased2]))
             ##
             ##
-            cbind(ourtypes1,ourtypes2,dist11,dist12,dist21,dist22,phase1b,phase2b)[!phased1b & !phased2b,]
+            ##cbind(ourtypes1,ourtypes2,dist11,dist12,dist21,dist22,phase1b,phase2b)[!phased1b & !phased2b,]
             update=!phased1 & !phased2
             phased1[update]=phased1b[update]
             phased2[update]=phased2b[update]
