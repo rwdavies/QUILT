@@ -2530,3 +2530,30 @@ estimate_bq <- function(truth_labels, sampleReads, truth_haps) {
 }
 
     
+
+
+recast_haps <- function(hd1, hd2, gp, err = 0.001) {
+    gt1 <- round(hd1) + round(hd2)
+    max_val <- gp[, 1]
+    gt3 <- rep(0, nrow(gp))
+    for(i in 2:3) {
+        w <- gp[, i] > max_val
+        gt3[w] <- i - 1
+        max_val[w] <- gp[w, i]
+    }
+    ## 
+    to_change <- which(gt3 != gt1)
+    ## easy one
+    hd1[to_change][gt3[to_change] == 0] <- 0
+    hd2[to_change][gt3[to_change] == 0] <- 0
+    hd1[to_change][gt3[to_change] == 2] <- 1
+    hd2[to_change][gt3[to_change] == 2] <- 1
+    ## hard one
+    a1 <- hd1[to_change][gt3[to_change] == 1]    
+    a2 <- hd2[to_change][gt3[to_change] == 1]
+    hd1[to_change][gt3[to_change] == 1][a1 > a2] <- 1
+    hd2[to_change][gt3[to_change] == 1][a1 > a2] <- 0
+    hd1[to_change][gt3[to_change] == 1][a1 <= a2] <- 0
+    hd2[to_change][gt3[to_change] == 1][a1 <= a2] <- 1
+    return(list(hd1 = hd1, hd2 = hd2))
+}
