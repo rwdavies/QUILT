@@ -153,8 +153,17 @@ test_that("can build necessary components from make_rhb_t_equality", {
     ## make them mostly one of three options, with a few small changes
     K <- 500
     nSNPs <- 100
-    
-    reference_haps <- array(as.integer(runif(nSNPs * K) > 0.5), c(nSNPs, K))
+
+    reference_haps <- array(0L, c(nSNPs, K))
+    ## introduce some shapiness to this
+    small <- array(as.integer(runif(nSNPs * 10) > 0.5), c(nSNPs, 10))
+    for(k in 1:K) {
+        reference_haps[, k] <- small[, sample(10, 1)]
+        if ((k %% 10) == 0) {
+            small[sample(nSNPs, 1), sample(10, 1)] <- sample(c(0L, 1L), 1)
+        }
+    }
+    ## 
     rhi <- reference_haps
     rhi_t <- t(rhi)
     rhb_t <- STITCH::make_rhb_t_from_rhi_t(rhi_t)
@@ -162,7 +171,7 @@ test_that("can build necessary components from make_rhb_t_equality", {
     
     ref_error <- 0.01
     ref_one_minus_error <- 1 - ref_error
-    nMaxDH <- 3
+    nMaxDH <- 6
     
     for(nMaxDH in c(3, 255, NA)) {
     
@@ -179,6 +188,7 @@ test_that("can build necessary components from make_rhb_t_equality", {
         hapMatcher <- out[["hapMatcher"]]
         eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
         eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
+        ## eMatDH_special_symbols_list <- out[["eMatDH_special_symbols_list"]]
         nrow_which_hapMatcher_0 <- out[["nrow_which_hapMatcher_0"]]
         ##
         ## perform
@@ -189,6 +199,26 @@ test_that("can build necessary components from make_rhb_t_equality", {
         } else {
             expect_equal(nrow_which_hapMatcher_0, sum(sapply(eMatDH_special_values_list, length)))
         }
+
+        ## ##
+        ## ## check can re-build
+        ## ##
+        ## for(k in 1:nrow(rhb_t)) {
+        ##     for(iGrid in 1:ncol(rhb_t)) {
+        ##         i <- hapMatcher[k, iGrid]
+        ##         if (value > 0) {
+        ##             b <- distinctHapsB[i, ]
+        ##         } else {
+        ##             eMatDH_special_symbols_list[[iGrid]]
+        ##         }
+        ##         expect_equal(rhb_t[k, iGrid], b)
+        ##     }
+        ## }
+        ## ##
+        ## ## OK so one version is to just run with infinite nMaxDH
+        ## ## then return list versions of distinctHapsB and distinctHapsIE
+        ## ## this will be much better for mspbwt I think
+        ## ## 
 
     }
 

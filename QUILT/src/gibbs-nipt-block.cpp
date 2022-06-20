@@ -1101,7 +1101,7 @@ Rcpp::List Rcpp_make_gibbs_considers(
     int previous_grid = wif0(previous_block_first_iRead);
     int previous_block = blocked_grid(previous_grid);
     int this_grid, this_block;
-    for(int this_iRead = 1; this_iRead < nReads; this_iRead++) {    
+    for(int this_iRead = 1; this_iRead < nReads; this_iRead++) {
         this_grid = wif0(this_iRead);
         this_block = blocked_grid(this_grid);
         if (this_iRead == (nReads - 1)) {

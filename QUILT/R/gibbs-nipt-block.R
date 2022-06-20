@@ -1748,7 +1748,8 @@ plot_attempt_to_reblock_snps <- function(
     sampleReads,
     n_block_it_to_plot,
     wif0,
-    grid
+    grid,
+    only_plot_confident_reads = TRUE
 ) {
     x <- out$gibbs_block_output_list[[n_block_it_to_plot]][["block_defining"]]
     blocked_snps <- x[["blocked_snps"]]
@@ -1809,8 +1810,9 @@ plot_attempt_to_reblock_snps <- function(
     for(i_block_type in 1:2) {
         ylim <- c(0, max(break_thresh, max(smoothed_rate, na.rm = TRUE)))
         ylim <- c(0, max(break_thresh, quantile(smoothed_rate, probs = c(0.99))))
-        par(mar = c(0, 0, 3, 0))            
-        plot(x = 0, y = 0, xlab = "Physical position", ylab = "Rate", main = "Location of shuffles to check", ylim = ylim, xlim = xlim)
+        par(mar = c(0, 0, 3, 0))
+        main <- c("Location of shuffles to check (block)", "Location of shuffles to check (shard)")[i_block_type]
+        plot(x = 0, y = 0, xlab = "Physical position", ylab = "Rate", main = main, ylim = ylim, xlim = xlim)
         add_grey_background(L_grid)
         y <- smoothed_rate
         y[y > ylim[2]] <- ylim[2]
@@ -1818,9 +1820,10 @@ plot_attempt_to_reblock_snps <- function(
         if (i_block_type == 1) {
             n <- length(consider_snp_start_0_based) - 1
         } else {
-            n <- length(consider_snp_start_0_based) - 1 - 1
+            n <- length(consider_snp_start_0_based) - 1
         }
         for(iBlock in 0:n) {
+            ## 
             l <- L[consider_snp_start_0_based[iBlock + 1] + 1]
             r <- L[consider_snp_end_0_based[iBlock + 1] + 1]
             abline(v = l, col = "red")
@@ -1858,18 +1861,21 @@ plot_attempt_to_reblock_snps <- function(
         abline(h = break_thresh, col = "black", lwd = 2)
     }
     ##
-    ##
+    ## plot gamms and reads
     ##
     for(i_before in 1:3) {
         if (i_before == 1) {
+            what_we_are_plotting <- "Before block gibbs"
             read_labels <- before_read_labels
             gamma1_t <- before_gamma1_t
             gamma2_t <- before_gamma2_t            
         } else if (i_before == 2) {
+            what_we_are_plotting <- "After block gibbs"            
             read_labels <- after_read_labels
             gamma1_t <- after_gamma1_t
             gamma2_t <- after_gamma2_t            
         } else {
+            what_we_are_plotting <- "After shard"                        
             read_labels <- after_shard_read_labels
             gamma1_t <- after_shard_gamma1_t
             gamma2_t <- after_shard_gamma2_t            
@@ -1885,16 +1891,21 @@ plot_attempt_to_reblock_snps <- function(
             truth[uncertain_truth_labels] <- 0
         }
         y <- 0.1 + (read_labels - 1) / 2 + runif(length(read_labels)) / 4
-        for(iRead in 1:length(sampleReads)) {
-            u <- range(sampleReads[[iRead]][[4]])
-            if (have_truth_haplotypes) {
-                col <- c("black", "blue", "red")[truth[iRead] + 1]
-            } else {
-                col <- "black"
-            }
-            lwd <- 1
-            segments(x0 = L[u[1] + 1], x1 = L[u[2] + 1], y0 = y[iRead], y1 = y[iRead], col = col, lwd = lwd)
+        lwd <- 1.5
+        ## 
+        ##
+        uu <- sapply(sampleReads, function(x) range(x[[4]])) + 1
+        if (have_truth_haplotypes) {
+            col <- c("black", "blue", "red")[truth + 1]
+        } else {
+            col <- rep("black", length(truth))
         }
+        if (only_plot_confident_reads) {
+            w <- truth != 0
+        } else {
+            w <- rep(TRUE, length(truth))
+        }
+        segments(x0 = L[uu[1, w]], x1 = L[uu[2, w]], y0 = y[w], y1 = y[w], col = col[w], lwd = lwd)
         ## 
         ##
         ## 3) plot gammas
@@ -1908,8 +1919,8 @@ plot_attempt_to_reblock_snps <- function(
             scale_dosage <- 0
             colStore <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
             nCols <- length(colStore)
-            if (i_which == 1) { gammaK_t <- gamma1_t;   main <- "Hap 1"}
-            if (i_which == 2) { gammaK_t <- gamma2_t;   main <- "Hap 2" }
+            if (i_which == 1) { gammaK_t <- gamma1_t;   main <- paste0("Hap 1 - ", what_we_are_plotting)}
+            if (i_which == 2) { gammaK_t <- gamma2_t;   main <- paste0("Hap 2 - ", what_we_are_plotting)}
             ##
             K <- nrow(gammaK_t)
             ylim <- c(0, 1 + scale_dosage + scale_dosage)
@@ -1948,8 +1959,8 @@ plot_attempt_to_reblock_snps <- function(
                 }
             }
             for(iBlock in 0:(length(consider_snp_start_0_based) - 1)) {
-                l <- L_grid[consider_snp_start_0_based[iBlock + 1] + 1]
-                r <- L_grid[consider_snp_end_0_based[iBlock + 1] + 1]
+                l <- L[consider_snp_start_0_based[iBlock + 1] + 1]
+                r <- L[consider_snp_end_0_based[iBlock + 1] + 1]
                 abline(v = l, col = "red")
                 abline(v = r, col = "red")
                 text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.1, labels = iBlock)

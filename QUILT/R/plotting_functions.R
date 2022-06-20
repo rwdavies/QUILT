@@ -85,12 +85,6 @@ plot_single_gamma_dosage <- function(
     buffer,
     output_plot = TRUE
 ) {
-    ##load("~/Downloads/atta/haps.NA12878HT.chr20.2000001.4000000_igs.1.it1.gibbs.png.RData")
-   ## setwd("~/Downloads/atta")
-    ##regionStart <- 1800000
-    ##regionEnd <- 2000000
-    ##buffer <- 200000
-    ##outname="temp.png"
     ##
     colStore <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
     smoothV <- 10

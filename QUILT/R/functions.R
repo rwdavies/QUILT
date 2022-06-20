@@ -1986,7 +1986,7 @@ impute_one_sample <- function(
         return_extra = FALSE,
         return_genProbs = return_genProbs,
         return_gamma = as.logical(return_gamma | make_plots),
-        return_hapProbs = return_hapProbs,
+        return_hapProbs = as.logical(return_hapProbs | make_plots),
         return_p_store = return_p_store,
         return_gibbs_block_output = return_gibbs_block_output,
         return_advanced_gibbs_block_output = return_advanced_gibbs_block_output,

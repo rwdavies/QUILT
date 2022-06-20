@@ -37,7 +37,7 @@ double print_times(
     if( suppressOutput == 0 ) {    
         double cur=clock();
         std::cout << std::setw (40) << past_text;
-        printf ("- %.6f cpu sec -", ((double)cur - (double)prev)* 1.0e-6);
+        printf ("- %.6f cpu sec *1000 -", ((double)cur - (double)prev)* 1.0e-3);
         std::cout << next_text << std::endl;
         prev=cur;
     }
