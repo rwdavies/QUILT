@@ -390,10 +390,15 @@ make_rhb_t_equality <- function(
     ## matrix with nMaxDH x nGrids
     ## matrix with the distinct haplotypes
     distinctHapsB <- array(0, c(nMaxDH_default, nGrids)) ## store encoded binary
+    ## --- all_symbols
+    ## list with nGrid entries
+    ## each entry is a matrix with each row containing the ID of a symbol, and the 1-based number of entries
+    all_symbols <- list(1:nGrids)    
     for(iGrid in 1:nGrids) {
         ## can safely ignore the end, it will be zeros what is not captured
         a <- table(rhb_t[, iGrid], useNA = "always")
         a <- a[order(-a)]
+        a <- a[a > 0]
         if (infer_nMaxDH) {
             if (length(a) > nMaxDH_default) {
                 temp_counter[, iGrid] <- a[1:nMaxDH_default]
@@ -407,6 +412,11 @@ make_rhb_t_equality <- function(
         ## match against
         hapMatcher[, iGrid] <- as.integer(match(rhb_t[, iGrid], distinctHapsB[, iGrid]))
         hapMatcher[which(is.na(hapMatcher[, iGrid])), iGrid] <- 0L
+        ## 
+        a <- cbind(names_a, a)
+        rownames(a) <- NULL
+        colnames(a) <- c("symbol", "count")
+        all_symbols[[iGrid]] <- a        
     }
     ##
     ## now, if we're inferring this, choose appropriate re-value downwards
@@ -472,6 +482,15 @@ make_rhb_t_equality <- function(
         eMatDH_special_values_list <- lapply(1:length(starts), function(i) {
             return(as.integer(which_hapMatcher_0[starts[i]:ends[i], 1]))
         })
+        ##
+        ## fix all_symbols (these aren't stored here)
+        ##
+        for(iGrid in 1:nGrids) {
+            a <- all_symbols[[iGrid]]
+            if (nrow(a) > nMaxDH) {
+                all_symbols[[iGrid]] <- a[1:nMaxDH, ]
+            }
+        }
     } else {
         eMatDH_special_values_list <- list()
     }
@@ -483,7 +502,8 @@ make_rhb_t_equality <- function(
             hapMatcher = hapMatcher,
             eMatDH_special_values_list = eMatDH_special_values_list,
             eMatDH_special_grid_which = eMatDH_special_grid_which,
-            nrow_which_hapMatcher_0 = nrow_which_hapMatcher_0
+            nrow_which_hapMatcher_0 = nrow_which_hapMatcher_0,
+            all_symbols = all_symbols
         )
     )
 }
