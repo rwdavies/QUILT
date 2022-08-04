@@ -451,6 +451,31 @@
 ## }
 
 
+## zilong pbwt.cpp
+## @param pbwt is constructed by pbwt_build in pbwt.cpp
+select_new_haps_pbwt <- function(
+    hapProbs_t,
+    pbwt,
+    Kfull,
+    Ksubset,
+    L = 2,
+    Step = 8
+) {
+  vals <- unlist(sapply(1:2, function(x) {
+    hap <- round(hapProbs_t[x, ])
+    unique(find_neighour_haps(pbwt, hap, L, Step))
+  }))
+  vals <- unique(vals) + 1 # 1-based
+  if (length(vals) >= Ksubset) {
+    new_haps <- vals[1:Ksubset]
+  } else {
+    new_haps <- array(NA, Ksubset)
+    new_haps[1:length(vals)] <- vals
+    new_haps[-c(1:length(vals))] <- sample(setdiff(1:Kfull, vals), Ksubset - length(vals), replace = FALSE)
+  }
+  new_haps
+}
+
 
 
 get_and_impute_one_sample <- function(
@@ -536,7 +561,8 @@ get_and_impute_one_sample <- function(
     block_gibbs_iterations,
     plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc,
-    output_gt_phased_genotypes
+    output_gt_phased_genotypes,
+    pbwt = NULL
 ) {
 
     
@@ -680,7 +706,7 @@ get_and_impute_one_sample <- function(
         
         ##
         ## possibly do truth
-        ## 
+        ## note: ignore this
         if (have_truth_haplotypes) {
 
             if (verbose) {
@@ -806,6 +832,9 @@ get_and_impute_one_sample <- function(
                 return_genProbs <- FALSE
                 return_hapProbs <- FALSE
             }
+            if (!is.null(pbwt)) return_hapProbs <- TRUE
+
+            print_message(paste0("i_gibbs, which_haps_to_use = ", paste(which_haps_to_use, collapse = ",")))
 
             gibbs_iterate <- impute_one_sample(
                 distinctHapsIE = distinctHapsIE,
@@ -876,7 +905,7 @@ get_and_impute_one_sample <- function(
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc
             )
 
-            if (hla_run) {            
+            if (hla_run) {
                 ## final phasing it, save gamma
                 if (
                 (i_it == n_seek_its)
@@ -911,6 +940,7 @@ get_and_impute_one_sample <- function(
 
             read_labels <- gibbs_iterate$double_list_of_ending_read_labels[[1]][[1]]
             previously_selected_haplotypes <- sample(which_haps_to_use, Ksubset - Knew)
+            # is equavaliant to hapProbs_t
             return_dosage <- (have_truth_haplotypes | record_interim_dosages | (i_it == n_seek_its))
 
             impute_all <- impute_using_everything(
@@ -922,7 +952,7 @@ get_and_impute_one_sample <- function(
                 full_betaHat_t = full_betaHat_t,
                 full_gamma_t = full_gamma_t,
                 full_gammaSmall_t = full_gammaSmall_t,
-                full_gammaSmall_cols_to_get = full_gammaSmall_cols_to_get,    
+                full_gammaSmall_cols_to_get = full_gammaSmall_cols_to_get,
                 full_transMatRate_t_H = full_transMatRate_t_H,
                 distinctHapsB =distinctHapsB,
                 distinctHapsIE = distinctHapsIE,
@@ -939,9 +969,9 @@ get_and_impute_one_sample <- function(
                 L_grid = L_grid,
                 L = L,
                 inRegion2 = inRegion2,
-                cM_grid = cM_grid,                
+                cM_grid = cM_grid,
                 ancAlleleFreqAll = ancAlleleFreqAll,
-                plot_description = paste0("it", i_it, ".full"),  
+                plot_description = paste0("it", i_it, ".full"),
                 return_good_haps = return_good_haps,
                 Knew = Knew,
                 return_dosage  = return_dosage,
@@ -957,13 +987,17 @@ get_and_impute_one_sample <- function(
                 minGLValue = minGLValue,
                 suppressOutput = suppressOutput
             )
-
             ## for next time
-            
-            which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
+            ## TODO which_haps_to_use should be returned by PBWT selection
+            if (is.null(pbwt)) {
+                which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
+            } else {
+                which_haps_to_use <- select_new_haps_pbwt(gibbs_iterate$hapProbs_t, pbwt, Kfull =  nrow(rhb_t), Ksubset = Ksubset,L = 2, Step = 8)
+            }
+
             hap1 <- impute_all[["dosage1"]]
             hap2 <- impute_all[["dosage2"]]
-            
+
             if (record_interim_dosages) {
                 dosage_matrix[, paste0("gibbs", i_it)] <- get_dosages_from_fbsoL(gibbs_iterate)
                 dosage_matrix[, paste0("all", i_it)] <- hap1 + hap2

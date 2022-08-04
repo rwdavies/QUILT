@@ -397,6 +397,18 @@ option_list <- list(
         type = "logical",
         help = "For testing purposes only [default FALSE] ",
         default = FALSE
+    ),
+    make_option(
+        "--vcf",
+        type = "character",
+        help = "zilong favors vcf. please feed vcf path to run PBWT [default NULL]",
+        default = NULL
+    ),
+    make_option(
+        "--zilong",
+        type = "logical",
+        help = "Using zilong's solution PBWT selection [default FALSE]",
+        default = FALSE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -468,5 +480,7 @@ QUILT(
     block_gibbs_iterations = eval(parse(text=opt$block_gibbs_iterations)),
     n_gibbs_burn_in_its = opt$n_gibbs_burn_in_its,
     plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods,
-    use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc
+    use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
+    vcf = opt$vcf,
+    zilong =  opt$zilong
 )

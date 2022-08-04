@@ -197,6 +197,16 @@ rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects <- functio
 }
 
 #' @export
+pbwt_build <- function(vcf, samples, region, N, M) {
+    .Call('_QUILT_pbwt_build', PACKAGE = 'QUILT', vcf, samples, region, N, M)
+}
+
+#' @export
+find_neighour_haps <- function(p, z, L = 1L, Step = 2L) {
+    .Call('_QUILT_find_neighour_haps', PACKAGE = 'QUILT', p, z, L, Step)
+}
+
+#' @export
 Rcpp_quilt_test_doubler <- function(a) {
     .Call('_QUILT_Rcpp_quilt_test_doubler', PACKAGE = 'QUILT', a)
 }

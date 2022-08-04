@@ -66,6 +66,8 @@
 #' @param n_gibbs_burn_in_its How many iterations to run the Gibbs sampler for each time it is run
 #' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
 #' @param use_small_eHapsCurrent_tc For testing purposes only
+#' @param vcf zilong favors vcf
+#' @param zilong Using zilong's solution
 
 #' @return Results in properly formatted version
 #' @author Robert Davies
@@ -136,9 +138,10 @@ QUILT <- function(
     block_gibbs_iterations = c(3,6,9),
     n_gibbs_burn_in_its = 20,
     plot_per_sample_likelihoods = FALSE,
-    use_small_eHapsCurrent_tc = FALSE
+    use_small_eHapsCurrent_tc = FALSE,
+    vcf = NULL,
+    zilong = FALSE
 ) {
-
 
     x <- as.list(environment())
     command_line <- paste0(
@@ -298,6 +301,28 @@ QUILT <- function(
     new_buffer <- buffer
     
     load(prepared_reference_filename)
+
+    ## now build PBWT using nSNPs, nrow(rhb_t) loaded from last step
+    if(zilong && is.null(vcf)) stop("zilong favors vcf file. please feed vcf file!")
+
+    if (zilong) {
+        s1 <- read.table(reference_sample_file, h = T)[,1]
+        if (reference_exclude_samplelist_file == "")
+        {
+            subsamples <- paste(s1, collapse = ",")
+        }
+        else
+        {
+            s2 <- read.table(reference_exclude_samplelist_file, h = F)[,1]
+            subsamples <- paste(s1[-which(s2%in%s1)], collapse = ",")
+        }
+        samtoolslike <- paste0(chr, ":", regionStart, "-", regionEnd)
+        pbwt <- pbwt_build(vcf, samples = subsamples, region = samtoolslike, N = nSNPs, M = nrow(rhb_t))
+        print_message("zilong build pbwt indecies successfully!")
+    } else {
+        pbwt <- NULL
+    }
+
 
     if (hla_run) {
 
@@ -688,7 +713,8 @@ QUILT <- function(
                 block_gibbs_iterations = block_gibbs_iterations,
                 plot_per_sample_likelihoods = plot_per_sample_likelihoods,
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
-                output_gt_phased_genotypes = output_gt_phased_genotypes
+                output_gt_phased_genotypes = output_gt_phased_genotypes,
+                pbwt = pbwt
             )
 
             if (out[["sample_was_imputed"]]) {

@@ -70,7 +70,9 @@ QUILT(
   block_gibbs_iterations = c(3, 6, 9),
   n_gibbs_burn_in_its = 20,
   plot_per_sample_likelihoods = FALSE,
-  use_small_eHapsCurrent_tc = FALSE
+  use_small_eHapsCurrent_tc = FALSE,
+  vcf = NULL,
+  zilong = FALSE
 )
 }
 \arguments{
@@ -205,6 +207,10 @@ QUILT(
 \item{plot_per_sample_likelihoods}{Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations}
 
 \item{use_small_eHapsCurrent_tc}{For testing purposes only}
+
+\item{vcf}{zilong favors vcf}
+
+\item{zilong}{Using zilong's solution}
 }
 \value{
 Results in properly formatted version
