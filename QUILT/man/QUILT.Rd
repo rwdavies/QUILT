@@ -72,6 +72,8 @@ QUILT(
   plot_per_sample_likelihoods = FALSE,
   use_small_eHapsCurrent_tc = FALSE,
   vcf = NULL,
+  pbwtL = 2,
+  pbwtS = 8,
   zilong = FALSE
 )
 }
@@ -209,6 +211,10 @@ QUILT(
 \item{use_small_eHapsCurrent_tc}{For testing purposes only}
 
 \item{vcf}{zilong favors vcf}
+
+\item{pbwtL}{How many neighouring haplotypes to select forward and backwards for each selection point [default 2]}
+
+\item{pbwtS}{How many SNPs as a step to do selection [default 8]}
 
 \item{zilong}{Using zilong's solution}
 }

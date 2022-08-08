@@ -562,6 +562,8 @@ get_and_impute_one_sample <- function(
     plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc,
     output_gt_phased_genotypes,
+    pbwtL = pbwtL,
+    pbwtS = pbwtS,
     pbwt = NULL
 ) {
 
@@ -992,7 +994,7 @@ get_and_impute_one_sample <- function(
             if (is.null(pbwt)) {
                 which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
             } else {
-                which_haps_to_use <- select_new_haps_pbwt(gibbs_iterate$hapProbs_t, pbwt, Kfull =  nrow(rhb_t), Ksubset = Ksubset,L = 2, Step = 8)
+                which_haps_to_use <- select_new_haps_pbwt(gibbs_iterate$hapProbs_t, pbwt, Kfull =  nrow(rhb_t), Ksubset = Ksubset,L = pbwtL, Step = pbwtS)
             }
 
             hap1 <- impute_all[["dosage1"]]

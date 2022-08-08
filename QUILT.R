@@ -405,6 +405,18 @@ option_list <- list(
         default = NULL
     ),
     make_option(
+        "--pbwtL",
+        type = "integer",
+        help = "How many neighouring haplotypes to select forward and backwards for each selection point [default 2] ",
+        default = 2
+    ),
+    make_option(
+        "--pbwtS",
+        type = "integer",
+        help = "How many SNPs as a step to do selection [default 8] ",
+        default = 8
+    ),
+    make_option(
         "--zilong",
         type = "logical",
         help = "Using zilong's solution PBWT selection [default FALSE]",
@@ -482,5 +494,7 @@ QUILT(
     plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
     vcf = opt$vcf,
+    pbwtL = opt$pbwtL,
+    pbwtS = opt$pbwtS,
     zilong =  opt$zilong
 )

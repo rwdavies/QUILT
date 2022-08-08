@@ -67,6 +67,8 @@
 #' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
 #' @param use_small_eHapsCurrent_tc For testing purposes only
 #' @param vcf zilong favors vcf
+#' @param pbwtL How many neighouring haplotypes to select forward and backwards for each selection point [default 2]
+#' @param pbwtS How many SNPs as a step to do selection [default 8]
 #' @param zilong Using zilong's solution
 
 #' @return Results in properly formatted version
@@ -140,6 +142,8 @@ QUILT <- function(
     plot_per_sample_likelihoods = FALSE,
     use_small_eHapsCurrent_tc = FALSE,
     vcf = NULL,
+    pbwtL = 2,
+    pbwtS = 8,
     zilong = FALSE
 ) {
 
@@ -714,6 +718,8 @@ QUILT <- function(
                 plot_per_sample_likelihoods = plot_per_sample_likelihoods,
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
                 output_gt_phased_genotypes = output_gt_phased_genotypes,
+                pbwtL = pbwtL,
+                pbwtS = pbwtS,
                 pbwt = pbwt
             )
 

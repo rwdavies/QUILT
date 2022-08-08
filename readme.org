@@ -3,7 +3,7 @@
 
 * Installation
 
-I uses *vcfpp.h* for parsing vcf/bcf, which depends on the =htslib=. Therefore make sure =htslib= is in your system path.
+I use https://github.com/Zilong-Li/vcfpp for parsing vcf/bcf, which depends on the =htslib=. Therefore make sure =htslib= is in your system path.
 
 #+begin_src shell
 git clone --recursive https://github.com/rwdavies/QUILT.git
@@ -38,6 +38,8 @@ run QUILT with PBWT
 --genetic_map_file=package_2021_01_15A/CEU-chr20-final.b38.txt.gz \
 --nGen=100 \
 --vcf=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.vcf.gz \
+--pbwtL=2 \
+--pbwtS=8 \
 --zilong=TRUE \
 --save_prepared_reference=TRUE
 #+end_src
