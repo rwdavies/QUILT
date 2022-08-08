@@ -70,6 +70,7 @@
 #' @param pbwtL How many neighouring haplotypes to select forward and backwards for each selection point [default 2]
 #' @param pbwtS How many SNPs as a step to do selection [default 8]
 #' @param zilong Using zilong's solution
+#' @param use_mspbwt Use msPBWT to select new haplotypes
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -87,7 +88,7 @@ QUILT <- function(
     nGibbsSamples = 7,
     n_seek_its = 3,
     Ksubset = 400,
-    Knew = 100,
+    Knew = 400,
     K_top_matches = 5,
     output_gt_phased_genotypes = TRUE,
     heuristic_match_thin = 0.1,
@@ -143,7 +144,8 @@ QUILT <- function(
     vcf = NULL,
     pbwtL = 2,
     pbwtS = 8,
-    zilong = FALSE
+    zilong = FALSE,
+    use_mspbwt = FALSE
 ) {
 
     x <- as.list(environment())
@@ -305,23 +307,26 @@ QUILT <- function(
 
     load(prepared_reference_filename)
 
+    if (zilong && use_mspbwt) {
+        stop("Please select only one of zilong or use_mspbwt")
+    }
+
     ## now build PBWT using nSNPs, nrow(rhb_t) loaded from last step
-    if(zilong && is.null(vcf)) stop("zilong favors vcf file. please feed vcf file!")
+    if(zilong && is.null(vcf)) stop("Zilong requires VCF file. Please feed vcf file!")
+
 
     if (zilong) {
+        print_message("Begin building Zilong PBWT indices")
         s1 <- read.table(reference_sample_file, h = T)[,1]
-        if (reference_exclude_samplelist_file == "")
-        {
+        if (reference_exclude_samplelist_file == "") {
             subsamples <- paste(s1, collapse = ",")
-        }
-        else
-        {
+        } else {
             s2 <- read.table(reference_exclude_samplelist_file, h = F)[,1]
             subsamples <- paste(s1[-which(s2%in%s1)], collapse = ",")
         }
         samtoolslike <- paste0(chr, ":", regionStart, "-", regionEnd)
         pbwt <- pbwt_build(vcf, samples = subsamples, region = samtoolslike, N = nSNPs, M = nrow(rhb_t))
-        print_message("zilong build pbwt indecies successfully!")
+        print_message("End building Zilong PBWT indices")
     } else {
         pbwt <- NULL
     }
@@ -719,7 +724,10 @@ QUILT <- function(
                 output_gt_phased_genotypes = output_gt_phased_genotypes,
                 pbwtL = pbwtL,
                 pbwtS = pbwtS,
-                pbwt = pbwt
+                pbwt = pbwt,
+                zilong = zilong,
+                use_mspbwt = use_mspbwt,
+                ms_indices = ms_indices
             )
 
             if (out[["sample_was_imputed"]]) {

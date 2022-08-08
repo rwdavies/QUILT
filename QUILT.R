@@ -83,8 +83,8 @@ option_list <- list(
     make_option(
         "--Knew",
         type = "integer",
-        help = "How many haplotypes to replace per-iteration after doing the full reference panel imputation [default 100] ",
-        default = 100
+        help = "How many haplotypes to replace per-iteration after doing the full reference panel imputation [default 400] ",
+        default = 400
     ), 
     make_option(
         "--K_top_matches",
@@ -421,6 +421,12 @@ option_list <- list(
         type = "logical",
         help = "Using zilong's solution [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--use_mspbwt",
+        type = "logical",
+        help = "Use msPBWT to select new haplotypes [default FALSE] ",
+        default = FALSE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -496,5 +502,6 @@ QUILT(
     vcf = opt$vcf,
     pbwtL = opt$pbwtL,
     pbwtS = opt$pbwtS,
-    zilong = opt$zilong
+    zilong = opt$zilong,
+    use_mspbwt = opt$use_mspbwt
 )

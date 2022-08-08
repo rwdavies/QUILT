@@ -18,7 +18,7 @@ QUILT(
   nGibbsSamples = 7,
   n_seek_its = 3,
   Ksubset = 400,
-  Knew = 100,
+  Knew = 400,
   K_top_matches = 5,
   output_gt_phased_genotypes = TRUE,
   heuristic_match_thin = 0.1,
@@ -74,7 +74,8 @@ QUILT(
   vcf = NULL,
   pbwtL = 2,
   pbwtS = 8,
-  zilong = FALSE
+  zilong = FALSE,
+  use_mspbwt = FALSE
 )
 }
 \arguments{
@@ -217,6 +218,8 @@ QUILT(
 \item{pbwtS}{How many SNPs as a step to do selection [default 8]}
 
 \item{zilong}{Using zilong's solution}
+
+\item{use_mspbwt}{Use msPBWT to select new haplotypes}
 }
 \value{
 Results in properly formatted version

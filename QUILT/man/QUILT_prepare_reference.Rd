@@ -26,7 +26,8 @@ QUILT_prepare_reference(
   output_sites_filename = NA,
   expRate = 1,
   maxRate = 100,
-  minRate = 0.1
+  minRate = 0.1,
+  use_mspbwt = TRUE
 )
 }
 \arguments{
@@ -73,6 +74,8 @@ QUILT_prepare_reference(
 \item{maxRate}{Maximum recomb rate cM/Mb}
 
 \item{minRate}{Minimum recomb rate cM/Mb}
+
+\item{use_mspbwt}{Build mspbwt indices to be used in imputation}
 }
 \value{
 Results in properly formatted version

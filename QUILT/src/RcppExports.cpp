@@ -6,11 +6,6 @@
 
 using namespace Rcpp;
 
-#ifdef RCPP_USE_GLOBAL_ROSTREAM
-Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
-Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
-#endif
-
 // rcpp_make_eMatRead_t
 void rcpp_make_eMatRead_t(arma::mat& eMatRead_t, const Rcpp::List& sampleReads, const arma::cube& eHapsCurrent_tc, const int s, const double maxDifferenceBetweenReads, const int Jmax, arma::mat& eMatHapOri_t, const arma::vec& pRgivenH1, const arma::vec& pRgivenH2, double& prev, int suppressOutput, std::string& prev_section, std::string& next_section, const bool run_pseudo_haploid, const bool rescale_eMatRead_t);
 RcppExport SEXP _QUILT_rcpp_make_eMatRead_t(SEXP eMatRead_tSEXP, SEXP sampleReadsSEXP, SEXP eHapsCurrent_tcSEXP, SEXP sSEXP, SEXP maxDifferenceBetweenReadsSEXP, SEXP JmaxSEXP, SEXP eMatHapOri_tSEXP, SEXP pRgivenH1SEXP, SEXP pRgivenH2SEXP, SEXP prevSEXP, SEXP suppressOutputSEXP, SEXP prev_sectionSEXP, SEXP next_sectionSEXP, SEXP run_pseudo_haploidSEXP, SEXP rescale_eMatRead_tSEXP) {

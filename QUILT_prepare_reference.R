@@ -132,6 +132,12 @@ option_list <- list(
         type = "double",
         help = "Minimum recomb rate cM/Mb [default 0.1] ",
         default = 0.1
+    ), 
+    make_option(
+        "--use_mspbwt",
+        type = "logical",
+        help = "Build mspbwt indices to be used in imputation [default TRUE] ",
+        default = TRUE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -159,5 +165,6 @@ QUILT_prepare_reference(
     output_sites_filename = opt$output_sites_filename,
     expRate = opt$expRate,
     maxRate = opt$maxRate,
-    minRate = opt$minRate
+    minRate = opt$minRate,
+    use_mspbwt = opt$use_mspbwt
 )

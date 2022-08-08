@@ -21,6 +21,7 @@
 #' @param expRate Expected recombination rate in cM/Mb
 #' @param maxRate Maximum recomb rate cM/Mb
 #' @param minRate Minimum recomb rate cM/Mb
+#' @param use_mspbwt Build mspbwt indices to be used in imputation
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -46,7 +47,8 @@ QUILT_prepare_reference <- function(
     output_sites_filename = NA,
     expRate = 1,
     maxRate = 100,
-    minRate = 0.1
+    minRate = 0.1,
+    use_mspbwt = TRUE
 ) {
 
     x <- as.list(environment())
@@ -58,7 +60,7 @@ QUILT_prepare_reference <- function(
     print_message(paste0("Running ", command_line))
 
     print_message("Program start")
-    print_message("Begin converting reference haplotypes")    
+    print_message("Begin converting reference haplotypes")
 
     ## need for outputting
     regionName <- chr
@@ -67,7 +69,7 @@ QUILT_prepare_reference <- function(
         regionName <- paste0(chr, ".", regionStart,".", regionEnd)
 
 
-    
+
     ##
     ## validate parameters
     ##
@@ -85,7 +87,7 @@ QUILT_prepare_reference <- function(
             stop(paste0("Cannot find file:", genetic_map_file))
         }
     }
-    
+
     ##
     ## new validations
     ##
@@ -118,7 +120,7 @@ QUILT_prepare_reference <- function(
 
 
 
-    
+
     ##
     ## work on legend and identify SNPs to keep
     ##
@@ -137,7 +139,7 @@ QUILT_prepare_reference <- function(
 
     ##
     ## remove sites from consideration
-    ## 
+    ##
     if (region_exclude_file != "") {
         if (!file.exists(region_exclude_file)) {
             stop(paste0("Cannot find region_exclude_file:", region_exclude_file))
@@ -168,14 +170,14 @@ QUILT_prepare_reference <- function(
         }
     }
 
-    
+
     ##
     ## (optional) make fake vcf with sites list
     ##
     if (make_fake_vcf_with_sites_list) {
         print_message("Make VCF with sites list")
         if (is.na(output_sites_filename)) {
-            output_sites_filename <- file.path(outputdir, paste0("quilt.sites.", regionName, ".vcf.gz")) 
+            output_sites_filename <- file.path(outputdir, paste0("quilt.sites.", regionName, ".vcf.gz"))
         } else {
             STITCH::validate_output_filename(output_sites_filename, output_format = "bgvcf")
         }
@@ -204,7 +206,7 @@ QUILT_prepare_reference <- function(
         check_program_dependency("tabix")
         system(paste0("bgzip -f ", gsub(".gz", "", output_sites_filename)))
         system(paste0("tabix -f ", output_sites_filename))
-        print_message("Done making VCF with sites list")        
+        print_message("Done making VCF with sites list")
     }
 
 
@@ -226,14 +228,14 @@ QUILT_prepare_reference <- function(
         niterations = 2,
         extraction_method = "hap_v3" ## to do - make both, then only the one I want
     )
-    
+
     ##outORI <- out ## in case
     ref_alleleCount <- out[["ref_alleleCount3"]] ## defined at all SNPs
     gc(reset =TRUE); gc(reset =TRUE); gc(reset =TRUE)
 
 
 
-    
+
     ##
     ## stuff common across number of samples in ref output
     ##
@@ -273,7 +275,7 @@ QUILT_prepare_reference <- function(
     grid <- out2$grid
     L_grid <- out2$L_grid
     dl <- diff(L_grid)
-    
+
 
     ##
     ## might not be necessary
@@ -307,13 +309,13 @@ QUILT_prepare_reference <- function(
     m[, 2] <- m[, 2] * diff(L_grid)
     m[, 3] <- m[, 3] * diff(L_grid)
     m <- cbind(diff(L_grid), m)
-    ## 
+    ##
     w <- rateBetweenGrids < minRateBetweenGrids
     ## print(paste0("There are ", sum(w), " regions below minimum rate, setting them to minimum rate"))
     rateBetweenGrids[w] <- minRateBetweenGrids[w]
     sigmaCurrent_m <- array(exp(-rateBetweenGrids), c(nGrids - 1, S))
     ## print(paste0("The probability of staying the same across the region is ", prod(sigmaCurrent_m)))
-    
+
     ##
     ## stuff to do with the panel and possibly removing people
     ##
@@ -333,7 +335,7 @@ QUILT_prepare_reference <- function(
     ##     na_haps <- c()
     ## }
     ## na12878_hap1 <- rcpp_int_expand(rhb_t[na_haps[1], ], nSNPs)
-    ## na12878_hap2 <- rcpp_int_expand(rhb_t[na_haps[2], ], nSNPs)    
+    ## na12878_hap2 <- rcpp_int_expand(rhb_t[na_haps[2], ], nSNPs)
     ## rhb_t_no_NA12878 <- rhb_t[setdiff(1:nrow(rhb_t), na_haps), ]
     ## rhb_t <- rhb_t_no_NA12878
     ## ref_samples <- ref_samples[ref_samples[, "sample"] != "NA12878", ]
@@ -369,7 +371,7 @@ QUILT_prepare_reference <- function(
     ##
     ## do compression here
     ## note now can work out recommended nMaxDH on the fly
-    ## 
+    ##
     out <- make_rhb_t_equality(
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,
@@ -383,12 +385,27 @@ QUILT_prepare_reference <- function(
     eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
 
 
+    if (use_mspbwt) {
+        print_message("Build mspbwt indices")
+        all_symbols <- out$all_symbols
+        ms_indices <- mspbwt::Rcpp_ms_BuildIndices_Algorithm5(
+            X1C = hapMatcher,
+            all_symbols = all_symbols,
+            indices = list(),
+            verbose = FALSE
+        )
+        print_message("Done building mspbwt indices")
+    } else {
+        ms_indices <- NULL
+    }
+
+
     ##
     ## save here!
     ##
     ##  na12878_hap1
     ##  na12878_hap2
-    print_message("Save converted reference haplotypes")    
+    print_message("Save converted reference haplotypes")
     save(
         ref_error,
         hapMatcher,
@@ -401,7 +418,7 @@ QUILT_prepare_reference <- function(
         reference_samples,
         rh_in_L,
         af,
-        ref_alleleCount,    
+        ref_alleleCount,
         pos,
         L,
         nSNPs,
@@ -416,10 +433,11 @@ QUILT_prepare_reference <- function(
         regionEnd,
         buffer,
         chr,
+        ms_indices,
         file = output_file,
         compress = FALSE
     )
-    
+
 
     print_message("Done converting reference haplotypes")
 
