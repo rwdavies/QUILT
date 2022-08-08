@@ -397,29 +397,29 @@ option_list <- list(
         type = "logical",
         help = "For testing purposes only [default FALSE] ",
         default = FALSE
-    ),
+    ), 
     make_option(
         "--vcf",
         type = "character",
-        help = "zilong favors vcf. please feed vcf path to run PBWT [default NULL]",
+        help = "zilong favors vcf [default NULL] ",
         default = NULL
-    ),
+    ), 
     make_option(
         "--pbwtL",
         type = "integer",
-        help = "How many neighouring haplotypes to select forward and backwards for each selection point [default 2] ",
+        help = "How many neighouring haplotypes to select forward and backwards for each selection point [default 2] [default 2] ",
         default = 2
-    ),
+    ), 
     make_option(
         "--pbwtS",
         type = "integer",
-        help = "How many SNPs as a step to do selection [default 8] ",
+        help = "How many SNPs as a step to do selection [default 8] [default 8] ",
         default = 8
-    ),
+    ), 
     make_option(
         "--zilong",
         type = "logical",
-        help = "Using zilong's solution PBWT selection [default FALSE]",
+        help = "Using zilong's solution [default FALSE] ",
         default = FALSE
     )
 )
@@ -496,5 +496,5 @@ QUILT(
     vcf = opt$vcf,
     pbwtL = opt$pbwtL,
     pbwtS = opt$pbwtS,
-    zilong =  opt$zilong
+    zilong = opt$zilong
 )

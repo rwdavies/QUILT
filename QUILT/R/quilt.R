@@ -70,7 +70,6 @@
 #' @param pbwtL How many neighouring haplotypes to select forward and backwards for each selection point [default 2]
 #' @param pbwtS How many SNPs as a step to do selection [default 8]
 #' @param zilong Using zilong's solution
-
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -156,11 +155,11 @@ QUILT <- function(
     print_message(paste0("Running ", command_line))
 
 
-    
+
     ## turn this off for now
-    make_plots_block_gibbs <- FALSE    
+    make_plots_block_gibbs <- FALSE
     ## #' @param make_plots_block_gibbs Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs
-    
+
     options(digits.secs=6)
     options(scipen = 999)
 
@@ -182,14 +181,14 @@ QUILT <- function(
     check_program_dependency("bgzip")
     check_program_dependency("tabix")
 
-    
+
     ##
     ## local validate
     ##
     validate_panel_size(panel_size)
     validate_minimum_number_of_sample_reads(minimum_number_of_sample_reads)
     validate_niterations_and_block_gibbs(block_gibbs_iterations, n_gibbs_burn_in_its)
-    
+
     if (is.na(tempdir)) {
         ## tempdir <- tempdir()
         tempdir <- tempfile()
@@ -225,7 +224,7 @@ QUILT <- function(
         cat("test", file = tempfile)
         unlink(tempfile)
     }
-    
+
 
     ##print(args)
     ##print(paste0(commandArgs(trailingOnly = TRUE), collapse = "', '"))
@@ -245,7 +244,7 @@ QUILT <- function(
     ## bqFilter <- as.numeric(args[14]) ## e.g. 17 or 10
     ##have_truth_haplotypes <- as.logical(args[15])
     ## panel_size <- args[18]
-    
+
     ## hacky but OK!
     ##if (nGibbsSamples == 10) {
     ##    record_interim_dosages <- TRUE
@@ -296,14 +295,14 @@ QUILT <- function(
     }
 
 
-    
-    
+
+
     ## always check regionStart, regionEnd and buffer, just in case
     ## require them to be the same to prevent problems
     new_regionStart <- regionStart
-    new_regionEnd <- regionEnd 
+    new_regionEnd <- regionEnd
     new_buffer <- buffer
-    
+
     load(prepared_reference_filename)
 
     ## now build PBWT using nSNPs, nrow(rhb_t) loaded from last step
@@ -364,7 +363,7 @@ QUILT <- function(
         new_buffer
     )
 
-    
+
     ##
     ## possibly reset values
     ##
@@ -381,7 +380,7 @@ QUILT <- function(
             Knew <- K
         }
     }
-    
+
 
     ##
     ## optionally load genotypes and phasevali
@@ -431,9 +430,9 @@ QUILT <- function(
         gen <- NULL
         phase <- NULL
     }
-    
 
-    
+
+
     ##
     ## can request smaller panel size, only really useful for testing speed
     ##
@@ -456,7 +455,7 @@ QUILT <- function(
     K <- nrow(rhb_t)
     ancAlleleFreqAll <- ref_alleleCount[, 3]
 
-    
+
     ##
     ## get sample names
     ##
@@ -477,7 +476,7 @@ QUILT <- function(
     cram_files <- out$cram_files
 
     ##
-    ## check line up between 
+    ## check line up between
     ##
     out <- match_gen_and_phase_to_samples(
         sampleNames = sampleNames,
@@ -491,8 +490,8 @@ QUILT <- function(
     } else {
         have_truth_haplotypes <- FALSE
     }
-    
-    
+
+
     ##
     ## work on various recombination rates
     ##
@@ -504,8 +503,8 @@ QUILT <- function(
     full_transMatRate_t_H[, ] <- X[, , 1]
     rate2 <- -log(small_transMatRate_tc_H[1, , 1]) * 100
     smooth_cm <- rcpp_make_smoothed_rate(rate2, L_grid, shuffle_bin_radius, verbose = FALSE);
-    smooth_cm <- smooth_cm / max(smooth_cm)    
-    
+    smooth_cm <- smooth_cm / max(smooth_cm)
+
 
     ##
     ## work with truth haplotypes for Optimal output
@@ -536,7 +535,7 @@ QUILT <- function(
     ##         truth_gen <- cbind(truth_gen[, sampleName], truth_gen)
     ##         colnames(truth_gen)[1] <- paste0(sampleName, "10X")
     ##         truth_haps_all <- cbind(truth_haps_all[, sampleName], truth_haps_all)
-    ##         colnames(truth_haps_all)[1] <- paste0(sampleName, "10X")        
+    ##         colnames(truth_haps_all)[1] <- paste0(sampleName, "10X")
     ##     }
     ## }
 
@@ -556,7 +555,7 @@ QUILT <- function(
 
 
     ##
-    ## here initialize where to start and stop getting reads from 
+    ## here initialize where to start and stop getting reads from
     ##
     out <- initialize_chrStart_and_chrEnd(
         chrStart = NA,
@@ -570,8 +569,8 @@ QUILT <- function(
     if (chrEnd > chrLength) {
         chrEnd <- chrLength
     }
-    
-    
+
+
 
     ##
     ## mclapply the runs!
@@ -579,9 +578,9 @@ QUILT <- function(
     iCore <- 1
     sampleRanges <- getSampleRange(N, nCores)
     complete_set_of_results <- mclapply(1:length(sampleRanges), mc.cores = nCores, function(iCore) {
-        
+
         sampleRange <- sampleRanges[[iCore]]
-        
+
         ## for output
         hweCount <- array(0, c(nSNPs, 3))
         infoCount <- array(0, c(nSNPs, 2))
@@ -595,7 +594,7 @@ QUILT <- function(
         if (make_plots) {
             full_gamma_t <- array(0, c(K, nGrids))
         } else {
-            full_gamma_t <- array(0, c(1, 1))        
+            full_gamma_t <- array(0, c(1, 1))
         }
         iSample <- 1
         ww <- seq(1, nGrids, length.out = max(1, round(heuristic_match_thin * nGrids)))
@@ -610,14 +609,14 @@ QUILT <- function(
         eMatGrid_t1 <- array(0, c(K, nGrids))
         alphaHat_t2 <- array(0, c(K, nGrids))
         betaHat_t2 <- array(0, c(K, nGrids))
-        eMatGrid_t2 <- array(0, c(K, nGrids))        
+        eMatGrid_t2 <- array(0, c(K, nGrids))
         alphaHat_t3 <- array(0, c(K, nGrids))
         betaHat_t3 <- array(0, c(K, nGrids))
         eMatGrid_t3 <- array(0, c(K, nGrids))
         gammaMT_t_local <- array(0, c(K, nGrids))
         gammaMU_t_local <- array(0, c(K, nGrids))
         gammaP_t_local <- array(0, c(K, nGrids))
-        ## 
+        ##
         small_priorCurrent_m <- array(1 / K, c(K, S))
         small_alphaMatCurrent_tc <- array(1 / K, c(K, nGrids - 1, S))
         if (use_small_eHapsCurrent_tc) {
@@ -627,10 +626,10 @@ QUILT <- function(
         }
 
 
-        
+
 
         results_across_samples <- as.list(sampleRange[2] - sampleRange[1] + 1)
-        
+
         for(iSample in sampleRange[1]:sampleRange[2]) {
 
             print_message(paste0("Imputing sample: ", iSample))
@@ -648,7 +647,7 @@ QUILT <- function(
                 small_transMatRate_tc_H = small_transMatRate_tc_H,
                 alphaHat_t1 = alphaHat_t1,
                 betaHat_t1 = betaHat_t1,
-                eMatGrid_t1 = eMatGrid_t1,                
+                eMatGrid_t1 = eMatGrid_t1,
                 alphaHat_t2 = alphaHat_t2,
                 betaHat_t2 = betaHat_t2,
                 eMatGrid_t2 = eMatGrid_t2,
@@ -751,7 +750,7 @@ QUILT <- function(
                     gc(reset = TRUE)
                 }
             }
-            
+
         }
 
         return(
@@ -783,9 +782,9 @@ QUILT <- function(
         sampleRanges = sampleRanges,
         addOptimalHapsToVCF = addOptimalHapsToVCF,
         output_gt_phased_genotypes = output_gt_phased_genotypes
-    )    
+    )
 
-    
+
     ##
     ## build a singular set of results
     ##
@@ -802,31 +801,31 @@ QUILT <- function(
                 c <- c + 1
             }
         }
-        
+
         ## these are properly in the VCF
         ## still could be exported
         ## imputed_dosages <- array(NA, c(nrow(pos), length(final_set_of_results)))
         ## for(i in 1:length(final_set_of_results)) {
         ##     imputed_dosages[, i] <- final_set_of_results[[i]]$dosage
         ## }
-        
+
         for(object in RData_objects_to_save) {
             if (!exists(object)) {
                 stop(paste0("You have asked to save object:", object, " as part of RData_objects_to_save but this is not a valid option"))
             }
         }
         save_text <- paste0(
-            "save(", 
+            "save(",
             paste0(RData_objects_to_save, collapse = ", "),
             ", file = output_RData_filename)"
         )
         eval(parse(text = save_text))
         print_message("Done saving extra RData objects to disk")
-        
+
     }
-    
+
     print_message("Done QUILT")
-    
+
     return(NULL)
 
 }

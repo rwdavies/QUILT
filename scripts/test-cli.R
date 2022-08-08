@@ -33,11 +33,11 @@ cli_output_file <- "QUILT.R"
 STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt.R",
     cli_output_file = cli_output_file,
-    other_character_params = c("phasefile", "output_RData_filename", "RData_objects_to_save", "prepared_reference_filename", "reference_exclude_samplelist_file", "output_sites_filename", "region_exclude_file", "block_gibbs_iterations"),
+    other_character_params = c("phasefile", "output_RData_filename", "RData_objects_to_save", "prepared_reference_filename", "reference_exclude_samplelist_file", "output_sites_filename", "region_exclude_file", "block_gibbs_iterations", "vcf"),
     integer_vectors = c("block_gibbs_iterations"),
     character_vectors = c("RData_objects_to_save"),
-    other_logical_params = c("make_plots", "verbose", "record_read_label_usage", "record_interim_dosages", "use_bx_tag", "addOptimalHapsToVCF", "estimate_bq_using_truth_read_labels", "make_plots_block_gibbs", "override_default_params_for_small_ref_panel", "hla_run", "make_fake_vcf_with_sites_list", "print_extra_timing_information", "plot_per_sample_likelihoods", "save_prepared_reference", "use_small_eHapsCurrent_tc", "output_gt_phased_genotypes"),
-    other_integer_params = c("nGibbsSamples", "n_seek_its", "Ksubset", "Knew", "K_top_matches", "panel_size", "bxTagUpperLimit", "seed", "gamma_physically_closest_to", "nMaxDH", "minimum_number_of_sample_reads", "n_gibbs_burn_in_its"),
+    other_logical_params = c("make_plots", "verbose", "record_read_label_usage", "record_interim_dosages", "use_bx_tag", "addOptimalHapsToVCF", "estimate_bq_using_truth_read_labels", "make_plots_block_gibbs", "override_default_params_for_small_ref_panel", "hla_run", "make_fake_vcf_with_sites_list", "print_extra_timing_information", "plot_per_sample_likelihoods", "save_prepared_reference", "use_small_eHapsCurrent_tc", "output_gt_phased_genotypes", "zilong"),
+    other_integer_params = c("nGibbsSamples", "n_seek_its", "Ksubset", "Knew", "K_top_matches", "panel_size", "bxTagUpperLimit", "seed", "gamma_physically_closest_to", "nMaxDH", "minimum_number_of_sample_reads", "n_gibbs_burn_in_its", "pbwtL", "pbwtS"),
     other_double_params = c("heuristic_match_thin", "minGLValue"),
     function_name = "QUILT",
     library_name = "QUILT"
