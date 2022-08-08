@@ -325,6 +325,7 @@ QUILT <- function(
             subsamples <- paste(s1[-which(s2%in%s1)], collapse = ",")
         }
         samtoolslike <- paste0(chr, ":", regionStart, "-", regionEnd)
+        print(nSNPs)
         pbwt <- pbwt_build(vcf, samples = subsamples, region = samtoolslike, N = nSNPs, M = nrow(rhb_t))
         print_message("End building Zilong PBWT indices")
     } else {
