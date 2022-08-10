@@ -457,7 +457,7 @@ select_new_haps_pbwt <- function(
     hapProbs_t,
     pbwt,
     Kfull,
-    Ksubset,
+    Knew,
     L = 2,
     Step = 8
 ) {
@@ -466,12 +466,12 @@ select_new_haps_pbwt <- function(
     unique(find_neighour_haps(pbwt, hap, L, Step))
   }))
   vals <- unique(vals) + 1 # 1-based
-  if (length(vals) >= Ksubset) {
-    new_haps <- vals[1:Ksubset]
+  if (length(vals) >= Knew) {
+    new_haps <- vals[1:Knew]
   } else {
-    new_haps <- array(NA, Ksubset)
+    new_haps <- array(NA, Knew)
     new_haps[1:length(vals)] <- vals
-    new_haps[-c(1:length(vals))] <- sample(setdiff(1:Kfull, vals), Ksubset - length(vals), replace = FALSE)
+    new_haps[-c(1:length(vals))] <- sample(setdiff(1:Kfull, vals), Knew - length(vals), replace = FALSE)
   }
   new_haps
 }
@@ -953,7 +953,7 @@ get_and_impute_one_sample <- function(
 
             if (zilong) {
                 ## TODO which_haps_to_use should be returned by PBWT selection
-                which_haps_to_use <- select_new_haps_pbwt(gibbs_iterate$hapProbs_t, pbwt, Kfull =  nrow(rhb_t), Ksubset = Ksubset,L = pbwtL, Step = pbwtS)
+                which_haps_to_use <- select_new_haps_pbwt(gibbs_iterate$hapProbs_t, pbwt, Kfull =  nrow(rhb_t), Knew = Knew,L = pbwtL, Step = pbwtS)
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
             } else if (use_mspbwt) {
