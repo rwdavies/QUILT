@@ -11,6 +11,7 @@ cd QUILT
 ./scripts/install-dependencies.sh
 ./scripts/build-and-install.R
 #+end_src
+
 * Quick Start
 
 Download example data
@@ -40,6 +41,7 @@ run QUILT with PBWT
 --vcf=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.vcf.gz \
 --pbwtL=2 \
 --pbwtS=8 \
+--use_mspbwt=FALSE \
 --zilong=TRUE \
 --save_prepared_reference=TRUE
 #+end_src

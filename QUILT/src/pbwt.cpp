@@ -85,37 +85,42 @@ std::vector<int> find_neighour_haps(List p, IntegerVector z, int L = 1, int Step
     int M = p["m"];
     if (z.size() != N) stop("the query z must has the same number of sites N as the panel!");
     IntegerVector t(N);
-    t[0] = z[0] ? M : 0;
     IntegerMatrix u = as<IntegerMatrix>(p["u"]);
     IntegerMatrix v = as<IntegerMatrix>(p["v"]);
     IntegerMatrix a = as<IntegerMatrix>(p["a"]);
-    int i = 0, j =0;
-    for (int i = 1; i < N; i++)
-    {
-        if (z[i])
-            t[i] = v(i, t[i - 1]);
-        else
-            t[i] = u(i, t[i - 1]);
-    }
     NumericVector rng = runif(1); // flip the coin to make a decision;
     int s = floor(rng[0] * Step); // the first start of selection;
     std::vector<int> out;
-    for (i = s; i < N; i += Step) {
-        if (t[i] == M) {
-            // where we hit the bottom
-            for (j = 1; j <= L; j++)
-                out.push_back(a(i, M-j));
-        } else if (t[i] == 0) {
-            // where we hit the top;
-            for (j = 0; j < L; j++)
-                out.push_back(a(i, 0+j));
+    int i = 0, j =0;
+    for (i = 0; i < N; i++)
+    {
+        if (i == 0) {
+            t[0] = z[0] ? M : 0;
         } else {
-            // L haps before z;
-            for (j = 1; j <= L; j++)
-                out.push_back(a(i, std::max(t[i]-j, 0)));
-            // L haps after z;
-            for (j = 0; j < L; j++)
-                out.push_back(a(i, std::min(t[i]+j, M-1)));
+            if (z[i])
+                t[i] = v(i, t[i - 1]);
+            else
+                t[i] = u(i, t[i - 1]);
+        }
+        if (s < N && i == s)
+        {
+            if (t[s] == M) {
+                // where we hit the bottom
+                for (j = 1; j <= L; j++)
+                    out.push_back(a(s, M-j));
+            } else if (t[s] == 0) {
+                // where we hit the top;
+                for (j = 0; j < L; j++)
+                    out.push_back(a(s, 0+j));
+            } else {
+                // L haps before z;
+                for (j = 1; j <= L; j++)
+                    out.push_back(a(s, std::max(t[s]-j, 0)));
+                // L haps after z;
+                for (j = 0; j < L; j++)
+                    out.push_back(a(s, std::min(t[s]+j, M-1)));
+            }
+            s += Step;
         }
     }
     return out;
