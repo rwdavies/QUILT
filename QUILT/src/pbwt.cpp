@@ -16,7 +16,7 @@ List pbwt_build(String vcf, String samples, String region, int N, int M) {
     // get genotype from vcf/bcf
     BcfReader br(vcf, samples, region);
     BcfRecord var(br.header);
-    std::vector<bool> gt; // can be bool, char, int
+    std::vector<char> gt; // can be bool, char, int
     int i =0, k = 0, u_= 0, v_= 0, p= 0, q= 0;
     while (br.getNextVariant(var)) {
       if (!var.isSNP()) continue;

@@ -317,10 +317,15 @@ QUILT <- function(
 
     if (zilong) {
         print_message("Begin building Zilong PBWT indices")
-        s1 <- read.table(reference_sample_file, h = T)[,1]
-        if (reference_exclude_samplelist_file == "") {
+        if (reference_sample_file == "") {
+            subsamples <- "-" ## all samples
+        }
+        else if (reference_exclude_samplelist_file == "") {
+            s1 <- read.table(reference_sample_file, h = T)[,1]
             subsamples <- paste(s1, collapse = ",")
-        } else {
+        }
+        else {
+            s1 <- read.table(reference_sample_file, h = T)[,1]
             s2 <- read.table(reference_exclude_samplelist_file, h = F)[,1]
             subsamples <- paste(s1[-which(s2%in%s1)], collapse = ",")
         }
