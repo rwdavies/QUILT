@@ -307,6 +307,12 @@ QUILT <- function(
 
     load(prepared_reference_filename)
 
+    if (use_mspbwt) {
+        if (is.null(ms_indices)) {
+            stop("To use mspbwt and QUILT, you must prepare the reference package using use_mspbt=TRUE")
+        }
+    }
+    
     if (zilong && use_mspbwt) {
         stop("Please select only one of zilong or use_mspbwt")
     }
