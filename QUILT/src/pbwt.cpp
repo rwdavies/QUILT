@@ -11,39 +11,32 @@ using namespace vcfpp;
 // [[Rcpp::export]]
 List pbwt_build(String vcf, String samples, String region, int N, int M) {
     // N is number of SNPs, M is number of Haps
-    IntegerMatrix a(N, M), d(N, M), u(N, M + 1), v(N, M + 1);
-    IntegerVector a0(M), a1(M), d0(M), d1(M);
+    IntegerMatrix a(N, M), u(N, M + 1), v(N, M + 1);
+    IntegerVector a0(M), a1(M);
     // get genotype from vcf/bcf
     BcfReader br(vcf, samples, region);
     BcfRecord var(br.header);
     std::vector<char> gt; // can be bool, char, int
-    int i =0, k = 0, u_= 0, v_= 0, p= 0, q= 0;
+    int i =0, k = 0, u_= 0, v_= 0, a_= 0;
     while (br.getNextVariant(var)) {
       if (!var.isSNP()) continue;
       var.getGenotypes(gt);
       assert(gt.size() == M);
-      u_ = 0, v_ = 0, p = k + 1, q = k + 1;
+      u_ = 0, v_ = 0;
       for (i = 0; i < M; i++)
       {
-          int d_ = k > 0 ? d(k - 1, i) : 0;
-          int a_ = k > 0 ? a(k - 1, i) : i;
-          p = std::max(p, d_);
-          q = std::max(q, d_);
+          a_ = k > 0 ? a(k - 1, i) : i;
           u(k, i) = u_;
           v(k, i) = v_;
           if (gt[a_])
           {
               a1[v_] = a_;
-              d1[v_] = q;
               v_++;
-              q = 0;
           }
           else
           {
               a0[u_] = a_;
-              d0[u_] = p;
               u_++;
-              p = 0;
           }
       }
       u(k, M) = u_;
@@ -54,12 +47,10 @@ List pbwt_build(String vcf, String samples, String region, int N, int M) {
           if (i < u_)
           {
               a(k, i) = a0[i];
-              d(k, i) = d0[i];
           }
           else
           {
               a(k, i) = a1[i - u_];
-              d(k, i) = d1[i - u_];
           }
       }
       k++;
