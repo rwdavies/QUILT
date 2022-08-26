@@ -68,7 +68,7 @@ select_new_haps_mspbwt <- function(
     if (length(vals) >= Knew) {
         new_haps <- vals[1:Knew]
     } else {
-        new_haps <- array(NA, K)
+        new_haps <- array(NA, Knew)
         new_haps[1:length(vals)] <- vals
         new_haps[-c(1:length(vals))] <- sample(setdiff(1:Kfull, vals), Knew - length(vals), replace = FALSE)
     }
