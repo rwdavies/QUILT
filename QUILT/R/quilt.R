@@ -289,6 +289,7 @@ QUILT <- function(
                 expRate = expRate,
                 maxRate = maxRate,
                 minRate = minRate,
+                use_mspbwt = use_mspbwt,
                 output_file = prepared_reference_filename
             )
         } else {
@@ -335,8 +336,8 @@ QUILT <- function(
             s2 <- read.table(reference_exclude_samplelist_file, h = F)[,1]
             subsamples <- paste(s1[-which(s2%in%s1)], collapse = ",")
         }
-        samtoolslike <- paste0(chr, ":", regionStart, "-", regionEnd)
-        print(nSNPs)
+        ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
+        print(samtoolslike)
         pbwt <- pbwt_build(vcf, samples = subsamples, region = samtoolslike, N = nSNPs, M = nrow(rhb_t))
         print_message("End building Zilong PBWT indices")
     } else {

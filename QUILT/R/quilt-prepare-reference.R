@@ -48,7 +48,7 @@ QUILT_prepare_reference <- function(
     expRate = 1,
     maxRate = 100,
     minRate = 0.1,
-    use_mspbwt = TRUE
+    use_mspbwt = FALSE
 ) {
 
     x <- as.list(environment())

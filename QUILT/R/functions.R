@@ -952,13 +952,6 @@ get_and_impute_one_sample <- function(
             return_dosage <- (have_truth_haplotypes | record_interim_dosages | (i_it == n_seek_its))
 
             if (zilong) {
-                gibbs_iterate$gammaMT_t <- gammaMT_t_local
-                ## ensure it makes a copy
-                gibbs_iterate$gammaMT_t[1] <- gibbs_iterate$gammaMT_t[1] + 1
-                gibbs_iterate$gammaMT_t[1] <- gibbs_iterate$gammaMT_t[1] - 1
-                gibbs_iterate$gammaMU_t <- gammaMU_t_local
-                gibbs_iterate$gammaMU_t[1] <- gibbs_iterate$gammaMU_t[1] + 1
-                gibbs_iterate$gammaMU_t[1] <- gibbs_iterate$gammaMU_t[1] - 1
                 ## TODO which_haps_to_use should be returned by PBWT selection
                 which_haps_to_use <- select_new_haps_pbwt(gibbs_iterate$hapProbs_t, pbwt, Kfull =  nrow(rhb_t), Knew = Knew,L = pbwtL, Step = pbwtS)
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]

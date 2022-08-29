@@ -55,7 +55,7 @@ List pbwt_build(String vcf, String samples, String region, int N, int M) {
       }
       k++;
     }
-    assert(k == N);
+    if (k != N) stop("nSNPs doesn't match the reference loaded by QUILT!\n");
 
     Rcpp::List out = List::create(Rcpp::Named("a") = a,
                         Rcpp::Named("u") = u,
