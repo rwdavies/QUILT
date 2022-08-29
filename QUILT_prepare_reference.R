@@ -136,8 +136,8 @@ option_list <- list(
     make_option(
         "--use_mspbwt",
         type = "logical",
-        help = "Build mspbwt indices to be used in imputation [default TRUE] ",
-        default = TRUE
+        help = "Build mspbwt indices to be used in imputation [default FALSE] ",
+        default = FALSE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
