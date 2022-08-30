@@ -20,26 +20,28 @@ Rprof(file = profout, gc.profiling = TRUE, line.profiling = TRUE)
 
 profile_start <- Sys.time()
 ##################
-prepared_reference_filename <- Sys.getenv("prepared_reference_filename")
-##     phasefile = phasefile,
-setwd("/data/smew1/rdavies/quilt_data/hrc_2021_04_20/")
-dir <- "/data/smew1/rdavies/quilt_data/hrc_2021_04_20/2021_04_20_bams"
-f <- dir(dir)[grep(".1.0.bam", dir(dir))]
-f <- f[-grep("bai", f)]
-bamlist <- tempfile()
-write.table(matrix(paste0(dir, "/", f), ncol = 1), file = bamlist, row.names = FALSE, col.names = FALSE, quote = FALSE)
+dir <- "/well/davies/users/dcc832/QUILT_nicola_testing_2022_08_26/"
+f <- function(x) file.path(dir, x)
+CHR="chr20"
+REGIONSTART=10000001
+REGIONEND=12000000
+BUFFER=500000
 QUILT(
-    outputdir = "/data/smew1/rdavies/quilt_data/hrc_2021_04_20/",
-    chr = "chr20",
-    regionStart = 2000000,
-    regionEnd = 4000000,
-    buffer = 500000,
-    bamlist = bamlist,
-    bqFilter = 10,
-    nCores = 1,
-    prepared_reference_filename = prepared_reference_filename,
-    nGibbsSamples = 3,
-    n_seek_its = 2
+    outputdir=f("quilt_mspbwt_test"),
+    chr=CHR,
+    regionStart=REGIONSTART,
+    regionEnd=REGIONEND,
+    buffer=BUFFER,
+    bamlist=f("bamlist.txt"),
+    posfile=f("posfile.txt"),
+    use_mspbwt=TRUE,
+    make_plots=FALSE,
+    block_gibbs_iterations=3,
+    n_gibbs_burn_in_its=6,
+    n_seek_its=5,
+    nGibbsSamples=2,
+    Ksubset = 100,
+    Knew = 100
 )
 ##################
 
@@ -51,7 +53,6 @@ title <- Sys.getenv("TITLE")
 
 output_plot <- Sys.getenv("OUTPUT_PLOT")
 if (output_plot == "") {
-    setwd(stitch_dir)
     output_plot <- file.path("profile.pdf")
 }
 pdf(output_plot, height = 24, width = 24)
