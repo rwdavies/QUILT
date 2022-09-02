@@ -191,6 +191,10 @@ QUILT <- function(
     validate_minimum_number_of_sample_reads(minimum_number_of_sample_reads)
     validate_niterations_and_block_gibbs(block_gibbs_iterations, n_gibbs_burn_in_its)
 
+    ## if (make_plots && phasefile == "") {
+    ##     stop("If you want to make plots using make_plots, you need to provide phase information using phasefile")
+    ## }
+    
     if (is.na(tempdir)) {
         ## tempdir <- tempdir()
         tempdir <- tempfile()

@@ -27,7 +27,7 @@ QUILT_prepare_reference(
   expRate = 1,
   maxRate = 100,
   minRate = 0.1,
-  use_mspbwt = TRUE
+  use_mspbwt = FALSE
 )
 }
 \arguments{

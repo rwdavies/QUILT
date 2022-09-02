@@ -38,9 +38,11 @@ refpack <- STITCH::make_reference_package(
     chr = chr,
     phasemaster = phasemaster
 )
-set.seed(010)
+
 
 test_that("QUILT can impute a few samples in a standard way, using a large panel", {
+
+    set.seed(0105)
     
     outputdir <- STITCH::make_unique_tempdir()
     
@@ -58,7 +60,7 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
         regionEnd = regionEnd,
         buffer = buffer
     )
-    regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
+
     expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
     i <- 1
     

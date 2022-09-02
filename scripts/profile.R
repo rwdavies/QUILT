@@ -21,6 +21,7 @@ Rprof(file = profout, gc.profiling = TRUE, line.profiling = TRUE)
 profile_start <- Sys.time()
 ##################
 dir <- "/well/davies/users/dcc832/QUILT_nicola_testing_2022_08_26/"
+setwd(dir)
 f <- function(x) file.path(dir, x)
 CHR="chr20"
 REGIONSTART=10000001
@@ -41,7 +42,8 @@ QUILT(
     n_seek_its=5,
     nGibbsSamples=2,
     Ksubset = 100,
-    Knew = 100
+    Knew = 100,
+    make_plots = TRUE
 )
 ##################
 

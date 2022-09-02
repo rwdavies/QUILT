@@ -64,7 +64,14 @@ check_quilt_output <- function(
                 max(abs(as.numeric(observed_haps[, 1]) - sample_truth_haps[, 2])),
                 max(abs(as.numeric(observed_haps[, 2]) - sample_truth_haps[, 1]))
             ))
-            expect_true((val1 < tol) | (val2 < tol))
+            check_value <- (val1 < tol) | (val2 < tol)
+            if (!check_value) {
+                print("observed then truth")
+                print(data.frame(observed_haps, sample_truth_haps))
+                print(val1)
+                print(val2)
+            }
+            expect_true(check_value)
         }
     }
     return(NULL)
