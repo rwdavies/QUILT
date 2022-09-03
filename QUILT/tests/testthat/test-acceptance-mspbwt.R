@@ -13,7 +13,7 @@ if ( 1 == 0 ) {
 
 }
 
-n_snps <- 50
+n_snps <- 200
 chr <- 10
 K <- 6
 set.seed(919)
@@ -45,9 +45,19 @@ test_that("QUILT can impute a few samples in a standard way using mspbwt", {
     outputdir <- STITCH::make_unique_tempdir()
     
     regionStart <- 11
-    regionEnd <- 40
+    regionEnd <- 200 - 10
     buffer <- 5
-    
+
+    library("testthat")
+    library("QUILT")
+    dir <- "~/proj/QUILT/"
+    setwd(paste0(dir, "/QUILT/R"))
+    a <- dir(pattern = "*.R")
+    b <- grep("~", a)
+    if (length(b) > 0) {
+        a <- a[-b]
+    }
+    o <- sapply(a, source)
     QUILT(
         outputdir = outputdir,
         chr = data_package$chr,

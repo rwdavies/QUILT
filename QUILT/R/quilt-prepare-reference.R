@@ -388,12 +388,16 @@ QUILT_prepare_reference <- function(
     if (use_mspbwt) {
         print_message("Build mspbwt indices")
         all_symbols <- out$all_symbols
-        ms_indices <- mspbwt::Rcpp_ms_BuildIndices_Algorithm5(
-            X1C = hapMatcher,
-            all_symbols = all_symbols,
-            indices = list(),
-            verbose = FALSE
-        )
+        nIndices <- 3
+        ms_indices <- lapply(1:nIndices, function(iIndex) {
+            w <- seq(iIndex, ncol(hapMatcher), nIndices)
+            return(mspbwt::Rcpp_ms_BuildIndices_Algorithm5(
+                X1C = hapMatcher[, w, drop = FALSE],
+                all_symbols = all_symbols[w],
+                indices = list(),
+                verbose = FALSE
+            ))
+        })
         print_message("Done building mspbwt indices")
     } else {
         ms_indices <- NULL

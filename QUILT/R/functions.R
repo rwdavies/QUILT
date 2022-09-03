@@ -957,8 +957,57 @@ get_and_impute_one_sample <- function(
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
             } else if (use_mspbwt) {
+                    impute_all <- impute_using_split_reads_and_small_ref_panel(
+                        H = read_labels,
+                        which_haps_to_use = which_haps_to_use,
+                        sampleReads = sampleReads,
+                        rhb_t = rhb_t,
+                        nSNPs = nSNPs,
+                        full_alphaHat_t = full_alphaHat_t,
+                        full_betaHat_t = full_betaHat_t,
+                        full_gamma_t = full_gamma_t,
+                        full_gammaSmall_t = full_gammaSmall_t,
+                        full_gammaSmall_cols_to_get = full_gammaSmall_cols_to_get,
+                        full_transMatRate_t_H = full_transMatRate_t_H,
+                        distinctHapsB = distinctHapsB,
+                        distinctHapsIE = distinctHapsIE,
+                        hapMatcher = hapMatcher,
+                        eMatDH_special_grid_which = eMatDH_special_grid_which,
+                        eMatDH_special_values_list = eMatDH_special_values_list,
+                        ref_error = ref_error,
+                        make_plots = FALSE, ## these plots are pretty useless? as plots?
+                        outplotprefix = outplotprefix,
+                        have_truth_haplotypes = have_truth_haplotypes,
+                        truth_haps = truth_haps,
+                        truth_labels = truth_labels,
+                        uncertain_truth_labels = uncertain_truth_labels,
+                        L_grid = L_grid,
+                        L = L,
+                        inRegion2 = inRegion2,
+                        cM_grid = cM_grid,
+                        ancAlleleFreqAll = ancAlleleFreqAll,
+                        plot_description = paste0("it", i_it, ".full"),
+                        return_good_haps = return_good_haps,
+                        Knew = Knew,
+                        return_dosage  = return_dosage,
+                        previously_selected_haplotypes = previously_selected_haplotypes,
+                        K_top_matches = K_top_matches,
+                        heuristic_match_thin = heuristic_match_thin,
+                        return_gamma_t = return_gamma_t,
+                        sample_name = sample_name,
+                        smooth_cm = smooth_cm ,
+                        regionStart = regionStart,
+                        regionEnd = regionEnd,
+                        buffer = buffer,
+                        minGLValue = minGLValue,
+                        suppressOutput = suppressOutput
+                    )
+
+                    hap1 <- impute_all[["dosage1"]]
+                    hap2 <- impute_all[["dosage2"]]
+
                 which_haps_to_use <- select_new_haps_mspbwt_v2(
-                    hapProbs_t = gibbs_iterate[["hapProbs_t"]],
+                    hapProbs_t = rbind(hap1, hap2),
                     hapMatcher = hapMatcher,
                     ms_indices = ms_indices,
                     Knew = Knew,
@@ -966,57 +1015,26 @@ get_and_impute_one_sample <- function(
                     all_symbols = ms_indices[["all_symbols"]],
                     nGrids = nGrids
                 )
-                hap1 <- gibbs_iterate$hapProbs_t[1, ]
-                hap2 <- gibbs_iterate$hapProbs_t[2, ]
-                if (i_it == n_seek_its) {
-                    print("remove me!")
-                impute_all <- impute_using_everything(
-                    H = read_labels,
-                    sampleReads = sampleReads,
-                    rhb_t = rhb_t,
-                    nSNPs = nSNPs,
-                    full_alphaHat_t = full_alphaHat_t,
-                    full_betaHat_t = full_betaHat_t,
-                    full_gamma_t = full_gamma_t,
-                    full_gammaSmall_t = full_gammaSmall_t,
-                    full_gammaSmall_cols_to_get = full_gammaSmall_cols_to_get,
-                    full_transMatRate_t_H = full_transMatRate_t_H,
-                    distinctHapsB = distinctHapsB,
-                    distinctHapsIE = distinctHapsIE,
-                    hapMatcher = hapMatcher,
-                    eMatDH_special_grid_which = eMatDH_special_grid_which,
-                    eMatDH_special_values_list = eMatDH_special_values_list,
-                    ref_error = ref_error,
-                    make_plots = FALSE, ## these plots are pretty useless? as plots?
-                    outplotprefix = outplotprefix,
-                    have_truth_haplotypes = have_truth_haplotypes,
-                    truth_haps = truth_haps,
-                    truth_labels = truth_labels,
-                    uncertain_truth_labels = uncertain_truth_labels,
-                    L_grid = L_grid,
-                    L = L,
-                    inRegion2 = inRegion2,
-                    cM_grid = cM_grid,
-                    ancAlleleFreqAll = ancAlleleFreqAll,
-                    plot_description = paste0("it", i_it, ".full"),
-                    return_good_haps = return_good_haps,
-                    Knew = Knew,
-                    return_dosage  = return_dosage,
-                    previously_selected_haplotypes = previously_selected_haplotypes,
-                    K_top_matches = K_top_matches,
-                    heuristic_match_thin = heuristic_match_thin,
-                    return_gamma_t = return_gamma_t,
-                    sample_name = sample_name,
-                    smooth_cm = smooth_cm ,
-                    regionStart = regionStart,
-                    regionEnd = regionEnd,
-                    buffer = buffer,
-                    minGLValue = minGLValue,
-                    suppressOutput = suppressOutput
-                )
-                hap1 <- impute_all[["dosage1"]]
-                hap2 <- impute_all[["dosage2"]]
-                }
+
+                    
+                    ## print("---REMOVE ME--- ahhdyehnfnehdfuhwefi")
+                    ## hap1 <- impute_all[["dosage1"]]
+                    ## hap2 <- impute_all[["dosage2"]]
+                    ## print_message("Special compare - from Gibbs")
+                    ## hap1_gibbs <- gibbs_iterate$hapProbs_t[1, ]
+                    ## hap2_gibbs <- gibbs_iterate$hapProbs_t[2, ]
+                    ## x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1_gibbs, hap2 = hap2_gibbs, truth_haps = truth_haps, af = af, verbose = verbose)
+                    ## print_message("Special compare - from split")                    
+                    ## x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = impute_all[["dosage1"]], hap2 = impute_all[["dosage2"]], truth_haps = truth_haps, af = af, verbose = verbose)
+                    ## print_message("Special compare - both")
+                    ## g <- truth_haps[inRegion2, 1] + truth_haps[inRegion2, 2]
+                    ## ## scaled version
+                    ## r2 <-  round(    cor(
+                    ## (hap1 + hap2)[inRegion2] - 2 * af[inRegion2],
+                    ## (hap1_gibbs + hap2_gibbs)[inRegion2] - 2 * af[inRegion2],
+                    ## use = "pairwise.complete.obs") ** 2, 3)
+                    ## print_message(paste0("r2 is ", r2))
+            ## }
             } else {
                 impute_all <- impute_using_everything(
                     H = read_labels,
