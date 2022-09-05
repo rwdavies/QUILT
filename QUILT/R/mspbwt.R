@@ -113,7 +113,6 @@ select_new_haps_mspbwt_v2 <- function(
         return(mtm[1:Knew, 2])
     } else if(length(unique_haps) <= Knew)  {
         new_haps <- array(NA, Knew)
-        unique_haps <- mtm[, 2]
         new_haps[1:length(unique_haps)] <- unique_haps
         new_haps[-c(1:length(unique_haps))] <- sample(setdiff(1:Kfull, unique_haps), Knew - length(unique_haps), replace = FALSE)
         return(new_haps)
