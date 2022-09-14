@@ -66,7 +66,7 @@
 #' @param n_gibbs_burn_in_its How many iterations to run the Gibbs sampler for each time it is run
 #' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
 #' @param use_small_eHapsCurrent_tc For testing purposes only
-#' @param vcf zilong favors vcf
+#' @param reference_vcf_file zilong favors vcf
 #' @param pbwtL How many neighouring haplotypes to select forward and backwards for each selection point [default 2]
 #' @param pbwtS How many SNPs as a step to do selection [default 8]
 #' @param zilong Using zilong's solution
@@ -123,6 +123,7 @@ QUILT <- function(
     minGLValue = 1e-10,
     minimum_number_of_sample_reads = 2,
     nGen = NA,
+    reference_vcf_file = "",
     reference_haplotype_file = "",
     reference_legend_file = "",
     reference_sample_file = "",
@@ -142,7 +143,6 @@ QUILT <- function(
     n_gibbs_burn_in_its = 20,
     plot_per_sample_likelihoods = FALSE,
     use_small_eHapsCurrent_tc = FALSE,
-    vcf = NULL,
     pbwtL = 2,
     pbwtS = 8,
     zilong = FALSE,
@@ -296,6 +296,8 @@ QUILT <- function(
                 maxRate = maxRate,
                 minRate = minRate,
                 use_mspbwt = use_mspbwt,
+                use_pbwt_index = zilong,
+                reference_vcf_file = reference_vcf_file,
                 output_file = prepared_reference_filename
             )
         } else {
@@ -325,29 +327,12 @@ QUILT <- function(
     }
 
     ## now build PBWT using nSNPs, nrow(rhb_t) loaded from last step
-    if(zilong && is.null(vcf)) stop("Zilong requires VCF file. Please feed vcf file!")
-
+    if(zilong && reference_vcf_file == "") stop("Zilong requires VCF file. Please feed vcf file!")
 
     if (zilong) {
-        print_message("Begin building Zilong PBWT indices")
-        if (reference_sample_file == "") {
-            subsamples <- "-" ## all samples
+        if (is.null(zilong_indices)) {
+            stop("To use zilong pbwt and QUILT, you must prepare the reference package using use_pbwt_index=TRUE")
         }
-        else if (reference_exclude_samplelist_file == "") {
-            s1 <- read.table(reference_sample_file, h = T)[,1]
-            subsamples <- paste(s1, collapse = ",")
-        }
-        else {
-            s1 <- read.table(reference_sample_file, h = T)[,1]
-            s2 <- read.table(reference_exclude_samplelist_file, h = F)[,1]
-            subsamples <- paste(s1[-which(s2%in%s1)], collapse = ",")
-        }
-        ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
-        print(samtoolslike)
-        pbwt <- pbwt_build(vcf, samples = subsamples, region = samtoolslike, N = nSNPs, M = nrow(rhb_t))
-        print_message("End building Zilong PBWT indices")
-    } else {
-        pbwt <- NULL
     }
 
 
@@ -743,8 +728,8 @@ QUILT <- function(
                 output_gt_phased_genotypes = output_gt_phased_genotypes,
                 pbwtL = pbwtL,
                 pbwtS = pbwtS,
-                pbwt = pbwt,
                 zilong = zilong,
+                zilong_indices =  zilong_indices,
                 use_mspbwt = use_mspbwt,
                 ms_indices = ms_indices,
                 use_splitreadgl = use_splitreadgl

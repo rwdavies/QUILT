@@ -24,6 +24,7 @@ tar -xzvf QUILT_example_2021_01_15A.tgz
 run QUILT with PBWT
 
 #+begin_src shell
+rm -rf quilt_output
 ./QUILT.R \
 --outputdir=quilt_output \
 --chr=chr20 \
@@ -38,7 +39,7 @@ run QUILT with PBWT
 --reference_sample_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.samples \
 --genetic_map_file=package_2021_01_15A/CEU-chr20-final.b38.txt.gz \
 --nGen=100 \
---vcf=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.vcf.gz \
+--reference_vcf_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.vcf.gz \
 --pbwtL=2 \
 --pbwtS=8 \
 --use_mspbwt=FALSE \

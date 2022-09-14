@@ -52,6 +52,7 @@ QUILT(
   minGLValue = 1e-10,
   minimum_number_of_sample_reads = 2,
   nGen = NA,
+  reference_vcf_file = "",
   reference_haplotype_file = "",
   reference_legend_file = "",
   reference_sample_file = "",
@@ -71,7 +72,6 @@ QUILT(
   n_gibbs_burn_in_its = 20,
   plot_per_sample_likelihoods = FALSE,
   use_small_eHapsCurrent_tc = FALSE,
-  vcf = NULL,
   pbwtL = 2,
   pbwtS = 8,
   zilong = FALSE,
@@ -174,6 +174,8 @@ QUILT(
 
 \item{nGen}{Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure}
 
+\item{reference_vcf_file}{zilong favors vcf}
+
 \item{reference_haplotype_file}{Path to reference haplotype file in IMPUTE format (file with no header and no rownames, one row per SNP, one column per reference haplotype, space separated, values must be 0 or 1)}
 
 \item{reference_legend_file}{Path to reference haplotype legend file in IMPUTE format (file with one row per SNP, and a header including position for the physical position in 1 based coordinates, a0 for the reference allele, and a1 for the alternate allele)}
@@ -211,8 +213,6 @@ QUILT(
 \item{plot_per_sample_likelihoods}{Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations}
 
 \item{use_small_eHapsCurrent_tc}{For testing purposes only}
-
-\item{vcf}{zilong favors vcf}
 
 \item{pbwtL}{How many neighouring haplotypes to select forward and backwards for each selection point [default 2]}
 

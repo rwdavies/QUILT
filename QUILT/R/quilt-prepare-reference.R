@@ -6,6 +6,7 @@
 #' @param regionEnd When running imputation, where to stop
 #' @param buffer Buffer of region to perform imputation over. So imputation is run form regionStart-buffer to regionEnd+buffer, and reported for regionStart to regionEnd, including the bases of regionStart and regionEnd
 #' @param output_file Path to output RData file containing prepared haplotypes (has default value that works with QUILT)
+#' @param reference_vcf_file Path to reference haplotype file in VCF format (values must be 0 or 1)
 #' @param reference_haplotype_file Path to reference haplotype file in IMPUTE format (file with no header and no rownames, one row per SNP, one column per reference haplotype, space separated, values must be 0 or 1)
 #' @param reference_legend_file Path to reference haplotype legend file in IMPUTE format (file with one row per SNP, and a header including position for the physical position in 1 based coordinates, a0 for the reference allele, and a1 for the alternate allele)
 #' @param reference_sample_file Path to reference sample file (file with header, one must be POP, corresponding to populations that can be specified using reference_populations)
@@ -21,6 +22,7 @@
 #' @param expRate Expected recombination rate in cM/Mb
 #' @param maxRate Maximum recomb rate cM/Mb
 #' @param minRate Minimum recomb rate cM/Mb
+#' @param use_pbwt_index Build zilong pbwt indices to be used in imputation
 #' @param use_mspbwt Build mspbwt indices to be used in imputation
 #' @param mspbwt_nindices How many mspbwt indices to build
 #' @return Results in properly formatted version
@@ -34,6 +36,7 @@ QUILT_prepare_reference <- function(
     regionEnd = NA,
     buffer = NA,
     output_file = "",
+    reference_vcf_file = "",
     reference_haplotype_file = "",
     reference_legend_file = "",
     reference_sample_file = "",
@@ -49,6 +52,7 @@ QUILT_prepare_reference <- function(
     expRate = 1,
     maxRate = 100,
     minRate = 0.1,
+    use_pbwt_index = FALSE,
     use_mspbwt = FALSE,
     mspbwt_nindices = 1L
 ) {
@@ -414,6 +418,29 @@ QUILT_prepare_reference <- function(
         ms_indices <- NULL
     }
 
+    if (use_pbwt_index) {
+        if(reference_vcf_file == "") stop("Zilong requires VCF file. Please feed vcf file!")
+        print_message("Build zilong-pbwt indices")
+        if (reference_sample_file == "") {
+            subsamples <- "-" ## all samples
+        }
+        else if (reference_exclude_samplelist_file == "") {
+            s1 <- read.table(reference_sample_file, h = T)[,1]
+            subsamples <- paste(s1, collapse = ",")
+        }
+        else {
+            s1 <- read.table(reference_sample_file, h = T)[,1]
+            s2 <- read.table(reference_exclude_samplelist_file, h = F)[,1]
+            subsamples <- paste(s1[-which(s2%in%s1)], collapse = ",")
+        }
+        ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
+        pbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike)
+        print_message("End building and dumping Zilong PBWT indices")
+        zilong_indices <- list(vcf = reference_vcf_file, a = paste0(reference_vcf_file, ".pbwt"), u = paste0(reference_vcf_file, ".auxu"), v = paste0(reference_vcf_file, ".auxv"))
+    } else {
+        zilong_indices <- NULL
+    }
+
 
     ##
     ## save here!
@@ -449,6 +476,7 @@ QUILT_prepare_reference <- function(
         buffer,
         chr,
         ms_indices,
+        zilong_indices,
         file = output_file,
         compress = FALSE
     )

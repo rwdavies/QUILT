@@ -12,6 +12,7 @@ QUILT_prepare_reference(
   regionEnd = NA,
   buffer = NA,
   output_file = "",
+  reference_vcf_file = "",
   reference_haplotype_file = "",
   reference_legend_file = "",
   reference_sample_file = "",
@@ -27,6 +28,7 @@ QUILT_prepare_reference(
   expRate = 1,
   maxRate = 100,
   minRate = 0.1,
+  use_pbwt_index = FALSE,
   use_mspbwt = FALSE,
   mspbwt_nindices = 1L
 )
@@ -45,6 +47,8 @@ QUILT_prepare_reference(
 \item{buffer}{Buffer of region to perform imputation over. So imputation is run form regionStart-buffer to regionEnd+buffer, and reported for regionStart to regionEnd, including the bases of regionStart and regionEnd}
 
 \item{output_file}{Path to output RData file containing prepared haplotypes (has default value that works with QUILT)}
+
+\item{reference_vcf_file}{Path to reference haplotype file in VCF format (values must be 0 or 1)}
 
 \item{reference_haplotype_file}{Path to reference haplotype file in IMPUTE format (file with no header and no rownames, one row per SNP, one column per reference haplotype, space separated, values must be 0 or 1)}
 
@@ -75,6 +79,8 @@ QUILT_prepare_reference(
 \item{maxRate}{Maximum recomb rate cM/Mb}
 
 \item{minRate}{Minimum recomb rate cM/Mb}
+
+\item{use_pbwt_index}{Build zilong pbwt indices to be used in imputation}
 
 \item{use_mspbwt}{Build mspbwt indices to be used in imputation}
 

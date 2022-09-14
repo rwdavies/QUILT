@@ -399,10 +399,10 @@ option_list <- list(
         default = FALSE
     ), 
     make_option(
-        "--vcf",
+        "--reference_vcf_file",
         type = "character",
-        help = "zilong favors vcf [default NULL] ",
-        default = NULL
+        help = "zilong favors vcf [default \"\"] ",
+        default = ""
     ), 
     make_option(
         "--pbwtL",
@@ -505,7 +505,7 @@ QUILT(
     n_gibbs_burn_in_its = opt$n_gibbs_burn_in_its,
     plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
-    vcf = opt$vcf,
+    reference_vcf_file = opt$reference_vcf_file,
     pbwtL = opt$pbwtL,
     pbwtS = opt$pbwtS,
     zilong = opt$zilong,

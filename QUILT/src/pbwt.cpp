@@ -29,7 +29,7 @@ void pbwt_index(const std::string& vcffile, const std::string& samples, const st
         nsnps++;
     }
     // build pbwt index
-    uint N = nsnps, M = nsamples * 2;
+    int N = nsnps, M = nsamples * 2;
     std::ofstream ofpbwt(vcffile + ".pbwt", std::ios::binary);
     std::ofstream ofauxu(vcffile + ".auxu", std::ios::binary);
     std::ofstream ofauxv(vcffile + ".auxv", std::ios::binary);
@@ -73,7 +73,7 @@ void pbwt_index(const std::string& vcffile, const std::string& samples, const st
 // [[Rcpp::export]]
 std::vector<int> pbwt_query(const std::string& vcffile, const std::vector<int>& z, int s, int L, int Step)
 {
-    uint N, M, i, j;
+    int N, M, i, j;
     std::ifstream ifpbwt(vcffile + ".pbwt", std::ios::binary);
     if (!ifpbwt.read(reinterpret_cast<char*>(&N), 4))
         throw std::runtime_error(strerror(errno));
@@ -82,7 +82,7 @@ std::vector<int> pbwt_query(const std::string& vcffile, const std::vector<int>& 
     assert(z.size() == N);
     std::ifstream ifauxu(vcffile + ".auxu", std::ios::binary);
     std::ifstream ifauxv(vcffile + ".auxv", std::ios::binary);
-    std::vector<uint> t(N), v(M + 1), u(M + 1), a(M);
+    std::vector<int> t(N), v(M + 1), u(M + 1), a(M);
     std::vector<int> matches;
     for (i = 0; i < N; i++)
     {
@@ -122,7 +122,7 @@ std::vector<int> pbwt_query(const std::string& vcffile, const std::vector<int>& 
                     matches.push_back(a[(t[s] - j) > 0 ? (t[s] - j) : 0]);
                 // L haps after z;
                 for (j = 0; j < L; j++)
-                    matches.push_back(a[(t[s] + j) > M - 1] ? (t[s] + j) : (M - 1));
+                    matches.push_back(a[(t[s] + j) < M - 1 ? (t[s] + j) : (M - 1)]);
             }
             s += Step;
         }
@@ -131,8 +131,6 @@ std::vector<int> pbwt_query(const std::string& vcffile, const std::vector<int>& 
 }
 
 
-//' @export
-// [[Rcpp::export]]
 List pbwt_build(String vcf, String samples, String region, int N, int M) {
     // N is number of SNPs, M is number of Haps
     IntegerMatrix a(N, M), u(N, M + 1), v(N, M + 1);
@@ -192,8 +190,6 @@ List pbwt_build(String vcf, String samples, String region, int N, int M) {
     return out;
 }
 
-//' @export
-// [[Rcpp::export]]
 std::vector<int> find_neighour_haps(List p, IntegerVector z, int L = 1, int Step = 2) {
     if (!p.inherits("pbwt")) stop("Input must contain pbwt struct!");
     int N = p["n"];

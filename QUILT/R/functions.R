@@ -455,7 +455,7 @@
 ## @param pbwt is constructed by pbwt_build in pbwt.cpp
 select_new_haps_pbwt <- function(
     hapProbs_t,
-    pbwt,
+    vcf,
     Kfull,
     Knew,
     L = 2,
@@ -463,7 +463,8 @@ select_new_haps_pbwt <- function(
 ) {
   vals <- unlist(sapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
-    unique(find_neighour_haps(pbwt, hap, L, Step))
+    s <- floor(runif(1) * Step) # flip a coin to pick a start point;
+    unique(pbwt_query(vcf, hap, s, L, Step))
   }))
   vals <- unique(vals) + 1 # 1-based
   if (length(vals) >= Knew) {
@@ -564,8 +565,8 @@ get_and_impute_one_sample <- function(
     output_gt_phased_genotypes,
     pbwtL,
     pbwtS,
-    pbwt,
     zilong,
+    zilong_indices,
     use_mspbwt,
     ms_indices,
     use_splitreadgl
@@ -838,7 +839,6 @@ get_and_impute_one_sample <- function(
                 return_genProbs <- FALSE
                 return_hapProbs <- FALSE
             }
-            if (!is.null(pbwt)) return_hapProbs <- TRUE
 
             ## print_message(paste0("i_gibbs, which_haps_to_use = ", paste(which_haps_to_use, collapse = ",")))
             if (zilong | use_mspbwt) {
@@ -954,7 +954,7 @@ get_and_impute_one_sample <- function(
 
             if (zilong) {
                 ## TODO which_haps_to_use should be returned by PBWT selection
-                which_haps_to_use <- select_new_haps_pbwt(gibbs_iterate$hapProbs_t, pbwt, Kfull =  nrow(rhb_t), Knew = Knew,L = pbwtL, Step = pbwtS)
+                which_haps_to_use <- select_new_haps_pbwt(gibbs_iterate$hapProbs_t, zilong_indices$vcf, Kfull =  nrow(rhb_t), Knew = Knew,L = pbwtL, Step = pbwtS)
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
             } else if (use_mspbwt) {

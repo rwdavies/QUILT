@@ -44,6 +44,12 @@ option_list <- list(
         default = ""
     ), 
     make_option(
+        "--reference_vcf_file",
+        type = "character",
+        help = "Path to reference haplotype file in VCF format (values must be 0 or 1) [default \"\"] ",
+        default = ""
+    ), 
+    make_option(
         "--reference_haplotype_file",
         type = "character",
         help = "Path to reference haplotype file in IMPUTE format (file with no header and no rownames, one row per SNP, one column per reference haplotype, space separated, values must be 0 or 1) [default \"\"] ",
@@ -134,6 +140,12 @@ option_list <- list(
         default = 0.1
     ), 
     make_option(
+        "--use_pbwt_index",
+        type = "logical",
+        help = "Build zilong pbwt indices to be used in imputation [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
         "--use_mspbwt",
         type = "logical",
         help = "Build mspbwt indices to be used in imputation [default FALSE] ",
@@ -157,6 +169,7 @@ QUILT_prepare_reference(
     regionEnd = opt$regionEnd,
     buffer = opt$buffer,
     output_file = opt$output_file,
+    reference_vcf_file = opt$reference_vcf_file,
     reference_haplotype_file = opt$reference_haplotype_file,
     reference_legend_file = opt$reference_legend_file,
     reference_sample_file = opt$reference_sample_file,
@@ -172,6 +185,7 @@ QUILT_prepare_reference(
     expRate = opt$expRate,
     maxRate = opt$maxRate,
     minRate = opt$minRate,
+    use_pbwt_index = opt$use_pbwt_index,
     use_mspbwt = opt$use_mspbwt,
     mspbwt_nindices = opt$mspbwt_nindices
 )
