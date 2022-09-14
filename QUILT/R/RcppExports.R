@@ -197,6 +197,16 @@ rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects <- functio
 }
 
 #' @export
+pbwt_index <- function(vcffile, samples, region) {
+    invisible(.Call('_QUILT_pbwt_index', PACKAGE = 'QUILT', vcffile, samples, region))
+}
+
+#' @export
+pbwt_query <- function(vcffile, z, s, L, Step) {
+    .Call('_QUILT_pbwt_query', PACKAGE = 'QUILT', vcffile, z, s, L, Step)
+}
+
+#' @export
 pbwt_build <- function(vcf, samples, region, N, M) {
     .Call('_QUILT_pbwt_build', PACKAGE = 'QUILT', vcf, samples, region, N, M)
 }

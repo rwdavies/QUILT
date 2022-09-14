@@ -960,6 +960,33 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// pbwt_index
+void pbwt_index(const std::string& vcffile, const std::string& samples, const std::string& region);
+RcppExport SEXP _QUILT_pbwt_index(SEXP vcffileSEXP, SEXP samplesSEXP, SEXP regionSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type vcffile(vcffileSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type samples(samplesSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type region(regionSEXP);
+    pbwt_index(vcffile, samples, region);
+    return R_NilValue;
+END_RCPP
+}
+// pbwt_query
+std::vector<int> pbwt_query(const std::string& vcffile, const std::vector<int>& z, int s, int L, int Step);
+RcppExport SEXP _QUILT_pbwt_query(SEXP vcffileSEXP, SEXP zSEXP, SEXP sSEXP, SEXP LSEXP, SEXP StepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type vcffile(vcffileSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type z(zSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< int >::type L(LSEXP);
+    Rcpp::traits::input_parameter< int >::type Step(StepSEXP);
+    rcpp_result_gen = Rcpp::wrap(pbwt_query(vcffile, z, s, L, Step));
+    return rcpp_result_gen;
+END_RCPP
+}
 // pbwt_build
 List pbwt_build(String vcf, String samples, String region, int N, int M);
 RcppExport SEXP _QUILT_pbwt_build(SEXP vcfSEXP, SEXP samplesSEXP, SEXP regionSEXP, SEXP NSEXP, SEXP MSEXP) {
@@ -1305,6 +1332,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 64},
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 11},
     {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 11},
+    {"_QUILT_pbwt_index", (DL_FUNC) &_QUILT_pbwt_index, 3},
+    {"_QUILT_pbwt_query", (DL_FUNC) &_QUILT_pbwt_query, 5},
     {"_QUILT_pbwt_build", (DL_FUNC) &_QUILT_pbwt_build, 5},
     {"_QUILT_find_neighour_haps", (DL_FUNC) &_QUILT_find_neighour_haps, 4},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
