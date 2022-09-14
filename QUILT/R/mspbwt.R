@@ -85,19 +85,22 @@ select_new_haps_mspbwt_v2 <- function(
     all_symbols,
     nGrids
 ) {
+    iIndex <- 1
+    ihap <- 1
     nIndices <- length(ms_indices)
-    mtms <- lapply(1:nIndices, function(iIndex) {
-        a <- lapply(1:2, function(ihap) {
-            hap <- round(hapProbs_t[ihap, ])
-            Zs <- rcpp_int_contract(hap) 
-            which_grids <- seq(iIndex, ncol(hapMatcher), nIndices)
-            Zg <- mspbwt::map_Z_to_all_symbols(Zs[which_grids], ms_indices[[iIndex]][["all_symbols"]])
+    a <- lapply(1:2, function(ihap) {
+        hap <- round(hapProbs_t[ihap, ])
+        Zs <- rcpp_int_contract(hap)
+        mtms <- lapply(1:nIndices, function(iIndex) {
+            which_grids <- seq(iIndex, nGrids, nIndices)
+            Z_local <- mspbwt::map_Z_to_all_symbols(Zs[which_grids], ms_indices[[iIndex]][["all_symbols"]])
             mtm <- mspbwt::Rcpp_ms_MatchZ_Algorithm5(
-              X = hapMatcher,
-              ms_indices = ms_indices[[iIndex]],
-              Z = Zg,
-              cols_to_use0 = as.integer(which_grids - 1L),
-              use_cols_to_use0 = TRUE
+                X = hapMatcher,
+                ms_indices = ms_indices[[iIndex]],
+                Z = Z_local,
+                cols_to_use0 = as.integer(which_grids - 1L),
+                use_cols_to_use0 = TRUE,
+                verbose = FALSE
             )
             mtm[, 2] <- mtm[, 2] + 1 ## make 1-based here
             key <- nGrids * mtm[, 3] + mtm[, 4]
@@ -105,16 +108,17 @@ select_new_haps_mspbwt_v2 <- function(
             mtm <- cbind(mtm, key, length)
             mtm
         })
-        mtm <- rbind(a[[1]], a[[2]])
-        mtm <- mtm[order(-mtm[, 6], mtm[, 5]), ]
-    })
-    ## all that now matters is haplotype being considered, and length
-    mtm <- rbind(mtms[[1]])
-    if (length(mtms) > 1) {
-        for(j in 2:length(mtms)) {
-            mtm <- rbind(mtm, mtms[[j]])
+        mtm <- mtms[[1]]
+        if (length(mtms) > 1) {
+            for(j in 2:length(mtms)) {
+                mtm <- rbind(mtm, mtms[[j]])
+            }
         }
-    }
+        mtm
+    })
+    mtm <- rbind(a[[1]], a[[2]])
+    ## order everything
+    mtm <- mtm[order(-mtm[, "length"], mtm[, "key"]), ]    
     unique_haps <- unique(mtm[, 2])
     if (length(unique_haps) > Knew) {
         return(mtm[1:Knew, 2])

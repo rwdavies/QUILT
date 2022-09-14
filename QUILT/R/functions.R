@@ -574,7 +574,7 @@ get_and_impute_one_sample <- function(
 
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
-    nGrids <- length(grid)
+    nGrids <- ncol(rhb_t)
     suppressOutput <- !print_extra_timing_information
 
     ##
