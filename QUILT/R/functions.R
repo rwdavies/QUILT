@@ -567,7 +567,8 @@ get_and_impute_one_sample <- function(
     pbwt,
     zilong,
     use_mspbwt,
-    ms_indices
+    ms_indices,
+    use_splitreadgl
 ) {
 
 
@@ -957,6 +958,8 @@ get_and_impute_one_sample <- function(
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
             } else if (use_mspbwt) {
+
+                if (use_splitreadgl) {
                     impute_all <- impute_using_split_reads_and_small_ref_panel(
                         H = read_labels,
                         which_haps_to_use = which_haps_to_use,
@@ -1002,9 +1005,12 @@ get_and_impute_one_sample <- function(
                         minGLValue = minGLValue,
                         suppressOutput = suppressOutput
                     )
-
                     hap1 <- impute_all[["dosage1"]]
                     hap2 <- impute_all[["dosage2"]]
+                } else {
+                    hap1 <- gibbs_iterate$hapProbs_t[1, ]
+                    hap2 <- gibbs_iterate$hapProbs_t[2, ]
+                }
 
                 which_haps_to_use <- select_new_haps_mspbwt_v2(
                     hapProbs_t = rbind(hap1, hap2),

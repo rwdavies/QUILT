@@ -22,6 +22,7 @@
 #' @param maxRate Maximum recomb rate cM/Mb
 #' @param minRate Minimum recomb rate cM/Mb
 #' @param use_mspbwt Build mspbwt indices to be used in imputation
+#' @param mspbwt_nindices How many mspbwt indices to build
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -48,7 +49,8 @@ QUILT_prepare_reference <- function(
     expRate = 1,
     maxRate = 100,
     minRate = 0.1,
-    use_mspbwt = FALSE
+    use_mspbwt = FALSE,
+    mspbwt_nindices = 1L
 ) {
 
     x <- as.list(environment())
@@ -86,6 +88,15 @@ QUILT_prepare_reference <- function(
         if (!file.exists(genetic_map_file)) {
             stop(paste0("Cannot find file:", genetic_map_file))
         }
+    }
+    if (!(class(mspbwt_nindices) %in% c("integer", "numeric"))) {
+        stop("mspbwt_nindices must be either numeric or integer")
+    }
+    if (mspbwt_nindices < 1) {
+        stop("mspbwt_nindices must be at least 1")
+    }
+    if (round(mspbwt_nindices) != mspbwt_nindices) {
+        stop("mspbwt_nindices must be an integer")
     }
 
     ##
@@ -388,9 +399,9 @@ QUILT_prepare_reference <- function(
     if (use_mspbwt) {
         print_message("Build mspbwt indices")
         all_symbols <- out$all_symbols
-        nIndices <- 3
-        ms_indices <- lapply(1:nIndices, function(iIndex) {
-            w <- seq(iIndex, ncol(hapMatcher), nIndices)
+        mspbwt_nindices
+        ms_indices <- lapply(1:mspbwt_nindices, function(iIndex) {
+            w <- seq(iIndex, ncol(hapMatcher), mspbwt_nindices)
             return(mspbwt::Rcpp_ms_BuildIndices_Algorithm5(
                 X1C = hapMatcher[, w, drop = FALSE],
                 all_symbols = all_symbols[w],

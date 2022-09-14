@@ -27,7 +27,8 @@ QUILT_prepare_reference(
   expRate = 1,
   maxRate = 100,
   minRate = 0.1,
-  use_mspbwt = FALSE
+  use_mspbwt = FALSE,
+  mspbwt_nindices = 1L
 )
 }
 \arguments{
@@ -76,6 +77,8 @@ QUILT_prepare_reference(
 \item{minRate}{Minimum recomb rate cM/Mb}
 
 \item{use_mspbwt}{Build mspbwt indices to be used in imputation}
+
+\item{mspbwt_nindices}{How many mspbwt indices to build}
 }
 \value{
 Results in properly formatted version

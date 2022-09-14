@@ -85,17 +85,19 @@ select_new_haps_mspbwt_v2 <- function(
     all_symbols,
     nGrids
 ) {
-    nIndices <- 3
+    nIndices <- length(ms_indices)
     mtms <- lapply(1:nIndices, function(iIndex) {
         a <- lapply(1:2, function(ihap) {
             hap <- round(hapProbs_t[ihap, ])
             Zs <- rcpp_int_contract(hap) 
-            w <- seq(iIndex, ncol(hapMatcher), nIndices)  
-            Zg <- mspbwt::map_Z_to_all_symbols(Zs[w], ms_indices[[iIndex]][["all_symbols"]])
+            which_grids <- seq(iIndex, ncol(hapMatcher), nIndices)
+            Zg <- mspbwt::map_Z_to_all_symbols(Zs[which_grids], ms_indices[[iIndex]][["all_symbols"]])
             mtm <- mspbwt::Rcpp_ms_MatchZ_Algorithm5(
-              X = hapMatcher[, w],
+              X = hapMatcher,
               ms_indices = ms_indices[[iIndex]],
-              Z = Zg
+              Z = Zg,
+              cols_to_use0 = as.integer(which_grids - 1L),
+              use_cols_to_use0 = TRUE
             )
             mtm[, 2] <- mtm[, 2] + 1 ## make 1-based here
             key <- nGrids * mtm[, 3] + mtm[, 4]
@@ -107,7 +109,12 @@ select_new_haps_mspbwt_v2 <- function(
         mtm <- mtm[order(-mtm[, 6], mtm[, 5]), ]
     })
     ## all that now matters is haplotype being considered, and length
-    mtm <- rbind(mtms[[1]], mtms[[2]], mtms[[3]])
+    mtm <- rbind(mtms[[1]])
+    if (length(mtms) > 1) {
+        for(j in 2:length(mtms)) {
+            mtm <- rbind(mtm, mtms[[j]])
+        }
+    }
     unique_haps <- unique(mtm[, 2])
     if (length(unique_haps) > Knew) {
         return(mtm[1:Knew, 2])

@@ -71,6 +71,7 @@
 #' @param pbwtS How many SNPs as a step to do selection [default 8]
 #' @param zilong Using zilong's solution
 #' @param use_mspbwt Use msPBWT to select new haplotypes
+#' @param use_splitreadgl Use split real GL in hap selection and imputation
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -145,7 +146,8 @@ QUILT <- function(
     pbwtL = 2,
     pbwtS = 8,
     zilong = FALSE,
-    use_mspbwt = FALSE
+    use_mspbwt = FALSE,
+    use_splitreadgl = TRUE
 ) {
 
     x <- as.list(environment())
@@ -744,7 +746,8 @@ QUILT <- function(
                 pbwt = pbwt,
                 zilong = zilong,
                 use_mspbwt = use_mspbwt,
-                ms_indices = ms_indices
+                ms_indices = ms_indices,
+                use_splitreadgl = use_splitreadgl
             )
 
             if (out[["sample_was_imputed"]]) {

@@ -75,7 +75,8 @@ QUILT(
   pbwtL = 2,
   pbwtS = 8,
   zilong = FALSE,
-  use_mspbwt = FALSE
+  use_mspbwt = FALSE,
+  use_splitreadgl = TRUE
 )
 }
 \arguments{
@@ -220,6 +221,8 @@ QUILT(
 \item{zilong}{Using zilong's solution}
 
 \item{use_mspbwt}{Use msPBWT to select new haplotypes}
+
+\item{use_splitreadgl}{Use split real GL in hap selection and imputation}
 }
 \value{
 Results in properly formatted version

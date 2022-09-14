@@ -138,6 +138,12 @@ option_list <- list(
         type = "logical",
         help = "Build mspbwt indices to be used in imputation [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--mspbwt_nindices",
+        type = "integer",
+        help = "How many mspbwt indices to build [default 1L] ",
+        default = 1L
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -166,5 +172,6 @@ QUILT_prepare_reference(
     expRate = opt$expRate,
     maxRate = opt$maxRate,
     minRate = opt$minRate,
-    use_mspbwt = opt$use_mspbwt
+    use_mspbwt = opt$use_mspbwt,
+    mspbwt_nindices = opt$mspbwt_nindices
 )

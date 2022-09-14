@@ -427,6 +427,12 @@ option_list <- list(
         type = "logical",
         help = "Use msPBWT to select new haplotypes [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--use_splitreadgl",
+        type = "logical",
+        help = "Use split real GL in hap selection and imputation [default TRUE] ",
+        default = TRUE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -503,5 +509,6 @@ QUILT(
     pbwtL = opt$pbwtL,
     pbwtS = opt$pbwtS,
     zilong = opt$zilong,
-    use_mspbwt = opt$use_mspbwt
+    use_mspbwt = opt$use_mspbwt,
+    use_splitreadgl = opt$use_splitreadgl
 )
