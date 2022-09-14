@@ -1012,17 +1012,16 @@ get_and_impute_one_sample <- function(
                     hap2 <- gibbs_iterate$hapProbs_t[2, ]
                 }
 
+                hapProbs_t <- rbind(hap1, hap2)
+                Kfull <- nrow(rhb_t)
                 which_haps_to_use <- select_new_haps_mspbwt_v2(
-                    hapProbs_t = rbind(hap1, hap2),
+                    hapProbs_t = hapProbs_t,
                     hapMatcher = hapMatcher,
                     ms_indices = ms_indices,
                     Knew = Knew,
-                    Kfull = nrow(rhb_t),
-                    all_symbols = ms_indices[["all_symbols"]],
-                    nGrids = nGrids
+                    Kfull = Kfull
                 )
 
-                    
                     ## print("---REMOVE ME--- ahhdyehnfnehdfuhwefi")
                     ## hap1 <- impute_all[["dosage1"]]
                     ## hap2 <- impute_all[["dosage2"]]

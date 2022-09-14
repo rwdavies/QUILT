@@ -81,13 +81,12 @@ select_new_haps_mspbwt_v2 <- function(
     hapMatcher,
     ms_indices,
     Knew,
-    Kfull,
-    all_symbols,
-    nGrids
+    Kfull
 ) {
     iIndex <- 1
     ihap <- 1
     nIndices <- length(ms_indices)
+    nGrids <- ncol(hapMatcher)
     a <- lapply(1:2, function(ihap) {
         hap <- round(hapProbs_t[ihap, ])
         Zs <- rcpp_int_contract(hap)
@@ -100,7 +99,8 @@ select_new_haps_mspbwt_v2 <- function(
                 Z = Z_local,
                 cols_to_use0 = as.integer(which_grids - 1L),
                 use_cols_to_use0 = TRUE,
-                verbose = FALSE
+                verbose = FALSE,
+                min_length = 3
             )
             mtm[, 2] <- mtm[, 2] + 1 ## make 1-based here
             key <- nGrids * mtm[, 3] + mtm[, 4]
@@ -119,20 +119,25 @@ select_new_haps_mspbwt_v2 <- function(
     mtm <- rbind(a[[1]], a[[2]])
     ## order everything
     mtm <- mtm[order(-mtm[, "length"], mtm[, "key"]), ]    
-    unique_haps <- unique(mtm[, 2])
-    if (length(unique_haps) > Knew) {
-        return(mtm[1:Knew, 2])
-    } else if(length(unique_haps) <= Knew)  {
+    unique_haps <- unique(mtm[, "indexB0"])
+    if(length(unique_haps) <= Knew)  {
         new_haps <- array(NA, Knew)
         new_haps[1:length(unique_haps)] <- unique_haps
         new_haps[-c(1:length(unique_haps))] <- sample(setdiff(1:Kfull, unique_haps), Knew - length(unique_haps), replace = FALSE)
         return(new_haps)
     } else {
-        ## sort by length
-        ## though darn this does nothing about region specificity!
-        ## though not sure that is a problem
-        mtm <- mtm[order(mtm[, "length"], mtm[, 2]), ]
-        return(unique(mtm[, 2])[1:Knew])
+        ## so this doesn't do anything about region specificity
+        ## as long as there are buffers it should be pretty OK
+        ## it will favour the longest matches, and take one per key
+        ## if it exhausts that, it will take other unique long hones
+        unique_keys <- unique(mtm[, "key"])
+        unique_haps_at_unique_keys <- unique(mtm[match(unique_keys, mtm[, "key"]), "indexB0"])
+        if (length(unique_haps_at_unique_keys) > Knew) {
+            return(unique_haps_at_unique_keys[1:Knew])
+        } else {
+            ## otherwise, take unique ones, then next best ones, from length down
+            return(c(unique_haps_at_unique_keys, setdiff(unique_haps, unique_haps_at_unique_keys))[1:Knew])
+        }
     }
 }
 
