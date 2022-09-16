@@ -2,7 +2,7 @@
  * @file        https://github.com/Zilong-Li/vcfpp/vcfpp.h
  * @author      Zilong Li
  * @email       zilong.dk@gmail.com
- * @version     v0.1.0
+ * @version     v0.1.1
  * @breif       a single C++ file for manipulating VCF
  * Copyright (C) 2022. The use of this code is governed by the LICENSE file.
  ******************************************************************************/
@@ -101,7 +101,7 @@ namespace vcfpp
         {
             return false;
         }
-    };
+    }
 
     /**
      * @class BcfHeader
@@ -974,14 +974,15 @@ namespace vcfpp
          *                  ^LIST : exclude samples from list \n
          *                  "-" : include all samples \n
          *                  "" : exclude all samples
-         *  @param region samtools-like region "chr:start-end"
+         *  @param region samtools-like region "chr:start-end", skip if empty
          */
         BcfReader(const std::string& file, const std::string& samples, const std::string& region) : fname(file)
         {
             Open(file);
             header.setSamples(samples);
             nsamples = bcf_hdr_nsamples(header.hdr);
-            setRegion(region);
+            if (!region.empty())
+                setRegion(region);
             SamplesName = header.getSamples();
         }
 

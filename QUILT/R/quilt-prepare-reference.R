@@ -434,9 +434,10 @@ QUILT_prepare_reference <- function(
             subsamples <- paste(s1[-which(s2%in%s1)], collapse = ",")
         }
         ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
-        pbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike)
+        pbwtfile <- paste0(outputdir, "/" , regionName)
+        pbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike, outfile = pbwtfile)
         print_message("End building and dumping Zilong PBWT indices")
-        zilong_indices <- list(vcf = reference_vcf_file, a = paste0(reference_vcf_file, ".pbwt"), u = paste0(reference_vcf_file, ".auxu"), v = paste0(reference_vcf_file, ".auxv"))
+        zilong_indices <- list(pbwtfile = pbwtfile, a = paste0(reference_vcf_file, ".pbwt"), u = paste0(reference_vcf_file, ".auxu"))
     } else {
         zilong_indices <- NULL
     }

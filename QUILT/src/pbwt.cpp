@@ -2,6 +2,8 @@
 
 #include <Rcpp.h>
 #include <fstream>
+#include <cstdlib>
+#include <cmath>
 #include "vcfpp.h"
 
 using namespace Rcpp;
@@ -13,7 +15,7 @@ typedef uint64_t uint2;
 /// build and dump pbwt FM-index to disk;
 //' @export
 // [[Rcpp::export]]
-void pbwt_index(const std::string& vcffile, const std::string& samples, const std::string& region)
+void pbwt_index(const std::string& vcffile, const std::string& samples, const std::string& region, const std::string& outfile)
 {
     BcfReader vcf(vcffile, samples, region);
     BcfRecord var(vcf.header);
@@ -30,12 +32,11 @@ void pbwt_index(const std::string& vcffile, const std::string& samples, const st
     }
     // build pbwt index
     int N = nsnps, M = nsamples * 2;
-    std::ofstream ofpbwt(vcffile + ".pbwt", std::ios::binary);
-    std::ofstream ofauxu(vcffile + ".auxu", std::ios::binary);
-    std::ofstream ofauxv(vcffile + ".auxv", std::ios::binary);
+    std::ofstream ofpbwt(outfile + ".pbwt", std::ios::binary);
+    std::ofstream ofauxu(outfile + ".auxu", std::ios::binary);
     ofpbwt.write(reinterpret_cast<char*>(&N), 4);
     ofpbwt.write(reinterpret_cast<char*>(&M), 4);
-    std::vector<uint> at(M), a(M), a0(M), a1(M), u(M + 1), v(M + 1);
+    std::vector<uint> at(M), a(M), a0(M), a1(M), u(M + 1);
     uint i, j, u_, v_, a_;
     for (j = 0; j < N; j++)
     {
@@ -45,16 +46,15 @@ void pbwt_index(const std::string& vcffile, const std::string& samples, const st
         for (i = 0; i < M; i++)
         {
             a_ = j > 0 ? at[i] : i;
-            u[i] = u_; v[i] = v_;
+            u[i] = u_;
             if (x[j][a_])
                 a1[v_++] = a_;
             else
                 a0[u_++] = a_;
         }
-        u[M] = u_; v[M] = M;
+        u[M] = u_;
         for (i = 0; i < M; i++)
         {
-            v[i] += u_;
             if (i < u_)
                 a[i] = a0[i];
             else
@@ -64,30 +64,31 @@ void pbwt_index(const std::string& vcffile, const std::string& samples, const st
             throw std::runtime_error(strerror(errno));
         if (!ofauxu.write(reinterpret_cast<char*>(&u[0]), u.size() * 4))
             throw std::runtime_error(strerror(errno));
-        if (!ofauxv.write(reinterpret_cast<char*>(&v[0]), v.size() * 4))
-            throw std::runtime_error(strerror(errno));
     }
 }
 
 //' @export
 // [[Rcpp::export]]
-std::vector<int> pbwt_query(const std::string& vcffile, const std::vector<int>& z, int s, int L, int Step)
+std::vector<int> pbwt_query(const std::string& pbwtfile, const std::vector<int>& z, int L, int Step)
 {
-    int N, M, i, j;
-    std::ifstream ifpbwt(vcffile + ".pbwt", std::ios::binary);
+    int N, M, i, j, s, k = 0;
+    std::ifstream ifpbwt(pbwtfile + ".pbwt", std::ios::binary);
     if (!ifpbwt.read(reinterpret_cast<char*>(&N), 4))
         throw std::runtime_error(strerror(errno));
     if (!ifpbwt.read(reinterpret_cast<char*>(&M), 4))
         throw std::runtime_error(strerror(errno));
     assert(z.size() == N);
-    std::ifstream ifauxu(vcffile + ".auxu", std::ios::binary);
-    std::ifstream ifauxv(vcffile + ".auxv", std::ios::binary);
-    std::vector<int> t(N), v(M + 1), u(M + 1), a(M);
+    std::ifstream ifauxu(pbwtfile + ".auxu", std::ios::binary);
+    std::vector<int> t(N), u(M + 1), a(M);
     std::vector<int> matches;
+    std::vector<int> selects; // random pick a selection point at each Step;
+    NumericVector rng = runif( N / Step); // flip the coin to make a decision;
+    // for (i = 1; i < std::ceil(N / Step); i++)
+    for (i = 1; i < rng.size(); i++)
+        selects.push_back(i * Step + floor(rng[i] * Step));
     for (i = 0; i < N; i++)
     {
         ifauxu.read(reinterpret_cast<char*>(&u[0]), 4 * (M + 1));
-        ifauxv.read(reinterpret_cast<char*>(&v[0]), 4 * (M + 1));
         if (i == 0)
         {
             t[0] = z[0] ? M : 0;
@@ -95,12 +96,13 @@ std::vector<int> pbwt_query(const std::string& vcffile, const std::vector<int>& 
         else
         {
             if (z[i])
-                t[i] = v[t[i - 1]];
+                t[i] = u[M] + t[i - 1] - u[t[i - 1]];
             else
                 t[i] = u[t[i - 1]];
         }
-        if (s < N && i == s)
+        if (selects[k] < N && selects[k] == i)
         {
+            s = selects[k];
             ifpbwt.seekg((uint2)s * M * 4 + 8, std::ios_base::beg);
             ifpbwt.read(reinterpret_cast<char*>(&a[0]), 4 * M);
             if (t[s] == M)
@@ -124,7 +126,7 @@ std::vector<int> pbwt_query(const std::string& vcffile, const std::vector<int>& 
                 for (j = 0; j < L; j++)
                     matches.push_back(a[(t[s] + j) < M - 1 ? (t[s] + j) : (M - 1)]);
             }
-            s += Step;
+            k = k + 1;
         }
     }
     return matches;
