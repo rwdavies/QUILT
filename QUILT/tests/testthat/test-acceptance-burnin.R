@@ -34,14 +34,15 @@ data_package <- STITCH::make_acceptance_test_data_package(
     K = K,
     phasemaster = phasemaster
 )
+n_samples_per_pop <- 50
 refpack <- STITCH::make_reference_package(
     n_snps = n_snps,
-    n_samples_per_pop = 50,
+    n_samples_per_pop = n_samples_per_pop,
     reference_populations = c("CEU", "GBR"),
     chr = chr,
     phasemaster = phasemaster
 )
-
+Ktotal <- 2 * 2 * n_samples_per_pop
 
 test_that("QUILT can impute a few samples in a standard way, using a large panel", {
 
@@ -67,7 +68,7 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
     regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)    
     expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
     i <- 1
-    
+
     QUILT(
         outputdir = outputdir,
         chr = data_package$chr,
@@ -77,14 +78,17 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
         bamlist = data_package$bamlist,
         posfile = data_package$posfile,
         genfile = data_package$genfile,
-        nGibbsSamples = 5,
+        nGibbsSamples = 3,
         n_seek_its = 4,
         n_burn_in_seek_its = 2,
-        nCores = 1
+        nCores = 1,
+        Ksubset = 50,
+        Knew = 50,
+        override_default_params_for_small_ref_panel = FALSE
     )
+    ## 
 
     which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
-    
     ## now evaluate versus truth!
     check_quilt_output(
         file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),

@@ -637,6 +637,7 @@ get_and_impute_one_sample <- function(
 
     i_gibbs_sample <- 1
     dosage <- numeric(nSNPs)
+    nDosage <- 0
     gp_t <- array(0, c(3, nSNPs))
     wif0 <- as.integer(sapply(sampleReads, function(x) x[[2]]))
     grid_has_read <- rep(FALSE, nGrids)
@@ -951,7 +952,7 @@ get_and_impute_one_sample <- function(
             read_labels <- gibbs_iterate$double_list_of_ending_read_labels[[1]][[1]]
             previously_selected_haplotypes <- sample(which_haps_to_use, Ksubset - Knew)
             # is equavaliant to hapProbs_t
-            return_dosage <- (have_truth_haplotypes | record_interim_dosages | (i_it == n_seek_its))
+            return_dosage <- (have_truth_haplotypes | record_interim_dosages | (i_it > n_burn_in_seek_its))
 
             if (zilong) {
                 ## TODO which_haps_to_use should be returned by PBWT selection
@@ -1101,20 +1102,30 @@ get_and_impute_one_sample <- function(
                 read_label_matrix[, paste0("gibbs", i_it)] <- read_labels
             }
 
-            if (have_truth_haplotypes) {
-                w <- i_it + n_seek_its * (i_gibbs_sample - 1)
-                x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose)
-                pse_mat[w, ] <- c(i_gibbs_sample, i_it, as.integer(phasing_it), x)
+            ## if not a phasing iteration, and past burn in, store!
+            if (!phasing_it && (i_it > n_burn_in_seek_its)) {
+                ## print(paste0("temptemp - ", i_gibbs_sample, " ", i_it, " ", n_seek_its, " ", n_burn_in_seek_its))
+                dosage <- dosage + hap1 + hap2
+                gp_t <- gp_t +
+                    rbind((1 - hap1) * (1 - hap2), (1 - hap1) * hap2 + hap1 * (1 - hap2), hap1 * hap2)
+                nDosage <- nDosage + 1
+            
+                if (have_truth_haplotypes) {
+                    w <- i_it + n_seek_its * (i_gibbs_sample - 1)
+                    x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose)
+                    pse_mat[w, ] <- c(i_gibbs_sample, i_it, as.integer(phasing_it), x)
+                } else if (have_truth_genotypes) {
+                    r2 <-  round(cor((dosage / nDosage)[inRegion2] - 2 * af[inRegion2], gen[inRegion2, sampleNames[iSample]] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
+                    print_message(paste0("Current accuracy for this gibbs sample for ", sample_name, ", r2:", r2))
+                }
+
             }
+
+
         }
 
         if (!phasing_it) {
             ## for phasing bit
-            if (i_it > n_burn_in_seek_its) {
-                dosage <- dosage + hap1 + hap2
-                gp_t <- gp_t +
-                    rbind((1 - hap1) * (1 - hap2), (1 - hap1) * hap2 + hap1 * (1 - hap2), hap1 * hap2)
-            }
             read_label_matrix_all[, i_gibbs_sample] <- read_labels
             read_label_matrix_conf[, i_gibbs_sample] <- assess_ability_of_reads_to_be_confident(
                 hap1 = hap1,
@@ -1185,8 +1196,8 @@ get_and_impute_one_sample <- function(
         imputed_truth_haplotypes <- NULL
     }
 
-    dosage <- dosage / nGibbsSamples
-    gp_t <- gp_t / nGibbsSamples
+    dosage <- dosage / nDosage
+    gp_t <- gp_t / nDosage
 
     ##
     ## print final accuracies
