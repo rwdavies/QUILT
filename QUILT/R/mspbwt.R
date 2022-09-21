@@ -120,7 +120,11 @@ select_new_haps_mspbwt_v2 <- function(
     ## order everything
     mtm <- mtm[order(-mtm[, "length"], mtm[, "key"]), ]    
     unique_haps <- unique(mtm[, "indexB0"])
-    if(length(unique_haps) <= Knew)  {
+    if (length(unique_haps) == 0) {
+        ## special fluke case
+        new_haps <- sample(1:Kfull, Knew)
+        return(new_haps)
+    } else if(length(unique_haps) <= Knew)  {
         new_haps <- array(NA, Knew)
         new_haps[1:length(unique_haps)] <- unique_haps
         new_haps[-c(1:length(unique_haps))] <- sample(setdiff(1:Kfull, unique_haps), Knew - length(unique_haps), replace = FALSE)

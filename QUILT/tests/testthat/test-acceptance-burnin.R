@@ -11,7 +11,9 @@ if ( 1 == 0 ) {
     }
     o <- sapply(a, source)
 
+
 }
+
 
 n_snps <- 50
 chr <- 10
@@ -19,11 +21,12 @@ K <- 6
 set.seed(919)
 phasemaster <- array(sample(c(0, 1), n_snps * K, replace = TRUE), c(n_snps, K))
 reads_span_n_snps <- 3
+n_samples <- 3
 ## want about 4X here
 n_reads <- round(4 * n_snps / reads_span_n_snps)
 data_package <- STITCH::make_acceptance_test_data_package(
     reads_span_n_snps = reads_span_n_snps,
-    n_samples = 3,
+    n_samples = n_samples,
     n_snps = n_snps,
     n_reads = n_reads,
     seed = 2,
@@ -33,7 +36,7 @@ data_package <- STITCH::make_acceptance_test_data_package(
 )
 refpack <- STITCH::make_reference_package(
     n_snps = n_snps,
-    n_samples_per_pop = 500,
+    n_samples_per_pop = 50,
     reference_populations = c("CEU", "GBR"),
     chr = chr,
     phasemaster = phasemaster
@@ -65,48 +68,31 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
     expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
     i <- 1
     
-    for(i in 1:2) {
+    QUILT(
+        outputdir = outputdir,
+        chr = data_package$chr,
+        regionStart = regionStart,
+        regionEnd = regionEnd,
+        buffer = buffer,
+        bamlist = data_package$bamlist,
+        posfile = data_package$posfile,
+        genfile = data_package$genfile,
+        nGibbsSamples = 5,
+        n_seek_its = 4,
+        n_burn_in_seek_its = 2,
+        nCores = 1
+    )
 
-        if (i == 1) {phasefile <- "" }
-        if (i == 2) {phasefile <- data_package$phasefile}
-        
-        QUILT(
-            outputdir = outputdir,
-            chr = data_package$chr,
-            regionStart = regionStart,
-            regionEnd = regionEnd,
-            buffer = buffer,
-            bamlist = data_package$bamlist,
-            posfile = data_package$posfile,
-            genfile = data_package$genfile,
-            phasefile = phasefile,
-            nGibbsSamples = 5,
-            n_seek_its = 2,
-            nCores = 1,
-            RData_objects_to_save = "final_set_of_results",
-            addOptimalHapsToVCF = FALSE
-        )
-
-        ## Ksubset = 100,
-        ## Knew = 25,
-        
-        which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
+    which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
     
-        ## now evaluate versus truth!
-        check_quilt_output(
-            file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
-            data_package = data_package,
-            which_snps = which_snps,
-            tol = 0.1,
-            min_info = 0.9
-        )
-        
-        ## check loaded stuff
-        load(file_quilt_output_RData(outputdir, regionName))
-        expect_equal(length(final_set_of_results), 3)
-        unlink(file_quilt_output_RData(outputdir, regionName))
-        
-    }
+    ## now evaluate versus truth!
+    check_quilt_output(
+        file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+        data_package = data_package,
+        which_snps = which_snps,
+        tol = 0.1,
+        min_info = 0.9
+    )
     
 })
 

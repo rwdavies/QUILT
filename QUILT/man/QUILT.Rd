@@ -17,6 +17,7 @@ QUILT(
   nCores = 1,
   nGibbsSamples = 7,
   n_seek_its = 3,
+  n_burn_in_seek_its = NA,
   Ksubset = 400,
   Knew = 400,
   K_top_matches = 5,
@@ -68,8 +69,8 @@ QUILT(
   maxRate = 100,
   minRate = 0.1,
   print_extra_timing_information = FALSE,
-  block_gibbs_iterations = c(3, 6, 9),
-  n_gibbs_burn_in_its = 20,
+  small_ref_panel_block_gibbs_iterations = c(3, 6, 9),
+  small_ref_panel_gibbs_iterations = 20,
   plot_per_sample_likelihoods = FALSE,
   use_small_eHapsCurrent_tc = FALSE,
   pbwtL = 2,
@@ -103,6 +104,8 @@ QUILT(
 \item{nGibbsSamples}{How many Gibbs samples to use}
 
 \item{n_seek_its}{How many iterations between first using current haplotypes to update read labels, and using current read labels to get new reference haplotypes, to perform}
+
+\item{n_burn_in_seek_its}{How many iterations of the seek_its should be burn in. As an example, if n_seek_its is 3 and n_burn_in_seek_its is 2, then only the dosage from the final round is included. If n_seek_its is 4 and n_burn_in_seek_its is 2, then dosages from the last two rounds are used. Default value NA sets n_burn_in_seek_its to n_seek_its minus 1}
 
 \item{Ksubset}{How many haplotypes to use in the faster Gibbs sampling}
 
@@ -206,9 +209,9 @@ QUILT(
 
 \item{print_extra_timing_information}{Print extra timing information, i.e. how long sub-processes take, to better understand why things take as long as they do}
 
-\item{block_gibbs_iterations}{What iterations to perform block Gibbs sampling for the Gibbs sampler}
+\item{small_ref_panel_block_gibbs_iterations}{What iterations to perform block Gibbs sampling for the Gibbs sampler}
 
-\item{n_gibbs_burn_in_its}{How many iterations to run the Gibbs sampler for each time it is run}
+\item{small_ref_panel_gibbs_iterations}{How many iterations to run the Gibbs sampler for each time it is run (i.e. how many full passes to run the Gibbs sampler over all the reads)}
 
 \item{plot_per_sample_likelihoods}{Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations}
 

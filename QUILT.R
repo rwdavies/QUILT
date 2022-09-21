@@ -75,6 +75,12 @@ option_list <- list(
         default = 3
     ), 
     make_option(
+        "--n_burn_in_seek_its",
+        type = "integer",
+        help = "How many iterations of the seek_its should be burn in. As an example, if n_seek_its is 3 and n_burn_in_seek_its is 2, then only the dosage from the final round is included. If n_seek_its is 4 and n_burn_in_seek_its is 2, then dosages from the last two rounds are used. Default value NA sets n_burn_in_seek_its to n_seek_its minus 1 [default NA] ",
+        default = NA
+    ), 
+    make_option(
         "--Ksubset",
         type = "integer",
         help = "How many haplotypes to use in the faster Gibbs sampling [default 400] ",
@@ -375,15 +381,15 @@ option_list <- list(
         default = FALSE
     ), 
     make_option(
-        "--block_gibbs_iterations",
+        "--small_ref_panel_block_gibbs_iterations",
         type = "character",
-        help = "What iterations to perform block Gibbs sampling for the Gibbs sampler [default c(3,6,9)] ",
-        default = "c(3,6,9)"
+        help = "What iterations to perform block Gibbs sampling for the Gibbs sampler [default c(3, 6, 9)] ",
+        default = "c(3, 6, 9)"
     ), 
     make_option(
-        "--n_gibbs_burn_in_its",
+        "--small_ref_panel_gibbs_iterations",
         type = "integer",
-        help = "How many iterations to run the Gibbs sampler for each time it is run [default 20] ",
+        help = "How many iterations to run the Gibbs sampler for each time it is run (i.e. how many full passes to run the Gibbs sampler over all the reads) [default 20] ",
         default = 20
     ), 
     make_option(
@@ -451,6 +457,7 @@ QUILT(
     nCores = opt$nCores,
     nGibbsSamples = opt$nGibbsSamples,
     n_seek_its = opt$n_seek_its,
+    n_burn_in_seek_its = opt$n_burn_in_seek_its,
     Ksubset = opt$Ksubset,
     Knew = opt$Knew,
     K_top_matches = opt$K_top_matches,
@@ -501,8 +508,8 @@ QUILT(
     maxRate = opt$maxRate,
     minRate = opt$minRate,
     print_extra_timing_information = opt$print_extra_timing_information,
-    block_gibbs_iterations = eval(parse(text=opt$block_gibbs_iterations)),
-    n_gibbs_burn_in_its = opt$n_gibbs_burn_in_its,
+    small_ref_panel_block_gibbs_iterations = eval(parse(text=opt$small_ref_panel_block_gibbs_iterations)),
+    small_ref_panel_gibbs_iterations = opt$small_ref_panel_gibbs_iterations,
     plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
     reference_vcf_file = opt$reference_vcf_file,

@@ -100,6 +100,9 @@ test_that("QUILT can impute a few samples using zilong pbwt", {
     outputdir <- STITCH::make_unique_tempdir()
 
     print("Fix me - figure out how best to make this work when reference files are larger than region to be imputed")
+
+    skip("work in progress")
+    
     regionStart <- 1
     regionEnd <- 50
     buffer <- 0

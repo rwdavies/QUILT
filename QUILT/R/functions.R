@@ -484,6 +484,7 @@ get_and_impute_one_sample <- function(
     outputdir,
     nGibbsSamples,
     n_seek_its,
+    n_burn_in_seek_its,
     full_alphaHat_t,
     full_betaHat_t,
     full_gamma_t,
@@ -558,8 +559,8 @@ get_and_impute_one_sample <- function(
     minGLValue,
     minimum_number_of_sample_reads,
     print_extra_timing_information,
-    n_gibbs_burn_in_its,
-    block_gibbs_iterations,
+    small_ref_panel_gibbs_iterations,
+    small_ref_panel_block_gibbs_iterations,
     plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc,
     output_gt_phased_genotypes,
@@ -871,10 +872,10 @@ get_and_impute_one_sample <- function(
                 smooth_cm = smooth_cm,
                 which_haps_to_use = which_haps_to_use,
                 n_gibbs_starts = n_gibbs_starts,
-                n_gibbs_burn_in_its = n_gibbs_burn_in_its,
+                small_ref_panel_gibbs_iterations = small_ref_panel_gibbs_iterations,
                 n_gibbs_sample_its = 1,
                 double_list_of_starting_read_labels = double_list_of_starting_read_labels,
-                block_gibbs_iterations = block_gibbs_iterations,
+                small_ref_panel_block_gibbs_iterations = small_ref_panel_block_gibbs_iterations,
                 perform_block_gibbs = TRUE,
                 make_plots = make_plots,
                 wif0 = wif0,
@@ -1109,9 +1110,11 @@ get_and_impute_one_sample <- function(
 
         if (!phasing_it) {
             ## for phasing bit
-            dosage <- dosage + hap1 + hap2
-            gp_t <- gp_t +
-                rbind((1 - hap1) * (1 - hap2), (1 - hap1) * hap2 + hap1 * (1 - hap2), hap1 * hap2)
+            if (i_it > n_burn_in_seek_its) {
+                dosage <- dosage + hap1 + hap2
+                gp_t <- gp_t +
+                    rbind((1 - hap1) * (1 - hap2), (1 - hap1) * hap2 + hap1 * (1 - hap2), hap1 * hap2)
+            }
             read_label_matrix_all[, i_gibbs_sample] <- read_labels
             read_label_matrix_conf[, i_gibbs_sample] <- assess_ability_of_reads_to_be_confident(
                 hap1 = hap1,
@@ -2028,10 +2031,10 @@ impute_one_sample <- function(
     smooth_cm,
     which_haps_to_use,
     n_gibbs_starts,
-    n_gibbs_burn_in_its,
+    small_ref_panel_gibbs_iterations,
     n_gibbs_sample_its,
     double_list_of_starting_read_labels,
-    block_gibbs_iterations,
+    small_ref_panel_block_gibbs_iterations,
     perform_block_gibbs,
     make_plots,
     maxDifferenceBetweenReads,
@@ -2124,6 +2127,7 @@ impute_one_sample <- function(
     ## this should catch hopefully rare underflow problems and re-run the samples
     done_imputing <- FALSE
     n_imputing <- 0
+    n_gibbs_burn_in_its <- small_ref_panel_gibbs_iterations
     while(!done_imputing) {
         out <- rcpp_forwardBackwardGibbsNIPT(
             sampleReads = sampleReads,
@@ -2180,7 +2184,7 @@ impute_one_sample <- function(
             grid_has_read = grid_has_read,
             shuffle_bin_radius = shuffle_bin_radius,
             L_grid = L_grid,
-            block_gibbs_iterations = block_gibbs_iterations,
+            block_gibbs_iterations = small_ref_panel_block_gibbs_iterations,
             rescale_eMatRead_t = rescale_eMatRead_t,
             smooth_cm = smooth_cm,
             param_list = param_list,

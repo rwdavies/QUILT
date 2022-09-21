@@ -1,4 +1,4 @@
-validate_should_be_integer <- function(x, name) {
+validate_should_be_integer <- function(x, name, min_val = 1) {
     if (is.na(x)) {
         stop(paste0(name, " must be an integer greater than 0"))
     }
@@ -8,8 +8,8 @@ validate_should_be_integer <- function(x, name) {
     if (round(x) != x) {
         stop(paste0(name, " must be an integer greater than 0 but you have input:", x))
     }
-    if (x < 1) {
-        stop(paste0(name,  " must be an integer greater than 0 but you have input:", x))
+    if (x < min_val) {
+        stop(paste0(name,  " must be an integer greater than or equal to ", min_val, " but you have input:", x))
     }
 }
 
@@ -80,23 +80,36 @@ validate_quilt_use_of_region_variables <- function(
 }
 
 
-validate_niterations_and_block_gibbs <- function(
-    block_gibbs_iterations,
-    n_gibbs_burn_in_its
+validate_niterations_and_small_ref_panel_block_gibbs <- function(
+    small_ref_panel_block_gibbs_iterations,
+    small_ref_panel_gibbs_iterations
 ) {
-    validate_should_be_integer(n_gibbs_burn_in_its, "n_gibbs_burn_in_its")
-    ## need integers, with all entries between 1 and (n_gibbs_burn_in_its - 1)
+    validate_should_be_integer(small_ref_panel_gibbs_iterations, "small_ref_panel_gibbs_iterations")
+    ## need integers, with all entries between 1 and (small_ref_panel_gibbs_iterations - 1)
     ## can have length 0 or be NULL
-    if (length(block_gibbs_iterations) > 0) {
-        for(i in 1:length(block_gibbs_iterations)) {
+    if (length(small_ref_panel_block_gibbs_iterations) > 0) {
+        for(i in 1:length(small_ref_panel_block_gibbs_iterations)) {
             validate_should_be_integer(
-                block_gibbs_iterations[i],
-                paste0("block_gibbs_iterations entry ", i)
+                small_ref_panel_block_gibbs_iterations[i],
+                paste0("small_ref_panel_block_gibbs_iterations entry ", i)
             )
-            if ((block_gibbs_iterations[i]) > (n_gibbs_burn_in_its - 1)) {
-                stop(paste0("block_gibbs_iteration entries must be between 1 and n_gibbs_burn_in_its - 1 but in entry ", i, " you have selected ", block_gibbs_iterations[i]))
+            if ((small_ref_panel_block_gibbs_iterations[i]) > (small_ref_panel_gibbs_iterations - 1)) {
+                stop(paste0("small_ref_panel_block_gibbs_iteration entries must be between 1 and small_ref_panel_gibbs_iterations - 1 but in entry ", i, " you have selected ", small_ref_panel_block_gibbs_iterations[i]))
             }
         }
+    }
+    NULL
+}
+
+
+validate_n_seek_its_and_n_burn_in_seek_its <- function(
+    n_seek_its,
+    n_burn_in_seek_its
+) {
+    validate_should_be_integer(n_seek_its, "n_seek_its")
+    validate_should_be_integer(n_burn_in_seek_its, "n_burn_in_seek_its", min_val = 0)
+    if (n_burn_in_seek_its >= n_seek_its) {
+        stop(paste0("n_burn_in_seek_its = ", n_burn_in_seek_its, " should be stricly less than n_seek_its = ", n_seek_its))
     }
     NULL
 }

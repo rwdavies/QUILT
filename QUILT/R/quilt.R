@@ -11,6 +11,7 @@
 #' @param nCores How many cores to use
 #' @param nGibbsSamples How many Gibbs samples to use
 #' @param n_seek_its How many iterations between first using current haplotypes to update read labels, and using current read labels to get new reference haplotypes, to perform
+#' @param n_burn_in_seek_its How many iterations of the seek_its should be burn in. As an example, if n_seek_its is 3 and n_burn_in_seek_its is 2, then only the dosage from the final round is included. If n_seek_its is 4 and n_burn_in_seek_its is 2, then dosages from the last two rounds are used. Default value NA sets n_burn_in_seek_its to n_seek_its minus 1 
 #' @param Ksubset How many haplotypes to use in the faster Gibbs sampling
 #' @param Knew How many haplotypes to replace per-iteration after doing the full reference panel imputation
 #' @param K_top_matches How many top haplotypes to store in each grid site when looking for good matches in the full haplotype reference panel. Large values potentially bring in more haplotype diversity, but risk losing haplotypes that are good matches over shorter distances
@@ -62,8 +63,9 @@
 #' @param maxRate Maximum recomb rate cM/Mb
 #' @param minRate Minimum recomb rate cM/Mb
 #' @param print_extra_timing_information Print extra timing information, i.e. how long sub-processes take, to better understand why things take as long as they do
-#' @param block_gibbs_iterations What iterations to perform block Gibbs sampling for the Gibbs sampler
-#' @param n_gibbs_burn_in_its How many iterations to run the Gibbs sampler for each time it is run
+#' @param small_ref_panel_block_gibbs_iterations What iterations to perform block Gibbs sampling for the Gibbs sampler
+#' @param small_ref_panel_gibbs_iterations How many iterations to run the Gibbs sampler for each time it is run (i.e. how many full passes to run the Gibbs sampler over all the reads)
+#' 
 #' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
 #' @param use_small_eHapsCurrent_tc For testing purposes only
 #' @param reference_vcf_file zilong favors vcf
@@ -88,6 +90,7 @@ QUILT <- function(
     nCores = 1,
     nGibbsSamples = 7,
     n_seek_its = 3,
+    n_burn_in_seek_its = NA,
     Ksubset = 400,
     Knew = 400,
     K_top_matches = 5,
@@ -139,8 +142,8 @@ QUILT <- function(
     maxRate = 100,
     minRate = 0.1,
     print_extra_timing_information = FALSE,
-    block_gibbs_iterations = c(3,6,9),
-    n_gibbs_burn_in_its = 20,
+    small_ref_panel_block_gibbs_iterations = c(3, 6, 9),
+    small_ref_panel_gibbs_iterations = 20,
     plot_per_sample_likelihoods = FALSE,
     use_small_eHapsCurrent_tc = FALSE,
     pbwtL = 2,
@@ -159,9 +162,13 @@ QUILT <- function(
     print_message(paste0("Running ", command_line))
 
 
-
     ## turn this off for now
     make_plots_block_gibbs <- FALSE
+
+    ## re-label these internally
+    ## n_gibbs_burn_in_its <- small_ref_panel_gibbs_iterations
+    ## block_gibbs_iterations <- small_ref_panel_block_gibbs_iterations
+    
     ## #' @param make_plots_block_gibbs Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs
 
     options(digits.secs=6)
@@ -191,8 +198,14 @@ QUILT <- function(
     ##
     validate_panel_size(panel_size)
     validate_minimum_number_of_sample_reads(minimum_number_of_sample_reads)
-    validate_niterations_and_block_gibbs(block_gibbs_iterations, n_gibbs_burn_in_its)
+    validate_niterations_and_small_ref_panel_block_gibbs(small_ref_panel_block_gibbs_iterations, small_ref_panel_gibbs_iterations)
 
+    if (is.na(n_burn_in_seek_its)) {
+        print_message(paste0("Auto-set n_burn_in_seek_its to ", n_burn_in_seek_its, " i.e. only sample one dosage per Gibbs sample"))
+        n_burn_in_seek_its <- n_seek_its - 1
+    }
+    validate_n_seek_its_and_n_burn_in_seek_its(n_seek_its, n_burn_in_seek_its)
+    
     ## if (make_plots && phasefile == "") {
     ##     stop("If you want to make plots using make_plots, you need to provide phase information using phasefile")
     ## }
@@ -383,6 +396,8 @@ QUILT <- function(
             print_message(paste0("Observing number of reference haplotypes K=", K))
             print_message(paste0("Reset n_seek_its from ", n_seek_its, " to ", 1))
             n_seek_its <- 1
+            print_message(paste0("Reset n_burn_in_seek_its from ", n_burn_in_seek_its, " to ", 0))
+            n_burn_in_seek_its <- 0
             print_message(paste0("Set Ksubset to ", K, " (no longer necessary)"))
             Ksubset <- K
             print_message(paste0("Set Knew to ", K, " (no longer necessary)"))
@@ -647,6 +662,7 @@ QUILT <- function(
                 outputdir = outputdir,
                 nGibbsSamples = nGibbsSamples,
                 n_seek_its = n_seek_its,
+                n_burn_in_seek_its = n_burn_in_seek_its,
                 full_alphaHat_t = full_alphaHat_t,
                 full_betaHat_t = full_betaHat_t,
                 full_gamma_t = full_gamma_t,
@@ -721,8 +737,8 @@ QUILT <- function(
                 minGLValue = minGLValue,
                 minimum_number_of_sample_reads = minimum_number_of_sample_reads,
                 print_extra_timing_information = print_extra_timing_information,
-                n_gibbs_burn_in_its = n_gibbs_burn_in_its,
-                block_gibbs_iterations = block_gibbs_iterations,
+                small_ref_panel_gibbs_iterations = small_ref_panel_gibbs_iterations,
+                small_ref_panel_block_gibbs_iterations = small_ref_panel_block_gibbs_iterations,
                 plot_per_sample_likelihoods = plot_per_sample_likelihoods,
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
                 output_gt_phased_genotypes = output_gt_phased_genotypes,
