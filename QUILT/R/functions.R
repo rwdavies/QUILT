@@ -536,7 +536,10 @@ get_and_impute_one_sample <- function(
     block_gibbs_iterations,
     plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc,
-    output_gt_phased_genotypes
+    output_gt_phased_genotypes,
+    use_nicola_wes_approach,
+    WES,
+    nicola_wes_selection_method_is_af
 ) {
 
     
@@ -776,7 +779,45 @@ get_and_impute_one_sample <- function(
             ## here it is 1
             n_gibbs_starts <- 1
             if (i_it == 1 & !phasing_it) {
-                which_haps_to_use <- sort(sample(1:nrow(rhb_t), Ksubset))
+                if (use_nicola_wes_approach) {
+                    print_message("Using Nicola WES haplotype selection approach")
+                    ## 
+                    depth_threshold <- 10
+                    region_divide <- seq(0,400, 50) ## be careful about this! what if regions are larger or smaller
+                    ##
+                    rhb_t_index  <- 0:(nrow(rhb_t)-1)
+                    hap_region   <- 1:1000
+                    rhb_t_region <- rhb_t[hap_region,]
+                    rhb_t_region_indices <- rhb_t_index[hap_region]
+                    ## rename variables here
+                    Klocal <- 10 ## re-naming this as K usually means the number of rows of rhb_t
+                    if (nicola_wes_selection_method_is_af) {
+                        selection_method <- "AF"
+                    } else {
+                        selection_method <- "something_else"
+                    }
+                    ## 
+                    first_K_haps <- sort(
+                        run_haplotype_selection(
+                            sample_name,
+                            WES,
+                            rhb_t, 
+                            pos,
+                            ref_alleleCount,
+                            nSNPs,
+                            depth_threshold,
+                            nicola_wes_selection_method,
+                            selection_method,
+                            Klocal,
+                            rhb_t_region_indices
+                        )
+                    )
+                    remaining_K_haps <- sort(sample(1000:nrow(rhb_t), (Ksubset-K)))
+                    which_haps_to_use <- c(first_K_haps, remaining_K_haps)+1
+                } else {
+                    print_message("Using haplotypes selected at random")
+                    which_haps_to_use <- sort(sample(1:nrow(rhb_t), Ksubset))
+                }
                 double_list_of_starting_read_labels <- list(
                     lapply(1:n_gibbs_starts, function(i) {
                         H <- sample(c(1, 2), length(sampleReads), replace = TRUE)

@@ -1,54 +1,26 @@
-#' @export
-run_haplotype_selection <- function(
-    WES,
-    rhb_t,
-    pos,
-    ref_alleleCount,
-    nSNPs,
-    depth_threshold,
-    region_divide,
-    toolForSelection
-) {
-  
-    WES <- refine_WES_data(WES,depth_threshold)
-    pos.MAF <- merge_pos_MAF(pos,ref_alleleCount)
+# All functions for haplotype selection
 
-    if (toolForSelection == 'AF') {
-        haps_for_subset <- select_K_haps_by_rare_alleles(
-            WES, 
-            rhb_t, 
-            pos.MAF,
-            pos, 
-            nSNPs,
-            depth_threshold,
-            region_divide
-        )
-    } else {
-      haps_for_subset <- select_K_haps_by_match_length(
-          WES, 
-          rhb_t, 
-          pos, 
-          nSNPs,
-          depth_threshold,
-          region_divide
-      )
+Extract.Genotypes <- function(sample,vcf) {
+  if (file.exists(substr(vcf, 1, nchar(vcf)-3))) {
+    new_vcf <- vcf
+    print('FILE ALREADY UNZIPPED')
   }
-    
-    return(haps_for_subset)
-    
-}
-
-
-
-
-
-Extract.Genotypes <- function(vcf) {
-  vcf.separated <- separate(data = vcf, col = V10, into = c("GT","PL","DP"), sep="\\:")
+  else {
+  #new_vcf <- gunzip(paste(vcf,'.gz', sep=''), remove=FALSE)
+  new_vcf <- gunzip(vcf, remove=FALSE)
+  }
+  tmp_vcf<-readLines(new_vcf)
+  tmp_vcf_data<-read.table(new_vcf, stringsAsFactors = FALSE)
+  tmp_vcf<-tmp_vcf[-(grep("#CHROM",tmp_vcf)+1):-(length(tmp_vcf))]
+  vcf_names<-unlist(strsplit(tmp_vcf[length(tmp_vcf)],"\t"))
+  names(tmp_vcf_data)<-vcf_names
+  
+  vcf.separated <- separate(data = tmp_vcf_data, col = sample, into = c("GT","PL","DP"), sep="\\:")
   genotyped <- separate(data = vcf.separated, col = GT, into = c("H1", "H2"), sep="\\/")
   genotyped$GEN <- as.numeric(genotyped$H1) + as.numeric(genotyped$H2)
-  genotyped$pos.chr.ref.alt <- paste(genotyped$V2, ":", genotyped$V1,":", genotyped$V4,":", genotyped$V5 )
+  genotyped$pos.chr.ref.alt <- paste(genotyped$POS, ":", genotyped$`#CHROM`,":", genotyped$REF,":", genotyped$ALT )
   
-  genotyped <- separate(data = genotyped, col = V8, into = c('DP','MQ0F','AC','AN','DP4','MQ'), sep="\\;")
+  genotyped <- separate(data = genotyped, col = INFO, into = c('DP','MQ0F','AC','AN','DP4','MQ'), sep="\\;")
   genotyped <- separate(data = genotyped, col = DP, into = c('Key','Depth'), sep="\\=")
   
   
@@ -60,15 +32,14 @@ Extract.Genotypes <- function(vcf) {
   pos.gen.depth.na.removed <- pos.gen.depth[-na,]
   
   return(pos.gen.depth.na.removed)
-}
 
-# Filter the genotyped regions to only sites with sufficient depth of reads.
-# hap_data to input is in the form gen.depth
+}
 
 filter_to_exomic_regions <- function(hap_data, depth.threshold){
   filtered <- hap_data[as.numeric(hap_data$Depth)>depth.threshold,]
   return(filtered)
 }
+
 
 
 # Input the indices of the exonic sites 
@@ -129,9 +100,6 @@ find_het_sites <- function(WES_region){
   return(het.sites)
 }
 
-## het.sites <- find_het_sites(WES)
-
-
 
 find_rarest_SNP_in_region<- function(WES_region, allele_freqs_in_region) {
   het.sites <- find_het_sites(WES_region)
@@ -153,6 +121,29 @@ find_rarest_SNP_in_region<- function(WES_region, allele_freqs_in_region) {
   }
 }
 
+find_rarest_K_SNPs_in_region<- function(WES_region, allele_freqs_in_region, K) {
+  het.sites <- find_het_sites(WES_region)
+  print('HET SITES')
+  print(het.sites)
+  if (length(het.sites)==0) {
+    print('NO HET SITES')
+    rarest_SNP_in_region <- NA
+    return(list(NA,NA))
+  }
+  else {
+    print(het.sites)
+    het_allele_freqs <- data.frame(het.sites,allele_freqs_in_region[het.sites, 'MAF'])
+    colnames(het_allele_freqs) <- c('SNP.Index', 'MAF')
+    rarest_SNPs_in_region <- het_allele_freqs[order(het_allele_freqs$MAF, decreasing = FALSE),]
+    rarest_K_SNPs <- rarest_SNPs_in_region[1:K,]
+    return(rarest_K_SNPs)
+  }
+}
+
+
+
+
+
 find_het_sites_per_region <- function(WES, region_divide) {
   no_regions <- length(region_divide)-1
   het.sites.per.region <- vector(mode='list', length=no_regions)
@@ -164,21 +155,6 @@ find_het_sites_per_region <- function(WES, region_divide) {
     het.sites.per.region[[j]] <- het.sites
   }
   return(het.sites.per.region)
-}
-
-## find_het_sites_per_region(WES.refined, region_divide)
-
-find_rarest_SNP_per_region <- function(WES, allele_freqs, region_divide) {
-  no_regions <- length(region_divide)-1
-  rarest.SNP.index.per.region <- data.frame(REGION=c(1:no_regions), SNP.index=rep(NA,no_regions))
-  for (j in (1:(no_regions))) {
-    REGION_START <- region_divide[j]
-    REGION_END   <- region_divide[j+1]-1
-    index.rarest.SNP <- find_rarest_SNP_in_region(WES[REGION_START:REGION_END,],
-                                                  allele_freqs[REGION_START:REGION_END,])
-    rarest.SNP.index.per.region$SNP.index[j] <- index.rarest.SNP
-  }
-  return(rarest.SNP.index.per.region)
 }
 
 
@@ -234,8 +210,8 @@ order_by_match <- function(df) {
   return(df)
 }
 
-refine_WES_data <- function(WES, depth_threshold){
-  pos.gen.depths <- Extract.Genotypes(WES)
+refine_WES_data <- function(sample, WES, depth_threshold){
+  pos.gen.depths <- Extract.Genotypes(sample, WES)
   pos.gen.depths.exon <- filter_to_exomic_regions(pos.gen.depths, depth_threshold)
   
 }
@@ -257,13 +233,14 @@ merge_pos_MAF <- function(pos, ref_alleleCount) {
 }
 
 
-
 select_K_haps_by_match_length <- function(pos.gen.depths.exon, 
                                           rhb_t, 
                                           pos, 
                                           nSNPs,
                                           depth_threshold,
-                                          region_divide){
+                                          region_divide,
+                                          K,
+                                          rhb_t_region_indices){
   
   no_haps_in_reference <- nrow(rhb_t)
   no_regions <- length(region_divide)-1
@@ -273,13 +250,13 @@ select_K_haps_by_match_length <- function(pos.gen.depths.exon,
   ref_positions_to_keep <- which(pos$pos.chr.ref.alt %in% pos.gen.depths.exon$pos.chr.ref.alt)
   pos <-pos[ref_positions_to_keep,]
   WES     <-pos.gen.depths.exon[which(pos.gen.depths.exon$pos.chr.ref.alt %in% pos$pos.chr.ref.alt),]
-
+  
   
   region.list <- vector(mode='list', length = no_regions)
   for (i in (1:no_regions)) {
-    region.list[[i]] <- data.frame(REF_HAP=c(1:no_haps_in_reference),MATCH_LENGTH=rep(NA,no_haps_in_reference))
+    region.list[[i]] <- data.frame(REF_HAP=c(rhb_t_region_indices),MATCH_LENGTH=rep(NA,no_haps_in_reference))
   }
-  HAPS_FOR_SUBSET <- rep(NA,no_regions)
+  HAPS_FOR_SUBSET <- rep(NA,K)
   
   for (i in 0:(no_haps_in_reference-1)) {
     hap_to_evaluate <- inflate_haps_to_check(i, rhb_t, nSNPs)
@@ -304,15 +281,23 @@ select_K_haps_by_match_length <- function(pos.gen.depths.exon,
     }
   }
   ordered_region_list <- lapply(region.list,order_by_match)
-  for (i in (1:no_regions)) {
-    potential_haps_for_region <- ordered_region_list[[i]]$REF_HAP
+  counter <- 0 
+  for (i in (1:K)) {
+    print(length(region.list))
+    if (counter == (length(region.list))) {
+      print('COUNTER TOO BIG')
+      counter <- 1
+    }
+    else {
+      counter <- counter +1 
+    }
+    print(counter)
+    print(length(region.list))
+    potential_haps_for_region <- ordered_region_list[[counter]]$REF_HAP
     HAPS_FOR_SUBSET[i] <- find_hap_not_added(potential_haps_for_region,HAPS_FOR_SUBSET)
-    #HAPS_FOR_SUBSET[i] <- ordered_region_list[[i]][1,1]
-  } 
-  return(ordered_region_list[[4]])
+  }
+  return(HAPS_FOR_SUBSET)
 }
-
-
 
 select_K_haps_by_rare_alleles <- function(pos.gen.depths.exon, 
                                           rhb_t, 
@@ -320,68 +305,83 @@ select_K_haps_by_rare_alleles <- function(pos.gen.depths.exon,
                                           pos, 
                                           nSNPs,
                                           depth_threshold,
-                                          region_divide){
+                                          K){
   
   no_haps_in_reference <- nrow(rhb_t)
-  no_regions <- length(region_divide)-1
   
   ref_positions_to_keep <- which(pos.MAF$pos.chr.ref.alt %in% pos.gen.depths.exon$pos.chr.ref.alt)
   pos.MAF <-pos.MAF[ref_positions_to_keep,]
   WES     <-pos.gen.depths.exon[which(pos.gen.depths.exon$pos.chr.ref.alt %in% pos.MAF$pos.chr.ref.alt),]
   
-  #print(length(pos.MAF[,1]))
-  ##print(length(WES[,1]))
-
+  K_rarest_SNPs <- find_rarest_K_SNPs_in_region(WES, pos.MAF, K)
   
-  het.sites.per.region <- find_het_sites_per_region(WES, region_divide)
-  
-  regions_with_het_sites <- lapply(het.sites.per.region, check_if_het_sites)
-  no_het_sites <- which(is.na(regions_with_het_sites))
-  
-  #print(het.sites.per.region)
-  rare_SNP_indices <- find_rarest_SNP_per_region(WES, pos.MAF, region_divide)
-  print(rare_SNP_indices)
-  hap.per.region <- data.frame(REGION=c(1:no_regions), HAP_SELECTED=rep(NA,no_regions), MAF=rep(NA,no_regions))
-  hap.per.region$HAP_SELECTED[no_het_sites] <- 'NO HET SITES'
-  
-  
+  het_sites <-find_het_sites(WES)
+  print(het_sites)
+  print(K_rarest_SNPs)
+  ref_haps_with_K_rarest_SNPs <- data.frame(SNP.index=K_rarest_SNPs$SNP.Index, MAF = K_rarest_SNPs$MAF, REF_HAP = rep(NA,K))
   for (i in 0:(no_haps_in_reference-1)) {
-      if (length(which(is.na(hap.per.region$HAP_SELECTED)))==0) {
-        print('HAPS ALL SELECTED')
-        feasible_haps <- as.numeric(hap.per.region$HAP_SELECTED)[-which(is.na(as.numeric(hap.per.region$HAP_SELECTED)))]
-        return(feasible_haps)
-      }
-      
+    if (length(which(is.na(ref_haps_with_K_rarest_SNPs$REF_HAP)))==0) {
+      print('HAPS ALL SELECTED')
+      return(ref_haps_with_K_rarest_SNPs$REF_HAP)
+    }
+    else {
       hap_to_evaluate <- inflate_haps_to_check(i, rhb_t, nSNPs)
       hap_refined <- hap_to_evaluate[ref_positions_to_keep]
-      regions_to_consider <- which(is.na(hap.per.region$HAP_SELECTED))
-      for (region in (regions_to_consider)) {
-          if (length(regions_to_consider)>0) {
-            REGION_START <- region_divide[region]
-            REGION_END   <- region_divide[region+1]-1
-            hap_region_to_consider <- hap_refined[REGION_START:REGION_END]
-            print('HET SITES PER REGION')
-            print(het.sites.per.region[[region]])
-            hap_refined_to_het <- hap_region_to_consider[het.sites.per.region[[region]]]
-            if (is.na(hap_refined_to_het[rare_SNP_indices$SNP.index[region]])){
-              print('NO HET SITES IN REGION')
-            }
-            
-            else if (hap_refined_to_het[rare_SNP_indices$SNP.index[region]]==1) {
-              if (i %in% hap.per.region$HAP_SELECTED) {
-                print('HAP ALREADY SELECTED')
-              }
-              else {
-             hap.per.region$HAP_SELECTED[region] <- i
-             hap.per.region$MAF[region] <- rare_SNP_indices$MAF[region]
-              }
-           }
+      #print(hap_refined)
+    }
+    SNPs_to_cover <- which(is.na(ref_haps_with_K_rarest_SNPs$REF_HAP))
+    print(SNPs_to_cover)
+    for (SNP in (SNPs_to_cover)) {
+      print(ref_haps_with_K_rarest_SNPs$SNP.index)
+      print(hap_refined[ref_haps_with_K_rarest_SNPs$SNP.index[SNP]])
+      if (hap_refined[ref_haps_with_K_rarest_SNPs$SNP.index[SNP]]==1) {
+        if (!(i %in% ref_haps_with_K_rarest_SNPs$REF_HAP)){
+          ref_haps_with_K_rarest_SNPs$REF_HAP[SNP]=i
         }
+      }
+      
     }
   }
-  print(hap.per.region)
-  feasible_haps <- as.numeric(hap.per.region$HAP_SELECTED)[-which(is.na(as.numeric(hap.per.region$HAP_SELECTED)))]
-  
-  return(feasible_haps)
+  return(ref_haps_with_K_rarest_SNPs$REF_HAP)
 }
+
+run_haplotype_selection <- function(sample,
+                                    WES,
+                                    rhb_t,
+                                    pos,
+                                    ref_alleleCount,
+                                    nSNPs,
+                                    depth_threshold,
+                                    region_divide,
+                                    toolForSelection,
+                                    K,
+                                    rhb_t_region_indices) {
+  
+  WES <- refine_WES_data(sample, WES,depth_threshold)
+  pos.MAF <- merge_pos_MAF(pos,ref_alleleCount)
+  if (toolForSelection=='AF') {
+    haps_for_subset <- select_K_haps_by_rare_alleles(WES, 
+                                                     rhb_t, 
+                                                     pos.MAF,
+                                                     pos, 
+                                                     nSNPs,
+                                                     depth_threshold,
+                                                     #region_divide,
+                                                     K)
+  }
+  else {
+    haps_for_subset <- select_K_haps_by_match_length(WES, 
+                                                     rhb_t, 
+                                                     pos, 
+                                                     nSNPs,
+                                                     depth_threshold,
+                                                     region_divide,
+                                                     K,
+                                                     rhb_t_region_indices)
+  }
+  return(haps_for_subset)
+}
+
+
+
 

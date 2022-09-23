@@ -397,6 +397,24 @@ option_list <- list(
         type = "logical",
         help = "For testing purposes only [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--use_nicola_wes_approach",
+        type = "logical",
+        help = "Whether to use nicola WES approach to preselect haplotypes [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
+        "--WES",
+        type = "character",
+        help = "path to whole exome sequencing file [default \"\"] ",
+        default = ""
+    ), 
+    make_option(
+        "--nicola_wes_selection_method_is_af",
+        type = "logical",
+        help = "Whether or not for WES haplotype selection to use AF method [default TRUE] ",
+        default = TRUE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -468,5 +486,8 @@ QUILT(
     block_gibbs_iterations = eval(parse(text=opt$block_gibbs_iterations)),
     n_gibbs_burn_in_its = opt$n_gibbs_burn_in_its,
     plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods,
-    use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc
+    use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
+    use_nicola_wes_approach = opt$use_nicola_wes_approach,
+    WES = opt$WES,
+    nicola_wes_selection_method_is_af = opt$nicola_wes_selection_method_is_af
 )

@@ -66,7 +66,9 @@
 #' @param n_gibbs_burn_in_its How many iterations to run the Gibbs sampler for each time it is run
 #' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
 #' @param use_small_eHapsCurrent_tc For testing purposes only
-
+#' @param use_nicola_wes_approach Whether to use nicola WES approach to preselect haplotypes
+#' @param WES path to whole exome sequencing file
+#' @param nicola_wes_selection_method_is_af Whether or not for WES haplotype selection to use AF method
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -136,7 +138,10 @@ QUILT <- function(
     block_gibbs_iterations = c(3,6,9),
     n_gibbs_burn_in_its = 20,
     plot_per_sample_likelihoods = FALSE,
-    use_small_eHapsCurrent_tc = FALSE
+    use_small_eHapsCurrent_tc = FALSE,
+    use_nicola_wes_approach = FALSE,
+    WES = "",
+    nicola_wes_selection_method_is_af = TRUE
 ) {
 
 
@@ -688,7 +693,10 @@ QUILT <- function(
                 block_gibbs_iterations = block_gibbs_iterations,
                 plot_per_sample_likelihoods = plot_per_sample_likelihoods,
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
-                output_gt_phased_genotypes = output_gt_phased_genotypes
+                output_gt_phased_genotypes = output_gt_phased_genotypes,
+                use_nicola_wes_approach = use_nicola_wes_approach,
+                WES = WES,
+                nicola_wes_selection_method_is_af = nicola_wes_selection_method_is_af
             )
 
             if (out[["sample_was_imputed"]]) {
