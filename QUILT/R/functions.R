@@ -455,7 +455,7 @@
 ## @param pbwt is constructed by pbwt_build in pbwt.cpp
 select_new_haps_pbwt <- function(
     hapProbs_t,
-    pbwtfile,
+    zilong_indices,
     Kfull,
     Knew,
     L = 2,
@@ -464,7 +464,7 @@ select_new_haps_pbwt <- function(
   vals <- unlist(sapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     seed <- 2022 # can be exposed to user
-    unique(pbwt_query(pbwtfile, hap, L, Step))
+    unique(pbwt_query(zilong_indices, hap, L, Step))
   }))
   vals <- unique(vals) + 1 # 1-based
   if (length(vals) >= Knew) {
@@ -956,7 +956,7 @@ get_and_impute_one_sample <- function(
 
             if (zilong) {
                 ## TODO which_haps_to_use should be returned by PBWT selection
-                which_haps_to_use <- select_new_haps_pbwt(gibbs_iterate$hapProbs_t, zilong_indices$pbwtfile, Kfull =  nrow(rhb_t), Knew = Knew,L = pbwtL, Step = pbwtS)
+                which_haps_to_use <- select_new_haps_pbwt(gibbs_iterate$hapProbs_t, zilong_indices, Kfull =  nrow(rhb_t), Knew = Knew,L = pbwtL, Step = pbwtS)
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
             } else if (use_mspbwt) {

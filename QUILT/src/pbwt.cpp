@@ -9,20 +9,18 @@
 using namespace Rcpp;
 using namespace vcfpp;
 
-typedef uint32_t uint;
 typedef uint64_t uint2;
 
-/// build and dump pbwt FM-index to disk;
 //' @export
 // [[Rcpp::export]]
-void pbwt_index(const std::string& vcffile, const std::string& samples, const std::string& region, const std::string& outfile)
-{
-    BcfReader vcf(vcffile, samples, region);
-    BcfRecord var(vcf.header);
-    std::vector<bool> gt;
+Rcpp::List pbwt_index(String vcf, String samples, String region) {
+    // get genotype from vcf/bcf
+    BcfReader br(vcf, samples, region);
+    BcfRecord var(br.header);
+    std::vector<bool> gt; // can be bool, char, int
     std::vector<std::vector<bool>> x;
-    int nsnps = 0, nsamples = vcf.nsamples;
-    while (vcf.getNextVariant(var))
+    int nsnps = 0, nsamples = br.nsamples;
+    while (br.getNextVariant(var))
     {
         if (!var.isSNP())
             continue; // skip other type of variants
@@ -32,44 +30,95 @@ void pbwt_index(const std::string& vcffile, const std::string& samples, const st
     }
     // build pbwt index
     int N = nsnps, M = nsamples * 2;
-    std::ofstream ofpbwt(outfile + ".pbwt", std::ios::binary);
-    std::ofstream ofauxu(outfile + ".auxu", std::ios::binary);
-    ofpbwt.write(reinterpret_cast<char*>(&N), 4);
-    ofpbwt.write(reinterpret_cast<char*>(&M), 4);
-    std::vector<uint> at(M), a(M), a0(M), a1(M), u(M + 1);
-    uint i, j, u_, v_, a_;
+    // N is number of SNPs, M is number of Haps
+    IntegerMatrix a(N, M), u(N, M + 1), v(N, M + 1);
+    IntegerVector a0(M), a1(M);
+    int i, j, u_, v_, a_;
     for (j = 0; j < N; j++)
     {
         u_ = 0; v_ = 0;
-        // copy a to at
-        for (i = 0; i < M; i++) { at[i] = a[i]; }
         for (i = 0; i < M; i++)
         {
-            a_ = j > 0 ? at[i] : i;
-            u[i] = u_;
+            a_ = j > 0 ? a(j - 1, i) : i;
+            u(j, i) = u_;
             if (x[j][a_])
                 a1[v_++] = a_;
             else
                 a0[u_++] = a_;
         }
-        u[M] = u_;
+        u(j, M) = u_;
         for (i = 0; i < M; i++)
         {
             if (i < u_)
-                a[i] = a0[i];
+                a(j, i) = a0[i];
             else
-                a[i] = a1[i - u_];
+                a(j, i) = a1[i - u_];
         }
-        if (!ofpbwt.write(reinterpret_cast<char*>(&a[0]), a.size() * 4))
-            throw std::runtime_error(strerror(errno));
-        if (!ofauxu.write(reinterpret_cast<char*>(&u[0]), u.size() * 4))
-            throw std::runtime_error(strerror(errno));
     }
+
+    Rcpp::List out = List::create(Rcpp::Named("a") = a,
+                        Rcpp::Named("u") = u,
+                        Rcpp::Named("n") = N,
+                        Rcpp::Named("m") = M
+                       );
+    out.attr("class") = "pbwt";
+
+    return out;
 }
 
 //' @export
 // [[Rcpp::export]]
-std::vector<int> pbwt_query(const std::string& pbwtfile, const std::vector<int>& z, int L, int Step)
+std::vector<int> pbwt_query(List p, IntegerVector z, int L = 2, int Step = 8) {
+    if (!p.inherits("pbwt")) stop("Input must contain pbwt struct!");
+    int N = p["n"];
+    int M = p["m"];
+    if (z.size() != N) stop("the query z must has the same number of sites N as the panel!");
+    IntegerVector t(N);
+    IntegerMatrix u = as<IntegerMatrix>(p["u"]);
+    IntegerMatrix a = as<IntegerMatrix>(p["a"]);
+    std::vector<int> matches;
+    std::vector<int> selects; // random pick a selection point at each Step;
+    int i, j, s, k = 0;
+    NumericVector rng = runif( N / Step); // flip the coin to make a decision;
+    for (i = 1; i < rng.size(); i++)
+        selects.push_back(i * Step + floor(rng[i] * Step));
+    for (i = 0; i < N; i++)
+    {
+        if (i == 0) {
+            t[0] = z[0] ? M : 0;
+        } else {
+            if (z[i])
+                t[i] = u(i, M) + t[i - 1] - u(i, t[i - 1]);
+            else
+                t[i] = u(i, t[i - 1]);
+        }
+        if (selects[k] < N && selects[k] == i)
+        {
+            s = selects[k];
+            if (t[s] == M) {
+                // where we hit the bottom
+                for (j = 1; j <= L; j++)
+                    matches.push_back(a(s, M-j));
+            } else if (t[s] == 0) {
+                // where we hit the top;
+                for (j = 0; j < L; j++)
+                    matches.push_back(a(s, 0+j));
+            } else {
+                // L haps before z;
+                for (j = 1; j <= L; j++)
+                    matches.push_back(a(s, std::max(t[s]-j, 0)));
+                // L haps after z;
+                for (j = 0; j < L; j++)
+                    matches.push_back(a(s, std::min(t[s]+j, M-1)));
+            }
+            k = k + 1;
+        }
+    }
+    return matches;
+}
+
+// obslote
+std::vector<int> old_pbwt_query(const std::string& pbwtfile, const std::vector<int>& z, int L, int Step)
 {
     int N, M, i, j, s, k = 0;
     std::ifstream ifpbwt(pbwtfile + ".pbwt", std::ios::binary);
@@ -130,111 +179,4 @@ std::vector<int> pbwt_query(const std::string& pbwtfile, const std::vector<int>&
         }
     }
     return matches;
-}
-
-
-List pbwt_build(String vcf, String samples, String region, int N, int M) {
-    // N is number of SNPs, M is number of Haps
-    IntegerMatrix a(N, M), u(N, M + 1), v(N, M + 1);
-    IntegerVector a0(M), a1(M);
-    // get genotype from vcf/bcf
-    BcfReader br(vcf, samples, region);
-    BcfRecord var(br.header);
-    std::vector<char> gt; // can be bool, char, int
-    int i =0, k = 0, u_= 0, v_= 0, a_= 0;
-    while (br.getNextVariant(var)) {
-      if (!var.isSNP()) continue;
-      var.getGenotypes(gt);
-      assert(gt.size() == M);
-      u_ = 0, v_ = 0;
-      for (i = 0; i < M; i++)
-      {
-          a_ = k > 0 ? a(k - 1, i) : i;
-          u(k, i) = u_;
-          v(k, i) = v_;
-          if (gt[a_])
-          {
-              a1[v_] = a_;
-              v_++;
-          }
-          else
-          {
-              a0[u_] = a_;
-              u_++;
-          }
-      }
-      u(k, M) = u_;
-      v(k, M) = M;
-      for (i = 0; i < M; i++)
-      {
-          v(k, i) += u_;
-          if (i < u_)
-          {
-              a(k, i) = a0[i];
-          }
-          else
-          {
-              a(k, i) = a1[i - u_];
-          }
-      }
-      k++;
-    }
-    if (k != N) stop("nSNPs doesn't match the reference loaded by QUILT!\n");
-
-    Rcpp::List out = List::create(Rcpp::Named("a") = a,
-                        Rcpp::Named("u") = u,
-                        Rcpp::Named("v") = v,
-                        Rcpp::Named("n") = N,
-                        Rcpp::Named("m") = M
-                       );
-    out.attr("class") = "pbwt";
-
-    return out;
-}
-
-std::vector<int> find_neighour_haps(List p, IntegerVector z, int L = 1, int Step = 2) {
-    if (!p.inherits("pbwt")) stop("Input must contain pbwt struct!");
-    int N = p["n"];
-    int M = p["m"];
-    if (z.size() != N) stop("the query z must has the same number of sites N as the panel!");
-    IntegerVector t(N);
-    IntegerMatrix u = as<IntegerMatrix>(p["u"]);
-    IntegerMatrix v = as<IntegerMatrix>(p["v"]);
-    IntegerMatrix a = as<IntegerMatrix>(p["a"]);
-    NumericVector rng = runif(1); // flip the coin to make a decision;
-    int s = floor(rng[0] * Step); // the first start of selection;
-    std::vector<int> out;
-    int i = 0, j =0;
-    for (i = 0; i < N; i++)
-    {
-        if (i == 0) {
-            t[0] = z[0] ? M : 0;
-        } else {
-            if (z[i])
-                t[i] = v(i, t[i - 1]);
-            else
-                t[i] = u(i, t[i - 1]);
-        }
-        if (s < N && i == s)
-        {
-            if (t[s] == M) {
-                // where we hit the bottom
-                for (j = 1; j <= L; j++)
-                    out.push_back(a(s, M-j));
-            } else if (t[s] == 0) {
-                // where we hit the top;
-                for (j = 0; j < L; j++)
-                    out.push_back(a(s, 0+j));
-            } else {
-                // L haps before z;
-                for (j = 1; j <= L; j++)
-                    out.push_back(a(s, std::max(t[s]-j, 0)));
-                // L haps after z;
-                for (j = 0; j < L; j++)
-                    out.push_back(a(s, std::min(t[s]+j, M-1)));
-            }
-            s += Step;
-        }
-    }
-    return out;
 }

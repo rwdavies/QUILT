@@ -961,29 +961,29 @@ BEGIN_RCPP
 END_RCPP
 }
 // pbwt_index
-void pbwt_index(const std::string& vcffile, const std::string& samples, const std::string& region, const std::string& outfile);
-RcppExport SEXP _QUILT_pbwt_index(SEXP vcffileSEXP, SEXP samplesSEXP, SEXP regionSEXP, SEXP outfileSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type vcffile(vcffileSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type samples(samplesSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type region(regionSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type outfile(outfileSEXP);
-    pbwt_index(vcffile, samples, region, outfile);
-    return R_NilValue;
-END_RCPP
-}
-// pbwt_query
-std::vector<int> pbwt_query(const std::string& pbwtfile, const std::vector<int>& z, int L, int Step);
-RcppExport SEXP _QUILT_pbwt_query(SEXP pbwtfileSEXP, SEXP zSEXP, SEXP LSEXP, SEXP StepSEXP) {
+Rcpp::List pbwt_index(String vcf, String samples, String region);
+RcppExport SEXP _QUILT_pbwt_index(SEXP vcfSEXP, SEXP samplesSEXP, SEXP regionSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type pbwtfile(pbwtfileSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type z(zSEXP);
+    Rcpp::traits::input_parameter< String >::type vcf(vcfSEXP);
+    Rcpp::traits::input_parameter< String >::type samples(samplesSEXP);
+    Rcpp::traits::input_parameter< String >::type region(regionSEXP);
+    rcpp_result_gen = Rcpp::wrap(pbwt_index(vcf, samples, region));
+    return rcpp_result_gen;
+END_RCPP
+}
+// pbwt_query
+std::vector<int> pbwt_query(List p, IntegerVector z, int L, int Step);
+RcppExport SEXP _QUILT_pbwt_query(SEXP pSEXP, SEXP zSEXP, SEXP LSEXP, SEXP StepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type p(pSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type z(zSEXP);
     Rcpp::traits::input_parameter< int >::type L(LSEXP);
     Rcpp::traits::input_parameter< int >::type Step(StepSEXP);
-    rcpp_result_gen = Rcpp::wrap(pbwt_query(pbwtfile, z, L, Step));
+    rcpp_result_gen = Rcpp::wrap(pbwt_query(p, z, L, Step));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1303,7 +1303,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 64},
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 11},
     {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 11},
-    {"_QUILT_pbwt_index", (DL_FUNC) &_QUILT_pbwt_index, 4},
+    {"_QUILT_pbwt_index", (DL_FUNC) &_QUILT_pbwt_index, 3},
     {"_QUILT_pbwt_query", (DL_FUNC) &_QUILT_pbwt_query, 4},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
     {"_QUILT_Rcpp_test", (DL_FUNC) &_QUILT_Rcpp_test, 3},

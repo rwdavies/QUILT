@@ -4,6 +4,6 @@ vcffile <- "/Users/zilong/Project/zll/vcfpp/ALL.chr22.phase3_shapeit2_mvncall_in
 N <- 16325
 M <- 2504 * 2
 
-pbwt <- pbwt_build(vcffile = vcffile , samples = "-",  region = "22:19500000-20000000", N = N, M = M)
+pbwt <- pbwt_build(vcffile = vcffile , samples = "-",  region = "22:19500000-20000000")
 
 str(pbwt)
