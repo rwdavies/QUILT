@@ -74,6 +74,7 @@
 #' @param zilong Using zilong's solution
 #' @param use_mspbwt Use msPBWT to select new haplotypes
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
+#' @param use_sample_is_diploid Test flag
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -150,7 +151,8 @@ QUILT <- function(
     pbwtS = 8,
     zilong = FALSE,
     use_mspbwt = FALSE,
-    use_splitreadgl = TRUE
+    use_splitreadgl = TRUE,
+    use_sample_is_diploid = FALSE    
 ) {
 
     x <- as.list(environment())
@@ -201,8 +203,8 @@ QUILT <- function(
     validate_niterations_and_small_ref_panel_block_gibbs(small_ref_panel_block_gibbs_iterations, small_ref_panel_gibbs_iterations)
 
     if (is.na(n_burn_in_seek_its)) {
+        n_burn_in_seek_its <- n_seek_its - 1        
         print_message(paste0("Auto-set n_burn_in_seek_its to ", n_burn_in_seek_its, " i.e. only sample one dosage per Gibbs sample"))
-        n_burn_in_seek_its <- n_seek_its - 1
     }
     validate_n_seek_its_and_n_burn_in_seek_its(n_seek_its, n_burn_in_seek_its)
     
@@ -748,7 +750,8 @@ QUILT <- function(
                 zilong_indices =  zilong_indices,
                 use_mspbwt = use_mspbwt,
                 ms_indices = ms_indices,
-                use_splitreadgl = use_splitreadgl
+                use_splitreadgl = use_splitreadgl,
+                use_sample_is_diploid = use_sample_is_diploid
             )
 
             if (out[["sample_was_imputed"]]) {

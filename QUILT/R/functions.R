@@ -570,7 +570,8 @@ get_and_impute_one_sample <- function(
     zilong_indices,
     use_mspbwt,
     ms_indices,
-    use_splitreadgl
+    use_splitreadgl,
+    use_sample_is_diploid
 ) {
 
 
@@ -913,7 +914,8 @@ get_and_impute_one_sample <- function(
                 regionStart = regionStart,
                 regionEnd = regionEnd,
                 buffer = buffer,
-                use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc
+                use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
+                use_sample_is_diploid = use_sample_is_diploid
             )
 
             if (hla_run) {
@@ -2086,7 +2088,8 @@ impute_one_sample <- function(
     use_smooth_cm_in_block_gibbs = TRUE,
     block_gibbs_quantile_prob = 0.95,
     make_plots_block_gibbs = FALSE,
-    use_small_eHapsCurrent_tc = TRUE
+    use_small_eHapsCurrent_tc = TRUE,
+    use_sample_is_diploid = FALSE
 ) {
     ##
     K <- length(which_haps_to_use)
@@ -2121,6 +2124,11 @@ impute_one_sample <- function(
     ##     verbose = FALSE,
     ##     run_fb_subset = FALSE
     ## )
+    if (use_sample_is_diploid) {
+        sample_is_diploid <- TRUE
+    }else {
+        sample_is_diploid <- FALSE
+    }
     param_list <- list(
         return_alpha = FALSE,
         return_extra = FALSE,
@@ -2201,7 +2209,8 @@ impute_one_sample <- function(
             param_list = param_list,
             use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
             block_gibbs_quantile_prob = block_gibbs_quantile_prob,
-            use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc
+            use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
+            sample_is_diploid = sample_is_diploid 
         )
         if (out[["underflow_problem"]]) {
             new_maxDifferenceBetweenReads <- max(1, maxDifferenceBetweenReads / 10)

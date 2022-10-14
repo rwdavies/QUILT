@@ -635,7 +635,8 @@ void sample_reads_in_grid(
     const int& n_gibbs_full_its,
     const Rcpp::NumericVector& prior_probs,
     const bool gibbs_initialize_iteratively = false,
-    const int first_read_for_gibbs_initialization = 0
+    const int first_read_for_gibbs_initialization = 0,
+    bool sample_is_diploid = false
 ) {
     int h_rC = 0;
     int h_rA1 = 1;
@@ -685,19 +686,23 @@ void sample_reads_in_grid(
             //
             // build matrices to work with
             //
-            pC.fill(0);
-            pA1.fill(0);
-            pA2.fill(0);
+            pC.fill(1);
+            pA1.fill(1);
+            pA2.fill(1);
             alphaHat_m.col(0) = alphaHat_t1.col(iGrid);
             alphaHat_m.col(1) = alphaHat_t2.col(iGrid);
-            alphaHat_m.col(2) = alphaHat_t3.col(iGrid);                    
             betaHat_m.col(0) = betaHat_t1.col(iGrid);
             betaHat_m.col(1) = betaHat_t2.col(iGrid);
-            betaHat_m.col(2) = betaHat_t3.col(iGrid);
+            if (!sample_is_diploid) {
+                alphaHat_m.col(2) = alphaHat_t3.col(iGrid);
+                betaHat_m.col(2) = betaHat_t3.col(iGrid);
+            }
             ab_m = alphaHat_m % betaHat_m;
             pC(0) = sum(ab_m.col(0));
-            pC(1) = sum(ab_m.col(1));                        
-            pC(2) = sum(ab_m.col(2));
+            pC(1) = sum(ab_m.col(1));
+            if (!sample_is_diploid) {            
+                pC(2) = sum(ab_m.col(2));
+            }
             // pC(0) = sum(alphaHat_m.col(0) % betaHat_m.col(0));
             // pC(1) = sum(alphaHat_m.col(1) % betaHat_m.col(1));
             // pC(2) = sum(alphaHat_m.col(2) % betaHat_m.col(2));
@@ -722,8 +727,7 @@ void sample_reads_in_grid(
                 h_rA1 = 1; h_rA2 = 2;
             } else if (h_rC == 1) {
                 h_rA1 = 0; h_rA2 = 2;
-            }
-            if (h_rC == 2) {
+            } else if (h_rC == 2) {
                 h_rA1 = 0; h_rA2 = 1;                    
             }
             //
@@ -736,18 +740,24 @@ void sample_reads_in_grid(
             pA1(h_rA1) = 0;
             pA1(h_rA2) = pC(h_rA2); // stays the same
             //
-            pA2(h_rC) = 0;
-            pA2(h_rA1) = pC(h_rA1); // stays the same
-            pA2(h_rA2) = 0;
-            //
             // A1 - original hap loses
             pA1(h_rC) = sum(ab_m.col(h_rC) / eMatRead_t_col);
-            // A2 - original hap loses
-            pA2(h_rC) = pA1(h_rC);
             // A1 - new hap gains
             pA1(h_rA1) = sum(ab_m.col(h_rA1) % eMatRead_t_col);
-            // A2 - new hap gains
-            pA2(h_rA2) = sum(ab_m.col(h_rA2) % eMatRead_t_col);
+            //
+            // second alternate option (for ff > 0)
+            // this is BY FAR the most important thing to avoid
+            //
+            if (!sample_is_diploid) {
+                pA2(h_rC) = 0;
+                pA2(h_rA1) = pC(h_rA1); // stays the same
+                pA2(h_rA2) = 0;
+                //
+                // A2 - original hap loses
+                pA2(h_rC) = pA1(h_rC);
+                // A2 - new hap gains
+                pA2(h_rA2) = sum(ab_m.col(h_rA2) % eMatRead_t_col);
+            }
         } else if (currently_doing_gibbs_initialization) {
             h_rC = 0; // wlog
             h_rA1 = 1;
@@ -781,24 +791,26 @@ void sample_reads_in_grid(
         // prod_pA2=std::exp(log_prod_pA2);
         //
         //
-        prod_pC =  (pC(0) * pC(1) * pC(2)   ) * prior_probs(h_rC);
+        prod_pC = (pC(0) * pC(1) * pC(2)   ) * prior_probs(h_rC);
         prod_pA1 = (pA1(0) * pA1(1) * pA1(2)) * prior_probs(h_rA1);
-        prod_pA2 = (pA2(0) * pA2(1) * pA2(2)) * prior_probs(h_rA2);
-        //
+        prod_pA2 = (pA2(0) * pA2(1) * pA2(2)) * prior_probs(h_rA2); // doesn't matter as much        
         denom = prod_pC + prod_pA1 + prod_pA2;
         norm_pC = prod_pC / denom;
         norm_pA1 = prod_pA1 / denom;
         norm_pA2 = prod_pA2 / denom;
         if (verbose) {
-            std::cout << "pC(0)=" << pC(0) << ", pC(1)=" << pC(1) << ", pC(2)=" << pC(2) << std::endl;
-            std::cout << "pA1(0)=" << pA1(0) << ", pA1(1)=" << pA1(1) << ", pA1(2)=" << pA1(2) << std::endl;
-            std::cout << "pA2(0)=" << pA2(0) << ", pA2(1)=" << pA2(1) << ", pA2(2)=" << pA2(2) << std::endl;            
+            std::cout << "prior_probs = " << prior_probs << std::endl;
+            std::cout << "pC = " << pC << std::endl;
+            std::cout << "pA1 = " << pA1 << std::endl;
+            std::cout << "pA2 = " << pA2 << std::endl;                                   
+            std::cout << "prod_pC = " << prod_pC << std::endl;
+            std::cout << "prod_pA1 = " << prod_pA1 << std::endl;
+            std::cout << "prod_pA2 = " << prod_pA2 << std::endl;                        
+            std::cout << "denom = " << denom << std::endl;
+            std::cout << "norm_pC = " << norm_pC << std::endl;
+            std::cout << "norm_pA1 = " << norm_pA1 << std::endl;
+            std::cout << "norm_pA2 = " << norm_pA2 << std::endl;                        
         }
-        //
-        denom = prod_pC + prod_pA1 + prod_pA2;
-        norm_pC = prod_pC / denom;
-        norm_pA1 = prod_pA1 / denom;
-        norm_pA2 = prod_pA2 / denom;
         //
         // mt = 0            -> 0.5
         // mu = 0.5          -> 0.5 + ff / 2
@@ -824,10 +836,8 @@ void sample_reads_in_grid(
         }
         //
         if (verbose) {
-            std::cout << "pC = " << pC << std::endl;
-            std::cout << "pA1 = " << pA1 << std::endl;
-            std::cout << "pA2 = " << pA2 << std::endl;                        
-            std::cout << "denom = " << denom << std::endl;
+            std::cout << "h_rC = " << h_rC << std::endl;
+            std::cout << "h_rN = " << h_rN << std::endl;
         }
         //
         //
@@ -963,24 +973,32 @@ void sample_reads_in_grid(
         // arguably, only need to know which are lost, which are gained
         // can re-build here? but again, this only matters if lots of reads at same spot
         // only do if at least one of them changed?
-        alphaHat_t1.col(iGrid) = alphaHat_m.col(0);
-        alphaHat_t2.col(iGrid) = alphaHat_m.col(1);
-        alphaHat_t3.col(iGrid) = alphaHat_m.col(2);
         //
+        // first 
+        //
+        alphaHat_t1.col(iGrid) = alphaHat_m.col(0);
         alphaConst = 1 / sum(alphaHat_m.col(0));
         c1(iGrid) *= alphaConst;
         minus_log_c1_sum -= std::log(alphaConst);
         alphaHat_t1.col(iGrid) *= alphaConst;
         //
+        // second
+        //
+        alphaHat_t2.col(iGrid) = alphaHat_m.col(1);
         alphaConst = 1 / sum(alphaHat_m.col(1));
         c2(iGrid) *= alphaConst;
         minus_log_c2_sum -= std::log(alphaConst);
         alphaHat_t2.col(iGrid) *= alphaConst;
         //
-        alphaConst = 1 / sum(alphaHat_m.col(2));
-        c3(iGrid) *= alphaConst;
-        minus_log_c3_sum -= std::log(alphaConst);
-        alphaHat_t3.col(iGrid) *= alphaConst;
+        // third
+        //
+        if (!sample_is_diploid) {
+            alphaHat_t3.col(iGrid) = alphaHat_m.col(2);
+            alphaConst = 1 / sum(alphaHat_m.col(2));
+            c3(iGrid) *= alphaConst;
+            minus_log_c3_sum -= std::log(alphaConst);
+            alphaHat_t3.col(iGrid) *= alphaConst;
+        }
     }
     //
     return;
@@ -1302,7 +1320,7 @@ void add_to_per_it_likelihoods(
     per_it_likelihoods(i_per_it_likelihoods, 11) = relabel;
     i_per_it_likelihoods++; // bump counter
     return;
-};
+}
 
 
 
@@ -1481,7 +1499,8 @@ void rcpp_gibbs_nipt_iterate(
     const bool gibbs_initialize_iteratively = false,
     const int first_read_for_gibbs_initialization = 0,
     const bool do_block_resampling = false,
-    const int artificial_relabel = -1
+    const int artificial_relabel = -1,
+    bool sample_is_diploid = false
 ) {
     //
     //
@@ -1500,8 +1519,15 @@ void rcpp_gibbs_nipt_iterate(
     Rcpp::List readData;    
     arma::mat alphaHat_m(K, 3); // tested, this is the better orientation
     arma::mat betaHat_m(K, 3);
-    arma::mat ab_m(K, 3);    
+    int nHaps = 3; // just  to declare ab_m below
+    if (sample_is_diploid) {
+        nHaps = 2;
+    }
+    arma::mat ab_m(K, nHaps);    
     Rcpp::NumericVector pC(3), pA1(3), pA2(3);
+    pC.fill(1);
+    pA1.fill(1);
+    pA2.fill(1);    
     //
     if (return_p_store | (relabel > 1)) {
         minus_log_c1_sum = 0; minus_log_c2_sum = 0; minus_log_c3_sum = 0;
@@ -1520,14 +1546,18 @@ void rcpp_gibbs_nipt_iterate(
             // move and normalize
             rcpp_alpha_forward_one_QUILT_faster(s, iGrid, K, alphaHat_t1, transMatRate_tc_H, eMatGrid_t1, c1, minus_log_c1_sum, grid_has_read, true);
             rcpp_alpha_forward_one_QUILT_faster(s, iGrid, K, alphaHat_t2, transMatRate_tc_H, eMatGrid_t2, c2, minus_log_c2_sum, grid_has_read, true);
-            rcpp_alpha_forward_one_QUILT_faster(s, iGrid, K, alphaHat_t3, transMatRate_tc_H, eMatGrid_t3, c3, minus_log_c3_sum, grid_has_read, true);
+            if (!sample_is_diploid) {
+                rcpp_alpha_forward_one_QUILT_faster(s, iGrid, K, alphaHat_t3, transMatRate_tc_H, eMatGrid_t3, c3, minus_log_c3_sum, grid_has_read, true);
+            }
             //rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t1, transMatRate_tc_H, eMatGrid_t1, alphaMatCurrent_tc, c1, minus_log_c1_sum, true);
             //rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t2, transMatRate_tc_H, eMatGrid_t2, alphaMatCurrent_tc, c2, minus_log_c2_sum, true);
             //rcpp_alpha_forward_one(s, iGrid, K, alphaHat_t3, transMatRate_tc_H, eMatGrid_t3, alphaMatCurrent_tc, c3, minus_log_c3_sum, true);
         } else {
             rcpp_reinitialize_in_iterations(s, alphaHat_t1, c1, priorCurrent_m, eMatGrid_t1, K);
             rcpp_reinitialize_in_iterations(s, alphaHat_t2, c2, priorCurrent_m, eMatGrid_t2, K);
-            rcpp_reinitialize_in_iterations(s, alphaHat_t3, c3, priorCurrent_m, eMatGrid_t3, K);            
+            if (!sample_is_diploid) {            
+                rcpp_reinitialize_in_iterations(s, alphaHat_t3, c3, priorCurrent_m, eMatGrid_t3, K);
+            }
         }
         //
         iRead++;
@@ -1558,7 +1588,7 @@ void rcpp_gibbs_nipt_iterate(
                 sampleReads, return_p_store, iteration, p_store,
                 record_read_set, rlc, H_class, class_sum_cutoff,
                 i_gibbs_samplings, n_gibbs_full_its, prior_probs,
-                gibbs_initialize_iteratively, first_read_for_gibbs_initialization
+                gibbs_initialize_iteratively, first_read_for_gibbs_initialization, sample_is_diploid
             );
         }
         //
@@ -1571,11 +1601,15 @@ void rcpp_gibbs_nipt_iterate(
     //
     betaHat_t1.col(nGrids - 1).fill(c1(nGrids-1));
     betaHat_t2.col(nGrids - 1).fill(c2(nGrids-1));
-    betaHat_t3.col(nGrids - 1).fill(c3(nGrids-1));
+    if (!sample_is_diploid) {
+        betaHat_t3.col(nGrids - 1).fill(c3(nGrids-1));
+    }
     //
     Rcpp_run_backward_haploid_QUILT_faster(betaHat_t1, c1, eMatGrid_t1, transMatRate_tc_H, grid_has_read, s);
     Rcpp_run_backward_haploid_QUILT_faster(betaHat_t2, c2, eMatGrid_t2, transMatRate_tc_H, grid_has_read, s);
-    Rcpp_run_backward_haploid_QUILT_faster(betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, grid_has_read, s);
+    if (!sample_is_diploid) {
+        Rcpp_run_backward_haploid_QUILT_faster(betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, grid_has_read, s);
+    }
     //Rcpp_run_backward_haploid(betaHat_t1, c1, eMatGrid_t1, alphaMatCurrent_tc, transMatRate_tc_H, s);
     //Rcpp_run_backward_haploid(betaHat_t2, c2, eMatGrid_t2, alphaMatCurrent_tc, transMatRate_tc_H, s);
     //Rcpp_run_backward_haploid(betaHat_t3, c3, eMatGrid_t3, alphaMatCurrent_tc, transMatRate_tc_H, s);
@@ -2055,7 +2089,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool use_smooth_cm_in_block_gibbs = false,
     const double block_gibbs_quantile_prob = 0.9,
     const bool do_shard_ff0_block_gibbs = true,
-    const bool use_small_eHapsCurrent_tc = true
+    const bool use_small_eHapsCurrent_tc = true,
+    bool sample_is_diploid = false    
 ) {
     // I think these break the gibbs-ness - disable for now!
     // rescale_eMatRead_t should be fine to reset - will be constant across reads - only the read not per-base input considered
@@ -2093,7 +2128,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool return_advanced_gibbs_block_output = as<bool>(param_list["return_advanced_gibbs_block_output"]);
     const bool use_starting_read_labels = as<bool>(param_list["use_starting_read_labels"]);
     const bool verbose = as<bool>(param_list["verbose"]);
-    const bool run_fb_subset = as<bool>(param_list["run_fb_subset"]);    
+    const bool run_fb_subset = as<bool>(param_list["run_fb_subset"]);
     //
     //
     // initialize variables 
@@ -2450,7 +2485,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         record_read_set, rlc, H_class, class_sum_cutoff,
                         run_fb_grid_offset, prior_probs, per_it_likelihoods, grid_has_read,
                         gibbs_initialize_iteratively, first_read_for_gibbs_initialization,
-                        do_block_resampling, artificial_relabel
+                        do_block_resampling, artificial_relabel, sample_is_diploid
                     );
                     //
                     // do check here for underflow/overflow
