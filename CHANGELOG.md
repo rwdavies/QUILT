@@ -1,3 +1,5 @@
+* v1.0.4
+	* Mostly small bugs and some future capabilities
 * v1.0.3
 	* Simplify how QUILT HLA reference packages are built
 * v1.0.2
