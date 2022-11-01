@@ -483,12 +483,23 @@ make_rhb_t_equality <- function(
             return(as.integer(which_hapMatcher_0[starts[i]:ends[i], 1]))
         })
         ##
-        ## fix all_symbols (these aren't stored here)
+        ## fix all_symbols
         ##
         for(iGrid in 1:nGrids) {
             a <- all_symbols[[iGrid]]
             if (nrow(a) > nMaxDH) {
-                all_symbols[[iGrid]] <- a[1:nMaxDH, ]
+                ##
+                ## old behaviour - cap this to be the max
+                ## all_symbols[[iGrid]] <- a[1:nMaxDH, ]
+                ## 
+                ## new behaviour, if more than the max, make final entry the original, with number of missing
+                ## 
+                a_temp <- a[1:nMaxDH, ]
+                n_non_missing <- sum(a_temp[, 2])
+                n_missing <- K - n_non_missing
+                a_temp <- rbind(a_temp, c(a[1, 1], n_missing))
+                ## a_temp <- a_temp[order(-a_temp[, 2]), ]
+                all_symbols[[iGrid]] <- a_temp
             }
         }
     } else {
