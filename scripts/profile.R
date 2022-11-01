@@ -128,3 +128,16 @@ print(profile_end - profile_start)
 
 ## no diploid
 ## Time difference of 53.44265 secs
+
+
+## with -O3 flag on
+## Time difference of 1.377417 mins
+## Time difference of 1.428216 min
+## ./scripts/build-and-install.R && ./scripts/profile.R && mv profile.pdf profile.yesO3.pdf
+## example ## g++ -std=gnu++11 -I"/well/davies/users/dcc832/bin/R-4.1.3/include" -DNDEBUG -I./ -I'/gpfs3/well/davies/users/dcc832/bin/R-4.1.3/library/Rcpp/include' -I'/gpfs3/well/davies/users/dcc832/bin/R-4.1.3/library/RcppArmadillo/include' -I/usr/local/include  -O3 -fpic  -g -O2  -c test.cpp -o test.o
+
+
+
+## with no -O3 flag
+## Time difference of 1.28888 mins
+## ./scripts/profile.R && mv profile.pdf profile.O2.pdf

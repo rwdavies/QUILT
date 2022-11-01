@@ -105,17 +105,15 @@ make_and_write_output_file <- function(
     )
 
     print_message("bgzip output file")
-    print("REMOVE ME")
-    ## if (length(grep("~", output_unbgzipped)) > 0) {
-    ##     ## not entirely sure why this system call isn't working otherwise
-    ##     check_system_OK(system(paste0("bgzip --threads ", nCores, " -f ", output_unbgzipped), intern = TRUE))
-    ##     print(system(paste0("tabix ", output_filename), intern = TRUE))
-    ##     check_system_OK(system(paste0("tabix ", output_filename), intern = TRUE))
-    ## } else {
-    ##     check_system_OK(system(paste0("bgzip --threads ", nCores, " -f ", shQuote(output_unbgzipped)), intern = TRUE))
-    ##     check_system_OK(system(paste0("tabix ", shQuote(output_filename)), intern = TRUE))
-    ## }
-    
+    if (length(grep("~", output_unbgzipped)) > 0) {
+        ## not entirely sure why this system call isn't working otherwise
+        check_system_OK(system(paste0("bgzip --threads ", nCores, " -f ", output_unbgzipped), intern = TRUE))
+        print(system(paste0("tabix ", output_filename), intern = TRUE))
+        check_system_OK(system(paste0("tabix ", output_filename), intern = TRUE))
+    } else {
+        check_system_OK(system(paste0("bgzip --threads ", nCores, " -f ", shQuote(output_unbgzipped)), intern = TRUE))
+        check_system_OK(system(paste0("tabix ", shQuote(output_filename)), intern = TRUE))
+    }
     print_message("Done making and writing output file")
 
     return(NULL)
