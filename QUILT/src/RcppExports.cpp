@@ -1265,28 +1265,6 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// robbie_test
-void robbie_test(arma::mat& alphaHat_t1, arma::mat& alphaHat_m);
-RcppExport SEXP _QUILT_robbie_test(SEXP alphaHat_t1SEXP, SEXP alphaHat_mSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t1(alphaHat_t1SEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_m(alphaHat_mSEXP);
-    robbie_test(alphaHat_t1, alphaHat_m);
-    return R_NilValue;
-END_RCPP
-}
-// robbie_test2
-void robbie_test2(arma::mat& alphaHat_t1, arma::mat& alphaHat_m);
-RcppExport SEXP _QUILT_robbie_test2(SEXP alphaHat_t1SEXP, SEXP alphaHat_mSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t1(alphaHat_t1SEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_m(alphaHat_mSEXP);
-    robbie_test2(alphaHat_t1, alphaHat_m);
-    return R_NilValue;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_make_eMatRead_t", (DL_FUNC) &_QUILT_rcpp_make_eMatRead_t, 15},
@@ -1342,8 +1320,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_Rcpp_haploid_reference_single_backward", (DL_FUNC) &_QUILT_Rcpp_haploid_reference_single_backward, 28},
     {"_QUILT_Rcpp_haploid_reference_single_backward_version2", (DL_FUNC) &_QUILT_Rcpp_haploid_reference_single_backward_version2, 30},
     {"_QUILT_Rcpp_haploid_dosage_versus_refs", (DL_FUNC) &_QUILT_Rcpp_haploid_dosage_versus_refs, 30},
-    {"_QUILT_robbie_test", (DL_FUNC) &_QUILT_robbie_test, 2},
-    {"_QUILT_robbie_test2", (DL_FUNC) &_QUILT_robbie_test2, 2},
     {NULL, NULL, 0}
 };
 

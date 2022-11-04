@@ -58,6 +58,15 @@ if (1 == 0) {
 
 profile_start <- Sys.time()
 
+i_option <- Sys.getenv("I_OPTION")
+
+if (i_option == 1) {
+    use_sample_is_diploid <- TRUE
+    output_plot <- file.path("profile.diploidTRUE.pdf")    
+} else if (i_option == 2) {
+    use_sample_is_diploid <- FALSE
+    output_plot <- file.path("profile.diploidFALSE.pdf")
+}
 ##################
 QUILT(
     outputdir=f("quilt_mspbwt_test2"),
@@ -86,12 +95,8 @@ profile_end <- Sys.time()
 setwd(stitch_dir)
 Rprof(NULL)
 pd <- readProfileData(profout)
-title <- Sys.getenv("TITLE")
 
-output_plot <- Sys.getenv("OUTPUT_PLOT")
-if (output_plot == "") {
-    output_plot <- file.path("profile.pdf")
-}
+title <- Sys.getenv("TITLE")
 pdf(output_plot, height = 24, width = 24)
 par(mfrow = c(3, 1), oma=c(0, 0, 3, 0))
 flameGraph(pd, order = "time", main = "Time")

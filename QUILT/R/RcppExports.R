@@ -266,13 +266,3 @@ Rcpp_haploid_dosage_versus_refs <- function(gl, alphaHat_t, betaHat_t, c, gamma_
     invisible(.Call('_QUILT_Rcpp_haploid_dosage_versus_refs', PACKAGE = 'QUILT', gl, alphaHat_t, betaHat_t, c, gamma_t, gammaSmall_t, best_haps_stuff_list, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, hapMatcher, gammaSmall_cols_to_get, eMatDH_special_grid_which, eMatDH_special_values_list, K_top_matches, suppressOutput, min_emission_prob_normalization_threshold, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, is_version_2, return_extra, always_normalize, normalize_emissions))
 }
 
-#' @export
-robbie_test <- function(alphaHat_t1, alphaHat_m) {
-    invisible(.Call('_QUILT_robbie_test', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_m))
-}
-
-#' @export
-robbie_test2 <- function(alphaHat_t1, alphaHat_m) {
-    invisible(.Call('_QUILT_robbie_test2', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_m))
-}
-
