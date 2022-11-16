@@ -438,7 +438,7 @@ option_list <- list(
         "--use_splitreadgl",
         type = "logical",
         help = "Use split real GL in hap selection and imputation [default TRUE] ",
-        default = TRUE
+        default = FALSE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
