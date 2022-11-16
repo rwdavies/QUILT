@@ -151,7 +151,7 @@ QUILT <- function(
     pbwtS = 8,
     zilong = FALSE,
     use_mspbwt = FALSE,
-    use_splitreadgl = TRUE,
+    use_splitreadgl = FALSE,
     use_sample_is_diploid = FALSE    
 ) {
 

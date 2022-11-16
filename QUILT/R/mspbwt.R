@@ -125,9 +125,17 @@ select_new_haps_mspbwt_v2 <- function(
         new_haps <- sample(1:Kfull, Knew)
         return(new_haps)
     } else if(length(unique_haps) <= Knew)  {
-        new_haps <- array(NA, Knew)
-        new_haps[1:length(unique_haps)] <- unique_haps
-        new_haps[-c(1:length(unique_haps))] <- sample(setdiff(1:Kfull, unique_haps), Knew - length(unique_haps), replace = FALSE)
+        ##new_haps <- array(NA, Knew)
+        ## new_haps[1:length(unique_haps)] <- unique_haps
+        ## new_haps[-c(1:length(unique_haps))] <- sample(setdiff(1:Kfull, unique_haps), Knew - length(unique_haps), replace = FALSE)
+        ##
+        ## so in this faster version
+        ## oversample all we could possibly want. then take the new ones, plus some needed new ones
+        ##
+        new_haps <- unique(c(
+            unique_haps,
+            sample(Kfull, length(unique_haps) + Knew, replace = FALSE)
+        ))[1:Knew]
         return(new_haps)
     } else {
         ## so this doesn't do anything about region specificity
@@ -225,11 +233,6 @@ impute_using_split_reads_and_small_ref_panel <- function(
     ) {
 
 
-
-
-
-
-    
     K <- nrow(rhb_t)
     dosage <- numeric(nSNPs)
     nGrids <- ncol(rhb_t)
