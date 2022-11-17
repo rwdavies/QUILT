@@ -118,10 +118,11 @@ select_new_haps_mspbwt_v2 <- function(
     })
     mtm <- rbind(a[[1]], a[[2]])
     ## order everything
-    mtm <- mtm[order(-mtm[, "length"], mtm[, "key"]), ]    
+    mtm <- mtm[order(-mtm[, "length"], mtm[, "key"]), , drop = FALSE]
     unique_haps <- unique(mtm[, "indexB0"])
     if (length(unique_haps) == 0) {
         ## special fluke case
+        ## likely driven by very small regions we are trying to impute, with few / no matches above the min length above
         new_haps <- sample(1:Kfull, Knew)
         return(new_haps)
     } else if(length(unique_haps) <= Knew)  {
