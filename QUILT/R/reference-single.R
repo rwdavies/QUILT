@@ -370,7 +370,7 @@ make_rhb_t_equality <- function(
     verbose = TRUE
 ) {
     if (is.na(nMaxDH)) {
-        nMaxDH_default <- 2 ** 8 - 1
+        nMaxDH_default <- 2 ** 10 - 1
         infer_nMaxDH <- TRUE
     } else {
         nMaxDH_default <- nMaxDH
@@ -435,7 +435,11 @@ make_rhb_t_equality <- function(
             thresh <- 0.99
         }
         ## really want to almost never need this, within reason, for large K
-        suggested_value <- which.max(running_count > thresh)
+        if (sum(running_count > thresh) == 0) {
+            suggested_value <- length(running_count)
+        } else {
+            suggested_value <- which.max(running_count > thresh)
+        }
         nMaxDH <- min(
             max(c(2 ** 4 - 1, suggested_value)),
             nMaxDH_default

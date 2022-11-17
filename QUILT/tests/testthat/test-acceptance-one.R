@@ -84,7 +84,8 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
             n_seek_its = 2,
             nCores = 1,
             RData_objects_to_save = "final_set_of_results",
-            addOptimalHapsToVCF = FALSE
+            addOptimalHapsToVCF = FALSE,
+            plot_p1 = TRUE
         )
 
         ## Ksubset = 100,

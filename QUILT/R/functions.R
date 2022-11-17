@@ -571,7 +571,8 @@ get_and_impute_one_sample <- function(
     use_mspbwt,
     ms_indices,
     use_splitreadgl,
-    use_sample_is_diploid
+    use_sample_is_diploid,
+    plot_p1
 ) {
 
 
@@ -686,6 +687,17 @@ get_and_impute_one_sample <- function(
     ## leave NULL, add to it later if needed
     if (plot_per_sample_likelihoods) {
         for_likelihood_plotting <- as.list(1:(nGibbsSamples + 1))
+    }
+
+    if (plot_p1) {
+        record_read_label_usage <- TRUE ## check this too
+        p1_store <- lapply(1:(nGibbsSamples + 1), function(x) {
+            as.list(1:n_seek_its)
+        })
+        return_p1 <- TRUE
+
+    } else {
+        return_p1 <- FALSE
     }
 
     ## don't need this for routine use - or do better matching!
@@ -897,6 +909,7 @@ get_and_impute_one_sample <- function(
                 verbose = FALSE,
                 maxEmissionMatrixDifference = 1e100,
                 return_p_store = FALSE,
+                return_p1 = return_p1,
                 return_extra = FALSE,
                 return_genProbs = return_genProbs,
                 return_hapProbs = return_hapProbs,
@@ -917,6 +930,10 @@ get_and_impute_one_sample <- function(
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
                 use_sample_is_diploid = use_sample_is_diploid
             )
+            
+            if (plot_p1) {
+                p1_store[[i_gibbs_sample]][[i_it]] <- gibbs_iterate[["p1"]]
+            }
 
             if (hla_run) {
                 ## final phasing it, save gamma
@@ -1191,6 +1208,11 @@ get_and_impute_one_sample <- function(
             }
         }
 
+    }
+
+    if (plot_p1) {
+        save(p1_store, super_out_read_labels, file = "~/temp.RData")
+        stop("WER")
     }
 
     if(have_truth_haplotypes) {
@@ -2073,6 +2095,7 @@ impute_one_sample <- function(
     buffer,
     uncertain_truth_labels,
     return_p_store = FALSE,
+    return_p1 = FALSE,
     return_extra = FALSE,
     return_genProbs = TRUE,
     return_hapProbs = TRUE,
@@ -2137,6 +2160,7 @@ impute_one_sample <- function(
         return_gamma = as.logical(return_gamma | make_plots),
         return_hapProbs = as.logical(return_hapProbs | make_plots),
         return_p_store = return_p_store,
+        return_p1 = return_p1,
         return_gibbs_block_output = return_gibbs_block_output,
         return_advanced_gibbs_block_output = return_advanced_gibbs_block_output,
         use_starting_read_labels = TRUE,

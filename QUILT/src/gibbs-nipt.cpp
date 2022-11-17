@@ -625,8 +625,10 @@ void sample_reads_in_grid(
     arma::mat& betaHat_t3,    
     const Rcpp::List& sampleReads,
     const bool& return_p_store,
+    const bool return_p1,
     int& iteration,
     Rcpp::NumericMatrix& p_store,
+    Rcpp::NumericMatrix& p1,
     const bool record_read_set,
     const Rcpp::NumericMatrix& rlc,
     Rcpp::IntegerVector& H_class,
@@ -916,6 +918,9 @@ void sample_reads_in_grid(
             } else {
                 H_class(iRead) = 0;
             }
+        }
+        if (return_p1) {
+            p1(i_gibbs_samplings * n_gibbs_full_its + iteration ,iRead) = norm_pC;
         }
         if (return_p_store) {
             // p_store_cols <- c("p_1", "p_2", "p_3", "chance", "h_rC", "h_rN", "c1", "c2", "c3", "p", "agreePer")
@@ -1480,9 +1485,11 @@ void rcpp_gibbs_nipt_iterate(
     arma::rowvec& c3,
     arma::mat& eMatGrid_t3,
     Rcpp::NumericMatrix& p_store,
+    Rcpp::NumericMatrix& p1,
     int& i_per_it_likelihoods,
     const bool verbose,
     const bool return_p_store,
+    bool return_p1,
     const bool run_fb_subset,
     const int i_gibbs_samplings,
     const int n_gibbs_starts,
@@ -1585,7 +1592,7 @@ void rcpp_gibbs_nipt_iterate(
                 minus_log_c1_sum, minus_log_c2_sum, minus_log_c3_sum,
                 alphaHat_t1, alphaHat_t2, alphaHat_t3,
                 betaHat_t1, betaHat_t2, betaHat_t3,
-                sampleReads, return_p_store, iteration, p_store,
+                sampleReads, return_p_store, return_p1, iteration, p_store, p1,
                 record_read_set, rlc, H_class, class_sum_cutoff,
                 i_gibbs_samplings, n_gibbs_full_its, prior_probs,
                 gibbs_initialize_iteratively, first_read_for_gibbs_initialization, sample_is_diploid
@@ -2120,6 +2127,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     // ## )
     const bool return_alpha = as<bool>(param_list["return_alpha"]);
     const bool return_p_store = as<bool>(param_list["return_p_store"]);
+    const bool return_p1 = as<bool>(param_list["return_p1"]);    
     const bool return_extra = as<bool>(param_list["return_extra"]);
     const bool return_genProbs = as<bool>(param_list["return_genProbs"]);
     const bool return_hapProbs = as<bool>(param_list["return_hapProbs"]);
@@ -2202,6 +2210,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     //
     Rcpp::NumericMatrix p_store;
     Rcpp::CharacterVector p_store_cols;
+    Rcpp::NumericMatrix p1;
     if (return_p_store) {
         p_store_cols = CharacterVector::create(
             "p_1", "p_2", "p_3",
@@ -2218,6 +2227,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         p_store = Rcpp::NumericMatrix(n_gibbs_starts * n_gibbs_full_its * nReads, 3 + 3 + 2 + 3 + 3);
         p_store.fill(0);
         colnames(p_store) = p_store_cols;
+    }
+    if (return_p1) {
+        p1 = Rcpp::NumericMatrix(n_gibbs_starts * n_gibbs_full_its, nReads);
     }
     //
     //
@@ -2480,7 +2492,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         alphaHat_t1, betaHat_t1, c1, eMatGrid_t1,
                         alphaHat_t2, betaHat_t2, c2, eMatGrid_t2,
                         alphaHat_t3, betaHat_t3, c3, eMatGrid_t3,
-                        p_store, i_per_it_likelihoods, verbose, return_p_store, run_fb_subset,
+                        p_store, p1, i_per_it_likelihoods, verbose, return_p_store, return_p1, run_fb_subset,
                         i_gibbs_samplings, n_gibbs_starts, i_result_it, ff,
                         record_read_set, rlc, H_class, class_sum_cutoff,
                         run_fb_grid_offset, prior_probs, per_it_likelihoods, grid_has_read,
@@ -2776,6 +2788,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     //
     if (return_p_store) {
         to_return.push_back(p_store, "p_store");
+    }
+    if (return_p1) {
+        to_return.push_back(p1, "p1");
     }
     if (record_read_set) {
         to_return.push_back(H_class, "H_class");

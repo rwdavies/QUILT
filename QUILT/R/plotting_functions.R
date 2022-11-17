@@ -465,3 +465,72 @@ plot_of_likelihoods_across_samplings_and_seek_its <- function(
     ## system(paste("rsync -av ", filename, " rescompNew2:~/"))
 }
 
+
+
+
+plot_prob_of_flipping_to_first_hap <- function(
+    p_store,
+    filename
+) {
+
+    filename <- "~/temp.png"
+    load(file = "~/temp.RData")    
+    
+    nReads <- ncol(p1_store[[1]][[1]])
+    n_sampling_its <- nrow(p1_store[[1]][[1]])
+
+    n_seek_its <- length(p1_store[[1]])
+    nGibbsSamples <- length(p1_store) - 1
+
+    ## 
+    size <- round(nReads / 1000)
+    size <- min(max(size, 5), 20)
+
+    filename <- "temp.readprobs.png"
+    png(filename, height = size, width = size, units = "in", res = 300)
+    xlim <- c(1, n_seek_its + 1)
+    ylim <- c(1, nGibbsSamples + 1 + 1)
+    plot(x = 0, y = 0, col = "white", xlim = xlim, ylim = ylim, axes = TRUE, xlab = "", ylab = "")
+    ybottom <- (0:(nReads - 1)) / nReads
+    ytop <- ybottom + 1 / nReads
+    xleft <- 0:(n_sampling_its - 1) / n_sampling_its
+    xright <- xleft + 1 / n_sampling_its
+    ## now rep them
+    ybottom <- rep(ybottom, each = n_sampling_its)
+    ytop <- rep(ytop, each = n_sampling_its)
+    ##
+    xleft <- rep(xleft, nReads)
+    xright <- rep(xright, nReads)
+    ## 
+    cols <- colorRampPalette(c("#FFFFFF", "#56B4E9"))(51)
+    for(i_it in 1:n_seek_its) {
+        for(iGibbs in 1:(nGibbsSamples + 1)) {
+            p1 <- p1_store[[iGibbs]][[i_it]]
+            rect(i_it + xleft, iGibbs + ybottom, i_it + xright, iGibbs + ytop, col = cols[round(100 * abs(p1 - 0.5)) + 1], border = NA)
+                rect(i_it, iGibbs, i_it + 1, iGibbs + 1)
+        }
+    }
+    dev.off()
+
+
+    table(round(colMeans(abs(x - 0.5)), 1))
+    
+    ## plot reads used as well
+    filename <- "temp.reads.png"
+    png(filename, height = size, width = size, units = "in", res = 300)
+
+    ## argh, not yet recorded
+    f <- function(i, j) {
+        x <- p1_store[[i]][[j]]
+        y <- round(apply(x, 2, function(x) max(abs(x - 0.5))), 1)
+        y
+    }
+
+    table(f(1, 1), f(1, 3))
+    table(f(2, 3), f(1, 3)) ## mostly the same
+    
+
+    ## compare across runs
+    
+    
+}

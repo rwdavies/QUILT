@@ -75,6 +75,7 @@
 #' @param use_mspbwt Use msPBWT to select new haplotypes
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
 #' @param use_sample_is_diploid Test flag
+#' @param plot_p1 Plot first haplotype read sampling probabilities
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -152,7 +153,8 @@ QUILT <- function(
     zilong = FALSE,
     use_mspbwt = FALSE,
     use_splitreadgl = FALSE,
-    use_sample_is_diploid = FALSE    
+    use_sample_is_diploid = FALSE,
+    plot_p1 = FALSE
 ) {
 
     x <- as.list(environment())
@@ -751,7 +753,8 @@ QUILT <- function(
                 use_mspbwt = use_mspbwt,
                 ms_indices = ms_indices,
                 use_splitreadgl = use_splitreadgl,
-                use_sample_is_diploid = use_sample_is_diploid
+                use_sample_is_diploid = use_sample_is_diploid,
+                plot_p1 = plot_p1
             )
 
             if (out[["sample_was_imputed"]]) {
