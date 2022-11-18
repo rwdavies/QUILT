@@ -437,7 +437,7 @@ option_list <- list(
     make_option(
         "--use_splitreadgl",
         type = "logical",
-        help = "Use split real GL in hap selection and imputation [default TRUE] ",
+        help = "Use split real GL in hap selection and imputation [default FALSE] ",
         default = FALSE
     )
 )

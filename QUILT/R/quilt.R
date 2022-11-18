@@ -74,8 +74,6 @@
 #' @param zilong Using zilong's solution
 #' @param use_mspbwt Use msPBWT to select new haplotypes
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
-#' @param use_sample_is_diploid Test flag
-#' @param plot_p1 Plot first haplotype read sampling probabilities
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -152,9 +150,7 @@ QUILT <- function(
     pbwtS = 8,
     zilong = FALSE,
     use_mspbwt = FALSE,
-    use_splitreadgl = FALSE,
-    use_sample_is_diploid = FALSE,
-    plot_p1 = FALSE
+    use_splitreadgl = FALSE
 ) {
 
     x <- as.list(environment())
@@ -165,9 +161,17 @@ QUILT <- function(
     )
     print_message(paste0("Running ", command_line))
 
-
+    ## 
+    use_sample_is_diploid <- TRUE
     ## turn this off for now
     make_plots_block_gibbs <- FALSE
+    ## plot_p1 Plot first haplotype read sampling probabilities
+    plot_p1 = FALSE
+
+    ## turn this off as well
+    small_ref_panel_skip_equally_likely_reads <- FALSE
+    small_ref_panel_equally_likely_reads_update_iterations <- c(1,2,3,6,9,15)
+
 
     ## re-label these internally
     ## n_gibbs_burn_in_its <- small_ref_panel_gibbs_iterations
@@ -754,7 +758,9 @@ QUILT <- function(
                 ms_indices = ms_indices,
                 use_splitreadgl = use_splitreadgl,
                 use_sample_is_diploid = use_sample_is_diploid,
-                plot_p1 = plot_p1
+                plot_p1 = plot_p1,
+                small_ref_panel_skip_equally_likely_reads = small_ref_panel_skip_equally_likely_reads,
+                small_ref_panel_equally_likely_reads_update_iterations = small_ref_panel_equally_likely_reads_update_iterations
             )
 
             if (out[["sample_was_imputed"]]) {

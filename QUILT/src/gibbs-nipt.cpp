@@ -630,6 +630,8 @@ void sample_reads_in_grid(
     Rcpp::NumericMatrix& p_store,
     Rcpp::NumericMatrix& p1,
     Rcpp::IntegerMatrix& pH,
+    Rcpp::LogicalVector& skip_read,
+    Rcpp::LogicalVector& skip_read_iteration,
     const bool record_read_set,
     const Rcpp::NumericMatrix& rlc,
     Rcpp::IntegerVector& H_class,
@@ -660,9 +662,11 @@ void sample_reads_in_grid(
     bool currently_doing_gibbs_initialization = false;
     bool currently_doing_pass_through = false;
     //
-    //
+    // want to NOT continue if BOTH skip_read_iteration(iteration) AND skip_read(iRead) are true
     //
     while((done_reads == false) & ((read_wif_iRead) == iGrid)) {
+        //
+        //
         //
         // determine type of iteration
         //
@@ -715,7 +719,6 @@ void sample_reads_in_grid(
             }
         }
         //
-        eMatRead_t_col = eMatRead_t.col(iRead);
         //
         if (verbose) {
             std::cout << "------------------- it = " << iteration << ", iRead = " << iRead << std::endl;
@@ -724,6 +727,7 @@ void sample_reads_in_grid(
         //
         // these are made 0-based here
         if (currently_doing_normal_progress) {
+            eMatRead_t_col = eMatRead_t.col(iRead);
             h_rC = H(iRead) - 1; // h_r current
             // ugh just do this manually
             if (h_rC == 0) {
@@ -762,6 +766,7 @@ void sample_reads_in_grid(
                 pA2(h_rA2) = sum(ab_m.col(h_rA2) % eMatRead_t_col);
             }
         } else if (currently_doing_gibbs_initialization) {
+            eMatRead_t_col = eMatRead_t.col(iRead);            
             h_rC = 0; // wlog
             h_rA1 = 1;
             h_rA2 = 2;
@@ -774,6 +779,7 @@ void sample_reads_in_grid(
             pA1(h_rA1) = sum(ab_m.col(h_rA1) % eMatRead_t_col);
             pA2(h_rA2) = sum(ab_m.col(h_rA2) % eMatRead_t_col);
         } else {
+            // do nothing here
             for(j=0; j < 3; j++) {
                 pA1(j) = pC(j);
                 pA2(j) = pC(j);                
@@ -814,6 +820,12 @@ void sample_reads_in_grid(
             std::cout << "norm_pA1 = " << norm_pA1 << std::endl;
             std::cout << "norm_pA2 = " << norm_pA2 << std::endl;                        
         }
+        // probably fast enough
+        //if (-0.001 < (norm_pC - 0.5) & (norm_pC - 0.5) < 0.001) {
+        //    skip_read(iRead) = true;
+        //} else {
+        //    skip_read(iRead) = false;
+        // }
         //
         // mt = 0            -> 0.5
         // mu = 0.5          -> 0.5 + ff / 2
@@ -965,7 +977,34 @@ void sample_reads_in_grid(
             //p_store[w, "agreePer"] <- sum(abs(H ==  true_H)) / length(H) * 100
         }
         //
+        // update the read to consider
+        //
+        // normal functionality, just to go the next one, unless at the end
+        // bool done = false;
+        // while(!done) {
+        //     iRead++;
+        //     // continue if the normal continue condition met AND the next read
+        //     if ((nReads - 1) < iRead) {
+        //         done_reads = true;
+        //         read_wif_iRead = -1;
+        //     } else {
+        //         // update
+        //         readData = as<Rcpp::List>(sampleReads[iRead]);
+        //         read_wif_iRead = as<int>(readData[1]);
+        //     }
+        //     if (!skip_read_iteration(iteration)) {
+        //         // normally we just do the one
+        //         done = true;
+        //     } else {
+        //         // otherwise, we check. we can SKIP this read if the above condition is good, AND the next read is a skip read
+        //         bool above_while_cond=(done_reads == false) & ((read_wif_iRead) == iGrid);
+        //         if (!(skip_read(iRead) & above_while_cond)) {
+        //             done = true;
+        //         }
+        //     }
+        // }
         iRead++;
+        // continue if the normal continue condition met AND the next read
         if ((nReads - 1) < iRead) {
             done_reads = true;
             read_wif_iRead = -1;
@@ -1489,6 +1528,8 @@ void rcpp_gibbs_nipt_iterate(
     Rcpp::NumericMatrix& p_store,
     Rcpp::NumericMatrix& p1,
     Rcpp::IntegerMatrix& pH,
+    Rcpp::LogicalVector& skip_read,
+    Rcpp::LogicalVector& skip_read_iteration,
     int& i_per_it_likelihoods,
     const bool verbose,
     const bool return_p_store,
@@ -1595,7 +1636,8 @@ void rcpp_gibbs_nipt_iterate(
                 minus_log_c1_sum, minus_log_c2_sum, minus_log_c3_sum,
                 alphaHat_t1, alphaHat_t2, alphaHat_t3,
                 betaHat_t1, betaHat_t2, betaHat_t3,
-                sampleReads, return_p_store, return_p1, iteration, p_store, p1, pH,
+                sampleReads, return_p_store, return_p1, iteration, p_store, 
+                p1, pH, skip_read, skip_read_iteration,
                 record_read_set, rlc, H_class, class_sum_cutoff,
                 i_gibbs_samplings, n_gibbs_full_its, prior_probs,
                 gibbs_initialize_iteratively, first_read_for_gibbs_initialization, sample_is_diploid
@@ -2066,6 +2108,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     Rcpp::IntegerVector& L_grid,
     Rcpp::NumericVector& smooth_cm,
     Rcpp::List param_list,
+    Rcpp::LogicalVector& skip_read_iteration,
     const int Jmax_local = 100,
     const double maxDifferenceBetweenReads = 1000,
     const double maxEmissionMatrixDifference = 10000000000,
@@ -2082,9 +2125,6 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     Rcpp::IntegerVector seed_vector = -1,
     const Rcpp::List& prev_list_of_alphaBetaBlocks = R_NilValue,
     const int i_snp_block_for_alpha_beta = 1,
-    const bool haploid_gibbs_equal_weighting = true,
-    const bool gibbs_initialize_iteratively = false,
-    const bool gibbs_initialize_at_first_read = true,
     const bool do_block_resampling = false,
     const int artificial_relabel = -1,
     const bool pass_in_alphaBeta = false,
@@ -2140,6 +2180,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool use_starting_read_labels = as<bool>(param_list["use_starting_read_labels"]);
     const bool verbose = as<bool>(param_list["verbose"]);
     const bool run_fb_subset = as<bool>(param_list["run_fb_subset"]);
+    const bool haploid_gibbs_equal_weighting = as<bool>(param_list["haploid_gibbs_equal_weighting"]);
+    const bool gibbs_initialize_iteratively = as<bool>(param_list["gibbs_initialize_iteratively"]);
+    const bool gibbs_initialize_at_first_read = as<bool>(param_list["gibbs_initialize_at_first_read"]);
     //
     //
     // initialize variables 
@@ -2161,6 +2204,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     } else {
         nSNPsLocal = snp_end_1_based - snp_start_1_based + 1; // also 1-based
     }
+    // turn off for now, can re-do later, if need be
+    Rcpp::LogicalVector skip_read(1);
+    skip_read.fill(false);
     //
     const Rcpp::NumericVector prior_probs = NumericVector::create(0.5, (1 - ff) / 2, (ff / 2));    
     //
@@ -2497,7 +2543,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         alphaHat_t1, betaHat_t1, c1, eMatGrid_t1,
                         alphaHat_t2, betaHat_t2, c2, eMatGrid_t2,
                         alphaHat_t3, betaHat_t3, c3, eMatGrid_t3,
-                        p_store, p1, pH, i_per_it_likelihoods, verbose, return_p_store, return_p1, run_fb_subset,
+                        p_store, p1, pH, skip_read, skip_read_iteration,
+                        i_per_it_likelihoods, verbose, return_p_store, return_p1, run_fb_subset,
                         i_gibbs_samplings, n_gibbs_starts, i_result_it, ff,
                         record_read_set, rlc, H_class, class_sum_cutoff,
                         run_fb_grid_offset, prior_probs, per_it_likelihoods, grid_has_read,
@@ -2796,7 +2843,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     }
     if (return_p1) {
         to_return.push_back(p1, "p1");
-        to_return.push_back(pH, "pH");        
+        to_return.push_back(pH, "pH");
+        to_return.push_back(skip_read, "skip_read");                
     }
     if (record_read_set) {
         to_return.push_back(H_class, "H_class");

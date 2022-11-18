@@ -572,7 +572,9 @@ get_and_impute_one_sample <- function(
     ms_indices,
     use_splitreadgl,
     use_sample_is_diploid,
-    plot_p1
+    plot_p1,
+    small_ref_panel_skip_equally_likely_reads,
+    small_ref_panel_equally_likely_reads_update_iterations
 ) {
 
 
@@ -696,7 +698,6 @@ get_and_impute_one_sample <- function(
         })
         read_store <- p1_store
         return_p1 <- TRUE
-
     } else {
         return_p1 <- FALSE
     }
@@ -929,7 +930,9 @@ get_and_impute_one_sample <- function(
                 regionEnd = regionEnd,
                 buffer = buffer,
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
-                use_sample_is_diploid = use_sample_is_diploid
+                use_sample_is_diploid = use_sample_is_diploid,
+                small_ref_panel_skip_equally_likely_reads = small_ref_panel_skip_equally_likely_reads,
+                small_ref_panel_equally_likely_reads_update_iterations = small_ref_panel_equally_likely_reads_update_iterations
             )
             
             if (plot_p1) {
@@ -1213,8 +1216,12 @@ get_and_impute_one_sample <- function(
     }
 
     if (plot_p1) {
-        save(p1_store, read_store, super_out_read_labels, file = "~/temp.RData")
-        stop("WER")
+        ##save(p1_store, read_store, super_out_read_labels, file = "~/temp.RData")
+        p1 <- p1_store[[1]][[1]]
+        print(paste0(sum(p1 == 0) / (prod(dim(p1)))))
+        if (small_ref_panel_skip_equally_likely_reads) {
+            save(p1_store, file = "~/temp.RData")
+        }
     }
 
     if(have_truth_haplotypes) {
@@ -2096,6 +2103,8 @@ impute_one_sample <- function(
     regionEnd,
     buffer,
     uncertain_truth_labels,
+    small_ref_panel_skip_equally_likely_reads,
+    small_ref_panel_equally_likely_reads_update_iterations,
     return_p_store = FALSE,
     return_p1 = FALSE,
     return_extra = FALSE,
@@ -2167,13 +2176,21 @@ impute_one_sample <- function(
         return_advanced_gibbs_block_output = return_advanced_gibbs_block_output,
         use_starting_read_labels = TRUE,
         verbose = verbose,
-        run_fb_subset = FALSE
+        run_fb_subset = FALSE,
+        haploid_gibbs_equal_weighting = TRUE,
+        gibbs_initialize_iteratively = gibbs_initialize_iteratively,
+        gibbs_initialize_at_first_read = gibbs_initialize_at_first_read
     )
-
     ## this should catch hopefully rare underflow problems and re-run the samples
     done_imputing <- FALSE
     n_imputing <- 0
     n_gibbs_burn_in_its <- small_ref_panel_gibbs_iterations
+    n_gibbs_full_its <- n_gibbs_burn_in_its + n_gibbs_sample_its
+    skip_read_iteration <- rep(FALSE, n_gibbs_full_its)
+    if (small_ref_panel_skip_equally_likely_reads) {
+        skip_read_iteration <- rep(TRUE, n_gibbs_full_its)
+        skip_read_iteration[small_ref_panel_equally_likely_reads_update_iterations] <- FALSE
+    }
     while(!done_imputing) {
         out <- rcpp_forwardBackwardGibbsNIPT(
             sampleReads = sampleReads,
@@ -2194,6 +2211,7 @@ impute_one_sample <- function(
             blocks_for_output = array(0, c(1, 1)),
             grid = grid,
             pass_in_alphaBeta = TRUE,
+            skip_read_iteration = skip_read_iteration,
             alphaHat_t1 = alphaHat_t1,
             alphaHat_t2 = alphaHat_t2,
             alphaHat_t3 = alphaHat_t3,
@@ -2217,9 +2235,6 @@ impute_one_sample <- function(
             double_list_of_starting_read_labels = double_list_of_starting_read_labels,
             prev_list_of_alphaBetaBlocks = as.list(c(1, 2)),
             i_snp_block_for_alpha_beta = -1,
-            haploid_gibbs_equal_weighting = TRUE,
-            gibbs_initialize_iteratively = gibbs_initialize_iteratively,
-            gibbs_initialize_at_first_read = gibbs_initialize_at_first_read, ## experiment with
             do_block_resampling = FALSE, ## turn off for now
             perform_block_gibbs = perform_block_gibbs,
             seed_vector = 0,

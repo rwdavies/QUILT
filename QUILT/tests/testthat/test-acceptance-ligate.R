@@ -22,7 +22,7 @@ set.seed(919)
 phasemaster <- array(sample(c(0, 1), n_snps * K, replace = TRUE), c(n_snps, K))
 reads_span_n_snps <- 3
 ## want about 1X here
-n_reads <- round(0.2 * n_snps / reads_span_n_snps)
+n_reads <- round(1.0 * n_snps / reads_span_n_snps)
 data_package <- STITCH::make_acceptance_test_data_package(
     reads_span_n_snps = reads_span_n_snps,
     n_samples = 3,

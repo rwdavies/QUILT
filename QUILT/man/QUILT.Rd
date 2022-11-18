@@ -77,9 +77,7 @@ QUILT(
   pbwtS = 8,
   zilong = FALSE,
   use_mspbwt = FALSE,
-  use_splitreadgl = FALSE,
-  use_sample_is_diploid = FALSE,
-  plot_p1 = FALSE
+  use_splitreadgl = FALSE
 )
 }
 \arguments{
@@ -228,10 +226,6 @@ QUILT(
 \item{use_mspbwt}{Use msPBWT to select new haplotypes}
 
 \item{use_splitreadgl}{Use split real GL in hap selection and imputation}
-
-\item{use_sample_is_diploid}{Test flag}
-
-\item{plot_p1}{Plot first haplotype read sampling probabilities}
 }
 \value{
 Results in properly formatted version
