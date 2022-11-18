@@ -629,6 +629,7 @@ void sample_reads_in_grid(
     int& iteration,
     Rcpp::NumericMatrix& p_store,
     Rcpp::NumericMatrix& p1,
+    Rcpp::IntegerMatrix& pH,
     const bool record_read_set,
     const Rcpp::NumericMatrix& rlc,
     Rcpp::IntegerVector& H_class,
@@ -921,6 +922,7 @@ void sample_reads_in_grid(
         }
         if (return_p1) {
             p1(i_gibbs_samplings * n_gibbs_full_its + iteration ,iRead) = norm_pC;
+            pH(i_gibbs_samplings * n_gibbs_full_its + iteration ,iRead) = H(iRead); // so after sampling
         }
         if (return_p_store) {
             // p_store_cols <- c("p_1", "p_2", "p_3", "chance", "h_rC", "h_rN", "c1", "c2", "c3", "p", "agreePer")
@@ -1486,6 +1488,7 @@ void rcpp_gibbs_nipt_iterate(
     arma::mat& eMatGrid_t3,
     Rcpp::NumericMatrix& p_store,
     Rcpp::NumericMatrix& p1,
+    Rcpp::IntegerMatrix& pH,
     int& i_per_it_likelihoods,
     const bool verbose,
     const bool return_p_store,
@@ -1592,7 +1595,7 @@ void rcpp_gibbs_nipt_iterate(
                 minus_log_c1_sum, minus_log_c2_sum, minus_log_c3_sum,
                 alphaHat_t1, alphaHat_t2, alphaHat_t3,
                 betaHat_t1, betaHat_t2, betaHat_t3,
-                sampleReads, return_p_store, return_p1, iteration, p_store, p1,
+                sampleReads, return_p_store, return_p1, iteration, p_store, p1, pH,
                 record_read_set, rlc, H_class, class_sum_cutoff,
                 i_gibbs_samplings, n_gibbs_full_its, prior_probs,
                 gibbs_initialize_iteratively, first_read_for_gibbs_initialization, sample_is_diploid
@@ -2211,6 +2214,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     Rcpp::NumericMatrix p_store;
     Rcpp::CharacterVector p_store_cols;
     Rcpp::NumericMatrix p1;
+    Rcpp::IntegerMatrix pH;    
     if (return_p_store) {
         p_store_cols = CharacterVector::create(
             "p_1", "p_2", "p_3",
@@ -2230,6 +2234,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     }
     if (return_p1) {
         p1 = Rcpp::NumericMatrix(n_gibbs_starts * n_gibbs_full_its, nReads);
+        pH = Rcpp::IntegerMatrix(n_gibbs_starts * n_gibbs_full_its, nReads);
     }
     //
     //
@@ -2492,7 +2497,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         alphaHat_t1, betaHat_t1, c1, eMatGrid_t1,
                         alphaHat_t2, betaHat_t2, c2, eMatGrid_t2,
                         alphaHat_t3, betaHat_t3, c3, eMatGrid_t3,
-                        p_store, p1, i_per_it_likelihoods, verbose, return_p_store, return_p1, run_fb_subset,
+                        p_store, p1, pH, i_per_it_likelihoods, verbose, return_p_store, return_p1, run_fb_subset,
                         i_gibbs_samplings, n_gibbs_starts, i_result_it, ff,
                         record_read_set, rlc, H_class, class_sum_cutoff,
                         run_fb_grid_offset, prior_probs, per_it_likelihoods, grid_has_read,
@@ -2791,6 +2796,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     }
     if (return_p1) {
         to_return.push_back(p1, "p1");
+        to_return.push_back(pH, "pH");        
     }
     if (record_read_set) {
         to_return.push_back(H_class, "H_class");

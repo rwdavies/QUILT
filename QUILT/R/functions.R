@@ -694,6 +694,7 @@ get_and_impute_one_sample <- function(
         p1_store <- lapply(1:(nGibbsSamples + 1), function(x) {
             as.list(1:n_seek_its)
         })
+        read_store <- p1_store
         return_p1 <- TRUE
 
     } else {
@@ -933,6 +934,7 @@ get_and_impute_one_sample <- function(
             
             if (plot_p1) {
                 p1_store[[i_gibbs_sample]][[i_it]] <- gibbs_iterate[["p1"]]
+                read_store[[i_gibbs_sample]][[i_it]] <- gibbs_iterate[["pH"]]
             }
 
             if (hla_run) {
@@ -1211,7 +1213,7 @@ get_and_impute_one_sample <- function(
     }
 
     if (plot_p1) {
-        save(p1_store, super_out_read_labels, file = "~/temp.RData")
+        save(p1_store, read_store, super_out_read_labels, file = "~/temp.RData")
         stop("WER")
     }
 

@@ -486,33 +486,46 @@ plot_prob_of_flipping_to_first_hap <- function(
     size <- round(nReads / 1000)
     size <- min(max(size, 5), 20)
 
-    filename <- "temp.readprobs.png"
-    png(filename, height = size, width = size, units = "in", res = 300)
-    xlim <- c(1, n_seek_its + 1)
-    ylim <- c(1, nGibbsSamples + 1 + 1)
-    plot(x = 0, y = 0, col = "white", xlim = xlim, ylim = ylim, axes = TRUE, xlab = "", ylab = "")
-    ybottom <- (0:(nReads - 1)) / nReads
-    ytop <- ybottom + 1 / nReads
-    xleft <- 0:(n_sampling_its - 1) / n_sampling_its
-    xright <- xleft + 1 / n_sampling_its
-    ## now rep them
-    ybottom <- rep(ybottom, each = n_sampling_its)
-    ytop <- rep(ytop, each = n_sampling_its)
     ##
-    xleft <- rep(xleft, nReads)
-    xright <- rep(xright, nReads)
-    ## 
-    cols <- colorRampPalette(c("#FFFFFF", "#56B4E9"))(51)
-    for(i_it in 1:n_seek_its) {
-        for(iGibbs in 1:(nGibbsSamples + 1)) {
-            p1 <- p1_store[[iGibbs]][[i_it]]
-            rect(i_it + xleft, iGibbs + ybottom, i_it + xright, iGibbs + ytop, col = cols[round(100 * abs(p1 - 0.5)) + 1], border = NA)
-                rect(i_it, iGibbs, i_it + 1, iGibbs + 1)
+    ## here look at how probabilities of sampling change
+    ##
+    for(i_what in 1:2) {
+        if (i_what == 1) {
+            filename <- "~/temp.readprobs.png"
+        } else {
+            filename <- "~/temp.reads.png"
         }
+        png(filename, height = size, width = size, units = "in", res = 300)
+        xlim <- c(1, n_seek_its + 1)
+        ylim <- c(1, nGibbsSamples + 1 + 1)
+        plot(x = 0, y = 0, col = "white", xlim = xlim, ylim = ylim, axes = TRUE, xlab = "", ylab = "")
+        ybottom <- (0:(nReads - 1)) / nReads
+        ytop <- ybottom + 1 / nReads
+        xleft <- 0:(n_sampling_its - 1) / n_sampling_its
+        xright <- xleft + 1 / n_sampling_its
+        ## now rep them
+        ybottom <- rep(ybottom, each = n_sampling_its)
+        ytop <- rep(ytop, each = n_sampling_its)
+        ##
+        xleft <- rep(xleft, nReads)
+        xright <- rep(xright, nReads)
+        ## 
+        cols <- colorRampPalette(c("#FFFFFF", "#56B4E9"))(51)
+        for(i_it in 1:n_seek_its) {
+            for(iGibbs in 1:(nGibbsSamples + 1)) {
+                if (i_what == 1) {  p1 <- p1_store[[iGibbs]][[i_it]] }
+                if (i_what == 2) {  p1 <- read_store[[iGibbs]][[i_it]] }                
+                rect(i_it + xleft, iGibbs + ybottom, i_it + xright, iGibbs + ytop, col = cols[round(100 * abs(p1 - 0.5)) + 1], border = NA)
+                rect(i_it, iGibbs, i_it + 1, iGibbs + 1)
+            }
+        }
+        dev.off()
     }
-    dev.off()
 
 
+    ##
+    ## here plot the reads themselves
+    ##
     table(round(colMeans(abs(x - 0.5)), 1))
     
     ## plot reads used as well
@@ -530,7 +543,43 @@ plot_prob_of_flipping_to_first_hap <- function(
     table(f(2, 3), f(1, 3)) ## mostly the same
     
 
-    ## compare across runs
+    ##
+    ## here compare the read probs at the start and end of each run
+    ##
+    o <- lapply(p1_store, function(p1) {
+        m <- nrow(p1_store[[1]][[1]])
+        m <- cbind(
+            t(p1[[1]][c(1, m), ]),
+            t(p1[[2]][c(1, m), ]),
+            t(p1[[3]][c(1, m), ])
+        )
+        m
+    })
+    a <- cbind(o[[1]], o[[2]])
+    for(j in 3:length(o)) {
+        a <- cbind(a, o[[j]])
+    }
+    a <- t(a)
     
+    pdf("~/temp.pdf", height = 10, width = 30)
+    xlim <- c(0, 1)
+    ylim <- c(0, 1)
+    plot(x = 0, y = 0, col = "white", xlim = xlim, ylim = ylim, axes = TRUE, xlab = "", ylab = "")
+    ## 
+    ybottom <- (0:(nReads - 1)) / nReads
+    ytop <- ybottom + 1 / nReads
+    n_sampling_its <- nrow(a)
+    xleft <- 0:(n_sampling_its - 1) / n_sampling_its
+    xright <- xleft + 1 / n_sampling_its
+    ## now rep them
+    ybottom <- rep(ybottom, each = n_sampling_its)
+    ytop <- rep(ytop, each = n_sampling_its)
+    xleft <- rep(xleft, nReads)
+    xright <- rep(xright, nReads)
+    ## 
+    rect(ybottom, xleft, ytop, xright, col = cols[round(100 * abs(a - 0.5)) + 1], border = NA)
+    ## add some lines
+    abline(h = seq(0, n_sampling_its - 1, 6) / n_sampling_its)
+    dev.off()
     
 }
