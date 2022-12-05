@@ -971,6 +971,33 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// mspbwt_index
+Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples, const std::string& region);
+RcppExport SEXP _QUILT_mspbwt_index(SEXP vcfpanelSEXP, SEXP samplesSEXP, SEXP regionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type vcfpanel(vcfpanelSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type samples(samplesSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type region(regionSEXP);
+    rcpp_result_gen = Rcpp::wrap(mspbwt_index(vcfpanel, samples, region));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mspbwt_query
+NumericVector mspbwt_query(List p, IntegerVector z, int L, int Step);
+RcppExport SEXP _QUILT_mspbwt_query(SEXP pSEXP, SEXP zSEXP, SEXP LSEXP, SEXP StepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type p(pSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type z(zSEXP);
+    Rcpp::traits::input_parameter< int >::type L(LSEXP);
+    Rcpp::traits::input_parameter< int >::type Step(StepSEXP);
+    rcpp_result_gen = Rcpp::wrap(mspbwt_query(p, z, L, Step));
+    return rcpp_result_gen;
+END_RCPP
+}
 // pbwt_index
 Rcpp::List pbwt_index(String vcf, String samples, String region);
 RcppExport SEXP _QUILT_pbwt_index(SEXP vcfSEXP, SEXP samplesSEXP, SEXP regionSEXP) {
@@ -1314,6 +1341,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 63},
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 11},
     {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 11},
+    {"_QUILT_mspbwt_index", (DL_FUNC) &_QUILT_mspbwt_index, 3},
+    {"_QUILT_mspbwt_query", (DL_FUNC) &_QUILT_mspbwt_query, 4},
     {"_QUILT_pbwt_index", (DL_FUNC) &_QUILT_pbwt_index, 3},
     {"_QUILT_pbwt_query", (DL_FUNC) &_QUILT_pbwt_query, 4},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},

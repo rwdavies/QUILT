@@ -435,7 +435,7 @@ QUILT_prepare_reference <- function(
         }
         ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
         pbwtfile <- paste0(outputdir, "/" , regionName)
-        zilong_indices <- pbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike)
+        zilong_indices <- mspbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike)
         print_message("End building and dumping Zilong PBWT indices")
     } else {
         zilong_indices <- NULL

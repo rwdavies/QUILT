@@ -9,7 +9,6 @@
 using namespace Rcpp;
 using namespace vcfpp;
 
-typedef uint64_t uint2;
 
 //' @export
 // [[Rcpp::export]]
@@ -152,7 +151,7 @@ std::vector<int> old_pbwt_query(const std::string& pbwtfile, const std::vector<i
         if (selects[k] < N && selects[k] == i)
         {
             s = selects[k];
-            ifpbwt.seekg((uint2)s * M * 4 + 8, std::ios_base::beg);
+            ifpbwt.seekg((uint64_t)s * M * 4 + 8, std::ios_base::beg);
             ifpbwt.read(reinterpret_cast<char*>(&a[0]), 4 * M);
             if (t[s] == M)
             {

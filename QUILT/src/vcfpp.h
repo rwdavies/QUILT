@@ -2,7 +2,7 @@
  * @file        https://github.com/Zilong-Li/vcfpp/vcfpp.h
  * @author      Zilong Li
  * @email       zilong.dk@gmail.com
- * @version     v0.1.1
+ * @version     v0.1.3
  * @breif       a single C++ file for manipulating VCF
  * Copyright (C) 2022. The use of this code is governed by the LICENSE file.
  ******************************************************************************/
@@ -29,6 +29,8 @@
  *
  *
  */
+
+#pragma once
 
 #ifndef VCFPP_H_
 #define VCFPP_H_
@@ -91,7 +93,7 @@ namespace vcfpp
     }
 
     // test if a string is end with another string
-    bool isEndWith(std::string const& s, std::string const& e)
+    inline bool isEndWith(std::string const& s, std::string const& e)
     {
         if (s.length() >= e.length())
         {
@@ -317,7 +319,7 @@ namespace vcfpp
         {
         }
 
-        /** @brief print out the variant */
+        /** @brief stream out the variant */
         friend std::ostream& operator<<(std::ostream& out, const BcfRecord& v)
         {
             out << v.asString();
@@ -403,6 +405,8 @@ namespace vcfpp
         isFormatVector<T> getFORMAT(std::string tag, T& v)
         {
             fmt = bcf_get_fmt(header.hdr, line, tag.c_str());
+            if (!fmt)
+                throw std::runtime_error("there is no " + tag + " in FORMAT of this variant.\n");
             nvalues = fmt->n;
             ndst = 0;
             S* dst = NULL;
@@ -421,7 +425,7 @@ namespace vcfpp
             }
             else
             {
-                throw std::runtime_error("couldn't parse the " + tag + " format of this variant.\n");
+                throw std::runtime_error("failed to parse the " + tag + " format of this variant.\n");
             }
         }
 
@@ -434,6 +438,8 @@ namespace vcfpp
         bool getFORMAT(std::string tag, std::vector<std::string>& v)
         {
             fmt = bcf_get_fmt(header.hdr, line, tag.c_str());
+            if (!fmt)
+                throw std::runtime_error("there is no " + tag + " in FORMAT of this variant.\n");
             nvalues = fmt->n;
             // if ndst < (fmt->n+1)*nsmpl; then realloc is involved
             ret = -1, ndst = 0;
@@ -467,6 +473,8 @@ namespace vcfpp
         isInfoVector<T> getINFO(std::string tag, T& v)
         {
             info = bcf_get_info(header.hdr, line, tag.c_str());
+            if (!info)
+                throw std::runtime_error("there is no " + tag + " tag in INFO of this variant.\n");
             S* dst = NULL;
             ndst = 0;
             ret = -1;
@@ -495,6 +503,8 @@ namespace vcfpp
         isScalar<T> getINFO(std::string tag, T& v)
         {
             info = bcf_get_info(header.hdr, line, tag.c_str());
+            if (!info)
+                throw std::runtime_error("there is no " + tag + " tag in INFO of this variant.\n");
             // scalar value
             if (info->len == 1)
             {
@@ -524,6 +534,8 @@ namespace vcfpp
         isString<T> getINFO(std::string tag, T& v)
         {
             info = bcf_get_info(header.hdr, line, tag.c_str());
+            if (!info)
+                throw std::runtime_error("there is no " + tag + " tag in INFO of this variant.\n");
             if (info->type == BCF_BT_CHAR)
                 v = std::string(reinterpret_cast<char*>(info->vptr), info->vptr_len);
             else
@@ -808,6 +820,12 @@ namespace vcfpp
             return line->pos + 1;
         }
 
+        /** @brief modify position given 1-based value */
+        inline void setPOS(int64_t p)
+        {
+            line->pos = p - 1;
+        }
+
         /** @brief return 0-base start of the variant (can be any type) */
         inline int64_t Start() const
         {
@@ -824,6 +842,13 @@ namespace vcfpp
         inline std::string REF() const
         {
             return std::string(line->d.allele[0]);
+        }
+
+        /** @brief swap REF and ALT for biallelic */
+        inline void swap_REF_ALT()
+        {
+            if (!isMultiAllelic())
+                std::swap(line->d.allele[0], line->d.allele[1]);
         }
 
         /** @brief return raw ALT alleles as string */
@@ -946,7 +971,7 @@ namespace vcfpp
          */
         BcfReader(const std::string& file) : fname(file)
         {
-            Open(file);
+            open(file);
         }
 
         /**
@@ -960,7 +985,7 @@ namespace vcfpp
          */
         BcfReader(const std::string& file, const std::string& samples) : fname(file)
         {
-            Open(file);
+            open(file);
             header.setSamples(samples);
             nsamples = bcf_hdr_nsamples(header.hdr);
             SamplesName = header.getSamples();
@@ -978,7 +1003,7 @@ namespace vcfpp
          */
         BcfReader(const std::string& file, const std::string& samples, const std::string& region) : fname(file)
         {
-            Open(file);
+            open(file);
             header.setSamples(samples);
             nsamples = bcf_hdr_nsamples(header.hdr);
             if (!region.empty())
@@ -993,7 +1018,7 @@ namespace vcfpp
         }
 
         /// open a VCF/BCF/STDIN file for streaming in
-        void Open(const std::string& file)
+        void open(const std::string& file)
         {
             fname = file;
             fp = hts_open(file.c_str(), "r");
@@ -1012,7 +1037,7 @@ namespace vcfpp
         }
 
         /// close the BcfReader object.
-        void Close()
+        void close()
         {
             if (fp)
                 hts_close(fp);
@@ -1034,19 +1059,44 @@ namespace vcfpp
             return hts_set_threads(fp, n);
         }
 
+        /** @brief get records of current contig to use */
+        uint64_t get_region_records(const std::string& region)
+        {
+            setRegion(region); // only one chromosome
+            int tid = 0, ret = 0, nseq = 0;
+            uint64_t records, v;
+            if (tidx)
+            {
+                tbx_seqnames(tidx, &nseq);
+            }
+            else
+            {
+                nseq = hts_idx_nseq(hidx);
+            }
+            for (tid = 0; tid < nseq; tid++)
+            {
+                ret = hts_idx_get_stat(tidx ? tidx->idx : hidx, tid, &records, &v);
+                // printf("%" PRIu64 "\n", records);
+                if (ret >= 0 && records > 0)
+                    return records;
+            }
+            return 0;
+        }
+
         /**
          * @brief explicitly stream to specific region
          * @param region the string is samtools-like format which is chr:start-end
          * */
         void setRegion(const std::string& region)
         {
-            // TODO reset current region. seek to the first record.
             // 1. check and load index first
             // 2. query iterval region
             if (isEndWith(fname, "bcf") || isEndWith(fname, "bcf.gz"))
             {
                 isBcf = true;
                 hidx = bcf_index_load(fname.c_str());
+                if (itr)
+                    bcf_itr_destroy(itr); // reset current region.
                 itr = bcf_itr_querys(hidx, header.hdr, region.c_str());
             }
             else
@@ -1054,6 +1104,8 @@ namespace vcfpp
                 isBcf = false;
                 tidx = tbx_index_load(fname.c_str());
                 assert(tidx != NULL && "error loading tabix index!");
+                if (itr)
+                    tbx_itr_destroy(itr); // reset current region.
                 itr = tbx_itr_querys(tidx, region.c_str());
                 assert(itr != NULL && "no interval region found.failed!");
             }
@@ -1125,36 +1177,67 @@ namespace vcfpp
         /**
          * @brief          Open VCF/BCF file for writing. The format is infered from file's suffix
          * @param fname    The file name or "-" for stdin/stdout. For indexed files
+         * @param version  The output header is constructed with the internal template given a specific version
          */
-        BcfWriter(const std::string& fname)
+        BcfWriter(const std::string& fname, std::string version = "VCF4.1")
         {
-            Open(fname);
+            open(fname);
+            initalHeader(version);
+        }
+
+        /**
+         * @brief          Open VCF/BCF file for writing. The format is infered from file's suffix
+         * @param fname    The file name or "-" for stdin/stdout. For indexed files
+         * @param h        The output header is pointing to the given BcfHeader object
+         */
+        BcfWriter(const std::string& fname, const BcfHeader& h)
+        {
+            open(fname);
+            initalHeader(h);
         }
 
         /**
          * @brief          Open VCF/BCF file for writing using given mode
          * @param fname    The file name or "-" for stdin/stdout. For indexed files
+         * @param version  The output header is constructed with the internal template given a specific version
          * @param mode     Mode matching \n
          *                 [w]b  .. compressed BCF \n
          *                 [w]bu .. uncompressed BCF \n
          *                 [w]z  .. compressed VCF \n
          *                 [w]   .. uncompressed VCF
          */
-        BcfWriter(const std::string& fname, const std::string& mode)
+        BcfWriter(const std::string& fname, const std::string& version, const std::string& mode)
         {
-            Open(fname, mode);
+            open(fname, mode);
+            initalHeader(version);
+        }
+
+        /**
+         * @brief          Open VCF/BCF file for writing using given mode
+         * @param fname    The file name or "-" for stdin/stdout. For indexed files
+         * @param h        The output header is pointing to the given BcfHeader object
+         * @param mode     Mode matching \n
+         *                 [w]b  .. compressed BCF \n
+         *                 [w]bu .. uncompressed BCF \n
+         *                 [w]z  .. compressed VCF \n
+         *                 [w]   .. uncompressed VCF
+         */
+        BcfWriter(const std::string& fname, const BcfHeader& h, const std::string& mode)
+        {
+            open(fname, mode);
+            initalHeader(h);
         }
 
         virtual ~BcfWriter()
         {
-            Close();
+            close();
         }
 
         /**
          * @brief          Open VCF/BCF file for writing. The format is infered from file's suffix
          * @param fname    The file name or "-" for stdin/stdout. For indexed files
          */
-        void Open(const std::string& fname)
+        void open(const std::string& fname)
         {
             std::string mode{"w"};
             if (isEndWith(fname, "bcf.gz"))
@@ -1175,31 +1258,33 @@ namespace vcfpp
          *                 [w]z  .. compressed VCF \n
          *                 [w]   .. uncompressed VCF
          */
-        void Open(const std::string& fname, const std::string& mode)
+        void open(const std::string& fname, const std::string& mode)
         {
             fp = hts_open(fname.c_str(), mode.c_str());
         }
 
         /// close the BcfWriter object.
-        void Close()
+        void close()
         {
-            hts_close(fp);
-            bcf_destroy(b);
+            if (!isHeaderWritten)
+                writeHeader();
+            if (fp)
+                hts_close(fp);
+            if (b)
+                bcf_destroy(b);
         }
 
         /// initial a VCF header using the internal template given a specific version. VCF4.1 is the default
         void initalHeader(std::string version = "VCF4.1")
         {
-            header = BcfHeader();
             header.hdr = bcf_hdr_init("w");
             header.setVersion(version);
         }
 
-        /// initial a VCF header by copying from another header
+        /// initial a VCF header by refering to another vcf header
         void initalHeader(const BcfHeader& h)
         {
-            header = BcfHeader();
-            header.hdr = bcf_hdr_dup(h.hdr); // make a copy of given header
+            header.hdr = h.hdr; // point to another header
             if (header.hdr == NULL)
                 throw std::runtime_error("couldn't copy the header from another vcf.\n");
         }
@@ -1248,8 +1333,8 @@ namespace vcfpp
                 return true;
         }
 
-        /// initialize an empty header;
-        BcfHeader header = BcfHeader();
+        /// header object initialized by initalHeader
+        BcfHeader header;
 
     private:
         htsFile* fp = NULL; // hts file
