@@ -225,8 +225,7 @@ IntegerVector mspbwt_query(List p, IntegerVector z, int L = 2, int Step = 1)
     Rcpp::List Symbols = as<Rcpp::List>(p["Symbols"]);
     vector<uint32_t> zg = encodeZgrid(z, G);
     IntegerVector az(G); // use int for index to be compatibable to R
-    int k = 0;
-    uint64_t idx;
+    int k{0}, n{0};
     string name;
     NumericVector ks = Symbols[k];
     auto kzus = *std::prev(std::upper_bound(ks.begin(), ks.end(), zg[k]));
@@ -245,19 +244,25 @@ IntegerVector mspbwt_query(List p, IntegerVector z, int L = 2, int Step = 1)
         Ck = C[k];
         Wk = W[k];
         ks = Symbols[k];
-        kzus = upper_bound(ks.begin(), ks.end(), zg[k]) == ks.begin() ? *ks.begin() : *prev(upper_bound(ks.begin(), ks.end(), zg[k])) ;
-        name = to_string(static_cast<uint64_t>(kzus));
-        az[k] = Ck[name];
+        name = to_string(zg[k]);
+        if (Ck.containsElementNamed(name.c_str())) {
+            az[k] = Ck[name]; // no need binary searching
+        } else {
+            kzus = upper_bound(ks.begin(), ks.end(), zg[k]) == ks.begin() ? *ks.begin() : *prev(upper_bound(ks.begin(), ks.end(), zg[k])) ;
+            name = to_string(static_cast<uint64_t>(kzus));
+            az[k] = Ck[name];
+        }
         if (az[k-1] >= az[k])
         {
             wki = Wk[name];
             kzus = upper_bound(wki.begin(), wki.end(), az[k - 1]) == wki.begin() ? *wki.begin() : *prev(upper_bound(wki.begin(), wki.end(), az[k - 1])) ;
             az[k] = az[k] + kzus;
         } else {
-            Rcout << "skip binary search for Grid " << k << "\n";
+            n++;
         }
         selects.push_back(Ak[az[k]]);
     }
+    Rcout << "skip binary search for " << n << " Grids\n";
 
     return selects;
 }
