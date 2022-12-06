@@ -158,7 +158,7 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
             y0[i] = X[k][a0[i]];
         IntSet s(y0.begin(), y0.end()); // convert to set which unique sorted
         IntMap Cg = build_C(y0, s);
-        C[k] = wrap(Cg);
+        C[k] = wrap(Cg);  // wrap it as list
         auto Wg = build_W(y0, s, Cg); // here Wg is S x N
         for (i = 0; i < N; i++)
             A[k + 1][Wg[y0[i]][i] - 1] = a0[i];
@@ -212,9 +212,10 @@ vector<uint32_t> encodeZgrid(IntegerVector z, int G)
     return zg;
 }
 
+
 //' @export
 // [[Rcpp::export]]
-NumericVector mspbwt_query(List p, IntegerVector z, int L = 2, int Step = 1)
+IntegerVector mspbwt_query(List p, IntegerVector z, int L = 2, int Step = 1)
 {
     if (!p.inherits("mspbwt")) stop("Input must contain mspbwt struct!");
     int G = p["G"];
@@ -223,22 +224,40 @@ NumericVector mspbwt_query(List p, IntegerVector z, int L = 2, int Step = 1)
     Rcpp::List C = as<Rcpp::List>(p["C"]);
     Rcpp::List Symbols = as<Rcpp::List>(p["Symbols"]);
     vector<uint32_t> zg = encodeZgrid(z, G);
-    NumericVector az(G); // use int for index to be compatibable to R
+    IntegerVector az(G); // use int for index to be compatibable to R
     int k = 0;
+    uint64_t idx;
+    string name;
     NumericVector ks = Symbols[k];
     auto kzus = *std::prev(std::upper_bound(ks.begin(), ks.end(), zg[k]));
+    Rcpp::List Ck = C[k];
     Rcpp::List Wk = W[k];
-    Rcpp::List wkz = Wk[std::to_string(kzus)];
+    name = to_string(static_cast<uint64_t>(kzus));
+    Rcpp::List wkz = Wk[name];
     az[k] = wkz[wkz.length()-1];
+    IntegerVector wki;
+    IntegerVector selects;
+    IntegerVector Ak = A[k+1];
+    selects.push_back(Ak[az[k]]);
     for (k = 1; k < G; k++)
     {
+        Ak = A[k+1];
+        Ck = C[k];
+        Wk = W[k];
         ks = Symbols[k];
-        kzus = *std::prev(std::upper_bound(ks.begin(), ks.end(), zg[k]));
-        wkz = Wk[to_string(kzus)];
-        az[k] = C[k][to_string(kzus)];
-        kzus = *std::prev(std::upper_bound(wkz.begin(), wkz.end(), az[k-1]));
-        az[k] = az[k] + kzus;
+        kzus = upper_bound(ks.begin(), ks.end(), zg[k]) == ks.begin() ? *ks.begin() : *prev(upper_bound(ks.begin(), ks.end(), zg[k])) ;
+        name = to_string(static_cast<uint64_t>(kzus));
+        az[k] = Ck[name];
+        if (az[k-1] >= az[k])
+        {
+            wki = Wk[name];
+            kzus = upper_bound(wki.begin(), wki.end(), az[k - 1]) == wki.begin() ? *wki.begin() : *prev(upper_bound(wki.begin(), wki.end(), az[k - 1])) ;
+            az[k] = az[k] + kzus;
+        } else {
+            Rcout << "skip binary search for Grid " << k << "\n";
+        }
+        selects.push_back(Ak[az[k]]);
     }
 
-    return az;
+    return selects;
 }

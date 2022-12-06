@@ -10,8 +10,6 @@ using namespace Rcpp;
 using namespace vcfpp;
 
 
-//' @export
-// [[Rcpp::export]]
 Rcpp::List pbwt_index(String vcf, String samples, String region) {
     // get genotype from vcf/bcf
     BcfReader br(vcf, samples, region);
@@ -65,8 +63,6 @@ Rcpp::List pbwt_index(String vcf, String samples, String region) {
     return out;
 }
 
-//' @export
-// [[Rcpp::export]]
 std::vector<int> pbwt_query(List p, IntegerVector z, int L = 2, int Step = 8) {
     if (!p.inherits("pbwt")) stop("Input must contain pbwt struct!");
     int N = p["n"];
