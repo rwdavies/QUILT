@@ -1,9 +1,11 @@
 #' @title QUILT
 #' @param outputdir What output directory to use
 #' @param chr What chromosome to run. Should match BAM headers
+#' @param method What method to run (diploid or nipt)
 #' @param regionStart When running imputation, where to start from. The 1-based position x is kept if regionStart <= x <= regionEnd
 #' @param regionEnd When running imputation, where to stop
 #' @param buffer Buffer of region to perform imputation over. So imputation is run form regionStart-buffer to regionEnd+buffer, and reported for regionStart to regionEnd, including the bases of regionStart and regionEnd
+#' @param fflist Path to file with fetal fraction values, one row per entry, in the same order as the bamlist
 #' @param bamlist Path to file with bam file locations. File is one row per entry, path to bam files. Bam index files should exist in same directory as for each bam, suffixed either .bam.bai or .bai
 #' @param cramlist Path to file with cram file locations. File is one row per entry, path to cram files. cram files are converted to bam files on the fly for parsing into QUILT
 #' @param sampleNames_file Optional, if not specified, sampleNames are taken from the SM tag in the header of the BAM / CRAM file. This argument is the path to file with sampleNames for samples. It is used directly to name samples in the order they appear in the bamlist / cramlist
@@ -30,6 +32,7 @@
 #' @param phasefile Path to phase file with truth phasing results. Empty for no phasefile. Supercedes genfile if both options given. File has a header row with a name for each sample, matching what is found in the bam file. Each subject is then a tab seperated column, with 0 = ref and 1 = alt, separated by a vertical bar |, e.g. 0|0 or 0|1. Note therefore this file has one more row than posfile which has no header.
 #' @param maxDifferenceBetweenReads How much of a difference to allow the reads to make in the forward backward probability calculation. For example, if P(read | state 1)=1 and P(read | state 2)=1e-6, re-scale so that their ratio is this value. This helps prevent any individual read as having too much of an influence on state changes, helping prevent against influence by false positive SNPs
 #' @param make_plots Whether to make some plots of per-sample imputation. Especially nice when truth data. This is pretty slow though so useful more for debugging and understanding and visualizing performance
+#' @param make_plots_block_gibbs Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs
 #' @param verbose whether to be more verbose when running
 #' @param shuffle_bin_radius Parameter that controls how to detect ancestral haplotypes that are shuffled during EM for possible re-setting. If set (not NULL), then recombination rate is calculated around pairs of SNPs in window of twice this value, and those that exceed what should be the maximum (defined by nGen and maxRate) are checked for whether they are shuffled
 #' @param iSizeUpperLimit Do not use reads with an insert size of more than this value
@@ -73,9 +76,11 @@
 QUILT <- function(
     outputdir,
     chr,
+    method = "diploid",
     regionStart = NA,
     regionEnd = NA,
     buffer = NA,
+    fflist = "",
     bamlist = "",
     cramlist = "",
     sampleNames_file = "",
@@ -101,6 +106,7 @@ QUILT <- function(
     phasefile = "",
     maxDifferenceBetweenReads = 1e10,
     make_plots = FALSE,
+    make_plots_block_gibbs = FALSE,
     verbose = TRUE,
     shuffle_bin_radius = 5000,
     iSizeUpperLimit = 1e6,
@@ -151,8 +157,7 @@ QUILT <- function(
 
     
     ## turn this off for now
-    make_plots_block_gibbs <- FALSE    
-    ## #' @param make_plots_block_gibbs Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs
+
     
     options(digits.secs=6)
     options(scipen = 999)
@@ -367,13 +372,15 @@ QUILT <- function(
         out <- get_and_validate_pos_gen_and_phase(
             posfile = posfile,
             genfile = genfile,
-            phasefile = phasefile,
             chr = chr,
             verbose = TRUE
         )
         posX <- out$pos
         genX <- out$gen
-        phaseX <- out$phase
+        phaseX <- get_and_validate_phase(
+            phasefile,
+            method = method
+        ) 
         ##
         ## shrink (if regionStart and regionEnd are NA)
         ##
@@ -446,6 +453,12 @@ QUILT <- function(
     sampleNames <- out$sampleNames
     bam_files <- out$bam_files
     cram_files <- out$cram_files
+
+    if (method == "nipt") {
+        ff_values <- as.numeric(read.table(fflist)[, 1])
+    } else {
+        ff_values <- NULL
+    }
 
     ##
     ## check line up between 
@@ -688,7 +701,9 @@ QUILT <- function(
                 block_gibbs_iterations = block_gibbs_iterations,
                 plot_per_sample_likelihoods = plot_per_sample_likelihoods,
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
-                output_gt_phased_genotypes = output_gt_phased_genotypes
+                output_gt_phased_genotypes = output_gt_phased_genotypes,
+                ff_values = ff_values,
+                method = method
             )
 
             if (out[["sample_was_imputed"]]) {
@@ -750,8 +765,9 @@ QUILT <- function(
         inRegion2 = inRegion2,
         sampleRanges = sampleRanges,
         addOptimalHapsToVCF = addOptimalHapsToVCF,
-        output_gt_phased_genotypes = output_gt_phased_genotypes
-    )    
+        output_gt_phased_genotypes = output_gt_phased_genotypes,
+        method = method
+    )   
 
     
     ##

@@ -2,6 +2,7 @@ if ( 1 == 0 ) {
     
     library("testthat")
     library("QUILT")
+    curdir <- getwd()
     dir <- "~/proj/QUILT/"
     setwd(paste0(dir, "/QUILT/R"))
     a <- dir(pattern = "*.R")
@@ -10,6 +11,7 @@ if ( 1 == 0 ) {
         a <- a[-b]
     }
     o <- sapply(a, source)
+    setwd(curdir)
 
 
 }

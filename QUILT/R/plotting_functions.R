@@ -2,7 +2,7 @@ plot_1_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, s
     ##
     ancAlleleFreqAll[ancAlleleFreqAll < minAFForBounding] <- minAFForBounding
     ancAlleleFreqAll[ancAlleleFreqAll > (1 - minAFForBounding)] <- (1 - minAFForBounding)
-    ## 
+    ##
     dosage2 <- (dosage - 1 * ancAlleleFreqAll) / sqrt(1 * ancAlleleFreqAll * (1 - ancAlleleFreqAll))
     truth[is.na(truth)] <- ancAlleleFreqAll[is.na(truth)]
     truth2 <- (truth - 1 * ancAlleleFreqAll) / sqrt(1 * ancAlleleFreqAll * (1 - ancAlleleFreqAll))
@@ -10,7 +10,7 @@ plot_1_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, s
     diff <- smooth_vector(x = abs(dosage2 - truth2), n = smoothV)
     diff <- diff / 3
     diff[diff > 1] <- 1
-    r2 <- round(cor(dosage2[inRegion2], truth2[inRegion2], method = "pearson", use = "pairwise.complete") ** 2, 3)    
+    r2 <- round(cor(dosage2[inRegion2], truth2[inRegion2], method = "pearson", use = "pairwise.complete") ** 2, 3)
     points(x = Ls, y = ybottom + (0.8 * scale) * diff, col = col, type = "l")
     text_labels <- paste0("r2 = ", r2)
     if (label != "") {
@@ -23,7 +23,7 @@ plot_2_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, s
     ##
     ancAlleleFreqAll[ancAlleleFreqAll < minAFForBounding] <- minAFForBounding
     ancAlleleFreqAll[ancAlleleFreqAll > (1 - minAFForBounding)] <- (1 - minAFForBounding)
-    ## 
+    ##
     dosage2 <- dosage - 2 * ancAlleleFreqAll
     truth[is.na(truth)] <- ancAlleleFreqAll[is.na(truth)]
     truth2 <- truth - 2 * ancAlleleFreqAll
@@ -40,7 +40,7 @@ plot_2_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, s
     text(x = Ls[1], y = ybottom + scale * 0.85, labels = text_labels, pos = 4, cex = 1.25)
     return(r2)
 }
-add_numbers <- function(ytop, ybottom, x, i) {
+add_numbers <- function(ytop, ybottom, x, i, col = "black") {
     ## accept only if on a grid of every 50 SNPs
     ok <- unique(round(seq(1, length(x), length.out = 50)))
     ##q <- diff(range(L_grid)) / 20 ## bins
@@ -52,7 +52,7 @@ add_numbers <- function(ytop, ybottom, x, i) {
         ##ww <- w[match(unique(a), a)]
         ## thin, make sure in different bins
         ## ww <- w[unique(round(seq(1, length(w), length.out = 20)))]
-        text(x = x[ww], y = ((ytop + ybottom)/2)[ww], i)
+        text(x = x[ww], y = ((ytop + ybottom)/2)[ww], i, col = col)
     }
 }
 smooth_vector <- function(x, n) {
@@ -83,6 +83,7 @@ plot_single_gamma_dosage <- function(
     regionStart,
     regionEnd,
     buffer,
+    new_haps = NULL,
     output_plot = TRUE
 ) {
     ##
@@ -91,36 +92,46 @@ plot_single_gamma_dosage <- function(
     Ls <- smooth_vector(L, smoothV)
     ##Ls <- smooth_vector(L_grid, smoothV)
     scale_dosage <- 0.5
-    ##    
+    n <- c(diploid = 2, nipt = 3)[method]
+    stopifnot(!is.na(n))
+    ##
     nCols <- length(colStore)
     if (output_plot) {
-        png(outname, height = 12, width = 20, units = "in", res = 100)
-        par(mfrow = c(4, 1))
+        png(outname, height = (n + 3) * 3, width = 20, units = "in", res = 100)
+        par(mfrow = c(n + 3, 1))
     }
     par(oma = c(0, 0, 5, 0))
     ##
     ##
     ##
     r2s <- NULL
-    for(i_which in 1:2) {
+    for(i_which in 1:n) {
         par(mar = c(0, 0, 3, 0))
-        if (method == "gibbs-nipt") {
-            if (i_which == 1) { gammaK_t <- fbsoL$gammaMT_t }
-            if (i_which == 2) { gammaK_t <- fbsoL$gammaMU_t }
-            if (i_which == 3) { gammaK_t <- fbsoL$gammaP_t }
-        } else if (method == "triploid-nipt") {
-            if (i_which == 1) { gammaK_t <- fbsoL$list_of_gammas[[1]]$gammaKMT_t }
-            if (i_which == 2) { gammaK_t <- fbsoL$list_of_gammas[[1]]$gammaKMU_t }
-            if (i_which == 3) { gammaK_t <- fbsoL$list_of_gammas[[1]]$gammaKP_t }
-        }
+        if (i_which == 1) { gammaK_t <- fbsoL$gammaMT_t }
+        if (i_which == 2) { gammaK_t <- fbsoL$gammaMU_t }
+        if (i_which == 3) { gammaK_t <- fbsoL$gammaP_t }
+        ## } else if (method == "triploid-nipt") {
+        ##     if (i_which == 1) { gammaK_t <- fbsoL$list_of_gammas[[1]]$gammaKMT_t }
+        ##     if (i_which == 2) { gammaK_t <- fbsoL$list_of_gammas[[1]]$gammaKMU_t }
+        ##     if (i_which == 3) { gammaK_t <- fbsoL$list_of_gammas[[1]]$gammaKP_t }
+        ## }
         ##
         K <- nrow(gammaK_t)
+        if (length(new_haps) > 0) {
+            letter_col <- rep("black", K)
+            letter_col[new_haps] <- "white"
+        } else {
+            letter_col <- rep("black", K)            
+        }
         xlim <- range(L_grid)
-        ylim <- c(0, 1 + scale_dosage + scale_dosage) 
+        ylim <- c(0, 1 + scale_dosage + scale_dosage)
+        if (method == "nipt") {
+            ylim[2] <- ylim[2] + scale_dosage
+        }
         nGrids <- ncol(gammaK_t)
         backwards <- nGrids:1
         ##
-        main <- c("Imputed haplotype 1", "Imputed haplotype 2")[i_which]
+        main <- paste0("Imputed haplotype ", i_which)
         ##
         plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, main = main, cex.main = 1.5, col = "white")
         x <- L_grid ## c(L_grid[1], L_grid) ## , L_grid[length(L_grid):1])
@@ -148,7 +159,7 @@ plot_single_gamma_dosage <- function(
                             col = colStore[(i %% nCols) + 1]
                         )
                     } else {
-                        add_numbers(ytop, ybottom, x, i)
+                        add_numbers(ytop, ybottom, x, i, col = letter_col[i])
                     }
                 }
             }
@@ -158,51 +169,93 @@ plot_single_gamma_dosage <- function(
         ## dosage2 <- fbsoL[["hapProbs_t"]][
         truth1 <- haps[, 1]
         truth2 <- haps[, 2]
-        ## ## 
-        r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth2, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1, scale = scale_dosage, col = "red", label = "Rolling accuracy versus truth haplotype 2"))
-        r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth1, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1 + scale_dosage, scale = scale_dosage, col = "green", label = "Rolling accuracy versus truth haplotype 1"))
+        ## ##
+        if (method == "nipt") {
+            truth3 <- haps[, 3]
+            r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth3, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1, scale = scale_dosage, col = "red", label = "Rolling accuracy versus truth haplotype 3"))
+            offset <- scale_dosage
+        } else {
+            offset <- 0
+        }
+        r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth2, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1 + offset, scale = scale_dosage, col = "red", label = "Rolling accuracy versus truth haplotype 2"))
+        r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth1, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1 + offset + scale_dosage, scale = scale_dosage, col = "green", label = "Rolling accuracy versus truth haplotype 1"))
         ## add cor!
     }
     ##
     ## plot section 3 - add in how well the reads are doing, and the genotypes
     ##
     ylim <- c(0, 1)
-    plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, main = "Read assignments", cex = 1.5, col = "white", cex.main = 1.5)
+    plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, main = "Read assignments", cex = 1.5, col = "white", cex.main = 1.5, xlab= "", ylab = "")
     test <- fbsoL$double_list_of_ending_read_labels[[1]][[1]] ## 1, 2, maybe 3 in the future
     if (have_truth_haplotypes) {
         truth <- truth_labels
         truth[uncertain_truth_labels] <- 0
     }
-    ## so have space 0-1 to fit both of these
+    ## so have space 0-1 to fit both of these (or three)
     ## use first two thirds for reads, last bit for diploid dosage
-    frac_reads <- 2/3
+    if (method == "diploid") {
+        frac_reads <- 2/3
+    } else{
+        frac_reads <- 3 / 4
+    }
     ## note, do 3-test so first haplotype reads on top
-    y <- (1 - frac_reads) + (0.95 * frac_reads) * (((3 - test) - 1) * (2 / 3) + runif(length(test)) / 3)
     ##
     ## text(x = mean(xlim), y = (1 - frac_reads) + frac_reads / 2, labels = "Read assignments", cex = 1.5, font = 2)
-    text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (5 / 6), labels = "Hap1", srt = 90, cex = 1.5, font = 2)
-    text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (1 / 6), labels = "Hap2", srt = 90, cex = 1.5, font = 2)
-    for(iRead in 1:length(sampleReads)) {
-        u <- range(sampleReads[[iRead]][[4]])
-        ## level depending on what I say
-        ## colour dpeending on truth
-        if (have_truth_haplotypes) {
-            col <- c("black", "blue", "red")[truth[iRead] + 1]
-            text(x = Ls[1], y = (1 - frac_reads) + frac_reads / 2, labels = "Blue = truth hap 1, Red = truth hap 2", pos = 4, cex = 1.25)
+    if (method == "diploid") {
+        y <- (1 - frac_reads) + (0.95 * frac_reads) * (((3 - test) - 1) * (2 / 3) + runif(length(test)) / 3)
+        text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (5 / 6), labels = "Hap1", srt = 90, cex = 1.5, font = 2)
+        text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (1 / 6), labels = "Hap2", srt = 90, cex = 1.5, font = 2)
+    } else {
+        ## put these at the top
+        y <- rep((1 - frac_reads), length(test))
+        H <- test
+        y[H == 1] <- y[H == 1] + (frac_reads) * (4 / 5 + runif(sum(H == 1)) * 1 / 5)
+        y[H == 2] <- y[H == 2] + (frac_reads) * (2 / 5 + runif(sum(H == 2)) * 1 / 5)
+        y[H == 3] <- y[H == 3] + (frac_reads) * (0 / 5 + runif(sum(H == 3)) * 1 / 5)
+        text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (9 / 10), labels = "Hap1", srt = 90, cex = 1.5, font = 2)
+        text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (5 / 10), labels = "Hap2", srt = 90, cex = 1.5, font = 2)
+        text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (1 / 10), labels = "Hap3", srt = 90, cex = 1.5, font = 2)
+    }
+    ##
+    if (have_truth_haplotypes) {
+        if (method == "nipt") {
+            label <- "Orange = truth hap 1, Green = truth hap 2, Purple = truth hap 3"
         } else {
-            col <- "black"
+            label <- "Orange = truth hap 1, Green = truth hap 2"
         }
-        lwd <- 1
-        ## if (unhappy_reads[iRead]) {
-        ##     col <- "purple"
-        ##     lwd <- 5
-        ## }
-        segments(x0 = L[u[1] + 1], x1 = L[u[2] + 1], y0 = y[iRead], y1 = y[iRead], col = col, lwd = lwd)
+        text(
+            x = Ls[1], y = (1 - frac_reads) + frac_reads / 2,
+            labels = label,
+            pos = 4, cex = 1.25
+        )
+    }
+    us <- t(sapply(1:length(sampleReads), function(iRead) {
+        range(sampleReads[[iRead]][[4]])
+    }))
+    ## level depending on what I say
+    ## colour dpeending on truth
+    grey <- alpha_col("grey", 0.25)
+    if (have_truth_haplotypes) {
+        col <- c(grey, "orange", "green", "purple")[truth + 1]
+    } else {
+        col <- rep(grey, length(test))
+    }
+    lwd <- 1
+    ## over-plot coloured ones
+    for(i in 1:2) {
+        if (i == 1) w <- col == grey
+        if (i == 2) w <- col != grey
+        segments(x0 = L[us[w, 1] + 1], x1 = L[us[w, 2] + 1], y0 = y[w], y1 = y[w], col = col[w], lwd = lwd)
     }
     ##
     ## abline(h = (1 - frac_reads))
     text(x = mean(xlim), y = (1 - frac_reads) * 0.85, labels = "Imputed genotypes", cex = 1.5, font = 2)
-    r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = rowSums(haps[, 1:2]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads), col = "green", label = "Rolling accuracy versus truth genotypes"))
+    if (method == "nipt") {
+        r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = rowSums(haps[, 1:2]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = (1 - frac_reads) / 2, scale = (1 - frac_reads) / 2, col = "green", label = "Rolling accuracy of maternal genotypes versus truth"))
+        r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][c(1, 3), ]), truth = rowSums(haps[, c(1, 3)]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads) / 2, col = "orange", label = "Rolling accuracy of fetal genotypes versus truth"))
+    } else {
+        r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = rowSums(haps[, 1:2]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads), col = "green", label = "Rolling accuracy versus truth genotypes"))        
+    }
     ##
     ## plot section 4 - recombination rate (need real thing!), and x-axis with locations
     ##
@@ -238,18 +291,18 @@ plot_single_gamma_dosage <- function(
 
 
 robbie_image <- function(x, truth, n_breaks = 101, xlab = "", ylab = "") {
-    ## 
+    ##
     cols <- colorRampPalette(c("white", "red"))(n_breaks)
     x2A <- matrix(cols[cut(x, breaks = n_breaks)], nrow = nrow(x))
-    cols <- colorRampPalette(c("white", "green"))(n_breaks)    
+    cols <- colorRampPalette(c("white", "green"))(n_breaks)
     x2B <- matrix(cols[cut(x, breaks = n_breaks)], nrow = nrow(x))
-    ## 
+    ##
     xlim <- c(0, ncol(x2A) + 1)
     ylim <- c(0, nrow(x2A) + 1)
     plot(x = 0, y= 0, xlim = xlim, ylim = ylim, col = "white", xlab = xlab, ylab = ylab)
     xleft <- 1:ncol(x2A) - 0.5
     xright <- xleft + 1
-    ## 
+    ##
     for(i_row in 1:nrow(x2A)) {
         col <- rep("white", ncol(x2A))
         w1 <- truth == 1 & !is.na(truth)
@@ -333,7 +386,7 @@ plot_of_likelihood_with_time_new <- function(
                         t[(i_sampling - 1) * n_hgfi * nReads + xx] <- NA
                     }
                 }
-                max_val <- max(t, na.rm = TRUE) 
+                max_val <- max(t, na.rm = TRUE)
             }
             ## add truth here
             if (!is.null(truth_likelihoods)) {
@@ -345,7 +398,7 @@ plot_of_likelihood_with_time_new <- function(
                     abline(h = prob, col = "green")
                 }
             }
-            ## 
+            ##
             for(i_sampling in 1:n_samplings) {
                 probs <- p_store[
                 (i_sampling - 1) * n_hgfi * nReads + x, ycol
@@ -410,7 +463,7 @@ plot_of_likelihoods_across_samplings_and_seek_its <- function(
         y <- sapply(for_likelihood_plotting, function(x) {
             sapply(x, function(y) {
                 if (ylab_option == "zoomedout") {
-                    if (n_gibbs_burn_in_its > 4) {            
+                    if (n_gibbs_burn_in_its > 4) {
                         y[-c(1:2), ylab]
                     }
                     y[, ylab]
@@ -431,7 +484,7 @@ plot_of_likelihoods_across_samplings_and_seek_its <- function(
         )
         axis(2)
         ## plot seek its
-        abline(v = 0, col = "black")    
+        abline(v = 0, col = "black")
         for(i_seek_it in 1:n_seek_its) {
             abline(v = i_seek_it / n_seek_its, col = "black")
             ## plot block Gibbs
@@ -458,7 +511,7 @@ plot_of_likelihoods_across_samplings_and_seek_its <- function(
                 )
                 points(x = x, y = y, type = "l", col = col)
             }
-            ## 
+            ##
         }
     }
     dev.off()

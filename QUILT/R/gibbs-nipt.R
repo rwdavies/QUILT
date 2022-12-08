@@ -1946,3 +1946,41 @@ make_rlc <- function(ff) {
     rlc[7, ] <- p
     return(rlc)
 }
+
+
+determine_a_set_of_truth_labels_for_nipt <- function(
+    sampleReads,
+    truth_haps,
+    phase,
+    ff
+) {
+    readProbs_t <- assign_fetal_read_probabilities(
+        sampleReads = sampleReads,
+        truth_haps_t = t(truth_haps)
+    )
+    ## convert those probabilities into probabilities they originate from sets of haplotypes
+    ## e.g. given ff, and a read could come from matt and p, what is the probability it came from each
+    out <- get_read_groupings_given_fetal_fraction_and_cov(
+        readProbs_t = readProbs_t,
+        phase = phase,
+        iiSample = 1,
+        ff = ff
+    )
+    ## 
+    truth_labels <- sample_H_for_NIPT_given_groupings(
+        groupings = out$groupings,
+        counts = out$counts,
+        ff = ff
+    )
+    ## hmm, for now, make these exact
+    groupings <- out$groupings
+    uncertain_truth_labels <- rep(TRUE, nrow(out$groupings))
+    uncertain_truth_labels[groupings[, "matt_only"]] <- FALSE
+    uncertain_truth_labels[groupings[, "matu_only"]] <- FALSE
+    uncertain_truth_labels[groupings[, "pat_only"]] <- FALSE   
+    ## 
+    list(
+        truth_labels = truth_labels,
+        uncertain_truth_labels = uncertain_truth_labels
+    )
+}

@@ -15,6 +15,12 @@ option_list <- list(
         help = "What chromosome to run. Should match BAM headers"
     ), 
     make_option(
+        "--method",
+        type = "character",
+        help = "What method to run (diploid or nipt) [default diploid] ",
+        default = "diploid"
+    ), 
+    make_option(
         "--regionStart",
         type = "integer",
         help = "When running imputation, where to start from. The 1-based position x is kept if regionStart <= x <= regionEnd [default NA] ",
@@ -31,6 +37,12 @@ option_list <- list(
         type = "integer",
         help = "Buffer of region to perform imputation over. So imputation is run form regionStart-buffer to regionEnd+buffer, and reported for regionStart to regionEnd, including the bases of regionStart and regionEnd [default NA] ",
         default = NA
+    ), 
+    make_option(
+        "--fflist",
+        type = "character",
+        help = "Path to file with fetal fraction values, one row per entry, in the same order as the bamlist [default \"\"] ",
+        default = ""
     ), 
     make_option(
         "--bamlist",
@@ -180,6 +192,12 @@ option_list <- list(
         "--make_plots",
         type = "logical",
         help = "Whether to make some plots of per-sample imputation. Especially nice when truth data. This is pretty slow though so useful more for debugging and understanding and visualizing performance [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
+        "--make_plots_block_gibbs",
+        type = "logical",
+        help = "Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs [default FALSE] ",
         default = FALSE
     ), 
     make_option(
@@ -405,9 +423,11 @@ Sys.setenv(PATH = paste0(Sys.getenv("PATH"), ":", getwd()))
 QUILT(
     outputdir = opt$outputdir,
     chr = opt$chr,
+    method = opt$method,
     regionStart = opt$regionStart,
     regionEnd = opt$regionEnd,
     buffer = opt$buffer,
+    fflist = opt$fflist,
     bamlist = opt$bamlist,
     cramlist = opt$cramlist,
     sampleNames_file = opt$sampleNames_file,
@@ -433,6 +453,7 @@ QUILT(
     phasefile = opt$phasefile,
     maxDifferenceBetweenReads = opt$maxDifferenceBetweenReads,
     make_plots = opt$make_plots,
+    make_plots_block_gibbs = opt$make_plots_block_gibbs,
     verbose = opt$verbose,
     shuffle_bin_radius = opt$shuffle_bin_radius,
     iSizeUpperLimit = opt$iSizeUpperLimit,

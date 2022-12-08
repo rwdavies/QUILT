@@ -103,15 +103,15 @@ helper_block_gibbs_resampler <- function(
     )
     attempted_blocked_snps <- out[["blocked_snps"]]
     if (language == "R") {
-        ## 
+        ##
     } else {
         f <- Rcpp_define_blocked_snps_using_gamma_on_the_fly
         s <- s + 1L
     }
-    
-    
 
-    
+
+
+
     H_class <- calculate_H_class(
         eMatRead_t = eMatRead_t,
         alphaHat_t1 = alphaHat_t1,
@@ -126,10 +126,10 @@ helper_block_gibbs_resampler <- function(
         class_sum_cutoff = class_sum_cutoff
     )
     ##
-    ## 
+    ##
     ##
     n_blocks <- max(blocked_snps) + 1
-    runif_block <- runif(n_blocks)    
+    runif_block <- runif(n_blocks)
     runif_total <- runif(n_blocks)
     nReads <- length(sampleReads)
     runif_proposed <- matrix(runif(nReads * 6), nrow = 6, ncol = nReads)
@@ -184,7 +184,7 @@ helper_block_gibbs_resampler <- function(
         use_cpp_bits_in_R = use_cpp_bits_in_R,
         block_approach = block_approach,
         prev_section = "prev_section",
-        next_section = "next_section", 
+        next_section = "next_section",
         suppressOutput = 1,
         prev = 0
     )
@@ -202,13 +202,13 @@ helper_block_gibbs_resampler <- function(
             H = H,
             alphaHat_t1 = alphaHat_t1,
             alphaHat_t2 = alphaHat_t2,
-            alphaHat_t3 = alphaHat_t3,            
+            alphaHat_t3 = alphaHat_t3,
             betaHat_t1 = betaHat_t1,
             betaHat_t2 = betaHat_t2,
             betaHat_t3 = betaHat_t3
         ))
-    } 
-    
+    }
+
     ## do checks here
     final_package <- for_testing_get_full_package_probabilities(block_out[["H"]], fpp_stuff)
     expect_equal(block_out[["eMatGrid_t1"]], final_package[[1]][["eMatGrid_t"]])
@@ -312,7 +312,7 @@ R_gibbs_block_forward_one_master <- function(
     ##
     if (do_checks && (block_approach == 1)) {
         for(ir in 1:6) {
-            if ((ff > 0) | ((ff == 0) & ((ir == 1) | (ir == 3)))) {            
+            if ((ff > 0) | ((ff == 0) & ((ir == 1) | (ir == 3)))) {
                 for(i in 1:3) {
                     h <- rr[ir, i]
                     expect_equal(all_packages[[ir]][[h]]$alphaHat_t[, iGrid], alphaStore[, h, ir])
@@ -331,7 +331,7 @@ R_gibbs_block_forward_one_master <- function(
         re <- approach2_iRead[1] - 1
         w <- rs:re
         for(ir in 1:6) {
-            if ((ff > 0) | ((ff == 0) & ((ir == 1) | (ir == 3)))) {            
+            if ((ff > 0) | ((ff == 0) & ((ir == 1) | (ir == 3)))) {
                 Htemp <- H
                 ## ONLY if change makes sense
                 if (rs <= re) {
@@ -341,7 +341,7 @@ R_gibbs_block_forward_one_master <- function(
                 ## check alphas
                 m <- cbind(cur_package[[rr[ir, 1]]]$eMatGrid_t[, iGrid], cur_package[[rr[ir, 2]]]$eMatGrid_t[, iGrid], cur_package[[rr[ir, 3]]]$eMatGrid_t[, iGrid])
                 expect_equal(eMatGridLocalc[, , ir], m)
-                ## 
+                ##
                 m <- cbind(cur_package[[1]]$alphaHat_t[, iGrid], cur_package[[2]]$alphaHat_t[, iGrid], cur_package[[3]]$alphaHat_t[, iGrid])
                 expect_equal(alphaStore[, , ir], m)
             }
@@ -355,7 +355,7 @@ R_gibbs_block_forward_one_master <- function(
             log_cStore = log_cStore,
             approach2_iRead = approach2_iRead,
             proposed_H = proposed_H,
-            eMatGridLocalc = eMatGridLocalc 
+            eMatGridLocalc = eMatGridLocalc
         )
     )
 }
@@ -379,7 +379,7 @@ R_block_gibbs_resampler <- function(
     eMatGrid_t3,
     H,
     H_class,
-    eMatRead_t,    
+    eMatRead_t,
     blocked_snps,
     runif_block,
     runif_total,
@@ -396,7 +396,7 @@ R_block_gibbs_resampler <- function(
     maxDifferenceBetweenReads,
     Jmax,
     prev_section,
-    next_section, 
+    next_section,
     suppressOutput,
     prev,
     do_checks = FALSE,
@@ -411,7 +411,7 @@ R_block_gibbs_resampler <- function(
     ##
     K <- dim(alphaMatCurrent_tc)[1]
     nSNPs <- length(grid)
-    nGrids <- dim(alphaMatCurrent_tc)[2] + 1    
+    nGrids <- dim(alphaMatCurrent_tc)[2] + 1
     S <- dim(alphaMatCurrent_tc)[3]
     nReads <- length(wif0)
     prior_probs <- c(0.5, (1 - ff) / 2, ff / 2)
@@ -473,8 +473,8 @@ R_block_gibbs_resampler <- function(
     )
     block_results <- matrix(0.0, nrow = n_blocks * 2, ncol = length(block_results_columns))
     colnames(block_results) <- block_results_columns
-    ## 
-    ## 
+    ##
+    ##
     rr <- rbind(
         c(1, 2, 3),
         c(1, 3, 2),
@@ -514,7 +514,7 @@ R_block_gibbs_resampler <- function(
     if (do_checks) {
         ##
         all_packages <- lapply(1:6, function(ir) {
-            iBlock <- 0        
+            iBlock <- 0
             w <- wif0 %in% (consider_grid_start_0_based[iBlock + 1]:consider_grid_end_0_based[iBlock + 1])
             localH <- H
             localH[w] <- rr[ir, H[w]]
@@ -523,7 +523,7 @@ R_block_gibbs_resampler <- function(
     } else {
         all_packages <- list(NA)
     }
-    ## 
+    ##
     ##
     logC_before <- numeric(3)
     ## remove first one from after, as we skip over that one
@@ -543,7 +543,7 @@ R_block_gibbs_resampler <- function(
     ## below, on second go after a pass through Rcpp, "0" was not working through seq or 0:X for loops including 0
     ## does work as an integer
     ##
-    ## for(iRead in seq(0, nReads - 1)) {    
+    ## for(iRead in seq(0, nReads - 1)) {
     for(iRead in seq(0L, as.integer(nReads - 1))) {
         sum_H[H[iRead + 1]] <- sum_H[H[iRead + 1]] + 1.0
     }
@@ -551,7 +551,7 @@ R_block_gibbs_resampler <- function(
     ## end of serious weirdness
     ##
     ## H, and proposed_H, are ALWAYS 1-based
-    proposed_H <- array(as.integer(-1), c(6, nReads)) 
+    proposed_H <- array(as.integer(-1), c(6, nReads))
     approach2_iRead <- integer(1)
     approach2_iRead[] <- 1L
     nReads <- length(H)
@@ -570,8 +570,8 @@ R_block_gibbs_resampler <- function(
     if (class(H[1]) != "integer") {
         stop("somehow H became non-integer before even starting")
     }
-    
-    for(iGrid in 1:nGrids) {    
+
+    for(iGrid in 1:nGrids) {
         if (verbose) {
             print_message(paste0("iBlock = ", iBlock, ", iGrid = ", iGrid))
         }
@@ -599,7 +599,7 @@ R_block_gibbs_resampler <- function(
             grid_end_0_based <- consider_grid_end_0_based[iBlock + 1]
             read_start_0_based <- consider_reads_start_0_based[iBlock + 1]
             read_end_0_based <- consider_reads_end_0_based[iBlock + 1]
-            ## 
+            ##
             ## now, build probabilities!
             ## need to use alphaBeta here!
             ##
@@ -688,7 +688,7 @@ R_block_gibbs_resampler <- function(
                 c3 <- out$c3
                 alphaHat_t1 <- out$alphaHat_t1
                 alphaHat_t2 <- out$alphaHat_t2
-                alphaHat_t3 <- out$alphaHat_t3            
+                alphaHat_t3 <- out$alphaHat_t3
                 betaHat_t1 <- out$betaHat_t1
                 betaHat_t2 <- out$betaHat_t2
                 betaHat_t3 <- out$betaHat_t3
@@ -749,7 +749,7 @@ R_block_gibbs_resampler <- function(
                     c3 <- out$c3
                     alphaHat_t1 <- out$alphaHat_t1
                     alphaHat_t2 <- out$alphaHat_t2
-                    alphaHat_t3 <- out$alphaHat_t3            
+                    alphaHat_t3 <- out$alphaHat_t3
                     betaHat_t1 <- out$betaHat_t1
                     betaHat_t2 <- out$betaHat_t2
                     betaHat_t3 <- out$betaHat_t3
@@ -858,14 +858,14 @@ R_block_gibbs_resampler <- function(
         logC_after[1] <- logC_after[1] - log(c1[iGrid])
         logC_after[2] <- logC_after[2] - log(c2[iGrid])
         logC_after[3] <- logC_after[3] - log(c3[iGrid])
-        ## 
+        ##
     }
-    
+
     ##
     ## re-run backward
-    ## 
+    ##
     betaHat_t1[, nGrids] <- c1[nGrids]
-    Rcpp_run_backward_haploid(        
+    Rcpp_run_backward_haploid(
         betaHat_t1,
         c = c1,
         eMatGrid_t = eMatGrid_t1,
@@ -874,7 +874,7 @@ R_block_gibbs_resampler <- function(
         s = s - 1
     )
     betaHat_t2[, nGrids] <- c2[nGrids]
-    Rcpp_run_backward_haploid(        
+    Rcpp_run_backward_haploid(
         betaHat_t2,
         c = c2,
         eMatGrid_t = eMatGrid_t2,
@@ -883,7 +883,7 @@ R_block_gibbs_resampler <- function(
         s = s - 1
     )
     betaHat_t3[, nGrids] <- c3[nGrids]
-    Rcpp_run_backward_haploid(        
+    Rcpp_run_backward_haploid(
         betaHat_t3,
         c = c3,
         eMatGrid_t = eMatGrid_t3,
@@ -901,14 +901,14 @@ R_block_gibbs_resampler <- function(
             c3 = c3,
             alphaHat_t1 = alphaHat_t1,
             alphaHat_t2 = alphaHat_t2,
-            alphaHat_t3 = alphaHat_t3,            
+            alphaHat_t3 = alphaHat_t3,
             betaHat_t1 = betaHat_t1,
             betaHat_t2 = betaHat_t2,
             betaHat_t3 = betaHat_t3,
             H = H,
             fpp_stuff = fpp_stuff,
             block_results = block_results,
-            consider_snp_start_0_based = consider_snp_start_0_based,            
+            consider_snp_start_0_based = consider_snp_start_0_based,
             consider_snp_end_0_based = consider_snp_end_0_based,
             consider_reads_start_0_based = consider_reads_start_0_based,
             consider_reads_end_0_based = consider_reads_end_0_based,
@@ -960,7 +960,7 @@ R_define_blocked_snps_using_gamma_on_the_fly <- function(
     ##     diff[3, iGrid - 1 + 1] <- sum( (g3b - g3a) ** 2)
     ##     g1a <- g1b
     ##     g2a <- g2b
-    ##     g3a <- g3b        
+    ##     g3a <- g3b
     ## }
     ## rate <- colSums(diff)
     ## try jUpdate version
@@ -1056,21 +1056,21 @@ R_define_blocked_snps_using_gamma_on_the_fly <- function(
     }
     blocked_snps <- array(-1, nSNPs) ## argh
     blocked_grid <- array(-1, nGrids)
-    ## 
+    ##
     for(i in 0:(length(blocks_to_consider) - 1 - 1)) {
-        a <- blocks_to_consider[i + 1] + 1 
+        a <- blocks_to_consider[i + 1] + 1
         b <- blocks_to_consider[i + 1 + 1] + 1
         blocked_grid[a:b] <- i
     }
-    ## 
+    ##
     for(iSNP in 0:(nSNPs - 1)) {
-        blocked_snps[iSNP + 1] <- blocked_grid[grid[iSNP + 1] + 1]    
+        blocked_snps[iSNP + 1] <- blocked_grid[grid[iSNP + 1] + 1]
     }
     ## now - if there are no reads in a block, get rid of
     ## iRead <- -1
     ## for(iSNP in 0:(nSNPs - 1)) {
     ##     b <- blocked_snps[iSNP + 1]
-    ##     ## keep going until block is done, then known 
+    ##     ## keep going until block is done, then known
     ## }
     ##
     if (!TRUE) {
@@ -1097,9 +1097,9 @@ for_testing_get_full_package_probabilities <- function(localH, fpp_stuff) {
     sampleReads <- fpp_stuff[["sampleReads"]]
     ##
     K <- dim(alphaMatCurrent_tc)[1]
-    nGrids <- dim(alphaMatCurrent_tc)[2] + 1    
+    nGrids <- dim(alphaMatCurrent_tc)[2] + 1
     S <- dim(alphaMatCurrent_tc)[3]
-    ## 
+    ##
     package <- lapply(1:3, function(hap) {
         ## now, for first region specifically, introduce the options
         ##
@@ -1107,7 +1107,7 @@ for_testing_get_full_package_probabilities <- function(localH, fpp_stuff) {
         rcpp_make_eMatGrid_t(eMatGrid_t = eMatGrid_t, eMatRead_t = eMatRead_t, H = localH, sampleReads = sampleReads, hap = hap, nGrids = nGrids, prev = 0, suppressOutput = 1, prev_section = "text", next_section = "", run_fb_grid_offset = 0, use_all_reads = FALSE, bound = FALSE, maxEmissionMatrixDifference =  1000, rescale = FALSE)
         ## initialize
         out <- initialize_gibbs_forward_backward(H = localH, hap = hap, s = s, sampleReads = sampleReads, priorCurrent_m = priorCurrent_m, alphaMatCurrent_tc = alphaMatCurrent_tc, transMatRate_tc_H = transMatRate_tc_H, eMatRead_t = eMatRead_t, eMatGrid_t = eMatGrid_t)
-        ## 
+        ##
         return(append(out, list(eMatGrid_t = eMatGrid_t)))
     })
     log_p <- -sum(log(package[[1]][["c"]]) + log(package[[2]][["c"]]) + log(package[[3]][["c"]]))
@@ -1132,7 +1132,7 @@ R_consider_block_relabelling <- function(
     logC_after,
     verbose,
     swap_list,
-    eMatGridLocal,    
+    eMatGridLocal,
     betaHatLocal,
     iGrid,
     grid_start_0_based,
@@ -1169,13 +1169,13 @@ R_consider_block_relabelling <- function(
     c3,
     eMatGrid_t3
 ) {
-    ## 
+    ##
     betaHatLocal[, 1] <- betaHat_t1[, iGrid]
     betaHatLocal[, 2] <- betaHat_t2[, iGrid]
     betaHatLocal[, 3] <- betaHat_t3[, iGrid]
     ##
     ## get this as well - inefficient
-    ## 
+    ##
     choice_log_probs_P <- array(0, 6)
     choice_log_probs_Pm <- array(0, c(6, 3))
     for(ir in 1:6) {
@@ -1187,10 +1187,10 @@ R_consider_block_relabelling <- function(
             }
             ## OK, so after includes original one
             ## inside one includes current c
-            choice_log_probs_Pm[ir, i] <- 
+            choice_log_probs_Pm[ir, i] <-
                 log(sum(alphaStore[, i, ir] * betaHatLocal[, i])) +
                 - logC_before[i] +
-                - logC_inside + 
+                - logC_inside +
                 - logC_after[i]
             choice_log_probs_P[ir] <- choice_log_probs_P[ir] + choice_log_probs_Pm[ir, i]
         }
@@ -1225,7 +1225,7 @@ R_consider_block_relabelling <- function(
             proposed_H = proposed_H,
             log_prior_probs = log_prior_probs,
             rr = rr
-        )            
+        )
     }
     ## now choose!
     choice_log_probs <- choice_log_probs_P + choice_log_probs_H
@@ -1254,13 +1254,13 @@ R_consider_block_relabelling <- function(
             ir_chosen <- i
         }
     }
-    ## 
+    ##
     if (verbose) {
         print_message(paste0("In block ", iBlock, ", see the following probabilities"))
         print_message(paste0(round(choice_probs, 4), collapse = ", "))
         print_message(paste0("Have selected block relabelling:", ir_chosen))
     }
-    ## 
+    ##
     ## store some probabilities about chosen change
     ##
     ibr <- 2 * iBlock + 1
@@ -1271,7 +1271,7 @@ R_consider_block_relabelling <- function(
     block_results[ibr, c("p_O1_given_H1_L", "p_O2_given_H2_L", "p_O3_given_H3_L")] <- choice_log_probs_Pm[ir_chosen, ]
     block_results[ibr, "p_O_given_H_L"] <- sum(choice_log_probs_Pm[ir_chosen, ])
     ## this should be recorded for the ENTIRE set of reads NOT specific
-    ## although the chosen set of 
+    ## although the chosen set of
     if (do_checks) {
         if (verbose) {
             print_message("Check H for block_results")
@@ -1288,11 +1288,11 @@ R_consider_block_relabelling <- function(
         }
     }
     for(iRead in read_start_0_based:read_end_0_based) {
-        h1 <- H[iRead + 1]        
+        h1 <- H[iRead + 1]
         if (block_approach == 1 | block_approach == 2) {
             h2 <- h1
         } else if (block_approach == 4) {
-            h2 <- proposed_H[ir_chosen, iRead + 1] 
+            h2 <- proposed_H[ir_chosen, iRead + 1]
         }
         x <- x - log_prior_probs[h1]
         x <- x + log_prior_probs[rr[ir_chosen, h2]]
@@ -1302,9 +1302,9 @@ R_consider_block_relabelling <- function(
         Htemp <- H
         for(iRead in read_start_0_based:read_end_0_based) {
             if (block_approach == 1 | block_approach == 2) {
-                h <- H[iRead + 1]                
+                h <- H[iRead + 1]
             } else if (block_approach == 4) {
-                h <- proposed_H[ir_chosen, iRead + 1] 
+                h <- proposed_H[ir_chosen, iRead + 1]
             }
             Htemp[iRead + 1] <- rr[ir_chosen, h]
         }
@@ -1356,7 +1356,7 @@ R_consider_block_relabelling <- function(
                     }
                 }
                 while (iRead <= nReads & (wif_read == (iGrid2 - 1))) {
-                    Hl <- proposed_H[ir_chosen, iRead] 
+                    Hl <- proposed_H[ir_chosen, iRead]
                     h <- rr[ir_chosen, Hl]
                     eMatGridLocal[, h] <- eMatGridLocal[, h] * eMatRead_t[, iRead]
                     ##
@@ -1366,9 +1366,9 @@ R_consider_block_relabelling <- function(
                     }
                 }
             }
-            ## 
+            ##
             ## reset eMatGrid_t s
-            ## 
+            ##
             eMatGrid_t1[, iGrid2] <- eMatGridLocal[, 1]
             eMatGrid_t2[, iGrid2] <- eMatGridLocal[, 2]
             eMatGrid_t3[, iGrid2] <- eMatGridLocal[, 3]
@@ -1384,15 +1384,15 @@ R_consider_block_relabelling <- function(
                 ## normal!
                 ## now go forward in traditional way
                 alphaHat_t1[, iGrid2] <- eMatGrid_t1[, iGrid2] * (
-                    transMatRate_tc_H[1, iGrid2 - 1, s] * alphaHat_t1[, iGrid2 - 1] + 
+                    transMatRate_tc_H[1, iGrid2 - 1, s] * alphaHat_t1[, iGrid2 - 1] +
                     transMatRate_tc_H[2, iGrid2 - 1, s] * alphaMatCurrent_tc[, iGrid2 - 1, s]
                 )
                 alphaHat_t2[, iGrid2] <- eMatGrid_t2[, iGrid2] * (
-                    transMatRate_tc_H[1, iGrid2 - 1, s] * alphaHat_t2[, iGrid2 - 1] + 
+                    transMatRate_tc_H[1, iGrid2 - 1, s] * alphaHat_t2[, iGrid2 - 1] +
                     transMatRate_tc_H[2, iGrid2 - 1, s] * alphaMatCurrent_tc[, iGrid2 - 1, s]
                 )
                 alphaHat_t3[, iGrid2] <- eMatGrid_t3[, iGrid2] * (
-                    transMatRate_tc_H[1, iGrid2 - 1, s] * alphaHat_t3[, iGrid2 - 1] + 
+                    transMatRate_tc_H[1, iGrid2 - 1, s] * alphaHat_t3[, iGrid2 - 1] +
                     transMatRate_tc_H[2, iGrid2 - 1, s] * alphaMatCurrent_tc[, iGrid2 - 1, s]
                 )
             }
@@ -1428,7 +1428,7 @@ R_consider_block_relabelling <- function(
             expect_equal(sum(H == 2), sum_H[2])
             expect_equal(sum(H == 3), sum_H[3])
         }
-        ## 
+        ##
     }
     return(
         list(
@@ -1440,7 +1440,7 @@ R_consider_block_relabelling <- function(
             c3 = c3,
             alphaHat_t1 = alphaHat_t1,
             alphaHat_t2 = alphaHat_t2,
-            alphaHat_t3 = alphaHat_t3,            
+            alphaHat_t3 = alphaHat_t3,
             betaHat_t1 = betaHat_t1,
             betaHat_t2 = betaHat_t2,
             betaHat_t3 = betaHat_t3,
@@ -1503,7 +1503,7 @@ R_consider_total_relabelling <- function(
         choice_probs[2] <- 0
         choice_probs[4] <- 0
         choice_probs[5] <- 0
-        choice_probs[6] <- 0        
+        choice_probs[6] <- 0
     }
     choice_probs <- choice_probs / sum(choice_probs)
     ##
@@ -1523,7 +1523,7 @@ R_consider_total_relabelling <- function(
         print_message(paste0(round(choice_probs, 4), collapse = ", "))
         print_message(paste0("Have selected total relabelling:", ir_chosen, " using chance:", round(chance, 3)))
     }
-    ## 
+    ##
     ## store some probabilities about chosen change
     ##
     ibr <- 2 * iBlock + 1 + 1
@@ -1552,7 +1552,7 @@ R_consider_total_relabelling <- function(
         Htemp <- rr[ir_chosen, H]
         expect_equal(table(H), sum_H)
         expect_equal(x, sum(log_prior_probs[Htemp]))
-    }        
+    }
     block_results[ibr, "p_H_given_L"] <- x
     block_results[ibr, "p_H_given_O_L_up_to_C"] <- block_results[ibr, "p_O_given_H_L"] + block_results[ibr, "p_H_given_L"]
     ##
@@ -1603,7 +1603,7 @@ R_consider_total_relabelling <- function(
             c3 = c3,
             alphaHat_t1 = alphaHat_t1,
             alphaHat_t2 = alphaHat_t2,
-            alphaHat_t3 = alphaHat_t3,            
+            alphaHat_t3 = alphaHat_t3,
             betaHat_t1 = betaHat_t1,
             betaHat_t2 = betaHat_t2,
             betaHat_t3 = betaHat_t3,
@@ -1749,6 +1749,7 @@ plot_attempt_to_reblock_snps <- function(
     n_block_it_to_plot,
     wif0,
     grid,
+    method,
     only_plot_confident_reads = TRUE
 ) {
     x <- out$gibbs_block_output_list[[n_block_it_to_plot]][["block_defining"]]
@@ -1781,33 +1782,43 @@ plot_attempt_to_reblock_snps <- function(
     ##
     before_gamma1_t <- gibbs_block_output_list[["before_gamma1_t"]]
     before_gamma2_t <- gibbs_block_output_list[["before_gamma2_t"]]
+    before_gamma3_t <- gibbs_block_output_list[["before_gamma3_t"]]
     after_gamma1_t <- gibbs_block_output_list[["after_gamma1_t"]]
     after_gamma2_t <- gibbs_block_output_list[["after_gamma2_t"]]
+    after_gamma3_t <- gibbs_block_output_list[["after_gamma3_t"]]
     after_shard_gamma1_t <- gibbs_block_output_list[["after_shard_gamma1_t"]]
     after_shard_gamma2_t <- gibbs_block_output_list[["after_shard_gamma2_t"]]
-    ## 
-    before_read_labels <- gibbs_block_output_list[["before_read_labels"]]        
+    after_shard_gamma3_t <- gibbs_block_output_list[["after_shard_gamma3_t"]]
+    ##
+    before_read_labels <- gibbs_block_output_list[["before_read_labels"]]
     after_read_labels <- gibbs_block_output_list[["after_read_labels"]]
     after_shard_read_labels <- gibbs_block_output_list[["after_shard_read_labels"]]
     ##
     ##
-    ## 
+    ##
     ## width <- min(max(20, (L_grid[length(L_grid)] - L_grid[1]) / 1e6 * 36), 200)
-    png(outname, height = 15, width = 20, res = 100, units = "in")
-    par(mfrow = c(11, 1))
-    par(oma = c(0, 0, 5, 0))    
+    height <- c(diploid = 15, nipt = 20)[method]
+    png(outname, height = height, width = 20, res = 100, units = "in")
+    mfrow <- c(diploid = 11, nipt = 15)[method]
+    par(mfrow = c(mfrow, 1))
+    par(oma = c(0, 0, 5, 0))
     grid_distances <- diff(L_grid)
-    x <- L_grid[-1] - grid_distances    
+    x <- L_grid[-1] - grid_distances
     xleft <- L_grid[-length(L_grid)]
     xright <- L_grid[-1]
     ## for fbdstore
-    midpoints <- L_grid[-1] - grid_distances / 2    
+    midpoints <- L_grid[-1] - grid_distances / 2
     xleft2 <- c(L_grid[1], midpoints)
     xright2 <- c(midpoints, L_grid[length(L_grid)])
     ##
     ## 1) find peaks to check
     ##
-    for(i_block_type in 1:2) {
+    if (is.null(shard_block_results)) {
+        n_block_type <- 1
+    } else {
+        n_block_type <- 2
+    }
+    for(i_block_type in 1:n_block_type) {
         ylim <- c(0, max(break_thresh, max(smoothed_rate, na.rm = TRUE)))
         ylim <- c(0, max(break_thresh, quantile(smoothed_rate, probs = c(0.99))))
         par(mar = c(0, 0, 3, 0))
@@ -1823,7 +1834,7 @@ plot_attempt_to_reblock_snps <- function(
             n <- length(consider_snp_start_0_based) - 1
         }
         for(iBlock in 0:n) {
-            ## 
+            ##
             l <- L[consider_snp_start_0_based[iBlock + 1] + 1]
             r <- L[consider_snp_end_0_based[iBlock + 1] + 1]
             abline(v = l, col = "red")
@@ -1868,35 +1879,48 @@ plot_attempt_to_reblock_snps <- function(
             what_we_are_plotting <- "Before block gibbs"
             read_labels <- before_read_labels
             gamma1_t <- before_gamma1_t
-            gamma2_t <- before_gamma2_t            
+            gamma2_t <- before_gamma2_t
+            gamma3_t <- before_gamma3_t
         } else if (i_before == 2) {
-            what_we_are_plotting <- "After block gibbs"            
+            what_we_are_plotting <- "After block gibbs"
             read_labels <- after_read_labels
             gamma1_t <- after_gamma1_t
-            gamma2_t <- after_gamma2_t            
+            gamma2_t <- after_gamma2_t
+            gamma3_t <- after_gamma3_t
         } else {
-            what_we_are_plotting <- "After shard"                        
+            what_we_are_plotting <- "After shard"
             read_labels <- after_shard_read_labels
             gamma1_t <- after_shard_gamma1_t
-            gamma2_t <- after_shard_gamma2_t            
+            gamma2_t <- after_shard_gamma2_t
+            gamma3_t <- after_shard_gamma3_t
         }
-        ## 
+        ##
         ## 2) add in reads here
         ##
-        par(mar = c(0, 0, 3, 0))            
+        par(mar = c(0, 0, 3, 0))
         ylim <- c(0, 1)
-        plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5)
+        plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, col = "white")
         if (have_truth_haplotypes) {
             truth <- truth_labels
             truth[uncertain_truth_labels] <- 0
+            if (method == "nipt") {
+                label <- "Orange = truth hap 1, Green = truth hap 2, Purple = truth hap 3"
+            } else {
+                label <- "Orange = truth hap 1, Green = truth hap 2"
+            }
+            text(
+                x = L[1], y = (1),
+                labels = label,
+                pos = 4, cex = 1.25, xpd = NA
+            )
         }
-        y <- 0.1 + (read_labels - 1) / 2 + runif(length(read_labels)) / 4
+        y <- 0.1 + (read_labels - 1) / 3 + runif(length(read_labels)) / 4
         lwd <- 1.5
-        ## 
+        ##
         ##
         uu <- sapply(sampleReads, function(x) range(x[[4]])) + 1
         if (have_truth_haplotypes) {
-            col <- c("black", "blue", "red")[truth + 1]
+            col <- c("black", "orange", "green", "purple")[truth + 1]
         } else {
             col <- rep("black", length(truth))
         }
@@ -1906,24 +1930,26 @@ plot_attempt_to_reblock_snps <- function(
             w <- rep(TRUE, length(truth))
         }
         segments(x0 = L[uu[1, w]], x1 = L[uu[2, w]], y0 = y[w], y1 = y[w], col = col[w], lwd = lwd)
-        ## 
+        ##
         ##
         ## 3) plot gammas
         ##
         ## argh, make fake
         ##
         ## for now, plot gammas before
-        ## 
-        for(i_which in 1:2) {
-            par(mar = c(0, 0, 3, 0))        
+        ##
+        n <- c(diploid = 2, nipt = 3)[method]
+        for(i_which in 1:n) {
+            par(mar = c(0, 0, 3, 0))
             scale_dosage <- 0
             colStore <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
             nCols <- length(colStore)
             if (i_which == 1) { gammaK_t <- gamma1_t;   main <- paste0("Hap 1 - ", what_we_are_plotting)}
             if (i_which == 2) { gammaK_t <- gamma2_t;   main <- paste0("Hap 2 - ", what_we_are_plotting)}
+            if (i_which == 3) { gammaK_t <- gamma3_t;   main <- paste0("Hap 3 - ", what_we_are_plotting)}
             ##
             K <- nrow(gammaK_t)
-            ylim <- c(0, 1 + scale_dosage + scale_dosage)
+            ylim <- c(0, 1 + c(diploid = 2, nipt = 3)[method] * scale_dosage)
             nGrids <- ncol(gammaK_t)
             backwards <- nGrids:1
             ##
@@ -1986,9 +2012,9 @@ calculate_H_class <- function(
     H,
     class_sum_cutoff = 0.06
 ) {
-    ## 
+    ##
     prior_probs <- c(0.5, (1 - ff) / 2, ff / 2)
-    p <- prior_probs    
+    p <- prior_probs
     rlc <- matrix(0, nrow = 7, ncol = 3)
     rlc[1, ] <- c(1, 0, 0)
     rlc[2, ] <- c(0, 1, 0)
@@ -2010,14 +2036,14 @@ calculate_H_class <- function(
         ## remove from current
         alphaHat_m <- rbind(alphaHat_t1[, iGrid], alphaHat_t2[, iGrid], alphaHat_t3[, iGrid])
         betaHat_m <- rbind(betaHat_t1[, iGrid], betaHat_t2[, iGrid], betaHat_t3[, iGrid])
-        ## 
+        ##
         ## remove from current
         ##
         pC <- rowSums(alphaHat_m * betaHat_m)
         h_rC <- H[iRead] ## h_r current
         h_rA1 <- setdiff(1:3, H[iRead])[1] ## h_r alternate 1
         h_rA2 <- setdiff(1:3, H[iRead])[2] ## h_r alternate 1
-        ## 
+        ##
         pA1 <- pC ## read label becomes h_rA1
         pA2 <- pC ## read label becomes h_rA2
         ## now - blank out the two that switch
@@ -2027,7 +2053,7 @@ calculate_H_class <- function(
         ## A1 loser
         pA1[h_rC] <- pA1[h_rC] + sum(alphaHat_m[h_rC, ] * betaHat_m[h_rC, ] / eMatRead_t[, iRead])
         ## A2 lower
-        pA2[h_rC] <- pA1[h_rC]        
+        pA2[h_rC] <- pA1[h_rC]
         ## A1 gainer
         pA1[h_rA1] <- pA1[h_rA1] + sum(alphaHat_m[h_rA1, ] * betaHat_m[h_rA1, ] * eMatRead_t[, iRead])
         ## A2 gainer
@@ -2035,7 +2061,7 @@ calculate_H_class <- function(
         prod_pC <- prod(pC) * prior_probs[h_rC]
         prod_pA1 <- prod(pA1) * prior_probs[h_rA1]
         prod_pA2 <- prod(pA2) * prior_probs[h_rA2]
-        denom <- (prod_pC + prod_pA1 + prod_pA2)        
+        denom <- (prod_pC + prod_pA1 + prod_pA2)
         norm_pC <- prod_pC / denom
         norm_pA1 <- prod_pA1 / denom
         norm_pA2 <- prod_pA2 / denom
@@ -2081,7 +2107,7 @@ R_gibbs_block_forward_one <- function(
     rr,
     rr0,
     eMatGridLocal,
-    eMatGridLocalc,    
+    eMatGridLocalc,
     transMatRate_tc_H,
     alphaMatCurrent_tc,
     priorCurrent_m,
@@ -2125,7 +2151,7 @@ R_gibbs_block_forward_one <- function(
         } else if (block_approach == 4) {
             ## per-read, sample read
             ## add to appropriate
-            ## then add to 
+            ## then add to
             ## opposite, start with BLANK. add back in based on sampling for the H
             eMatGridLocalc[] <- 1
             if ((approach2_iRead[1] <= nReads)) {
@@ -2261,7 +2287,7 @@ R_fill_rlcM <- function(rlcM, rlc, rr, verbose = FALSE) {
     rlcI[4, ] <- c(1L, 1L, 0L)
     rlcI[5, ] <- c(1L, 0L, 1L)
     rlcI[6, ] <- c(0L, 1L, 1L)
-    rlcI[7, ] <- c(1L, 1L, 1L)            
+    rlcI[7, ] <- c(1L, 1L, 1L)
     for(hcC in 1:7) {
         for(ir in 1:6) {
             if (verbose) {
@@ -2277,7 +2303,7 @@ R_fill_rlcM <- function(rlcM, rlc, rr, verbose = FALSE) {
             }
             x <- array(0, 3)
             x[future_labels] <- 1
-            ## 
+            ##
             hcF <- -1
             for(i in 1:7) {
                 d <- 0
@@ -2306,7 +2332,7 @@ R_fill_rlcM <- function(rlcM, rlc, rr, verbose = FALSE) {
             rlcM[1:3, ir, hcC] <- rlc[hcF, rr[ir, ]]
             if (verbose) {
                 print(paste0("So the current probabilities are:", paste0(round(rlc[hcC, ], 2), collapse = ", ")))
-                print(paste0("And the future probabilities are:", paste0(round(rlc[hcF, rr[ir, ]], 2), collapse = ", ")))                
+                print(paste0("And the future probabilities are:", paste0(round(rlc[hcF, rr[ir, ]], 2), collapse = ", ")))
             }
         }
     }
@@ -2330,7 +2356,7 @@ R_make_gibbs_considers <- function(
     nReads <- length(wif0)
     ##
     ## run a check / assert
-    ## 
+    ##
     for(iSNP in 1:(nSNPs - 1)) {
         if ((blocked_snps[iSNP + 1] - blocked_snps[iSNP]) > 1) {
             stop("problem with blocked snps")
@@ -2355,7 +2381,7 @@ R_make_gibbs_considers <- function(
         }
         if (record) {
             consider_snp_start_0_based[iBlock] <- start
-            consider_snp_end_0_based[iBlock] <- iSNP - 1                        
+            consider_snp_end_0_based[iBlock] <- iSNP - 1
             start <- iSNP - 1 + 1
             iBlock <- iBlock + 1
         }
@@ -2365,7 +2391,7 @@ R_make_gibbs_considers <- function(
     ##
     consider_grid_start_0_based <- integer(n_blocks)
     consider_grid_end_0_based <- integer(n_blocks)
-    for(iBlock in 1:n_blocks) {    
+    for(iBlock in 1:n_blocks) {
         consider_grid_start_0_based[iBlock] <- grid[consider_snp_start_0_based[iBlock] + 1]
         consider_grid_end_0_based[iBlock] <- grid[consider_snp_end_0_based[iBlock] + 1]
     }
@@ -2463,7 +2489,7 @@ R_make_gibbs_considers <- function(
                 }
                 jBefore <- jBefore + 1
             }
-            ## 
+            ##
             n_new_blocks <- sum(!remove)
             ##
             new_consider_reads_start_0_based <- integer(n_new_blocks)
@@ -2472,7 +2498,7 @@ R_make_gibbs_considers <- function(
             new_consider_grid_end_0_based <- integer(n_new_blocks)
             new_consider_snp_start_0_based <- integer(n_new_blocks)
             new_consider_snp_end_0_based <- integer(n_new_blocks)
-            ## 
+            ##
             i_prev_block <- 0
             for(iBlock in 1:n_blocks) {
                 if (!remove[iBlock]) {
@@ -2499,7 +2525,7 @@ R_make_gibbs_considers <- function(
     }
     ##
     ## finish
-    ## 
+    ##
     n_blocks <- length(consider_snp_end_0_based)
     consider_grid_where_0_based <- integer(nGrids)
     consider_grid_where_0_based[] <- -1L
@@ -2511,7 +2537,7 @@ R_make_gibbs_considers <- function(
         list(
             consider_reads_start_0_based = consider_reads_start_0_based ,
             consider_reads_end_0_based  = consider_reads_end_0_based,
-            consider_grid_start_0_based = consider_grid_start_0_based,            
+            consider_grid_start_0_based = consider_grid_start_0_based,
             consider_grid_end_0_based = consider_grid_end_0_based,
             consider_snp_start_0_based = consider_snp_start_0_based,
             consider_snp_end_0_based = consider_snp_end_0_based,
@@ -2545,7 +2571,7 @@ R_ff0_shard_block_gibbs_resampler <- function(
     eMatGrid_t2,
     eMatGrid_t3,
     H,
-    eMatRead_t,    
+    eMatRead_t,
     blocked_snps,
     grid,
     wif0,
@@ -2563,7 +2589,7 @@ R_ff0_shard_block_gibbs_resampler <- function(
     ##
     K <- dim(alphaMatCurrent_tc)[1]
     nSNPs <- length(grid)
-    nGrids <- dim(alphaMatCurrent_tc)[2] + 1    
+    nGrids <- dim(alphaMatCurrent_tc)[2] + 1
     S <- dim(alphaMatCurrent_tc)[3]
     nReads <- length(wif0)
     ##
@@ -2602,11 +2628,11 @@ R_ff0_shard_block_gibbs_resampler <- function(
     )
     shard_block_results <- matrix(0.0, nrow = length(consider_grid_end_0_based) - 1, ncol = length(shard_block_columns))
     colnames(shard_block_results) <- shard_block_columns
-    ## 
+    ##
     ##
     ## now do progression
     ##
-    ## 
+    ##
     minus_log_c1_sum <- 0
     minus_log_c2_sum <- 0
     minus_log_original_c1_sum <- -sum(log(c1))
@@ -2624,7 +2650,7 @@ R_ff0_shard_block_gibbs_resampler <- function(
         ## normal forward one (includes initialization)
         ##
         if (iGrid == 0) {
-            ## 
+            ##
             alphaHat_t1[, iGrid + 1] <- priorCurrent_m[, s] * eMatGrid_t1[, iGrid + 1]
             c1[iGrid + 1] <- 1 / sum(alphaHat_t1[, iGrid + 1])
             alphaHat_t1[, iGrid + 1] <- alphaHat_t1[, iGrid + 1] * c1[iGrid + 1]
@@ -2644,7 +2670,7 @@ R_ff0_shard_block_gibbs_resampler <- function(
             minus_log_c_sum <- 0
             rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t1, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t1, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c1, minus_log_c_sum = minus_log_c_sum, normalize = TRUE)
             ## double does not seem to work in R as pass by reference argh
-            minus_log_c1_sum <- minus_log_c1_sum - log(c1[iGrid + 1])            
+            minus_log_c1_sum <- minus_log_c1_sum - log(c1[iGrid + 1])
             rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t2, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t2, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c2, minus_log_c_sum = minus_log_c_sum, normalize = TRUE)
             minus_log_c2_sum <- minus_log_c2_sum - log(c2[iGrid + 1])
         }
@@ -2702,14 +2728,14 @@ R_ff0_shard_block_gibbs_resampler <- function(
             }
             ##
             ## now do on fly version
-            ## 
+            ##
             ## alt
             ## now try to do "on fly"
             if (do_checks) {
                 expect_equal(-sum(log(c1[w1])), minus_log_c1_sum)
                 expect_equal(-sum(log(c2[w1])), minus_log_c2_sum)
                 expect_equal(-sum(log(original_c1[w2])), minus_log_original_c1_sum)
-                expect_equal(-sum(log(original_c2[w2])), minus_log_original_c2_sum)                
+                expect_equal(-sum(log(original_c2[w2])), minus_log_original_c2_sum)
             }
             pA1 <- minus_log_c1_sum + minus_log_original_c1_sum + log(sum(alphaHat_t1[, iGrid + 1] * betaHat_t1[, iGrid + 1]))
             pA2 <- - sum(log(c2[w1])) - sum(log(original_c2[w2])) + log(sum(alphaHat_t2[, iGrid + 1] * betaHat_t2[, iGrid + 1]))
@@ -2719,7 +2745,7 @@ R_ff0_shard_block_gibbs_resampler <- function(
             p_flips <- c(pB1, pB2)
             ##
             ## yup, this looks right
-            calculated_difference <- sum(p_flips) - sum(p_stays) 
+            calculated_difference <- sum(p_flips) - sum(p_stays)
             if (do_checks) {
                 expect_equal(true_cur_probs, p_stays)
                 expect_equal(true_alt_probs, p_flips)
@@ -2753,7 +2779,7 @@ R_ff0_shard_block_gibbs_resampler <- function(
             }
         }
         minus_log_original_c1_sum <- minus_log_original_c1_sum + log(original_c1[iGrid + 1])
-        minus_log_original_c2_sum <- minus_log_original_c2_sum + log(original_c2[iGrid + 1])        
+        minus_log_original_c2_sum <- minus_log_original_c2_sum + log(original_c2[iGrid + 1])
     }
     if (do_checks) {
         for(i in 1:(nrow(shard_block_results) - 1)) {
@@ -2767,9 +2793,9 @@ R_ff0_shard_block_gibbs_resampler <- function(
     }
     ##
     ## re-run backward
-    ## 
+    ##
     betaHat_t1[, nGrids] <- c1[nGrids]
-    Rcpp_run_backward_haploid(        
+    Rcpp_run_backward_haploid(
         betaHat_t1,
         c = c1,
         eMatGrid_t = eMatGrid_t1,
@@ -2778,7 +2804,7 @@ R_ff0_shard_block_gibbs_resampler <- function(
         s = s - 1
     )
     betaHat_t2[, nGrids] <- c2[nGrids]
-    Rcpp_run_backward_haploid(        
+    Rcpp_run_backward_haploid(
         betaHat_t2,
         c = c2,
         eMatGrid_t = eMatGrid_t2,
@@ -2787,7 +2813,7 @@ R_ff0_shard_block_gibbs_resampler <- function(
         s = s - 1
     )
     betaHat_t3[, nGrids] <- c3[nGrids]
-    Rcpp_run_backward_haploid(        
+    Rcpp_run_backward_haploid(
         betaHat_t3,
         c = c3,
         eMatGrid_t = eMatGrid_t3,
@@ -2805,14 +2831,14 @@ R_ff0_shard_block_gibbs_resampler <- function(
             c3 = c3,
             alphaHat_t1 = alphaHat_t1,
             alphaHat_t2 = alphaHat_t2,
-            alphaHat_t3 = alphaHat_t3,            
+            alphaHat_t3 = alphaHat_t3,
             betaHat_t1 = betaHat_t1,
             betaHat_t2 = betaHat_t2,
             betaHat_t3 = betaHat_t3,
             H = H,
             fpp_stuff = fpp_stuff,
             shard_block_results = shard_block_results,
-            consider_snp_start_0_based = consider_snp_start_0_based,            
+            consider_snp_start_0_based = consider_snp_start_0_based,
             consider_snp_end_0_based = consider_snp_end_0_based,
             consider_reads_start_0_based = consider_reads_start_0_based,
             consider_reads_end_0_based = consider_reads_end_0_based

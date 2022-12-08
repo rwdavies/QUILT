@@ -7,9 +7,11 @@
 QUILT(
   outputdir,
   chr,
+  method = "diploid",
   regionStart = NA,
   regionEnd = NA,
   buffer = NA,
+  fflist = "",
   bamlist = "",
   cramlist = "",
   sampleNames_file = "",
@@ -35,6 +37,7 @@ QUILT(
   phasefile = "",
   maxDifferenceBetweenReads = 1e+10,
   make_plots = FALSE,
+  make_plots_block_gibbs = FALSE,
   verbose = TRUE,
   shuffle_bin_radius = 5000,
   iSizeUpperLimit = 1e+06,
@@ -78,11 +81,15 @@ QUILT(
 
 \item{chr}{What chromosome to run. Should match BAM headers}
 
+\item{method}{What method to run (diploid or nipt)}
+
 \item{regionStart}{When running imputation, where to start from. The 1-based position x is kept if regionStart <= x <= regionEnd}
 
 \item{regionEnd}{When running imputation, where to stop}
 
 \item{buffer}{Buffer of region to perform imputation over. So imputation is run form regionStart-buffer to regionEnd+buffer, and reported for regionStart to regionEnd, including the bases of regionStart and regionEnd}
+
+\item{fflist}{Path to file with fetal fraction values, one row per entry, in the same order as the bamlist}
 
 \item{bamlist}{Path to file with bam file locations. File is one row per entry, path to bam files. Bam index files should exist in same directory as for each bam, suffixed either .bam.bai or .bai}
 
@@ -133,6 +140,8 @@ QUILT(
 \item{maxDifferenceBetweenReads}{How much of a difference to allow the reads to make in the forward backward probability calculation. For example, if P(read | state 1)=1 and P(read | state 2)=1e-6, re-scale so that their ratio is this value. This helps prevent any individual read as having too much of an influence on state changes, helping prevent against influence by false positive SNPs}
 
 \item{make_plots}{Whether to make some plots of per-sample imputation. Especially nice when truth data. This is pretty slow though so useful more for debugging and understanding and visualizing performance}
+
+\item{make_plots_block_gibbs}{Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs}
 
 \item{verbose}{whether to be more verbose when running}
 

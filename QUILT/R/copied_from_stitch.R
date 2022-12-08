@@ -62,3 +62,79 @@ quilt_get_chromosome_length <- function(iBam, bam_files, cram_files, chr) {
 }
 
 
+
+
+
+## modified from STITCH one for now
+## possibly, long term, modify that one directly
+validate_phase_header <- function(phasefile) {
+    first_row <- as.character(unlist(read.table(phasefile,sep="\t",nrows=1)))
+    ## check none are 0|0, 0|1, 1|0, 1|1
+    m <- match(first_row, c("0|0", "0|1", "1|0", "1|1"))
+    if (sum(is.na(m) == FALSE) > 0) {
+        m2 <- which.max(is.na(m) == FALSE)
+        stop(paste0(
+            "The header for the phasefile is either invalid or missing. ",
+            "The first invalid entry is in position ", m2, " and is entry ", first_row[m2]
+        ))
+    }
+}
+
+validate_phase_col <- function(col, i_samp, method = "diploid") {
+    x <- sapply(col, length)
+    n <- c( diploid = 2, nipt = 3)[method]
+    if (sum(x != n) > 0) {
+        m <- which.max(x)
+        stop(paste0(
+            "Unable to split column ", i_samp, " of phasefile at position ", m,
+            " with entry ", col[m], " due to lack of field separator |"
+        ))
+    }
+}
+
+get_and_validate_phase <- function(
+    phasefile,
+    method = "diploid"
+) {
+    if (phasefile == "") {
+        return(NULL)
+    }
+    phaseX <- read.table(phasefile, header = TRUE, stringsAsFactors = FALSE)
+    validate_phase_header(phasefile)
+    n <- c( diploid = 2, nipt = 3)[method]    
+    phase <- array(0, c(nrow(phaseX), ncol(phaseX), n))
+    for(i_samp in 1:ncol(phase)) {
+        col <- strsplit(phaseX[, i_samp], "|", fixed = TRUE)
+        validate_phase_col(col, i_samp, method)
+        for(j in 1:n) {
+            x <- sapply(col, function(x) x[j])
+            ## only allow NA, 0, or 1
+            w <- x %in% c(0, 1, NA, "0", "1", "NA") ## any of these are fine
+            if (sum(!w) > 0) {
+                ## report error
+                i_row <- which.max(!w)
+                p2 <- phaseX[i_row, i_samp]
+                stop(paste0(
+                    "The phasefile contains entries other than 0, 1 or NA. ",
+                    "One such entry is in column ", i_samp, " and row ", i_row, " ",
+                    " with value ", paste(p2, collapse = "|")
+                ))
+            }
+            phase[, i_samp, j] <- suppressWarnings(as.integer(x))
+        }
+    }
+    if (length(colnames(phaseX)) == 1) {
+        dimnames(phase)[[2]] <- list(colnames(phaseX))
+    } else {
+        dimnames(phase)[[2]] <- colnames(phaseX)
+    }
+    if (length(dim(phase)) != 3) {
+        stop("The phasefile does not have the right number of dimensions")
+    }
+    return(phase)
+}
+
+alpha_col <- function(col, alpha) {
+    x <- col2rgb(col) / 255
+    return(rgb(x["red", 1], x["green", 1], x["blue", 1], alpha = alpha)    )
+}
