@@ -71,7 +71,7 @@ T reverseBits(T n, size_t B = sizeof(T) * 8)
     return rv;
 }
 
-IntGridVec encodeZgrid(IntegerVector z, int G)
+IntGridVec encodeZgrid(const IntegerVector& z, int G)
 {
     IntGridVec zg(G);
     const int B = sizeof(grid_t) * 8;
@@ -311,7 +311,7 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
 
 //' @export
 // [[Rcpp::export]]
-IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W, const List& Symbols, int G, int M, int N, const IntegerVector& z, int L = 2)
+IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L = 2)
 {
     assert(M == z.size());
     Timer tm;
@@ -320,37 +320,31 @@ IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W,
     IntGridVec zg = encodeZgrid(z, G);
     IntegerVector az(G);
     int k = 0, n = 0;
-    NumericVector ks = Symbols[k];
-    auto kzus = upper_bound(ks.begin(), ks.end(), zg[k]) == ks.begin() ? ks.begin() : prev(upper_bound(ks.begin(), ks.end(), zg[k])) ;
-    int j = std::distance(ks.begin(), kzus); // symbol rank
-    IntegerVector Ck = C[k];
+    vector<vector<double>> Symbols = as< vector<vector<double>> >(S);
+    auto kzus = upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k]) == Symbols[k].begin() ? Symbols[k].begin() : prev(upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k])) ;
+    int j = std::distance(Symbols[k].begin(), kzus); // symbol rank
     List Wk = as<List>(W[k]);
     IntegerVector wkz = Wk[j];
-    az[k] = wkz(wkz.size()-1);
+    az[k] = wkz[wkz.size()-1];
     IntegerVector selects;
-    IntegerVector Ak = A(k+1, _);
-    selects.push_back(Ak(az(k)));
+    selects.push_back(A(k+1, az(k)));
     Rcout << "elapsed time of processing first grid of z: " << tm.reltime() << " milliseconds" << endl;
 
     tm.clock();
     for (k = 1; k < G; k++)
     {
-        Ak = A(k+1, _);
-        Ck = as<IntegerVector>(C[k]);
-        Wk = as<List>(W[k]);
-        ks = as<NumericVector>(Symbols[k]);
-        auto kzus = upper_bound(ks.begin(), ks.end(), zg[k]) == ks.begin() ? ks.begin() : prev(upper_bound(ks.begin(), ks.end(), zg[k])) ;
-        j = std::distance(ks.begin(), kzus); // symbol rank. expensive. maybe use List lookup
-        az[k] = Ck(j);
+        auto kzus = upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k]) == Symbols[k].begin() ? Symbols[k].begin() : prev(upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k])) ;
+        j = std::distance(Symbols[k].begin(), kzus); // symbol rank. expensive. maybe use List lookup
+        az[k] = as<IntegerVector>(C[k])[j];
         if (az[k-1] >= az[k])
         {
-            wkz = as<IntegerVector>(Wk[j]);
+            wkz = as<IntegerVector>(as<List>(W[k])[j]);
             auto kzui = upper_bound(wkz.begin(), wkz.end(), az[k - 1]) == wkz.begin() ? wkz.begin() : prev(upper_bound(wkz.begin(), wkz.end(), az[k - 1])) ;
             az[k] = az[k] + std::distance(wkz.begin(), kzui);
         } else {
             n++;
         }
-        selects.push_back(Ak(az(k)));
+        selects.push_back(A(k+1,az(k)));
     }
     Rcout << "elapsed time of processing all grids of z: " << tm.reltime() << " milliseconds" << endl;
     Rcout << "elapsed time of mspbwt query: " << tm.abstime() << " seconds" << endl;
