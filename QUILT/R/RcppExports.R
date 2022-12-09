@@ -202,8 +202,8 @@ Rcpp_quilt_test_doubler <- function(a) {
 }
 
 #' @export
-mspbwt_index <- function(vcfpanel, samples, region) {
-    .Call('_QUILT_mspbwt_index', PACKAGE = 'QUILT', vcfpanel, samples, region)
+mspbwt_index <- function(vcfpanel, samples, region, fast = 1L) {
+    .Call('_QUILT_mspbwt_index', PACKAGE = 'QUILT', vcfpanel, samples, region, fast)
 }
 
 #' @export

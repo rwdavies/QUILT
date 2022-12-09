@@ -983,15 +983,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // mspbwt_index
-Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples, const std::string& region);
-RcppExport SEXP _QUILT_mspbwt_index(SEXP vcfpanelSEXP, SEXP samplesSEXP, SEXP regionSEXP) {
+Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples, const std::string& region, bool fast);
+RcppExport SEXP _QUILT_mspbwt_index(SEXP vcfpanelSEXP, SEXP samplesSEXP, SEXP regionSEXP, SEXP fastSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type vcfpanel(vcfpanelSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type samples(samplesSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type region(regionSEXP);
-    rcpp_result_gen = Rcpp::wrap(mspbwt_index(vcfpanel, samples, region));
+    Rcpp::traits::input_parameter< bool >::type fast(fastSEXP);
+    rcpp_result_gen = Rcpp::wrap(mspbwt_index(vcfpanel, samples, region, fast));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1320,7 +1321,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 11},
     {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 11},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
-    {"_QUILT_mspbwt_index", (DL_FUNC) &_QUILT_mspbwt_index, 3},
+    {"_QUILT_mspbwt_index", (DL_FUNC) &_QUILT_mspbwt_index, 4},
     {"_QUILT_mspbwt_query", (DL_FUNC) &_QUILT_mspbwt_query, 9},
     {"_QUILT_Rcpp_test", (DL_FUNC) &_QUILT_Rcpp_test, 3},
     {"_QUILT_Rcpp_make_gl_bound", (DL_FUNC) &_QUILT_Rcpp_make_gl_bound, 3},

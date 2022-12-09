@@ -59,7 +59,7 @@ unsigned int Timer::reltime()
 
 unsigned int Timer::abstime()
 {
-    return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - start_timing_clock).count();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_timing_clock).count();
 }
 template <typename T>
 T reverseBits(T n, size_t B = sizeof(T) * 8)
@@ -120,10 +120,10 @@ IntVecMap build_W(const IntGridVec& x, const IntSet& s, const IntMap& C)
     return W;
 }
 
-IntegerVector build_C(NumericVector x, const IntSet& s)
+IntMap build_C(const IntGridVec& x, const IntSet& s)
 {
-    uint32_t c{0}, n{0};
-    IntegerVector C(s.size());
+    uint32_t c{0}, n{0}, cap{0};
+    IntMap C;
     for (const auto& si : s)
     {
         c = 0;
@@ -132,8 +132,9 @@ IntegerVector build_C(NumericVector x, const IntSet& s)
             if (xi < si)
                 c++;
         }
-        C(n) = c;
-        n++;
+        C[si] = c;
+        if (++n == cap && cap > 0)
+            break;
     }
 
     return C;
@@ -173,7 +174,7 @@ IntMap build_Symbols(const IntSet& s)
 
 //' @export
 // [[Rcpp::export]]
-Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples, const std::string& region)
+Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples, const std::string& region, bool fast = 1)
 {
     Timer tm;
     tm.clock();
@@ -231,7 +232,8 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
     Rcpp::List W(G);
     Rcpp::List Symbols(G);
     IntSet s; // convert to set which unique sorted
-    IntMap sm;
+    IntMap sm, Ct;
+    IntVecMap Wt;
     vector<vector<int32_t>> Wg;
     vector<int32_t> idx, Cg;
     uint32_t c{0}, w{0}, occ{0};
@@ -272,22 +274,32 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
         C[k] = Cg;
         W[k] = Wg;
         Symbols[k] = wrap(s);
-        // build W from save W
-        for (i = 0; i < N; i++)
+        // build A from W
+        if (fast)
         {
-            // map y0 to index first
-            j = sm[y0[i]];
-            w = Cg[j];
-            if (i >= Wg[j][0]) {
-                for (occ = 0; occ < Wg[j].size(); occ++) {
-                    if(i == Wg[j][occ])
-                    {
-                        w += occ + 1;
-                        break;
+            Ct = build_C(y0, s);
+            Wt = build_W(y0, s, Ct);
+            for (i = 0; i < N; i++)
+                A(k + 1, Wt[y0[i]][i] - 1) = a0[i];
+        }
+        else
+        {
+            for (i = 0; i < N; i++)
+            {
+                // map y0 to index first
+                j = sm[y0[i]];
+                w = Cg[j];
+                if (i >= Wg[j][0]) {
+                    for (occ = 0; occ < Wg[j].size(); occ++) {
+                        if(i == Wg[j][occ])
+                        {
+                            w += occ + 1;
+                            break;
+                        }
                     }
                 }
+                A(k + 1, w - 1) = a0[i];
             }
-            A(k + 1, w - 1) = a0[i];
         }
         // next run
         a0 = A(k+1, _);
@@ -347,7 +359,7 @@ IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W,
         selects.push_back(A(k+1,az(k)));
     }
     Rcout << "elapsed time of processing all grids of z: " << tm.reltime() << " milliseconds" << endl;
-    Rcout << "elapsed time of mspbwt query: " << tm.abstime() << " seconds" << endl;
+    Rcout << "elapsed time of mspbwt query: " << tm.abstime() << " milliseconds" << endl;
     Rcout << "skip binary search for " << n << "/" << G << " Grids\n";
 
     return selects;
