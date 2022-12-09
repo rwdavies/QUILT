@@ -207,8 +207,8 @@ mspbwt_index <- function(vcfpanel, samples, region) {
 }
 
 #' @export
-mspbwt_query <- function(p, z, L = 2L, Step = 1L) {
-    .Call('_QUILT_mspbwt_query', PACKAGE = 'QUILT', p, z, L, Step)
+mspbwt_query <- function(A, C, W, Symbols, G, M, N, z, L = 2L) {
+    .Call('_QUILT_mspbwt_query', PACKAGE = 'QUILT', A, C, W, Symbols, G, M, N, z, L)
 }
 
 #' @export

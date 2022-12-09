@@ -455,16 +455,21 @@
 ## @param pbwt is constructed by pbwt_build in pbwt.cpp
 select_new_haps_zilong <- function(
     hapProbs_t,
-    zilong_indices,
     Kfull,
     Knew,
-    L = 2,
-    Step = 8
+    mspbwtA,
+    mspbwtC,
+    mspbwtW,
+    mspbwtSymbols,
+    mspbwtG,
+    mspbwtM,
+    mspbwtN,
+    L = 2
 ) {
   vals <- unlist(sapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     seed <- 2022 # can be exposed to user
-    unique(mspbwt_query(zilong_indices, hap, L, Step))
+    unique(mspbwt_query(mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, L))
   }))
   vals <- unique(vals) + 1 # 1-based
   if (length(vals) >= Knew) {
@@ -980,7 +985,18 @@ get_and_impute_one_sample <- function(
 
             if (zilong) {
                 ## TODO which_haps_to_use should be returned by PBWT selection
-                which_haps_to_use <- select_new_haps_zilong(gibbs_iterate$hapProbs_t, zilong_indices, Kfull =  nrow(rhb_t), Knew = Knew,L = pbwtL, Step = pbwtS)
+                which_haps_to_use <- select_new_haps_zilong(gibbs_iterate$hapProbs_t,
+                                                            Kfull =  nrow(rhb_t),
+                                                            Knew = Knew,
+                                                            mspbwtA = zilong_indices$A,
+                                                            mspbwtC = zilong_indices$C,
+                                                            mspbwtW = zilong_indices$W,
+                                                            mspbwtSymbols =  zilong_indices$Symbols,
+                                                            mspbwtG =  zilong_indices$G,
+                                                            mspbwtM =  zilong_indices$M,
+                                                            mspbwtN =  zilong_indices$N,
+                                                            L = pbwtL
+                                                            )
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
             } else if (use_mspbwt) {
