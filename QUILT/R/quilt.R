@@ -70,6 +70,7 @@
 #' @param use_small_eHapsCurrent_tc For testing purposes only
 #' @param reference_vcf_file zilong favors vcf
 #' @param pbwtL How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected.
+#' @param pbwtS How many grids as one step
 #' @param zilong Using zilong's solution
 #' @param use_mspbwt Use msPBWT to select new haplotypes
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
@@ -146,6 +147,7 @@ QUILT <- function(
     plot_per_sample_likelihoods = FALSE,
     use_small_eHapsCurrent_tc = FALSE,
     pbwtL = 0,
+    pbwtS = 1,
     zilong = FALSE,
     use_mspbwt = FALSE,
     use_splitreadgl = FALSE

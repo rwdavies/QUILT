@@ -74,6 +74,7 @@ QUILT(
   plot_per_sample_likelihoods = FALSE,
   use_small_eHapsCurrent_tc = FALSE,
   pbwtL = 0,
+  pbwtS = 1,
   zilong = FALSE,
   use_mspbwt = FALSE,
   use_splitreadgl = FALSE
@@ -217,6 +218,8 @@ QUILT(
 \item{use_small_eHapsCurrent_tc}{For testing purposes only}
 
 \item{pbwtL}{How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected.}
+
+\item{pbwtS}{How many grids as one step}
 
 \item{zilong}{Using zilong's solution}
 

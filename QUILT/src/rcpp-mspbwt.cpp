@@ -384,7 +384,6 @@ IntegerVector mspbwt_query(const List& X,const IntegerMatrix& A, const List& C, 
     Rcout << "elapsed time of processing all grids of z: " << tm.reltime() << " milliseconds" << endl;
     Rcout << "elapsed time of mspbwt query: " << tm.abstime() << " milliseconds" << endl;
     Rcout << "skip binary search for " << n << "/" << G << " Grids\n";
-    Rcout << "selected " << selects.size() << " new haps by mspbwt query\n";
 
     return selects;
 }

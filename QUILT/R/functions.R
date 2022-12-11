@@ -468,14 +468,18 @@ select_new_haps_zilong <- function(
     L = 0
 ) {
 
-  L <- ifelse(L > 0, L, ceiling(Kfull / mspbwtG))
+  L <- ifelse(L > 0, L, ceiling(Knew / mspbwtG))
+  print(paste(L, Knew, mspbwtG))
 
   vals <- unlist(sapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     seed <- 2022 # can be exposed to user
-    unique(mspbwt_query(mspbwtX, mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, L))
+    res <- mspbwt_query(mspbwtX, mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, L)
+    print(paste("select",  length(res),"new haps"))
+    res
   }))
   vals <- unique(vals) + 1 # 1-based
+  print(paste("select",  length(vals),"new unique haps"))
   if (length(vals) >= Knew) {
     new_haps <- vals[1:Knew]
   } else {

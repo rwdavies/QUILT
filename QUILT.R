@@ -417,6 +417,12 @@ option_list <- list(
         default = 0
     ), 
     make_option(
+        "--pbwtS",
+        type = "integer",
+        help = "How many grids as one step [default 1] ",
+        default = 1
+    ), 
+    make_option(
         "--zilong",
         type = "logical",
         help = "Using zilong's solution [default FALSE] ",
@@ -508,6 +514,7 @@ QUILT(
     use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
     reference_vcf_file = opt$reference_vcf_file,
     pbwtL = opt$pbwtL,
+    pbwtS = opt$pbwtS,
     zilong = opt$zilong,
     use_mspbwt = opt$use_mspbwt,
     use_splitreadgl = opt$use_splitreadgl
