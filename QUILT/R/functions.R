@@ -457,6 +457,7 @@ select_new_haps_zilong <- function(
     hapProbs_t,
     Kfull,
     Knew,
+    mspbwtX,
     mspbwtA,
     mspbwtC,
     mspbwtW,
@@ -464,12 +465,15 @@ select_new_haps_zilong <- function(
     mspbwtG,
     mspbwtM,
     mspbwtN,
-    L = 2
+    L = 0
 ) {
+
+  L <- ifelse(L > 0, L, ceiling(Kfull / mspbwtG))
+
   vals <- unlist(sapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     seed <- 2022 # can be exposed to user
-    unique(mspbwt_query(mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, L))
+    unique(mspbwt_query(mspbwtX, mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, L))
   }))
   vals <- unique(vals) + 1 # 1-based
   if (length(vals) >= Knew) {
@@ -988,6 +992,7 @@ get_and_impute_one_sample <- function(
                 which_haps_to_use <- select_new_haps_zilong(gibbs_iterate$hapProbs_t,
                                                             Kfull =  nrow(rhb_t),
                                                             Knew = Knew,
+                                                            mspbwtX = zilong_indices$X,
                                                             mspbwtA = zilong_indices$A,
                                                             mspbwtC = zilong_indices$C,
                                                             mspbwtW = zilong_indices$W,

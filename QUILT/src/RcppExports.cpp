@@ -997,11 +997,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // mspbwt_query
-IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L);
-RcppExport SEXP _QUILT_mspbwt_query(SEXP ASEXP, SEXP CSEXP, SEXP WSEXP, SEXP SSEXP, SEXP GSEXP, SEXP MSEXP, SEXP NSEXP, SEXP zSEXP, SEXP LSEXP) {
+IntegerVector mspbwt_query(const List& X, const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L);
+RcppExport SEXP _QUILT_mspbwt_query(SEXP XSEXP, SEXP ASEXP, SEXP CSEXP, SEXP WSEXP, SEXP SSEXP, SEXP GSEXP, SEXP MSEXP, SEXP NSEXP, SEXP zSEXP, SEXP LSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const List& >::type X(XSEXP);
     Rcpp::traits::input_parameter< const IntegerMatrix& >::type A(ASEXP);
     Rcpp::traits::input_parameter< const List& >::type C(CSEXP);
     Rcpp::traits::input_parameter< const List& >::type W(WSEXP);
@@ -1011,7 +1012,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type N(NSEXP);
     Rcpp::traits::input_parameter< const IntegerVector& >::type z(zSEXP);
     Rcpp::traits::input_parameter< int >::type L(LSEXP);
-    rcpp_result_gen = Rcpp::wrap(mspbwt_query(A, C, W, S, G, M, N, z, L));
+    rcpp_result_gen = Rcpp::wrap(mspbwt_query(X, A, C, W, S, G, M, N, z, L));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1322,7 +1323,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 11},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
     {"_QUILT_mspbwt_index", (DL_FUNC) &_QUILT_mspbwt_index, 4},
-    {"_QUILT_mspbwt_query", (DL_FUNC) &_QUILT_mspbwt_query, 9},
+    {"_QUILT_mspbwt_query", (DL_FUNC) &_QUILT_mspbwt_query, 10},
     {"_QUILT_Rcpp_test", (DL_FUNC) &_QUILT_Rcpp_test, 3},
     {"_QUILT_Rcpp_make_gl_bound", (DL_FUNC) &_QUILT_Rcpp_make_gl_bound, 3},
     {"_QUILT_rcpp_nth_partial_sort", (DL_FUNC) &_QUILT_rcpp_nth_partial_sort, 2},

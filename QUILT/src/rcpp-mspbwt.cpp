@@ -315,6 +315,7 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
     Rcpp::List out = List::create(Named("A",A),
                                   Named("C",C),
                                   Named("W", W),
+                                  Named("X", X),
                                   Named("Symbols", Symbols),
                                   Named("G", G),
                                   Named("N", N),
@@ -327,16 +328,17 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
 
 //' @export
 // [[Rcpp::export]]
-IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L = 1)
+IntegerVector mspbwt_query(const List& X,const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L = 1)
 {
     assert(M == z.size());
     Timer tm;
     tm.clock();
     Rcout << "RefHaps(N):" << N << "\tSNPs(M):" << M << "\tGrids(G):" << G << endl;
+    int k = 0, n = 0, s;
     IntGridVec zg = encodeZgrid(z, G);
     IntegerVector az(G);
-    int k = 0, n = 0, s;
     vector<vector<double>> Symbols = as< vector<vector<double>> >(S);
+    vector<IntGridVec> XG = as< vector<IntGridVec> >(X);
     auto kzus = upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k]) == Symbols[k].begin() ? Symbols[k].begin() : prev(upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k])) ;
     int j = std::distance(Symbols[k].begin(), kzus); // symbol rank
     List Wk = as<List>(W[k]);
@@ -345,7 +347,14 @@ IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W,
     IntegerVector selects;
     // L haps before z;
     for (s = 0; s < L; s++)
-        selects.push_back(A(k+1, std::max(az(k)-s, 0)));
+    {
+        j = A(k+1, std::max(az(k)-s-1, 0));
+        if (XG[k][j] == zg[k])
+            selects.push_back(j);
+        j = A(k+1, std::min(az(k)+s, M-1));
+        if (XG[k][j] == zg[k])
+            selects.push_back(j);
+    }
     Rcout << "elapsed time of processing first grid of z: " << tm.reltime() << " milliseconds" << endl;
 
     tm.clock();
@@ -363,11 +372,19 @@ IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W,
             n++;
         }
         for (s = 0; s < L; s++)
-            selects.push_back(A(k+1, std::max(az(k)-s, 0)));
+        {
+            j = A(k+1, std::max(az(k)-s-1, 0));
+            if (XG[k][j] == zg[k])
+                selects.push_back(j);
+            j = A(k+1, std::min(az(k)+s, M-1));
+            if (XG[k][j] == zg[k])
+                selects.push_back(j);
+        }
     }
     Rcout << "elapsed time of processing all grids of z: " << tm.reltime() << " milliseconds" << endl;
     Rcout << "elapsed time of mspbwt query: " << tm.abstime() << " milliseconds" << endl;
     Rcout << "skip binary search for " << n << "/" << G << " Grids\n";
+    Rcout << "selected " << selects.size() << " new haps by mspbwt query\n";
 
     return selects;
 }

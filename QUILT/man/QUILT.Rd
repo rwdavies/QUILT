@@ -73,8 +73,7 @@ QUILT(
   small_ref_panel_gibbs_iterations = 20,
   plot_per_sample_likelihoods = FALSE,
   use_small_eHapsCurrent_tc = FALSE,
-  pbwtL = 1,
-  pbwtS = 4,
+  pbwtL = 0,
   zilong = FALSE,
   use_mspbwt = FALSE,
   use_splitreadgl = FALSE
@@ -217,9 +216,7 @@ QUILT(
 
 \item{use_small_eHapsCurrent_tc}{For testing purposes only}
 
-\item{pbwtL}{How many neighouring haplotypes to select forward and backwards for each selection point}
-
-\item{pbwtS}{How many SNPs as a step to do selection}
+\item{pbwtL}{How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected.}
 
 \item{zilong}{Using zilong's solution}
 

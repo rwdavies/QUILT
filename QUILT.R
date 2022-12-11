@@ -413,14 +413,8 @@ option_list <- list(
     make_option(
         "--pbwtL",
         type = "integer",
-        help = "How many neighouring haplotypes to select forward and backwards for each selection point [default 1] ",
-        default = 1
-    ), 
-    make_option(
-        "--pbwtS",
-        type = "integer",
-        help = "How many SNPs as a step to do selection [default 4] ",
-        default = 4
+        help = "How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected. [default 0] ",
+        default = 0
     ), 
     make_option(
         "--zilong",
@@ -514,7 +508,6 @@ QUILT(
     use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
     reference_vcf_file = opt$reference_vcf_file,
     pbwtL = opt$pbwtL,
-    pbwtS = opt$pbwtS,
     zilong = opt$zilong,
     use_mspbwt = opt$use_mspbwt,
     use_splitreadgl = opt$use_splitreadgl
