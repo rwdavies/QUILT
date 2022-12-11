@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <bitset>
+#include <cmath>
 #include <chrono>
 #include <cstdint>
 #include <map>
@@ -17,7 +18,7 @@ using namespace Rcpp;
 using namespace vcfpp;
 using namespace std;
 
-using grid_t = uint32_t;
+using grid_t = uint32_t; // options: uint8_t, uint16_t, uint32_t
 
 using IntGridVec = vector<grid_t>;
 using IntSet = set<grid_t, less<grid_t>>;
@@ -96,7 +97,7 @@ IntGridVec encodeZgrid(const IntegerVector& z, int G)
     }
     else
     {
-        throw std::runtime_error("something wrong\n");
+        throw std::runtime_error("something wrong! G:" + to_string(G) + ", k: " + to_string(k) + "\n");
     }
     return zg;
 }
@@ -184,13 +185,14 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
     // N haplotypes, M SNPs, G Grids, k Current grid, m Current SNP
     uint64_t N{0}, M{0}, G{0}, k{0}, m{0}, i{0}, j{0};
     N = vcf.nsamples * 2;
-    M = vcf.get_region_records(region);
+    while (vcf.getNextVariant(var))
+        M++;
     G = (M + B - 1) / B;
     Rcout << "Haps(N):" << N << "\tSNPs(M):" << M << "\tGrids(G):" << G << "\tInt(B):" << B << endl;
     vector<IntGridVec> X; // Grids x Haps
     X.resize(G, IntGridVec(N));
     vcf.setRegion(region); // seek back to region
-    vector<char> gt;
+    vector<bool> gt;
     while (vcf.getNextVariant(var))
     {
         var.getGenotypes(gt);
@@ -219,7 +221,7 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
     }
     else
     {
-        throw std::runtime_error("something wrong\n");
+        throw std::runtime_error("something wrong! G:" + to_string(G) + ", k: " + to_string(k) + "\n");
     }
     Rcout << "elapsed time of compressing panel: " << tm.reltime() << " milliseconds" << endl;
 
@@ -275,8 +277,9 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
         W[k] = Wg;
         Symbols[k] = wrap(s);
         // build A from W
-        if (fast)
+        if ((s.size() < 256) || fast)
         {
+            // small number of symbols then build_W or forcing fast mode
             Ct = build_C(y0, s);
             Wt = build_W(y0, s, Ct);
             for (i = 0; i < N; i++)
@@ -284,6 +287,7 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
         }
         else
         {
+            // too symbols then do not build_W directly
             for (i = 0; i < N; i++)
             {
                 // map y0 to index first
@@ -323,7 +327,7 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
 
 //' @export
 // [[Rcpp::export]]
-IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L = 2)
+IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L = 1)
 {
     assert(M == z.size());
     Timer tm;
@@ -331,7 +335,7 @@ IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W,
     Rcout << "RefHaps(N):" << N << "\tSNPs(M):" << M << "\tGrids(G):" << G << endl;
     IntGridVec zg = encodeZgrid(z, G);
     IntegerVector az(G);
-    int k = 0, n = 0;
+    int k = 0, n = 0, s;
     vector<vector<double>> Symbols = as< vector<vector<double>> >(S);
     auto kzus = upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k]) == Symbols[k].begin() ? Symbols[k].begin() : prev(upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k])) ;
     int j = std::distance(Symbols[k].begin(), kzus); // symbol rank
@@ -339,7 +343,9 @@ IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W,
     IntegerVector wkz = Wk[j];
     az[k] = wkz[wkz.size()-1];
     IntegerVector selects;
-    selects.push_back(A(k+1, az(k)));
+    // L haps before z;
+    for (s = 0; s < L; s++)
+        selects.push_back(A(k+1, std::max(az(k)-s, 0)));
     Rcout << "elapsed time of processing first grid of z: " << tm.reltime() << " milliseconds" << endl;
 
     tm.clock();
@@ -356,7 +362,8 @@ IntegerVector mspbwt_query(const IntegerMatrix& A, const List& C, const List& W,
         } else {
             n++;
         }
-        selects.push_back(A(k+1,az(k)));
+        for (s = 0; s < L; s++)
+            selects.push_back(A(k+1, std::max(az(k)-s, 0)));
     }
     Rcout << "elapsed time of processing all grids of z: " << tm.reltime() << " milliseconds" << endl;
     Rcout << "elapsed time of mspbwt query: " << tm.abstime() << " milliseconds" << endl;

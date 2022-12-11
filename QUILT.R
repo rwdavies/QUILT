@@ -413,14 +413,14 @@ option_list <- list(
     make_option(
         "--pbwtL",
         type = "integer",
-        help = "How many neighouring haplotypes to select forward and backwards for each selection point [default 2] [default 2] ",
-        default = 2
+        help = "How many neighouring haplotypes to select forward and backwards for each selection point [default 1] ",
+        default = 1
     ), 
     make_option(
         "--pbwtS",
         type = "integer",
-        help = "How many SNPs as a step to do selection [default 8] [default 8] ",
-        default = 8
+        help = "How many SNPs as a step to do selection [default 4] ",
+        default = 4
     ), 
     make_option(
         "--zilong",
