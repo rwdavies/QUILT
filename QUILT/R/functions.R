@@ -469,20 +469,19 @@ select_new_haps_zilong <- function(
 ) {
 
   L <- ifelse(L > 0, L, ceiling(Knew / mspbwtG))
-  print(paste(L, Knew, mspbwtG))
 
   vals <- unlist(sapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     seed <- 2022 # can be exposed to user
     res <- mspbwt_query(mspbwtX, mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, L)
-    print(paste("select",  length(res),"new haps"))
     res
   }))
-  vals <- unique(vals) + 1 # 1-based
-  print(paste("select",  length(vals),"new unique haps"))
-  if (length(vals) >= Knew) {
-    new_haps <- vals[1:Knew]
+  vals <- vals + 1 # 1-based
+  if (length(unique(vals)) >= Knew) {
+    ## order by freq and pick top Knew
+    new_haps <- as.integer(names(rev(sort(table(vals)))[1:Knew]))
   } else {
+    vals <- unique(vals)
     new_haps <- array(NA, Knew)
     new_haps[1:length(vals)] <- vals
     new_haps[-c(1:length(vals))] <- sample(setdiff(1:Kfull, vals), Knew - length(vals), replace = FALSE)

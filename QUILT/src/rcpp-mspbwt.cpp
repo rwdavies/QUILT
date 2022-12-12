@@ -338,7 +338,7 @@ IntegerVector mspbwt_query(const List& X,const IntegerMatrix& A, const List& C, 
     IntGridVec zg = encodeZgrid(z, G);
     IntegerVector az(G);
     vector<vector<double>> Symbols = as< vector<vector<double>> >(S);
-    vector<IntGridVec> XG = as< vector<IntGridVec> >(X);
+    vector<vector<double>> XG = as< vector<vector<double>> >(X);
     auto kzus = upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k]) == Symbols[k].begin() ? Symbols[k].begin() : prev(upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k])) ;
     int j = std::distance(Symbols[k].begin(), kzus); // symbol rank
     List Wk = as<List>(W[k]);
