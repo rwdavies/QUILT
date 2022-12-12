@@ -477,11 +477,13 @@ select_new_haps_zilong <- function(
     res
   }))
   vals <- vals + 1 # 1-based
+  print(paste("select",  length(vals), "haps by mpbwt query" ) )
+  print(paste("select",  length(unique(vals)), " unique haps by mpbwt query" ) )
+  vals <- as.integer(names(sort(table(vals), decreasing = TRUE)))
   if (length(unique(vals)) >= Knew) {
     ## order by freq and pick top Knew
-    new_haps <- as.integer(names(rev(sort(table(vals)))[1:Knew]))
+    new_haps <- vals[1:Knew]
   } else {
-    vals <- unique(vals)
     new_haps <- array(NA, Knew)
     new_haps[1:length(vals)] <- vals
     new_haps[-c(1:length(vals))] <- sample(setdiff(1:Kfull, vals), Knew - length(vals), replace = FALSE)
