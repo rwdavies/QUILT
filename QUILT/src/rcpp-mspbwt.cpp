@@ -18,7 +18,7 @@ using namespace Rcpp;
 using namespace vcfpp;
 using namespace std;
 
-using grid_t = uint32_t; // options: uint8_t, uint16_t, uint32_t
+using grid_t = uint16_t; // options: uint8_t, uint16_t
 
 using IntGridVec = vector<grid_t>;
 using IntSet = set<grid_t, less<grid_t>>;
@@ -190,6 +190,7 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
     G = (M + B - 1) / B;
     Rcout << "Haps(N):" << N << "\tSNPs(M):" << M << "\tGrids(G):" << G << "\tInt(B):" << B << endl;
     vector<IntGridVec> X; // Grids x Haps
+    IntegerMatrix XG(N, G); // (Grids+1) x Haps
     X.resize(G, IntGridVec(N));
     vcf.setRegion(region); // seek back to region
     vector<bool> gt;
@@ -203,7 +204,10 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
         if (m % B == 0)
         {
             for (i = 0; i < N; i++)
+            {
                 X[k][i] = reverseBits(X[k][i]); // reverset bits
+                XG(i, k) = X[k][i];
+            }
             k++;                                // update next grid
         }
     }
@@ -213,6 +217,7 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
         {
             X[k][i] <<= G * B - M;
             X[k][i] = reverseBits(X[k][i]); // reverset bits
+            XG(i, k) = X[k][i];
         }
     }
     else if (G == k)
@@ -315,7 +320,7 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
     Rcpp::List out = List::create(Named("A",A),
                                   Named("C",C),
                                   Named("W", W),
-                                  Named("X", X),
+                                  Named("X", XG),
                                   Named("Symbols", Symbols),
                                   Named("G", G),
                                   Named("N", N),
@@ -328,7 +333,7 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
 
 //' @export
 // [[Rcpp::export]]
-IntegerVector mspbwt_query(const List& X,const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L = 1)
+IntegerVector mspbwt_query(const IntegerMatrix& XG,const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L = 1)
 {
     assert(M == z.size());
     Timer tm;
@@ -338,7 +343,6 @@ IntegerVector mspbwt_query(const List& X,const IntegerMatrix& A, const List& C, 
     IntGridVec zg = encodeZgrid(z, G);
     IntegerVector az(G);
     vector<vector<double>> Symbols = as< vector<vector<double>> >(S);
-    vector<vector<double>> XG = as< vector<vector<double>> >(X);
     auto kzus = upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k]) == Symbols[k].begin() ? Symbols[k].begin() : prev(upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k])) ;
     int j = std::distance(Symbols[k].begin(), kzus); // symbol rank
     List Wk = as<List>(W[k]);
@@ -349,10 +353,10 @@ IntegerVector mspbwt_query(const List& X,const IntegerMatrix& A, const List& C, 
     for (s = 0; s < L; s++)
     {
         j = A(k+1, std::max(az(k)-s-1, 0));
-        if (XG[k][j] == zg[k])
+        if (XG(j, k) == zg[k])
             selects.push_back(j);
         j = A(k+1, std::min(az(k)+s, M-1));
-        if (XG[k][j] == zg[k])
+        if (XG(j, k) == zg[k])
             selects.push_back(j);
     }
     Rcout << "elapsed time of processing first grid of z: " << tm.reltime() << " milliseconds" << endl;
@@ -374,10 +378,10 @@ IntegerVector mspbwt_query(const List& X,const IntegerMatrix& A, const List& C, 
         for (s = 0; s < L; s++)
         {
             j = A(k+1, std::max(az(k)-s-1, 0));
-            if (XG[k][j] == zg[k])
+            if (XG(j, k) == zg[k])
                 selects.push_back(j);
             j = A(k+1, std::min(az(k)+s, M-1));
-            if (XG[k][j] == zg[k])
+            if (XG(j, k) == zg[k])
                 selects.push_back(j);
         }
     }

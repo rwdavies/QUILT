@@ -997,12 +997,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // mspbwt_query
-IntegerVector mspbwt_query(const List& X, const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L);
-RcppExport SEXP _QUILT_mspbwt_query(SEXP XSEXP, SEXP ASEXP, SEXP CSEXP, SEXP WSEXP, SEXP SSEXP, SEXP GSEXP, SEXP MSEXP, SEXP NSEXP, SEXP zSEXP, SEXP LSEXP) {
+IntegerVector mspbwt_query(const IntegerMatrix& XG, const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L);
+RcppExport SEXP _QUILT_mspbwt_query(SEXP XGSEXP, SEXP ASEXP, SEXP CSEXP, SEXP WSEXP, SEXP SSEXP, SEXP GSEXP, SEXP MSEXP, SEXP NSEXP, SEXP zSEXP, SEXP LSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const List& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const IntegerMatrix& >::type XG(XGSEXP);
     Rcpp::traits::input_parameter< const IntegerMatrix& >::type A(ASEXP);
     Rcpp::traits::input_parameter< const List& >::type C(CSEXP);
     Rcpp::traits::input_parameter< const List& >::type W(WSEXP);
@@ -1012,7 +1012,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type N(NSEXP);
     Rcpp::traits::input_parameter< const IntegerVector& >::type z(zSEXP);
     Rcpp::traits::input_parameter< int >::type L(LSEXP);
-    rcpp_result_gen = Rcpp::wrap(mspbwt_query(X, A, C, W, S, G, M, N, z, L));
+    rcpp_result_gen = Rcpp::wrap(mspbwt_query(XG, A, C, W, S, G, M, N, z, L));
     return rcpp_result_gen;
 END_RCPP
 }
