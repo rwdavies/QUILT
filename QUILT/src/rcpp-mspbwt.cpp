@@ -18,12 +18,12 @@ using namespace Rcpp;
 using namespace vcfpp;
 using namespace std;
 
-using grid_t = uint16_t; // options: uint8_t, uint16_t
+using grid_t = uint32_t; // options: uint8_t, uint16_t
 
 using IntGridVec = vector<grid_t>;
 using IntSet = set<grid_t, less<grid_t>>;
 using IntMap = unordered_map<grid_t, int32_t>; // use double to replace uint32_t as symbol
-using IntVecMap = unordered_map<grid_t, vector<uint32_t>>;
+using IntVecMap = unordered_map<grid_t, vector<int32_t>>;
 using SymbolIdxMap = map<int32_t, int32_t>;
 
 class Timer
@@ -108,7 +108,7 @@ IntVecMap build_W(const IntGridVec& x, const IntSet& s, const IntMap& C)
     IntVecMap W;
     for (const auto& si : s)
     {
-        W[si] = vector<uint32_t>(x.size());
+        W[si] = vector<int32_t>(x.size());
         c = 0;
         for (i = 0; i < x.size(); i++)
         {
@@ -190,7 +190,8 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
     G = (M + B - 1) / B;
     Rcout << "Haps(N):" << N << "\tSNPs(M):" << M << "\tGrids(G):" << G << "\tInt(B):" << B << endl;
     vector<IntGridVec> X; // Grids x Haps
-    IntegerMatrix XG(N, G); // (Grids+1) x Haps
+    // IntegerMatrix XG(N, G); // (Grids+1) x Haps
+    NumericMatrix XG(N, G); // (Grids+1) x Haps
     X.resize(G, IntGridVec(N));
     vcf.setRegion(region); // seek back to region
     vector<bool> gt;
@@ -333,33 +334,22 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
 
 //' @export
 // [[Rcpp::export]]
-IntegerVector mspbwt_query(const IntegerMatrix& XG,const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L = 1)
+Rcpp::List mspbwt_query(const NumericMatrix& XG,const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L = 1)
 {
     assert(M == z.size());
     Timer tm;
     tm.clock();
     Rcout << "RefHaps(N):" << N << "\tSNPs(M):" << M << "\tGrids(G):" << G << endl;
-    int k = 0, n = 0, s;
+    int k = 0, n = 0, l, j, i, klen;
     IntGridVec zg = encodeZgrid(z, G);
     IntegerVector az(G);
     vector<vector<double>> Symbols = as< vector<vector<double>> >(S);
     auto kzus = upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k]) == Symbols[k].begin() ? Symbols[k].begin() : prev(upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k])) ;
-    int j = std::distance(Symbols[k].begin(), kzus); // symbol rank
+    j = std::distance(Symbols[k].begin(), kzus); // symbol rank
     List Wk = as<List>(W[k]);
     IntegerVector wkz = Wk[j];
     az[k] = wkz[wkz.size()-1];
-    IntegerVector selects;
-    // L haps before z;
-    for (s = 0; s < L; s++)
-    {
-        j = A(k+1, std::max(az(k)-s-1, 0));
-        if (XG(j, k) == zg[k])
-            selects.push_back(j);
-        j = A(k+1, std::min(az(k)+s, M-1));
-        if (XG(j, k) == zg[k])
-            selects.push_back(j);
-    }
-    Rcout << "elapsed time of processing first grid of z: " << tm.reltime() << " milliseconds" << endl;
+    IntegerVector  matches, lens;
 
     tm.clock();
     for (k = 1; k < G; k++)
@@ -375,19 +365,43 @@ IntegerVector mspbwt_query(const IntegerMatrix& XG,const IntegerMatrix& A, const
         } else {
             n++;
         }
-        for (s = 0; s < L; s++)
+        for (l = 0; l < L; l++)
         {
-            j = A(k+1, std::max(az(k)-s-1, 0));
-            if (XG(j, k) == zg[k])
-                selects.push_back(j);
-            j = A(k+1, std::min(az(k)+s, M-1));
-            if (XG(j, k) == zg[k])
-                selects.push_back(j);
+            j = A(k+1, std::max(az(k)-l-1, 0));
+            klen = 0;
+            for (i = k ; i > 0; i--) {
+                //
+                if (XG(j, i) == zg[i])
+                {
+                    klen++;
+                }
+                else {
+                    matches.push_back(j);
+                    lens.push_back(klen);
+                    break;
+                }
+            }
+            j = A(k+1, std::min(az(k)+l, N-1));
+            klen = 0;
+            for (i = k ; i > 0; i--) {
+                //
+                if (XG(j, i) == zg[i])
+                {
+                    klen++;
+                }
+                else {
+                    matches.push_back(j);
+                    lens.push_back(klen);
+                    break;
+                }
+            }
         }
     }
     Rcout << "elapsed time of processing all grids of z: " << tm.reltime() << " milliseconds" << endl;
     Rcout << "elapsed time of mspbwt query: " << tm.abstime() << " milliseconds" << endl;
     Rcout << "skip binary search for " << n << "/" << G << " Grids\n";
 
-    return selects;
+    Rcpp::List out = List::create(Named("haps",matches), Named("lens", lens));
+
+    return out;
 }

@@ -468,27 +468,30 @@ select_new_haps_zilong <- function(
     L = 0
 ) {
 
-  L <- ifelse(L > 0, L, ceiling(Knew / mspbwtG))
+  L <- ifelse(L > 0, L, ceiling(Knew / mspbwtG) + 1)
 
-  vals <- unlist(sapply(1:2, function(x) {
+  res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     seed <- 2022 # can be exposed to user
-    res <- mspbwt_query(mspbwtX, mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, L)
-    res
-  }))
-  vals <- vals + 1 # 1-based
-  print(paste("select",  length(vals), "haps by mpbwt query" ) )
-  print(paste("select",  length(unique(vals)), " unique haps by mpbwt query" ) )
-  vals <- as.integer(names(sort(table(vals), decreasing = TRUE)))
-  if (length(unique(vals)) >= Knew) {
+    mspbwt_query(mspbwtX, mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, L)
+  })
+
+  res <- do.call(rbind.data.frame, res) # make data frame with haps and lens columns
+  ## order haps by max lens grids matches
+  unique_haps <- unique(res[order(res$lens , decreasing = T),"haps"]) + 1 ## 1-based
+  print(paste("select",  length(unique_haps), " unique haps by mpbwt query" ) )
+
+  if (length(unique_haps) >= Knew) {
     ## order by freq and pick top Knew
-    new_haps <- vals[1:Knew]
+    new_haps <- unique_haps[1:Knew]
+    return(new_haps)
   } else {
-    new_haps <- array(NA, Knew)
-    new_haps[1:length(vals)] <- vals
-    new_haps[-c(1:length(vals))] <- sample(setdiff(1:Kfull, vals), Knew - length(vals), replace = FALSE)
+    new_haps <- unique(c(
+        unique_haps,
+        sample(Kfull, length(unique_haps) + Knew, replace = FALSE)
+    ))[1:Knew]
+    return(new_haps)
   }
-  new_haps
 }
 
 
