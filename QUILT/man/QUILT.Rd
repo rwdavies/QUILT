@@ -77,6 +77,7 @@ QUILT(
   pbwtS = 1,
   zilong = FALSE,
   use_mspbwt = FALSE,
+  mspbwt_nindices = 4L,
   use_splitreadgl = FALSE
 )
 }
@@ -224,6 +225,8 @@ QUILT(
 \item{zilong}{Using zilong's solution}
 
 \item{use_mspbwt}{Use msPBWT to select new haplotypes}
+
+\item{mspbwt_nindices}{How many mspbwt indices to build}
 
 \item{use_splitreadgl}{Use split real GL in hap selection and imputation}
 }

@@ -435,6 +435,12 @@ option_list <- list(
         default = FALSE
     ), 
     make_option(
+        "--mspbwt_nindices",
+        type = "integer",
+        help = "How many mspbwt indices to build [default 4L] ",
+        default = 4L
+    ), 
+    make_option(
         "--use_splitreadgl",
         type = "logical",
         help = "Use split real GL in hap selection and imputation [default FALSE] ",
@@ -517,5 +523,6 @@ QUILT(
     pbwtS = opt$pbwtS,
     zilong = opt$zilong,
     use_mspbwt = opt$use_mspbwt,
+    mspbwt_nindices = opt$mspbwt_nindices,
     use_splitreadgl = opt$use_splitreadgl
 )

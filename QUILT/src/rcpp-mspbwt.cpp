@@ -173,9 +173,110 @@ IntMap build_Symbols(const IntSet& s)
     return symbol;
 }
 
+// 0-based
+IntegerVector seq_by(int start, int end, int by)
+{
+    int n =  (end - start + 1) % by == 0 ? (end - start + 1) / by : ((end - start + 1) / by + 1) ;
+    IntegerVector seq(n);
+    int i = 0;
+    for (int x = start; x <= end; x=x+by)
+        seq[i++] = x;
+    return seq;
+}
+
+void build_A_with_nindices(const IntGridVec& x0,
+                           IntSet& s,
+                           IntMap& sm,
+                           IntMap& Ct,
+                           IntVecMap Wt,
+                           vector<int32_t>& idx,
+                           vector<int32_t>& Cg,
+                           vector<vector<int32_t>>& Wg,
+                           int N,
+                           int ki,
+                           IntegerVector& a0,
+                           IntGridVec& y0,
+                           IntegerMatrix& A,
+                           Rcpp::List& C,
+                           Rcpp::List& W,
+                           Rcpp::List& Symbols,
+                           bool fast)
+{
+    uint32_t i{0}, j{0}, c{0}, w{0}, occ{0};
+    if (ki == 0)
+    {
+        for (j = 0; j < N; j++) {
+            a0(j) = j;
+            A(ki, j) = a0(j);
+        }
+    }
+    for (i = 0; i < N; i++)
+    {
+        y0[i] = x0[a0[i]];
+        s.insert(y0[i]);
+    }
+    // build symbols
+    sm = build_Symbols(s);
+    // build C
+    Cg.resize(s.size());
+    j=0;
+    for (const auto& si : s)
+    {
+        c = 0;
+        for (i = 0; i < N; i++)
+        {
+            if (y0[i] < si)
+                c++;
+            if (y0[i] == si)
+                idx.push_back(i);
+        }
+        Cg[j] = c;
+        Wg.push_back(idx);
+        idx.clear();
+        j++;
+    }
+    C[ki] = Cg;
+    W[ki] = Wg;
+    Symbols[ki] = wrap(s);
+    // build A from W
+    if ((s.size() < 256) || fast)
+    {
+        // small number of symbols then build_W or forcing fast mode
+        Ct = build_C(y0, s);
+        Wt = build_W(y0, s, Ct);
+        for (i = 0; i < N; i++)
+            A(ki + 1, Wt[y0[i]][i] - 1) = a0[i];
+    }
+    else
+    {
+        // too symbols then do not build_W directly
+        for (i = 0; i < N; i++)
+        {
+            // map y0 to index first
+            j = sm[y0[i]];
+            w = Cg[j];
+            if (i >= Wg[j][0]) {
+                for (occ = 0; occ < Wg[j].size(); occ++) {
+                    if(i == Wg[j][occ])
+                    {
+                        w += occ + 1;
+                        break;
+                    }
+                }
+            }
+            A(ki + 1, w - 1) = a0[i];
+        }
+    }
+    // next run
+    a0 = A(ki + 1, _);
+    s.clear();
+    Wg.clear();
+
+}
+
 //' @export
 // [[Rcpp::export]]
-Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples, const std::string& region, bool fast = 1)
+Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples, const std::string& region, int nindices = 4, bool fast = 1)
 {
     Timer tm;
     tm.clock();
@@ -183,7 +284,7 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
     BcfReader vcf(vcfpanel, samples, region);
     BcfRecord var(vcf.header);
     // N haplotypes, M SNPs, G Grids, k Current grid, m Current SNP
-    uint64_t N{0}, M{0}, G{0}, k{0}, m{0}, i{0}, j{0};
+    uint64_t N{0}, M{0}, G{0}, k{0}, m{0}, i{0};
     N = vcf.nsamples * 2;
     while (vcf.getNextVariant(var))
         M++;
@@ -234,95 +335,39 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
 
     tm.clock();
     IntGridVec y0(N);
-    IntegerMatrix A(G+1, N); // (Grids+1) x Haps
+    // break grids into two set. even and odd
     IntegerVector a0(N);
-    Rcpp::List C(G);
-    Rcpp::List W(G);
-    Rcpp::List Symbols(G);
+    Rcpp::List A(nindices), C(nindices), W(nindices), Symbols(nindices);
     IntSet s; // convert to set which unique sorted
     IntMap sm, Ct;
     IntVecMap Wt;
     vector<vector<int32_t>> Wg;
     vector<int32_t> idx, Cg;
-    uint32_t c{0}, w{0}, occ{0};
-    for (k = 0; k < G; k++)
-    {
-        if (k == 0)
+    uint32_t Gi{0}, ki{0};
+    // build indices now
+    for (int ni = 0; ni < nindices; ni++) {
+        auto Gv = seq_by(ni , G - 1, nindices);
+        Gi = Gv.size();
+        IntegerMatrix Ai(Gi+1, N); // (Grids+1) x Haps
+        Rcpp::List Ci(Gi), Wi(Gi), Symbolsi(Gi);
+        for (ki = 0; ki < Gi; ki++)
         {
-            for (j = 0; j < N; j++) {
-                a0(j) = j;
-                A(k, j) = a0(j);
-            }
+            k = Gv[ki];
+            build_A_with_nindices(X[k], s, sm, Ct, Wt, idx, Cg, Wg, N, ki, a0, y0, Ai, Ci, Wi , Symbolsi, fast);
         }
-        for (i = 0; i < N; i++)
-        {
-            y0[i] = X[k][a0[i]];
-            s.insert(y0[i]);
-        }
-        // build symbols
-        sm = build_Symbols(s);
-        // build C
-        Cg.resize(s.size());
-        j=0;
-        for (const auto& si : s)
-        {
-            c = 0;
-            for (i = 0; i < N; i++)
-            {
-                if (y0[i] < si)
-                    c++;
-                if (y0[i] == si)
-                    idx.push_back(i);
-            }
-            Cg[j] = c;
-            Wg.push_back(idx);
-            idx.clear();
-            j++;
-        }
-        C[k] = Cg;
-        W[k] = Wg;
-        Symbols[k] = wrap(s);
-        // build A from W
-        if ((s.size() < 256) || fast)
-        {
-            // small number of symbols then build_W or forcing fast mode
-            Ct = build_C(y0, s);
-            Wt = build_W(y0, s, Ct);
-            for (i = 0; i < N; i++)
-                A(k + 1, Wt[y0[i]][i] - 1) = a0[i];
-        }
-        else
-        {
-            // too symbols then do not build_W directly
-            for (i = 0; i < N; i++)
-            {
-                // map y0 to index first
-                j = sm[y0[i]];
-                w = Cg[j];
-                if (i >= Wg[j][0]) {
-                    for (occ = 0; occ < Wg[j].size(); occ++) {
-                        if(i == Wg[j][occ])
-                        {
-                            w += occ + 1;
-                            break;
-                        }
-                    }
-                }
-                A(k + 1, w - 1) = a0[i];
-            }
-        }
-        // next run
-        a0 = A(k+1, _);
-        s.clear();
-        Wg.clear();
+        A[ni] = Ai;
+        C[ni] = Ci;
+        W[ni] = Wi;
+        Symbols[ni] = Symbolsi;
     }
     Rcout << "elapsed time of building indices: " << tm.reltime() << " milliseconds" << endl;
 
     Rcpp::List out = List::create(Named("A",A),
                                   Named("C",C),
                                   Named("W", W),
-                                  Named("X", XG),
                                   Named("Symbols", Symbols),
+                                  Named("nindices", nindices),
+                                  Named("X", XG),
                                   Named("G", G),
                                   Named("N", N),
                                   Named("M", M));
@@ -332,29 +377,35 @@ Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples,
     return out;
 }
 
-//' @export
-// [[Rcpp::export]]
-Rcpp::List mspbwt_query(const NumericMatrix& XG,const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L = 1)
+
+
+void query_z_with_nindices(const NumericMatrix& XG,
+                           const IntegerVector& Gv,
+                           const IntegerMatrix& A,
+                           const List& C,
+                           const List& W,
+                           const List& S,
+                           const IntGridVec& zg,
+                           IntegerVector&  matches,
+                           IntegerVector&  lens,
+                           int N,
+                           int L)
 {
-    assert(M == z.size());
-    Timer tm;
-    tm.clock();
-    Rcout << "RefHaps(N):" << N << "\tSNPs(M):" << M << "\tGrids(G):" << G << endl;
-    int k = 0, n = 0, l, j, i, klen;
-    IntGridVec zg = encodeZgrid(z, G);
-    IntegerVector az(G);
+    int k = 0, l, j, i, klen, kx;
+    int Gi = Gv.size();
+    IntegerVector az(Gi);
     vector<vector<double>> Symbols = as< vector<vector<double>> >(S);
-    auto kzus = upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k]) == Symbols[k].begin() ? Symbols[k].begin() : prev(upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k])) ;
+    kx = Gv[k];
+    auto kzus = upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[kx]) == Symbols[k].begin() ? Symbols[k].begin() : prev(upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[kx])) ;
     j = std::distance(Symbols[k].begin(), kzus); // symbol rank
     List Wk = as<List>(W[k]);
     IntegerVector wkz = Wk[j];
     az[k] = wkz[wkz.size()-1];
-    IntegerVector  matches, lens;
 
-    tm.clock();
-    for (k = 1; k < G; k++)
+    for (k = 1; k < Gi; k++)
     {
-        auto kzus = upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k]) == Symbols[k].begin() ? Symbols[k].begin() : prev(upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[k])) ;
+        kx = Gv[k];
+        auto kzus = upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[kx]) == Symbols[k].begin() ? Symbols[k].begin() : prev(upper_bound(Symbols[k].begin(), Symbols[k].end(), zg[kx])) ;
         j = std::distance(Symbols[k].begin(), kzus); // symbol rank. expensive. maybe use List lookup
         az[k] = as<IntegerVector>(C[k])[j];
         if (az[k-1] >= az[k])
@@ -362,8 +413,6 @@ Rcpp::List mspbwt_query(const NumericMatrix& XG,const IntegerMatrix& A, const Li
             wkz = as<IntegerVector>(as<List>(W[k])[j]);
             auto kzui = upper_bound(wkz.begin(), wkz.end(), az[k - 1]) == wkz.begin() ? wkz.begin() : prev(upper_bound(wkz.begin(), wkz.end(), az[k - 1])) ;
             az[k] = az[k] + std::distance(wkz.begin(), kzui);
-        } else {
-            n++;
         }
         for (l = 0; l < L; l++)
         {
@@ -371,7 +420,7 @@ Rcpp::List mspbwt_query(const NumericMatrix& XG,const IntegerMatrix& A, const Li
             klen = 0;
             for (i = k ; i > 0; i--) {
                 //
-                if (XG(j, i) == zg[i])
+                if (XG(j, Gv(i)) == zg[Gv(i)])
                 {
                     klen++;
                 }
@@ -385,7 +434,7 @@ Rcpp::List mspbwt_query(const NumericMatrix& XG,const IntegerMatrix& A, const Li
             klen = 0;
             for (i = k ; i > 0; i--) {
                 //
-                if (XG(j, i) == zg[i])
+                if (XG(j, Gv(i)) == zg[Gv(i)])
                 {
                     klen++;
                 }
@@ -397,9 +446,40 @@ Rcpp::List mspbwt_query(const NumericMatrix& XG,const IntegerMatrix& A, const Li
             }
         }
     }
+}
+
+//' @export
+// [[Rcpp::export]]
+Rcpp::List mspbwt_query(const NumericMatrix& XG,
+                        const List& A,
+                        const List& C,
+                        const List& W,
+                        const List& S,
+                        int G,
+                        int M,
+                        int N,
+                        const IntegerVector& z,
+                        int nindices = 4,
+                        int L = 1)
+{
+    assert(M == z.size());
+    Timer tm;
+    tm.clock();
+    Rcout << "RefHaps(N):" << N << "\tSNPs(M):" << M << "\tGrids(G):" << G << endl;
+    IntGridVec zg = encodeZgrid(z, G);
+    IntegerVector matches, lens;
+    List Ci, Wi, Si;
+    IntegerMatrix Ai;
+    for (int ni = 0; ni < nindices; ni++) {
+        auto Gv = seq_by(ni , G - 1, nindices);
+        Ai = as<IntegerMatrix>(A[ni]);
+        Ci = as<List>(C[ni]);
+        Wi = as<List>(W[ni]);
+        Si = as<List>(S[ni]);
+        query_z_with_nindices(XG, Gv, Ai, Ci, Wi, Si, zg, matches, lens, N, L);
+    }
     Rcout << "elapsed time of processing all grids of z: " << tm.reltime() << " milliseconds" << endl;
     Rcout << "elapsed time of mspbwt query: " << tm.abstime() << " milliseconds" << endl;
-    Rcout << "skip binary search for " << n << "/" << G << " Grids\n";
 
     Rcpp::List out = List::create(Named("haps",matches), Named("lens", lens));
 

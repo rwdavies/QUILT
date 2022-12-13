@@ -154,8 +154,8 @@ option_list <- list(
     make_option(
         "--mspbwt_nindices",
         type = "integer",
-        help = "How many mspbwt indices to build [default 1L] ",
-        default = 1L
+        help = "How many mspbwt indices to build [default 4L] ",
+        default = 4L
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))

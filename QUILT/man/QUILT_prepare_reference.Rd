@@ -30,7 +30,7 @@ QUILT_prepare_reference(
   minRate = 0.1,
   use_pbwt_index = FALSE,
   use_mspbwt = FALSE,
-  mspbwt_nindices = 1L
+  mspbwt_nindices = 4L
 )
 }
 \arguments{

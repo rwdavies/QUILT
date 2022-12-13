@@ -983,27 +983,28 @@ BEGIN_RCPP
 END_RCPP
 }
 // mspbwt_index
-Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples, const std::string& region, bool fast);
-RcppExport SEXP _QUILT_mspbwt_index(SEXP vcfpanelSEXP, SEXP samplesSEXP, SEXP regionSEXP, SEXP fastSEXP) {
+Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples, const std::string& region, int nindices, bool fast);
+RcppExport SEXP _QUILT_mspbwt_index(SEXP vcfpanelSEXP, SEXP samplesSEXP, SEXP regionSEXP, SEXP nindicesSEXP, SEXP fastSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type vcfpanel(vcfpanelSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type samples(samplesSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type region(regionSEXP);
+    Rcpp::traits::input_parameter< int >::type nindices(nindicesSEXP);
     Rcpp::traits::input_parameter< bool >::type fast(fastSEXP);
-    rcpp_result_gen = Rcpp::wrap(mspbwt_index(vcfpanel, samples, region, fast));
+    rcpp_result_gen = Rcpp::wrap(mspbwt_index(vcfpanel, samples, region, nindices, fast));
     return rcpp_result_gen;
 END_RCPP
 }
 // mspbwt_query
-Rcpp::List mspbwt_query(const NumericMatrix& XG, const IntegerMatrix& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int L);
-RcppExport SEXP _QUILT_mspbwt_query(SEXP XGSEXP, SEXP ASEXP, SEXP CSEXP, SEXP WSEXP, SEXP SSEXP, SEXP GSEXP, SEXP MSEXP, SEXP NSEXP, SEXP zSEXP, SEXP LSEXP) {
+Rcpp::List mspbwt_query(const NumericMatrix& XG, const List& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int nindices, int L);
+RcppExport SEXP _QUILT_mspbwt_query(SEXP XGSEXP, SEXP ASEXP, SEXP CSEXP, SEXP WSEXP, SEXP SSEXP, SEXP GSEXP, SEXP MSEXP, SEXP NSEXP, SEXP zSEXP, SEXP nindicesSEXP, SEXP LSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const NumericMatrix& >::type XG(XGSEXP);
-    Rcpp::traits::input_parameter< const IntegerMatrix& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const List& >::type A(ASEXP);
     Rcpp::traits::input_parameter< const List& >::type C(CSEXP);
     Rcpp::traits::input_parameter< const List& >::type W(WSEXP);
     Rcpp::traits::input_parameter< const List& >::type S(SSEXP);
@@ -1011,8 +1012,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type M(MSEXP);
     Rcpp::traits::input_parameter< int >::type N(NSEXP);
     Rcpp::traits::input_parameter< const IntegerVector& >::type z(zSEXP);
+    Rcpp::traits::input_parameter< int >::type nindices(nindicesSEXP);
     Rcpp::traits::input_parameter< int >::type L(LSEXP);
-    rcpp_result_gen = Rcpp::wrap(mspbwt_query(XG, A, C, W, S, G, M, N, z, L));
+    rcpp_result_gen = Rcpp::wrap(mspbwt_query(XG, A, C, W, S, G, M, N, z, nindices, L));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1322,8 +1324,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 11},
     {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 11},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
-    {"_QUILT_mspbwt_index", (DL_FUNC) &_QUILT_mspbwt_index, 4},
-    {"_QUILT_mspbwt_query", (DL_FUNC) &_QUILT_mspbwt_query, 10},
+    {"_QUILT_mspbwt_index", (DL_FUNC) &_QUILT_mspbwt_index, 5},
+    {"_QUILT_mspbwt_query", (DL_FUNC) &_QUILT_mspbwt_query, 11},
     {"_QUILT_Rcpp_test", (DL_FUNC) &_QUILT_Rcpp_test, 3},
     {"_QUILT_Rcpp_make_gl_bound", (DL_FUNC) &_QUILT_Rcpp_make_gl_bound, 3},
     {"_QUILT_rcpp_nth_partial_sort", (DL_FUNC) &_QUILT_rcpp_nth_partial_sort, 2},

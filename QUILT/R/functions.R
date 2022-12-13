@@ -465,6 +465,7 @@ select_new_haps_zilong <- function(
     mspbwtG,
     mspbwtM,
     mspbwtN,
+    nindices,
     L = 0
 ) {
 
@@ -473,7 +474,7 @@ select_new_haps_zilong <- function(
   res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     seed <- 2022 # can be exposed to user
-    mspbwt_query(mspbwtX, mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, L)
+    mspbwt_query(mspbwtX, mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, nindices ,L)
   })
 
   res <- do.call(rbind.data.frame, res) # make data frame with haps and lens columns
@@ -1008,6 +1009,7 @@ get_and_impute_one_sample <- function(
                                                             mspbwtG =  zilong_indices$G,
                                                             mspbwtM =  zilong_indices$M,
                                                             mspbwtN =  zilong_indices$N,
+                                                            nindices =  zilong_indices$nindices,
                                                             L = pbwtL
                                                             )
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]

@@ -73,6 +73,7 @@
 #' @param pbwtS How many grids as one step
 #' @param zilong Using zilong's solution
 #' @param use_mspbwt Use msPBWT to select new haplotypes
+#' @param mspbwt_nindices How many mspbwt indices to build
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
 #' @return Results in properly formatted version
 #' @author Robert Davies
@@ -150,6 +151,7 @@ QUILT <- function(
     pbwtS = 1,
     zilong = FALSE,
     use_mspbwt = FALSE,
+    mspbwt_nindices = 4L,
     use_splitreadgl = FALSE
 ) {
 
@@ -318,6 +320,7 @@ QUILT <- function(
                 minRate = minRate,
                 use_mspbwt = use_mspbwt,
                 use_pbwt_index = zilong,
+                mspbwt_nindices =  mspbwt_nindices,
                 reference_vcf_file = reference_vcf_file,
                 output_file = prepared_reference_filename
             )

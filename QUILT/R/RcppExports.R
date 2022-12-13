@@ -202,13 +202,13 @@ Rcpp_quilt_test_doubler <- function(a) {
 }
 
 #' @export
-mspbwt_index <- function(vcfpanel, samples, region, fast = 1L) {
-    .Call('_QUILT_mspbwt_index', PACKAGE = 'QUILT', vcfpanel, samples, region, fast)
+mspbwt_index <- function(vcfpanel, samples, region, nindices = 4L, fast = 1L) {
+    .Call('_QUILT_mspbwt_index', PACKAGE = 'QUILT', vcfpanel, samples, region, nindices, fast)
 }
 
 #' @export
-mspbwt_query <- function(XG, A, C, W, S, G, M, N, z, L = 1L) {
-    .Call('_QUILT_mspbwt_query', PACKAGE = 'QUILT', XG, A, C, W, S, G, M, N, z, L)
+mspbwt_query <- function(XG, A, C, W, S, G, M, N, z, nindices = 4L, L = 1L) {
+    .Call('_QUILT_mspbwt_query', PACKAGE = 'QUILT', XG, A, C, W, S, G, M, N, z, nindices, L)
 }
 
 #' @export

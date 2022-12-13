@@ -54,7 +54,7 @@ QUILT_prepare_reference <- function(
     minRate = 0.1,
     use_pbwt_index = FALSE,
     use_mspbwt = FALSE,
-    mspbwt_nindices = 1L
+    mspbwt_nindices = 4L
 ) {
 
     x <- as.list(environment())
@@ -435,7 +435,7 @@ QUILT_prepare_reference <- function(
         }
         ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
         pbwtfile <- paste0(outputdir, "/" , regionName)
-        zilong_indices <- mspbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike)
+        zilong_indices <- mspbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike, nindices = mspbwt_nindices)
         print_message("End building and dumping Zilong PBWT indices")
     } else {
         zilong_indices <- NULL
