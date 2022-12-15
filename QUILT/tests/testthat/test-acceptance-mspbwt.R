@@ -11,6 +11,7 @@ if ( 1 == 0 ) {
     }
     o <- sapply(a, source)
 
+
 }
 
 n_snps <- 200
@@ -40,55 +41,63 @@ refpack <- STITCH::make_reference_package(
 )
 set.seed(010)
 
-test_that("QUILT can impute a few samples in a standard way using mspbwt", {
+
+
+
+test_that("QUILT can impute a few samples in a standard way using mspbwt, using either robbie or zilong", {
     
     outputdir <- STITCH::make_unique_tempdir()
     
     regionStart <- 11
     regionEnd <- 200 - 10
     buffer <- 5
+    i_method <- 2
 
-    library("testthat")
-    library("QUILT")
-    dir <- "~/proj/QUILT/"
-    setwd(paste0(dir, "/QUILT/R"))
-    a <- dir(pattern = "*.R")
-    b <- grep("~", a)
-    if (length(b) > 0) {
-        a <- a[-b]
+    for(i_method in 1:2) {
+        
+        if (i_method == 1) {
+            zilong <- FALSE
+            use_mspbwt <- TRUE
+        } else {
+            zilong <- TRUE
+            use_mspbwt <- FALSE
+        }
+        
+        QUILT(
+            outputdir = outputdir,
+            chr = data_package$chr,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer,
+            bamlist = data_package$bamlist,
+            posfile = data_package$posfile,
+            genfile = data_package$genfile,
+            phasefile = data_package$phasefile,
+            reference_vcf_file = refpack$reference_vcf_file,
+            reference_haplotype_file = refpack$reference_haplotype_file,
+            reference_legend_file = refpack$reference_legend_file,
+            genetic_map_file = refpack$reference_genetic_map_file,
+            nGibbsSamples = 5,
+            n_seek_its = 3,
+            nCores = 1,
+            nGen = 100,
+            use_mspbwt = use_mspbwt,
+            zilong = zilong
+        )
+
+        regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
+        which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
+        
+        ## now evaluate versus truth!
+        check_quilt_output(
+            file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+            data_package = data_package,
+            which_snps = which_snps,
+            tol = 0.1,
+            min_info = 0.9
+        )
+
     }
-    o <- sapply(a, source)
-    QUILT(
-        outputdir = outputdir,
-        chr = data_package$chr,
-        regionStart = regionStart,
-        regionEnd = regionEnd,
-        buffer = buffer,
-        bamlist = data_package$bamlist,
-        posfile = data_package$posfile,
-        genfile = data_package$genfile,
-        phasefile = data_package$phasefile,
-        reference_haplotype_file = refpack$reference_haplotype_file,
-        reference_legend_file = refpack$reference_legend_file,
-        genetic_map_file = refpack$reference_genetic_map_file,
-        nGibbsSamples = 5,
-        n_seek_its = 3,
-        nCores = 1,
-        nGen = 100,
-        use_mspbwt = TRUE
-    )
-
-    regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
-    which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
-    
-    ## now evaluate versus truth!
-    check_quilt_output(
-        file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
-        data_package = data_package,
-        which_snps = which_snps,
-        tol = 0.1,
-        min_info = 0.9
-    )
     
 })
 

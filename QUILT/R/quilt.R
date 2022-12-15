@@ -48,6 +48,7 @@
 #' @param minGLValue For non-Gibbs full imputation, minimum allowed value in haplotype gl, after normalization. In effect, becomes 1/minGLValue becomes maximum difference allowed between genotype likelihoods
 #' @param minimum_number_of_sample_reads Minimum number of sample reads a sample must have for imputation to proceed. Samples that have fewer reads than this will not be imputed in a given region and all output will be set to missing
 #' @param nGen Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure
+#' @param reference_vcf_file Path to reference VCF file with haplotypes, matching the reference haplotype and legend file
 #' @param reference_haplotype_file Path to reference haplotype file in IMPUTE format (file with no header and no rownames, one row per SNP, one column per reference haplotype, space separated, values must be 0 or 1)
 #' @param reference_legend_file Path to reference haplotype legend file in IMPUTE format (file with one row per SNP, and a header including position for the physical position in 1 based coordinates, a0 for the reference allele, and a1 for the alternate allele)
 #' @param reference_sample_file Path to reference sample file (file with header, one must be POP, corresponding to populations that can be specified using reference_populations)
@@ -68,7 +69,6 @@
 #' 
 #' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
 #' @param use_small_eHapsCurrent_tc For testing purposes only
-#' @param reference_vcf_file zilong favors vcf
 #' @param pbwtL How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected.
 #' @param pbwtS How many grids as one step
 #' @param zilong Using zilong's solution

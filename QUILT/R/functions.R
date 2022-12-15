@@ -2255,7 +2255,7 @@ impute_one_sample <- function(
             which_haps_to_use = which_haps_to_use,
             ff = 0,
             maxDifferenceBetweenReads = maxDifferenceBetweenReads,
-            Jmax = Jmax,
+            Jmax_local = Jmax,
             maxEmissionMatrixDifference = maxEmissionMatrixDifference,
             run_fb_grid_offset = FALSE,
             blocks_for_output = array(0, c(1, 1)),
@@ -2302,7 +2302,10 @@ impute_one_sample <- function(
             use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
             block_gibbs_quantile_prob = block_gibbs_quantile_prob,
             use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
-            sample_is_diploid = sample_is_diploid 
+            sample_is_diploid = sample_is_diploid,
+            artificial_relabel = -1,
+            update_in_place = FALSE,
+            do_shard_ff0_block_gibbs = TRUE
         )
         if (out[["underflow_problem"]]) {
             new_maxDifferenceBetweenReads <- max(1, maxDifferenceBetweenReads / 10)
