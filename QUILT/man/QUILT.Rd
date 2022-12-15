@@ -178,7 +178,7 @@ QUILT(
 
 \item{nGen}{Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure}
 
-\item{reference_vcf_file}{zilong favors vcf}
+\item{reference_vcf_file}{Path to reference VCF file with haplotypes, matching the reference haplotype and legend file}
 
 \item{reference_haplotype_file}{Path to reference haplotype file in IMPUTE format (file with no header and no rownames, one row per SNP, one column per reference haplotype, space separated, values must be 0 or 1)}
 
