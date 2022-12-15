@@ -83,6 +83,7 @@ plot_single_gamma_dosage <- function(
     regionStart,
     regionEnd,
     buffer,
+    which_haps_to_use = NULL,
     output_plot = TRUE
 ) {
     ##
@@ -132,6 +133,9 @@ plot_single_gamma_dosage <- function(
             m[, i + 1] <- m[, i] + gammaK_t[i, ]
         }
         ##
+        if (is.null(which_haps_to_use)) {
+            which_haps_to_use <- 1:K
+        }
         for(j in 1:2) {
             for(i in K:1) {
                 ## can I o
@@ -148,7 +152,7 @@ plot_single_gamma_dosage <- function(
                             col = colStore[(i %% nCols) + 1]
                         )
                     } else {
-                        add_numbers(ytop, ybottom, x, i)
+                        add_numbers(ytop, ybottom, x, which_haps_to_use[i]) ## make global
                     }
                 }
             }

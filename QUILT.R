@@ -189,6 +189,12 @@ option_list <- list(
         default = FALSE
     ), 
     make_option(
+        "--make_plots_block_gibbs",
+        type = "logical",
+        help = "Whether to make some plots of gibbs block sampling. This is pretty slow though so useful more for debugging and understanding and visualizing performance [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
         "--verbose",
         type = "logical",
         help = "whether to be more verbose when running [default TRUE] ",
@@ -289,6 +295,12 @@ option_list <- list(
         type = "double",
         help = "Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure [default NA] ",
         default = NA
+    ), 
+    make_option(
+        "--reference_vcf_file",
+        type = "character",
+        help = "Path to reference VCF file with haplotypes, matching the reference haplotype and legend file [default \"\"] ",
+        default = ""
     ), 
     make_option(
         "--reference_haplotype_file",
@@ -405,12 +417,6 @@ option_list <- list(
         default = FALSE
     ), 
     make_option(
-        "--reference_vcf_file",
-        type = "character",
-        help = "zilong favors vcf [default \"\"] ",
-        default = ""
-    ), 
-    make_option(
         "--pbwtL",
         type = "integer",
         help = "How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected. [default 0] ",
@@ -482,6 +488,7 @@ QUILT(
     phasefile = opt$phasefile,
     maxDifferenceBetweenReads = opt$maxDifferenceBetweenReads,
     make_plots = opt$make_plots,
+    make_plots_block_gibbs = opt$make_plots_block_gibbs,
     verbose = opt$verbose,
     shuffle_bin_radius = opt$shuffle_bin_radius,
     iSizeUpperLimit = opt$iSizeUpperLimit,
@@ -499,6 +506,7 @@ QUILT(
     minGLValue = opt$minGLValue,
     minimum_number_of_sample_reads = opt$minimum_number_of_sample_reads,
     nGen = opt$nGen,
+    reference_vcf_file = opt$reference_vcf_file,
     reference_haplotype_file = opt$reference_haplotype_file,
     reference_legend_file = opt$reference_legend_file,
     reference_sample_file = opt$reference_sample_file,
@@ -518,7 +526,6 @@ QUILT(
     small_ref_panel_gibbs_iterations = opt$small_ref_panel_gibbs_iterations,
     plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
-    reference_vcf_file = opt$reference_vcf_file,
     pbwtL = opt$pbwtL,
     pbwtS = opt$pbwtS,
     zilong = opt$zilong,
