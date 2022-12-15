@@ -14,7 +14,7 @@ select_new_haps_zilong <- function(
     mspbwtN,
     nindices,
     L = 0,
-    min_len = 4
+    min_len = 3
 ) {
 
   L <- ifelse(L > 0, L, ceiling(Knew / mspbwtG) + 1)

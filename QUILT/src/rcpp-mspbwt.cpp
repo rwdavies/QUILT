@@ -431,6 +431,11 @@ void query_z_with_nindices(const NumericMatrix& XG,
                     break;
                 }
             }
+            if (klen==0)
+                break;
+        }
+        for (l = 0; l < L; l++)
+        {
             j = A(k+1, std::min(az(k)+l, N-1));
             klen = 0;
             for (i = k ; i > 0; i--) {
@@ -445,6 +450,8 @@ void query_z_with_nindices(const NumericMatrix& XG,
                     break;
                 }
             }
+            if (klen==0)
+                break;
         }
     }
 }
@@ -482,7 +489,6 @@ Rcpp::List mspbwt_query(const NumericMatrix& XG,
         Si = as<List>(S[ni]);
         query_z_with_nindices(XG, Gv, Ai, Ci, Wi, Si, zg, matches, lens, ends, N, L);
     }
-    Rcout << "elapsed time of processing all grids of z: " << tm.reltime() << " milliseconds" << endl;
     Rcout << "elapsed time of mspbwt query: " << tm.abstime() << " milliseconds" << endl;
 
     Rcpp::List out = List::create(Named("haps",matches),
