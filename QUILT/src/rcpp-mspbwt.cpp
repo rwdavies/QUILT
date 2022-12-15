@@ -386,8 +386,9 @@ void query_z_with_nindices(const NumericMatrix& XG,
                            const List& W,
                            const List& S,
                            const IntGridVec& zg,
-                           IntegerVector&  matches,
-                           IntegerVector&  lens,
+                           vector<int>&  matches,
+                           vector<int>&  lens,
+                           vector<int>&  ends,
                            int N,
                            int L)
 {
@@ -419,7 +420,6 @@ void query_z_with_nindices(const NumericMatrix& XG,
             j = A(k+1, std::max(az(k)-l-1, 0));
             klen = 0;
             for (i = k ; i > 0; i--) {
-                //
                 if (XG(j, Gv(i)) == zg[Gv(i)])
                 {
                     klen++;
@@ -427,13 +427,13 @@ void query_z_with_nindices(const NumericMatrix& XG,
                 else {
                     matches.push_back(j);
                     lens.push_back(klen);
+                    ends.push_back(k);
                     break;
                 }
             }
             j = A(k+1, std::min(az(k)+l, N-1));
             klen = 0;
             for (i = k ; i > 0; i--) {
-                //
                 if (XG(j, Gv(i)) == zg[Gv(i)])
                 {
                     klen++;
@@ -441,6 +441,7 @@ void query_z_with_nindices(const NumericMatrix& XG,
                 else {
                     matches.push_back(j);
                     lens.push_back(klen);
+                    ends.push_back(k);
                     break;
                 }
             }
@@ -467,7 +468,10 @@ Rcpp::List mspbwt_query(const NumericMatrix& XG,
     tm.clock();
     Rcout << "RefHaps(N):" << N << "\tSNPs(M):" << M << "\tGrids(G):" << G << endl;
     IntGridVec zg = encodeZgrid(z, G);
-    IntegerVector matches, lens;
+    vector<int> matches, lens, ends;
+    matches.reserve(2 * L * G);
+    lens.reserve(2 * L * G);
+    ends.reserve(2 * L * G);
     List Ci, Wi, Si;
     IntegerMatrix Ai;
     for (int ni = 0; ni < nindices; ni++) {
@@ -476,12 +480,14 @@ Rcpp::List mspbwt_query(const NumericMatrix& XG,
         Ci = as<List>(C[ni]);
         Wi = as<List>(W[ni]);
         Si = as<List>(S[ni]);
-        query_z_with_nindices(XG, Gv, Ai, Ci, Wi, Si, zg, matches, lens, N, L);
+        query_z_with_nindices(XG, Gv, Ai, Ci, Wi, Si, zg, matches, lens, ends, N, L);
     }
     Rcout << "elapsed time of processing all grids of z: " << tm.reltime() << " milliseconds" << endl;
     Rcout << "elapsed time of mspbwt query: " << tm.abstime() << " milliseconds" << endl;
 
-    Rcpp::List out = List::create(Named("haps",matches), Named("lens", lens));
+    Rcpp::List out = List::create(Named("haps",matches),
+                                  Named("lens", lens),
+                                  Named("ends", ends));
 
     return out;
 }

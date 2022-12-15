@@ -477,9 +477,25 @@ select_new_haps_zilong <- function(
     mspbwt_query(mspbwtX, mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, nindices ,L)
   })
 
-  res <- do.call(rbind.data.frame, res) # make data frame with haps and lens columns
+  ## saveRDS(res,"/Users/zilong/Project/QUILT/test.rds")
+
+  # collapse into data frame with haps, lens and ends columns
+  res <- do.call(rbind.data.frame, res)
+  # keep haps with minimun mspbwtG/(nindices*4) grids long matches
+  res <- res[res$lens > 3, ]
+  res$haps <- res$haps + 1 ## 1-based
+  res$keys <- paste0(res$lens, "_", res$ends)
+  # find duplicated keys
+  ## dupkeys <- res[duplicated(res[,"keys"] ), "keys"]
+  # keep unique keys only
+  ## unique_dat <- res[!res$keys %in% dupkeys,]
+  # drop duplicated haps
+  unique_dat <- res[order(-res$lens, res$keys),]
+  unique_dat <- unique_dat[!duplicated(unique_dat[,c('haps')]),]
+  unique_dat <- unique_dat[!duplicated(unique_dat[,c('keys')]),]
+  unique_haps <- unique(unique_dat$haps)
   ## order haps by max lens grids matches
-  unique_haps <- unique(res[order(res$lens , decreasing = T),"haps"]) + 1 ## 1-based
+  ## unique_haps <- unique(unique_dat[order(unique_dat$lens , decreasing = T),"haps"])
   print(paste("select",  length(unique_haps), " unique haps by mpbwt query" ) )
 
   if (length(unique_haps) >= Knew) {
@@ -487,6 +503,9 @@ select_new_haps_zilong <- function(
     new_haps <- unique_haps[1:Knew]
     return(new_haps)
   } else {
+    ## dd <- res[res$keys %in% dupkeys,]
+    ## unique_haps <- unique(c(unique_haps, dd[!duplicated(dd[,"keys"] ), "haps"]))
+    ## print(paste("select",  length(unique_haps), " unique haps by mpbwt query" ) )
     new_haps <- unique(c(
         unique_haps,
         sample(Kfull, length(unique_haps) + Knew, replace = FALSE)

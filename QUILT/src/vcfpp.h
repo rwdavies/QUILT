@@ -1059,29 +1059,29 @@ namespace vcfpp
             return hts_set_threads(fp, n);
         }
 
-        /** @brief get records of current contig to use */
-        uint64_t get_region_records(const std::string& region)
-        {
-            setRegion(region); // only one chromosome
-            int tid = 0, ret = 0, nseq = 0;
-            uint64_t records, v;
-            if (tidx)
-            {
-                tbx_seqnames(tidx, &nseq);
-            }
-            else
-            {
-                nseq = hts_idx_nseq(hidx);
-            }
-            for (tid = 0; tid < nseq; tid++)
-            {
-                ret = hts_idx_get_stat(tidx ? tidx->idx : hidx, tid, &records, &v);
-                // printf("%" PRIu64 "\n", records);
-                if (ret >= 0 && records > 0)
-                    return records;
-            }
-            return 0;
-        }
+        // /** @brief get records of current contig to use */
+        // uint64_t get_region_records(const std::string& region)
+        // {
+        //     setRegion(region); // only one chromosome
+        //     int tid = 0, ret = 0, nseq = 0;
+        //     uint64_t records, v;
+        //     if (tidx)
+        //     {
+        //         tbx_seqnames(tidx, &nseq);
+        //     }
+        //     else
+        //     {
+        //         nseq = hts_idx_nseq(hidx);
+        //     }
+        //     for (tid = 0; tid < nseq; tid++)
+        //     {
+        //         ret = hts_idx_get_stat(tidx ? tidx->idx : hidx, tid, &records, &v);
+        //         // printf("%" PRIu64 "\n", records);
+        //         if (ret >= 0 && records > 0)
+        //             return records;
+        //     }
+        //     return 0;
+        // }
 
         /**
          * @brief explicitly stream to specific region
