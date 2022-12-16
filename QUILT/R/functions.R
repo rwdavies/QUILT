@@ -49,9 +49,10 @@ select_new_haps_zilong <- function(
     new_haps <- unique_haps[1:Knew]
     return(new_haps)
   } else {
+    ## cannot take a sample larger than the population when 'replace = FALSE'
     new_haps <- unique(c(
         unique_haps,
-        sample(Kfull, length(unique_haps) + Knew, replace = FALSE)
+        sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
     ))[1:Knew]
     return(new_haps)
   }
