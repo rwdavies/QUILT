@@ -22,7 +22,7 @@ using grid_t = uint32_t; // options: uint8_t, uint16_t
 
 using IntGridVec = vector<grid_t>;
 using IntSet = set<grid_t, less<grid_t>>;
-using IntMap = unordered_map<grid_t, int32_t>; // use double to replace uint32_t as symbol
+using IntMap = unordered_map<grid_t, int32_t>;
 using IntVecMap = unordered_map<grid_t, vector<int32_t>>;
 using SymbolIdxMap = map<int32_t, int32_t>;
 
@@ -386,9 +386,10 @@ void query_z_with_nindices(const NumericMatrix& XG,
                            const List& W,
                            const List& S,
                            const IntGridVec& zg,
-                           vector<int>&  matches,
-                           vector<int>&  lens,
-                           vector<int>&  ends,
+                           IntMap& haplens,
+                           IntMap& hapends,
+                           IntMap& hapnindicies,
+                           int ni,
                            int N,
                            int L)
 {
@@ -425,9 +426,19 @@ void query_z_with_nindices(const NumericMatrix& XG,
                     klen++;
                 }
                 else {
-                    matches.push_back(j);
-                    lens.push_back(klen);
-                    ends.push_back(k);
+                    if (haplens.count(j) == 0)
+                    {
+                        haplens[j] = klen;
+                        hapends[j] = k;
+                        hapnindicies[j] = 1;
+                    }
+                    else if (klen > haplens[j])
+                    {
+                        haplens[j] = klen;
+                        hapends[j] = k;
+                    }
+                    if (hapnindicies.count(j))
+                        hapnindicies[j] = ni >= hapnindicies[j] ? (ni+1) : hapnindicies[j];
                     break;
                 }
             }
@@ -444,9 +455,19 @@ void query_z_with_nindices(const NumericMatrix& XG,
                     klen++;
                 }
                 else {
-                    matches.push_back(j);
-                    lens.push_back(klen);
-                    ends.push_back(k);
+                    if (haplens.count(j) == 0)
+                    {
+                        haplens[j] = klen;
+                        hapends[j] = k;
+                        hapnindicies[j] = 1;
+                    }
+                    else if (klen > haplens[j])
+                    {
+                        haplens[j] = klen;
+                        hapends[j] = k;
+                    }
+                    if (hapnindicies.count(j))
+                        hapnindicies[j] = ni >= hapnindicies[j] ? (ni+1) : hapnindicies[j];
                     break;
                 }
             }
@@ -454,6 +475,7 @@ void query_z_with_nindices(const NumericMatrix& XG,
                 break;
         }
     }
+
 }
 
 //' @export
@@ -475,25 +497,36 @@ Rcpp::List mspbwt_query(const NumericMatrix& XG,
     tm.clock();
     Rcout << "RefHaps(N):" << N << "\tSNPs(M):" << M << "\tGrids(G):" << G << endl;
     IntGridVec zg = encodeZgrid(z, G);
-    vector<int> matches, lens, ends;
-    matches.reserve(2 * L * G);
-    lens.reserve(2 * L * G);
-    ends.reserve(2 * L * G);
     List Ci, Wi, Si;
     IntegerMatrix Ai;
-    for (int ni = 0; ni < nindices; ni++) {
-        auto Gv = seq_by(ni , G - 1, nindices);
-        Ai = as<IntegerMatrix>(A[ni]);
-        Ci = as<List>(C[ni]);
-        Wi = as<List>(W[ni]);
-        Si = as<List>(S[ni]);
-        query_z_with_nindices(XG, Gv, Ai, Ci, Wi, Si, zg, matches, lens, ends, N, L);
+    IntMap haplens, hapends, hapnindicies;
+    for (int i = 0; i < nindices; i++) {
+        auto Gv = seq_by(i , G - 1, nindices);
+        Ai = as<IntegerMatrix>(A[i]);
+        Ci = as<List>(C[i]);
+        Wi = as<List>(W[i]);
+        Si = as<List>(S[i]);
+        query_z_with_nindices(XG, Gv, Ai, Ci, Wi, Si, zg, haplens, hapends, hapnindicies, i , N, L);
     }
     Rcout << "elapsed time of mspbwt query: " << tm.abstime() << " milliseconds" << endl;
 
+    size_t n = haplens.size();
+    vector<int> matches(n), lens(n), ends(n), ni(n);
+    n = 0;
+    for (auto const& h : haplens)
+    {
+        matches[n] = h.first;
+        lens[n] = h.second;
+        ends[n] = hapends[h.first];
+        ni[n] = hapnindicies[h.first];
+        n++;
+    }
+
     Rcpp::List out = List::create(Named("haps",matches),
                                   Named("lens", lens),
-                                  Named("ends", ends));
+                                  Named("ends", ends),
+                                  Named("n", ni));
 
+    return out;
     return out;
 }

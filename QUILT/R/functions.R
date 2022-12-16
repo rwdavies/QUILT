@@ -22,24 +22,23 @@ select_new_haps_zilong <- function(
   res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     seed <- 2022 # can be exposed to user
-    mspbwt_query(mspbwtX, mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, nindices ,L)
+    out <- mspbwt_query(mspbwtX, mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, nindices ,L)
+    out
   })
 
   ## saveRDS(res,"/Users/zilong/Project/QUILT/test.rds")
 
   # collapse into data frame with haps, lens and ends columns
   res <- do.call(rbind.data.frame, res)
-  # keep haps with minimun 4 grids long matches
-  res <- res[res$lens > max(min_len-1, 0), ]
   if (nrow(res) > 0) {
-    res$haps <- res$haps + 1 ## 1-based
+    # order by nindices then drop duplicated haps
+    res <- res[order(res$haps, -res$n),]
+    res <- res[!duplicated(res[,c('haps')]),]
+    # order by lens drop duplicated keys
     res$keys <- paste0(res$lens, "_", res$ends)
-    unique_dat <- res[order(-res$lens, res$keys),]
-    # drop duplicated haps
-    unique_dat <- unique_dat[!duplicated(unique_dat[,c('haps')]),]
-    # drop duplicated keys
-    unique_dat <- unique_dat[!duplicated(unique_dat[,c('keys')]),]
-    unique_haps <- unique(unique_dat$haps)
+    res <- res[order(-res$lens, res$keys),]
+    res <- res[!duplicated(res[,c('keys')]),]
+    unique_haps <- unique(res$haps) + 1 ## 1-based
   } else {
     unique_haps <- NULL
   }
