@@ -931,6 +931,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcpp_simple_binary_search
+int rcpp_simple_binary_search(int val, Rcpp::IntegerVector vec);
+RcppExport SEXP _QUILT_rcpp_simple_binary_search(SEXP valSEXP, SEXP vecSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type val(valSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type vec(vecSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_simple_binary_search(val, vec));
+    return rcpp_result_gen;
+END_RCPP
+}
 // Rcpp_make_eMatRead_t_for_gibbs_using_objects
 void Rcpp_make_eMatRead_t_for_gibbs_using_objects(arma::mat& eMatRead_t, const Rcpp::List& sampleReads, const arma::imat& hapMatcher, const Rcpp::IntegerVector& grid, const arma::imat& rhb_t, const arma::mat& distinctHapsIE, const double ref_error, const Rcpp::IntegerVector& which_haps_to_use, const bool rescale_eMatRead_t, const int Jmax, const double maxDifferenceBetweenReads);
 RcppExport SEXP _QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects(SEXP eMatRead_tSEXP, SEXP sampleReadsSEXP, SEXP hapMatcherSEXP, SEXP gridSEXP, SEXP rhb_tSEXP, SEXP distinctHapsIESEXP, SEXP ref_errorSEXP, SEXP which_haps_to_useSEXP, SEXP rescale_eMatRead_tSEXP, SEXP JmaxSEXP, SEXP maxDifferenceBetweenReadsSEXP) {
@@ -979,6 +991,30 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
     rcpp_result_gen = Rcpp::wrap(Rcpp_quilt_test_doubler(a));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Rcpp_raw_test
+int Rcpp_raw_test(Rcpp::RawVector a, Rcpp::IntegerVector b);
+RcppExport SEXP _QUILT_Rcpp_raw_test(SEXP aSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::RawVector >::type a(aSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(Rcpp_raw_test(a, b));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Rcpp_raw_test_int
+int Rcpp_raw_test_int(Rcpp::IntegerVector a, Rcpp::IntegerVector b);
+RcppExport SEXP _QUILT_Rcpp_raw_test_int(SEXP aSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type a(aSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(Rcpp_raw_test_int(a, b));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1321,9 +1357,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_gibbs_nipt_iterate", (DL_FUNC) &_QUILT_rcpp_gibbs_nipt_iterate, 55},
     {"_QUILT_rcpp_fly_weighter", (DL_FUNC) &_QUILT_rcpp_fly_weighter, 14},
     {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 63},
+    {"_QUILT_rcpp_simple_binary_search", (DL_FUNC) &_QUILT_rcpp_simple_binary_search, 2},
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 11},
     {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 11},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
+    {"_QUILT_Rcpp_raw_test", (DL_FUNC) &_QUILT_Rcpp_raw_test, 2},
+    {"_QUILT_Rcpp_raw_test_int", (DL_FUNC) &_QUILT_Rcpp_raw_test_int, 2},
     {"_QUILT_mspbwt_index", (DL_FUNC) &_QUILT_mspbwt_index, 5},
     {"_QUILT_mspbwt_query", (DL_FUNC) &_QUILT_mspbwt_query, 11},
     {"_QUILT_Rcpp_test", (DL_FUNC) &_QUILT_Rcpp_test, 3},

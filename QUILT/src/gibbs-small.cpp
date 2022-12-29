@@ -20,6 +20,35 @@ using namespace Rcpp;
 Rcpp::IntegerVector rcpp_int_expand(arma::ivec& hapc, const int nSNPs);
 
 
+
+//' @export
+// [[Rcpp::export]]
+int rcpp_simple_binary_search(
+    int val,
+    Rcpp::IntegerVector vec
+) {
+    //
+    // note that this returns the 0-based value
+    //
+    int n = vec.length();
+    int i = n / 2;
+    n = n / 4;
+    while(true) {
+        if (vec(i) == val) {
+            return(i);
+        } else if (vec(i) < val) {
+            i += n;
+        } else {
+            i -= n;
+        }
+        n = n / 2;
+        if (n < 1) {
+            n = 1;
+        }
+    }
+}
+
+
 //' @export
 // [[Rcpp::export]]
 void Rcpp_make_eMatRead_t_for_gibbs_using_objects(

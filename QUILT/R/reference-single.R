@@ -1,5 +1,5 @@
 if (1 == 0) {
-    
+
     dl <- diff(L_grid)
     expRate <- 1
     nGen <- 10
@@ -7,7 +7,7 @@ if (1 == 0) {
     transMatRate_t <- rbind(sigmaCurrent, 1 - sigmaCurrent)
     K <- nrow(rhb_t)
     nGrids <- ncol(rhb_t)
-    ## 
+    ##
     alphaHat_t <- array(0, c(K, nGrids))
     betaHat_t <- array(0, c(K, nGrids))
     gamma_t <- array(0, c(K, nGrids))
@@ -26,7 +26,7 @@ make_gl_from_u_bq <- function(
         return(gl)
     }
     probs <- convertScaledBQtoProbs(matrix(bq, ncol = 1))
-    ## 
+    ##
     for(i in 1:length(u)) {
         gl[, u[i]] <- gl[, u[i]] * probs[i, ]
     }
@@ -45,15 +45,15 @@ build_eMatDH <- function(distinctHapsB, gl, nGrids, nSNPs, ref_error, ref_one_mi
     nMaxDH <- nrow(distinctHapsB)
     eMatDH <- array(0, c(nMaxDH, nGrids))
     for(iGrid in 0:(nGrids - 1)) {
-        ## 
+        ##
         s <- 32 * iGrid + 1 ## 1-based start
         e <- min(32 * (iGrid + 1), nSNPs) ## 1-based end
         nSNPsLocal <- e - s + 1
-        gl_local <- gl[, s:e, drop = FALSE]        
+        gl_local <- gl[, s:e, drop = FALSE]
         ##
         for(k in 0:(nMaxDH - 1)) {
             ref_hapLocal <- STITCH::int_expand(distinctHapsB[k + 1, iGrid + 1], nSNPs = nSNPsLocal)
-            ## 
+            ##
             prob <- 1
             for(b in 0:(nSNPsLocal - 1)) {
                 x <- ref_hapLocal[b + 1]
@@ -74,7 +74,7 @@ build_eMatDH <- function(distinctHapsB, gl, nGrids, nSNPs, ref_error, ref_one_mi
 
 get_prob_for_k <- function(rhb_t, k, iGrid, nSNPsLocal, ref_error, ref_one_minus_error, gl_local) {
     ref_hapLocal <- STITCH::int_expand(rhb_t[k, iGrid], nSNPs = nSNPsLocal)
-    ## 
+    ##
     prob <- 1
     for(b in 0:(nSNPsLocal - 1)) {
         x <- ref_hapLocal[b + 1]
@@ -97,7 +97,7 @@ R_haploid_dosage_versus_refs <- function(
     c,
     c_prob,
     gamma_t,
-    gammaSmall_t,    
+    gammaSmall_t,
     dosage,
     transMatRate_t,
     rhb_t,
@@ -183,7 +183,7 @@ R_haploid_dosage_versus_refs <- function(
     ## run forward algorithm
     ##
     for(iGrid in 1:(nGrids - 1)) {
-        ## 
+        ##
         jump_prob <- transMatRate_t[2, iGrid] / K
         if (always_normalize) {
             jump_prob_plus <- jump_prob
@@ -239,7 +239,7 @@ R_haploid_dosage_versus_refs <- function(
         if (iGrid == (nGrids - 1)) {
             betaHat_t_col <- rep(1, K) ## c[nGrids - 1 + 1]
         } else {
-            ## this is from 
+            ## this is from
             jump_prob <- transMatRate_t[2, iGrid + 1] / K
             not_jump_prob <- transMatRate_t[1, iGrid + 1]
             ## I think we want previous emissions?
@@ -289,14 +289,14 @@ R_haploid_dosage_versus_refs <- function(
             gamma_t_col <- (alphaHat_t[, iGrid + 1] * betaHat_t_col)
         } else {
             if (return_dosage | return_gamma_t | calculate_small_gamma_t_col) {
-                gamma_t_col <- (alphaHat_t[, iGrid + 1] * betaHat_t_col)            
+                gamma_t_col <- (alphaHat_t[, iGrid + 1] * betaHat_t_col)
             }
         }
         ## do this bit here
         s <- 32 * iGrid + 1 ## 1-based start
         e <- min(32 * (iGrid + 1), nSNPs) ## 1-based end
         nSNPsLocal <- e - s + 1
-        dosageL <- array(0, nSNPsLocal)        
+        dosageL <- array(0, nSNPsLocal)
         if (use_eMatDH) {
             matched_gammas <- array(0, nMaxDH)
             for(k in 0:(K - 1)) {
@@ -324,7 +324,7 @@ R_haploid_dosage_versus_refs <- function(
                 ref_hapLocal[ref_hapLocal == 1] <- (1 - ref_error)
                 dosageL <- dosageL + gamma_t_col[k + 1] * ref_hapLocal
             }
-            dosage[s:e] <- dosageL            
+            dosage[s:e] <- dosageL
         }
         ## finish up
         if (always_normalize) {
@@ -393,7 +393,7 @@ make_rhb_t_equality <- function(
     ## --- all_symbols
     ## list with nGrid entries
     ## each entry is a matrix with each row containing the ID of a symbol, and the 1-based number of entries
-    all_symbols <- list(1:nGrids)    
+    all_symbols <- list(1:nGrids)
     for(iGrid in 1:nGrids) {
         ## can safely ignore the end, it will be zeros what is not captured
         a <- table(rhb_t[, iGrid], useNA = "always")
@@ -412,11 +412,11 @@ make_rhb_t_equality <- function(
         ## match against
         hapMatcher[, iGrid] <- as.integer(match(rhb_t[, iGrid], distinctHapsB[, iGrid]))
         hapMatcher[which(is.na(hapMatcher[, iGrid])), iGrid] <- 0L
-        ## 
+        ##
         a <- cbind(names_a, a)
         rownames(a) <- NULL
         colnames(a) <- c("symbol", "count")
-        all_symbols[[iGrid]] <- a        
+        all_symbols[[iGrid]] <- a
     }
     ##
     ## now, if we're inferring this, choose appropriate re-value downwards
@@ -487,6 +487,13 @@ make_rhb_t_equality <- function(
             return(as.integer(which_hapMatcher_0[starts[i]:ends[i], 1]))
         })
         ##
+        ## eMatDH_special_symbols
+        ##   not great name, but these are the actual symbols
+        ##
+        eMatDH_special_symbols_list <- lapply(1:length(starts), function(i) {
+            rhb_t[as.integer(which_hapMatcher_0[starts[i]:ends[i], 1]) + 1, i]
+        })
+        ##
         ## fix all_symbols
         ##
         for(iGrid in 1:nGrids) {
@@ -511,12 +518,47 @@ make_rhb_t_equality <- function(
             hapMatcher = hapMatcher,
             eMatDH_special_values_list = eMatDH_special_values_list,
             eMatDH_special_grid_which = eMatDH_special_grid_which,
+            eMatDH_special_symbols_list = eMatDH_special_symbols_list,
             nrow_which_hapMatcher_0 = nrow_which_hapMatcher_0,
             all_symbols = all_symbols
         )
     )
 }
 
+
+get_eMatDH_special_entry <- function(
+    k1,
+    iGrid1,
+    eMatDH_special_values_list,
+    eMatDH_special_symbols_list
+) {
+    eMatDH_special_symbols_list[[iGrid1]][
+        simple_binary_search(k1 - 1, eMatDH_special_values_list[[iGrid1]])
+    ]
+}
+
+## have a vector with entries
+## e.g. 100 values between 1 and 10000
+## we have a specific value we want to match, e.g. 37th value
+## so we start at 50, then 25, then 33, etc, until we get there
+simple_binary_search <- function(val, vec) {
+    n <- length(vec)
+    i <- round(n / 2)
+    n <- round(n / 4)
+    while(TRUE) {
+        if (vec[i] == val) {
+            return(i)
+        } else if (vec[i] < val) {
+            i <- i + n
+        } else {
+            i <- i - n
+        }
+        n <- round(n / 2)
+        if (n < 1) {
+            n <- 1
+        }
+    }
+}
 
 
 make_eMatRead_t_using_binary <- function(
@@ -544,11 +586,11 @@ make_eMatRead_t_using_binary <- function(
     eps <- 10 ** (-bq[w] / 10)
     ps[1, w] <- eps / 3
     ps[2, w] <- (1 - eps)
-    ## 
+    ##
     nr <- sapply(sampleReads, function(x) x[[1]]) + 1
     start <- cumsum(c(1, nr))[-(1 + length(nr))]
     end <- cumsum(nr)
-    ## 
+    ##
     rhb <- t(rhb_t)
     ceil_K_n <- ceiling(K / n)
     if (language == "R") {
@@ -609,7 +651,7 @@ calculate_eMatRead_t_usig_rhb_t <- function(
     s <- 0
     ## slow but whatevs, will fix
     n <- 5000
-    eMatRead_t_full  <- array(1, c(K, nReads))    
+    eMatRead_t_full  <- array(1, c(K, nReads))
     for(i in 1:ceiling(K / n)) {
         print(paste0(i, " / ", ceiling(K / n)))
         s <- n * (i - 1) + 1
@@ -622,9 +664,9 @@ calculate_eMatRead_t_usig_rhb_t <- function(
             haps_to_get = s:e - 1,
             nSNPs
         )
-        eMatRead_t_partial  <- array(1, c(KL, nReads))            
+        eMatRead_t_partial  <- array(1, c(KL, nReads))
         gc(reset = TRUE); gc(reset = TRUE);
-        ## 
+        ##
         rcpp_make_eMatRead_t(
             eMatRead_t = eMatRead_t_partial,
             sampleReads = sampleReads,
@@ -632,7 +674,7 @@ calculate_eMatRead_t_usig_rhb_t <- function(
             s = 0,
             maxDifferenceBetweenReads = maxDifferenceBetweenReads,
             Jmax = 10000,
-            eMatHapOri_t = array(0, c(1, 1)), ## ugh                                                      
+            eMatHapOri_t = array(0, c(1, 1)), ## ugh
             pRgivenH1 = array(0),
             pRgivenH2 = array(0),
             run_pseudo_haploid = FALSE,

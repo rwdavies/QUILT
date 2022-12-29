@@ -1,5 +1,5 @@
 if ( 1 == 0 ) {
-    
+
     library("testthat")
     library("QUILT")
     dir <- "~/proj/QUILT/"
@@ -10,7 +10,7 @@ if ( 1 == 0 ) {
         a <- a[-b]
     }
     o <- sapply(a, source)
-    
+
 }
 
 test_that("can bound make_gl_from_u_bq", {
@@ -30,12 +30,12 @@ test_that("can bound make_gl_from_u_bq", {
     minGLValue <- 1e-2
     gl <- array(NA, dim(m1))
     gl[] <- m1[]
-    to_fix <- as.integer(which(colSums(gl < minGLValue) > 0))    
+    to_fix <- as.integer(which(colSums(gl < minGLValue) > 0))
     for(i_col in to_fix) {
         a <- gl[1, i_col]
         b <- gl[2, i_col]
         if (a > b) {
-            b <- b / a                    
+            b <- b / a
             a <- 1
             if (b < minGLValue) {
                 b <- minGLValue
@@ -56,14 +56,14 @@ test_that("can bound make_gl_from_u_bq", {
     Rcpp_make_gl_bound(gl2, minGLValue, to_fix - 1);
 
     expect_equal(gl, gl2)
-    
+
     ## now do bounding
     m2 <- make_gl_from_u_bq(u, bq, nSNPs, minGLValue = 1e-2)
 
     expect_true(sum(m1 == 1e-2) == 0)    ## confirm that m1 has not changed
     expect_false(sum(m2 == 1e-2) == 0)   ## confirm that m2 has changed
 
-    ## check that rcpp works too 
+    ## check that rcpp works too
 
 })
 
@@ -102,9 +102,9 @@ test_that("can quickly in cpp get positions greater than certain value", {
 
     ## either an equivalency or not
     K_top_matches <- 10
-    
+
     for(i in 1:1) {
-        
+
         if (i == 1) {
             set.seed(100)
             x <- runif(100) ## so will be distinct
@@ -118,10 +118,10 @@ test_that("can quickly in cpp get positions greater than certain value", {
         iGrid <- 1
         betaHat_t_col <- array(x, c(K, 1))
         gamma_t_col <- array(0, c(K, 1))
-        
+
         for(j in 1:2) {
             if (j == 1) { f<- Rcpp_get_top_K_or_more_matches_while_building_gamma }
-            if (j == 2) { f<- R_get_top_K_or_more_matches_while_building_gamma }            
+            if (j == 2) { f<- R_get_top_K_or_more_matches_while_building_gamma }
             out <- f(
                 alphaHat_t = alphaHat_t,
                 betaHat_t_col = betaHat_t_col,
@@ -137,7 +137,7 @@ test_that("can quickly in cpp get positions greater than certain value", {
         expect_equal(out1, out2)
 
     }
-    
+
     ## so first pass, can get value, while going over and building
     ## second pass, can get those that meet value
 
@@ -145,6 +145,27 @@ test_that("can quickly in cpp get positions greater than certain value", {
 
 
 
+
+test_that("can do simple binary search", {
+
+    vec <- sort(sample(100000, 1000))
+    locations <- c(1, 37, 50, 900, 1000)
+
+    ##
+    for(i in 1:length(locations)) {
+        index <- locations[i]
+        val <- vec[index]
+        expect_equal(
+            match(val, vec),
+            simple_binary_search(val, vec)
+        )
+        expect_equal(
+            match(val, vec),
+            rcpp_simple_binary_search(val, vec) + 1
+        )
+    }
+
+})
 
 
 
@@ -163,18 +184,18 @@ test_that("can build necessary components from make_rhb_t_equality", {
             small[sample(nSNPs, 1), sample(10, 1)] <- sample(c(0L, 1L), 1)
         }
     }
-    ## 
+    ##
     rhi <- reference_haps
     rhi_t <- t(rhi)
     rhb_t <- STITCH::make_rhb_t_from_rhi_t(rhi_t)
     rhb <- t(rhb_t)
-    
+
     ref_error <- 0.01
     ref_one_minus_error <- 1 - ref_error
     nMaxDH <- 6
-    
+
     for(nMaxDH in c(3, 255, NA)) {
-    
+
         ## make haplotype matching objects
         out <- make_rhb_t_equality(
             rhb_t = rhb_t,
@@ -182,17 +203,18 @@ test_that("can build necessary components from make_rhb_t_equality", {
             nSNPs = nSNPs,
             ref_error = ref_error
         )
-        
+
         distinctHapsB <- out[["distinctHapsB"]]
-        distinctHapsIE <- out[["distinctHapsIE"]]            
+        distinctHapsIE <- out[["distinctHapsIE"]]
         hapMatcher <- out[["hapMatcher"]]
         eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
         eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
+        eMatDH_special_symbols_list <- out[["eMatDH_special_symbols_list"]]
         ## eMatDH_special_symbols_list <- out[["eMatDH_special_symbols_list"]]
         nrow_which_hapMatcher_0 <- out[["nrow_which_hapMatcher_0"]]
         ##
         ## perform
-        ## 
+        ##
         expect_equal(sum(eMatDH_special_grid_which != 0), length(eMatDH_special_values_list))
         if (length(eMatDH_special_values_list) == 0) {
             expect_equal(nrow_which_hapMatcher_0, 0)
@@ -200,25 +222,22 @@ test_that("can build necessary components from make_rhb_t_equality", {
             expect_equal(nrow_which_hapMatcher_0, sum(sapply(eMatDH_special_values_list, length)))
         }
 
-        ## ##
-        ## ## check can re-build
-        ## ##
-        ## for(k in 1:nrow(rhb_t)) {
-        ##     for(iGrid in 1:ncol(rhb_t)) {
-        ##         i <- hapMatcher[k, iGrid]
-        ##         if (value > 0) {
-        ##             b <- distinctHapsB[i, ]
-        ##         } else {
-        ##             eMatDH_special_symbols_list[[iGrid]]
-        ##         }
-        ##         expect_equal(rhb_t[k, iGrid], b)
-        ##     }
-        ## }
-        ## ##
-        ## ## OK so one version is to just run with infinite nMaxDH
-        ## ## then return list versions of distinctHapsB and distinctHapsIE
-        ## ## this will be much better for mspbwt I think
-        ## ## 
+        ##
+        ## check can re-build
+        ##
+        rebuilt_rhb_t <- array(as.integer(1), c(nrow(rhb_t), ncol(rhb_t)))
+        for(k in 1:nrow(rhb_t)) {
+            for(iGrid in 1:ncol(rhb_t)) {
+                i <- hapMatcher[k, iGrid]
+                if (i > 0) {
+                    b <- distinctHapsB[i, iGrid]
+                } else {
+                    b <- get_eMatDH_special_entry(k, iGrid, eMatDH_special_values_list, eMatDH_special_symbols_list)
+                }
+                rebuilt_rhb_t[k, iGrid] <- b
+            }
+        }
+        expect_equal(rhb_t, rebuilt_rhb_t)
 
     }
 
@@ -246,7 +265,7 @@ test_that("can fast eMat", {
     eHapsCurrent_tc[] <- rhi_t
     eHapsCurrent_tc[eHapsCurrent_tc == 0] <- ref_error
     eHapsCurrent_tc[eHapsCurrent_tc == 1] <- 1 - ref_error
-    
+
     maxDifferenceBetweenReads <- 1e10
     normal_eMatRead_t <- array(1, c(K, nReads))
     rcpp_make_eMatRead_t(
@@ -275,7 +294,7 @@ test_that("can fast eMat", {
         language = "R",
         n = 10
     )
-    expect_equal(eMatRead_t, normal_eMatRead_t)    
+    expect_equal(eMatRead_t, normal_eMatRead_t)
 
     ## OK!
 
@@ -288,8 +307,8 @@ test_that("can fast eMat", {
         language = "Rcpp"
     )
 
-    expect_equal(eMatRead_t, Rcpp_eMatRead_t)    
-    
+    expect_equal(eMatRead_t, Rcpp_eMatRead_t)
+
 })
 
 
@@ -353,7 +372,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     always_normalize <- TRUE
     language <- "R"
     min_emission_prob_normalization_threshold <- 1e-100 ## make much smaller than usual
-     
+
     ##
     ## run normal version in R, or Rcpp, and make sure the same
     ##
@@ -436,7 +455,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     out_R_always_normalize <- master_f(TRUE, "R", NA)
     out_Rcpp_always_normalize <- master_f(TRUE, "Rcpp", FALSE)
     out_Rcpp2_always_normalize <- master_f(TRUE, "Rcpp", TRUE)
-    
+
     out_R_seldom_normalize <- master_f(FALSE, "R", NA)
     out_Rcpp_seldom_normalize <- master_f(FALSE, "Rcpp", FALSE)
     out_Rcpp2_seldom_normalize <- master_f(FALSE, "Rcpp", TRUE)
@@ -468,7 +487,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
         expect_equal(out_R_always_normalize[["dosage"]], out_Rcpp_seldom_normalize[["dosage"]], tolerance = 1e-5)
         ## check gammaSmall vs each other and R
         expect_equal(out_R_always_normalize[["gammaSmall_t"]], out_Rcpp_always_normalize[["gammaSmall_t"]], tolerance = 1e-5)
-        expect_equal(out_R_always_normalize[["gammaSmall_t"]], out_Rcpp_seldom_normalize[["gammaSmall_t"]], tolerance = 1e-5)        
+        expect_equal(out_R_always_normalize[["gammaSmall_t"]], out_Rcpp_seldom_normalize[["gammaSmall_t"]], tolerance = 1e-5)
     }
 
 
@@ -502,7 +521,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     ## check dosages and gamma for 4 Rcpp options, without normalization
     ##
     if (!speed_test) {
-        
+
         out_Rcpp_baseline <- master_f(always_normalize = TRUE, language = "Rcpp", is_version_2 = FALSE, normalize_emissions = FALSE)
         for(always_normalize in c(FALSE, TRUE)) {
             for(is_version_2 in c(FALSE, TRUE)) {
@@ -525,20 +544,20 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
 
     }
 
-    
+
     ##
     ## extra stuff for later (possibly)
     ##
     if (1 == 0) {
-    
+
         x <- colSums(out_Rcpp2_always_normalize_c_inexact[["gammaSmall_t"]])
         expect_equal(x, rep(1, length(x)))
-        
+
         expect_equal(colSums(out_Rcpp2_always_normalize_c_inexact[["gammaSmall_t"]]), 1)
         alphaHat_t1 <- out_Rcpp2_always_normalize_c_exact[["alphaHat_t"]]
         c1 <- out_Rcpp2_always_normalize_c_exact[["c"]]
         alphaHat_t2 <- out_Rcpp2_always_normalize_c_inexact[["alphaHat_t"]]
-        c2 <- out_Rcpp2_always_normalize_c_inexact[["c"]]    
+        c2 <- out_Rcpp2_always_normalize_c_inexact[["c"]]
         for(iGrid in which(gammaSmall_cols_to_get > (-1))) {
             x <- unique(round(log(alphaHat_t1[, iGrid] / alphaHat_t2[, iGrid]), 5))
             expect_equal(length(x), 1)
@@ -548,9 +567,9 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
                 exp(sum(log(c1[1:iGrid])) - sum(log(c2[1:iGrid])))
             )
         }
-        
+
         expect_equal(out_Rcpp2_always_normalize_c_exact[["gammaSmall_t"]], out_Rcpp2_always_normalize_c_inexact[["gammaSmall_t"]])
-        
+
         expect_equal(out_R_always_normalize[["dosage"]],    out_Rcpp2_always_normalize_c_exact[["dosage"]])
         expect_equal(out_R_always_normalize[["dosage"]],    out_Rcpp2_always_normalize_c_inexact[["dosage"]])
         expect_equal(out_R_always_normalize[["dosage"]],    out_Rcpp2_seldom_normalize_c_exact[["dosage"]])
@@ -570,7 +589,7 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
     if (!speed_test) {
         nSNPs <- 100
         L <- sort(sample(1:1000, 100))
-        suppressOutput <- 1        
+        suppressOutput <- 1
     } else {
         suppressOutput <- 0
         nSNPs <- 1000
@@ -609,16 +628,16 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
     use_eMatDH <- TRUE
     i_setup <- 1
     always_normalize <- FALSE
-    
+
     ## build some haplotypes and encode them
     for(i_setup in 1:3) {
 
         for(always_normalize in c(FALSE, TRUE)) {
-                
+
             setup_result <- list()
-            
+
             for(use_eMatDH in c(FALSE, TRUE)) {
-                
+
                 ## for cpp
                 return_dosage <- TRUE
                 return_betaHat_t <- TRUE
@@ -627,10 +646,10 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                 get_best_haps_from_thinned_sites <- TRUE
 
                 ##
-                ## i_setup = 1 --- 
-                ## i_setup = 2 --- 
+                ## i_setup = 1 ---
+                ## i_setup = 2 ---
                 ## i_setup = 3 --- same as above, but only get best_haps from thinned sites
-                if (!suppressOutput) {            
+                if (!suppressOutput) {
                     print(paste0("use_eMatDH = ", use_eMatDH, ", i_setup = ", i_setup))
                 }
                 if (i_setup == 1) {
@@ -660,10 +679,10 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                     }
                 }
 
-                ## 
+                ##
                 best_haps_stuff_list <- list()
                 best_haps_stuff_list <- as.list(1:sum(gammaSmall_cols_to_get >= 0))
-                
+
                 ## make them mostly one of three options, with a few small changes
                 rhi <- reference_haps
                 rhi_t <- t(rhi)
@@ -675,7 +694,7 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                 ref_error <- 0.01
                 ref_one_minus_error <- 1 - ref_error
 
-                
+
                 ## make haplotype matching objects
                 out <- make_rhb_t_equality(
                     rhb_t = rhb_t,
@@ -684,11 +703,11 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                     ref_error = ref_error
                 )
                 distinctHapsB <- out[["distinctHapsB"]]
-                distinctHapsIE <- out[["distinctHapsIE"]]            
+                distinctHapsIE <- out[["distinctHapsIE"]]
                 hapMatcher <- out[["hapMatcher"]]
                 eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
                 eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
-                
+
                 ## make some gls from this
                 my_hap <- c(
                     rhi_t[1, 1:36],
@@ -732,11 +751,11 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                 gamma_t <- array(0, c(K, nGrids))
                 gammaSmall_t <- array(0, c(K, nSmallGammaGrids))
                 dosage <- numeric(nSNPs)
-                
-                ## so now, want to 
+
+                ## so now, want to
                 if (!speed_test) {
-                    
-                    ## 
+
+                    ##
                     a <- system.time(
                         outR <- R_haploid_dosage_versus_refs(
                             gl = gl,
@@ -763,7 +782,7 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                         )
                     )
 
-                    if (!suppressOutput) {                
+                    if (!suppressOutput) {
                         print("R speed")
                     }
                     R_gamma_t <- outR[["gamma_t"]]
@@ -776,9 +795,9 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                     expect_equal(colSums(R_gamma_t), rep(1, 4))
                     expect_true((cor(R_dosage, my_hap) ** 2) > 0.7) ## is better for truer match against reference
                     ## alternate
-                    
+
                 }
-                
+
                 a <- system.time(
                     Rcpp_haploid_dosage_versus_refs(
                         gl = gl,
@@ -839,14 +858,14 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                     c = c
                 )
             }
-            
+
             ## compare results for a setup per eMatDH
             for(what in c("alphaHat_t", "betaHat_t", "gamma_t", "dosage", "c")) {
                 m1 <- setup_result[["FALSE"]][[what]]
                 m2 <- setup_result[["TRUE"]][[what]]
                 ## don't check alpha and beta if always_normize is on
                 if (
-                    !(!always_normalize && (what == "alphaHat_t" | what == "betaHat_t" | what == "c")) && 
+                    !(!always_normalize && (what == "alphaHat_t" | what == "betaHat_t" | what == "c")) &&
                     !(what == "alphaHat_t" & !return_gamma_t)
                 ) {
                     if (suppressWarnings((max(m1 / m2 - 1, na.rm = TRUE) > 1e-8))) {
@@ -856,11 +875,11 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                     expect_equal(setup_result[["FALSE"]][[what]], setup_result[["TRUE"]][[what]])
                 }
             }
-            
+
         }
-        
+
     }
-    
+
 })
 
 
@@ -871,7 +890,7 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
 test_that("profile", {
 
     skip("for profiling")
-    
+
     if (1 == 0) {
 
         load("~/Downloads/impute_develop.RData")
@@ -884,7 +903,7 @@ test_that("profile", {
             ref_error = ref_error
         )
         distinctHapsB <- out[["distinctHapsB"]]
-        distinctHapsIE <- out[["distinctHapsIE"]]            
+        distinctHapsIE <- out[["distinctHapsIE"]]
         hapMatcher <- out[["hapMatcher"]]
         eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
         eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
@@ -897,12 +916,12 @@ test_that("profile", {
 
     }
 
-    ## 
+    ##
     ## load("~/Downloads/temp_quilt_speed_test.RData")
-    ## 
+    ##
     load("~/Downloads/impute_develop.RData")
     transMatRate_t <- full_transMatRate_t_H
-    K <- nrow(rhb_t)    
+    K <- nrow(rhb_t)
     nGrids <- ncol(rhb_t)
     i_hap <- 1
     u <- unlist(sapply(sampleReads[H == i_hap], function(x) x[[4]])) + 1
@@ -913,13 +932,13 @@ test_that("profile", {
     if (length(u) == 0) {
         print_message(paste0("Read label assignment includes no reads for haplotype ", i_hap))
     }
-    ## 
+    ##
     gl <- make_gl_from_u_bq(u, bq, nSNPs)
     ## so u is 1-based, so e.g. having 1-32 means grid 1, 33-64 means grid 2, etc
     ## so unique(floor(u / 32)) having 2 means yes there is a var in grid 2, etc
     grid_has_variant <- array(FALSE, nGrids)
     grid_has_variant[unique(floor(u / 32))] <- TRUE ## at least for 32-base grids
-    
+
 
     ##
     ## new version
@@ -949,7 +968,7 @@ test_that("profile", {
     nSNPsLocal <- e - s + 1
     gl_local <- gl[, s : e, drop = FALSE]
     first_alpha <- array(0, K)
-    one_over_K <- 1 / K            
+    one_over_K <- 1 / K
     for(k in 0:(K - 1)) {
         if (use_eMatDH) {
             dh <- hapMatcher[k + 1, iGrid + 1]
@@ -969,13 +988,13 @@ test_that("profile", {
     ##
     ## profile forward
     ##
-    
+
     if (1 == 1) {
 
         print("-----------------------")
         print("--------forward--------")
-        print("-----------------------")        
-        
+        print("-----------------------")
+
         alphaHat_t_new <- array(0, c(K, nGrids))
         alphaHat_t_new[, 1] <- first_alpha
         c1 <- array(1, c(1, nGrids))
@@ -986,7 +1005,7 @@ test_that("profile", {
         c2[1] <- first_c
 
         ## OK, is there some way I can avoid more multiplications!
-        
+
         ## run them normally too for checking!
         print(paste0("----------new version----------------"))
         nReps <- 10
@@ -1013,7 +1032,7 @@ test_that("profile", {
                     eMatDH_special_values_list
                 )
             }}))
-        
+
         print(paste0("----------original version----------------"))
         print(system.time({
             for(i in 1:nReps) {
@@ -1036,8 +1055,8 @@ test_that("profile", {
                     min_emission_prob_normalization_threshold = 1e-100
                 )
             }}))
-        
-        
+
+
         print(paste0("--------done forward testing version----------"))
         if (1 == 0) {
             print(c1[1:10])
@@ -1068,7 +1087,7 @@ test_that("profile", {
             alphaHat_t_new[, nGrids],
             alphaHat_t_original[, nGrids]
         )
-        
+
         ## also, want alphas to be the same, throughout!
         for(iGrid in which(full_gammaSmall_cols_to_get > (-1))) {
             x <- unique(round(log(alphaHat_t_new[, iGrid] / alphaHat_t_original[, iGrid]), 5))
@@ -1090,7 +1109,7 @@ test_that("profile", {
 
         print("-----------------------")
         print("--------backward-------")
-        print("-----------------------")        
+        print("-----------------------")
         ## load(file = "~/Downloads/impute_develop_alpha.RData")
         ##nMaxDH <- 2 ** 8 - 1
 
@@ -1102,26 +1121,26 @@ test_that("profile", {
             return_gammaSmall_t <- FALSE
             make_plots <- FALSE
             return_gammaSmall_t <- FALSE
-            
+
             if (i_option == 1) {
                 only_store_alpha_at_gamma_small <- TRUE
                 get_best_haps_from_thinned_sites <- TRUE
                 return_dosage <- FALSE
                 best_haps_stuff_list1 <- as.list(1:sum(full_gammaSmall_cols_to_get >= 0))
-                best_haps_stuff_list2 <- as.list(1:sum(full_gammaSmall_cols_to_get >= 0))                
-                print("--------- getting best K ---------")                
+                best_haps_stuff_list2 <- as.list(1:sum(full_gammaSmall_cols_to_get >= 0))
+                print("--------- getting best K ---------")
             } else if (i_option == 2) {
                 only_store_alpha_at_gamma_small <- FALSE
                 get_best_haps_from_thinned_sites <- FALSE
                 return_dosage <- TRUE
                 best_haps_stuff_list1 <- list()
-                best_haps_stuff_list2 <- list()                                
+                best_haps_stuff_list2 <- list()
                 print("--------- getting dosage ---------")
                 return_gamma_t <- FALSE
             }
             if (return_gamma_t == TRUE) {
                 gamma_t1 <- array(0, c(K, nGrids))
-                gamma_t2 <- array(0, c(K, nGrids))                
+                gamma_t2 <- array(0, c(K, nGrids))
                 only_store_alpha_at_gamma_small <- FALSE
             } else {
                 gamma_t1 <- array(0, c(1, 1))
@@ -1129,12 +1148,12 @@ test_that("profile", {
                 full_gamma_t <- array(0, c(1, 1))
             }
 
-            
+
             full_betaHat_t <- array(0, c(1, 1))
             dosage1 <- numeric(nSNPs)
             dosage2 <- numeric(nSNPs)
-            
-            
+
+
             ##
             ## run forward to initialize
             ##
@@ -1142,7 +1161,7 @@ test_that("profile", {
             alphaHat_t[, 1] <- first_alpha
             c <- array(1, c(1, nGrids))
             c[1] <- first_c
-            
+
             Rcpp_haploid_reference_single_forward_version2(
                 full_gammaSmall_cols_to_get,
                 gl,
@@ -1163,7 +1182,7 @@ test_that("profile", {
                 eMatDH_special_grid_which = eMatDH_special_grid_which,
                 eMatDH_special_values_list = eMatDH_special_values_list
             )
-            
+
 
             print("--- backwards new version ---------------")
             nReps <- 10
@@ -1207,7 +1226,7 @@ test_that("profile", {
             alphaHat_t[, 1] <- first_alpha
             c <- array(1, c(1, nGrids))
             c[1] <- first_c
-            
+
             Rcpp_haploid_reference_single_forward(
                 full_gammaSmall_cols_to_get,
                 gl,
@@ -1226,8 +1245,8 @@ test_that("profile", {
                 always_normalize = FALSE,
                 min_emission_prob_normalization_threshold = 1e-100
             )
-            
-            
+
+
             print("--- backwards old version ---------------")
             print(system.time({
                 for(i in 1:nReps) {
@@ -1297,7 +1316,7 @@ test_that("profile", {
         gammaSmall_cols_to_get <- array(-1, nGrids)
         gammaSmall_cols_to_get[ww] <- 0:(length(ww) - 1)
         gammaSmall_t <-  array(0, c(K, length(ww)))
-        
+
         ## what type of iteration
         for(i_what in 1:2) {
 
@@ -1306,15 +1325,15 @@ test_that("profile", {
                 return_gammaSmall_t <- TRUE
                 return_dosage <- FALSE
                 return_good_haps <- TRUE
-                get_best_haps_from_thinned_sites <- TRUE                
-                best_haps_stuff_list <- as.list(1:sum(gammaSmall_cols_to_get >= 0))        
+                get_best_haps_from_thinned_sites <- TRUE
+                best_haps_stuff_list <- as.list(1:sum(gammaSmall_cols_to_get >= 0))
             } else {
                 print("----------calculate dosages -----------")
                 return_gammaSmall_t <- FALSE
                 return_dosage <- TRUE
                 return_good_haps <- FALSE
                 best_haps_stuff_list <- list()
-                get_best_haps_from_thinned_sites <- FALSE                
+                get_best_haps_from_thinned_sites <- FALSE
             }
 
             for(i_version in 2:1) {
@@ -1324,7 +1343,7 @@ test_that("profile", {
                 alphaHat_t[] <- 0
                 gammaSmall_t[] <- 0
                 use_eMatDH <- TRUE
-                ## 
+                ##
                 u <- unlist(sapply(sampleReads[H == i_hap], function(x) x[[4]])) + 1
                 bq <- unlist(sapply(sampleReads[H == i_hap], function(x) x[[3]]))
                 w <- bq != 0
@@ -1333,16 +1352,16 @@ test_that("profile", {
                 if (length(u) == 0) {
                     print_message(paste0("Read label assignment includes no reads for haplotype ", i_hap))
                 }
-                ## 
+                ##
                 gl <- make_gl_from_u_bq(u, bq, nSNPs)
-                ## 
+                ##
                 dosage <- numeric(nSNPs)
                 if (i_version == 2) {
                     is_version_2 <- TRUE
                     print(paste0("----------- new version --------------"))
                 } else {
                     is_version_2 <- FALSE
-                    print(paste0("----------- old version --------------"))                    
+                    print(paste0("----------- old version --------------"))
                 }
                 Rcpp_haploid_dosage_versus_refs(
                     gl = gl,
@@ -1355,7 +1374,7 @@ test_that("profile", {
                     ref_error = ref_error,
                     use_eMatDH = use_eMatDH,
                     distinctHapsB = distinctHapsB,
-                    distinctHapsIE = distinctHapsIE,                
+                    distinctHapsIE = distinctHapsIE,
                     hapMatcher = hapMatcher,
                     suppressOutput = 0,
                     gammaSmall_t = gammaSmall_t,
@@ -1372,7 +1391,7 @@ test_that("profile", {
                 )
                 if (i_version == 1) {dosage1 <- dosage; gammaSmall_t1 <- gammaSmall_t}
                 if (i_version == 2) {dosage2 <- dosage; gammaSmall_t2 <- gammaSmall_t}
-                
+
             }
 
             if (return_dosage) {
@@ -1411,20 +1430,20 @@ test_that("profile", {
             m,
             rbind(m3, c(NA, NA, NA, NA))
         )[1:40, ]
-        
+
         ## AM HERE
         ## HOW MANY ARE CREATED AND DESTROYED
         ## CAN I CONSIDER A REDUCED REPRESENTATION
         ## WHERE I UPDATE THESE ON EVERY GO
         ## AND DO FEWER CALCULATIONS
-            ## AM 
-        
+            ## AM
+
         ## OK, so how may created / lost per go
-        
+
         ## OK so sometimes several thousands, and sometimes many fewer
         ## seriously can I use lower precision on the values I store...
 
-        ## so often 50+ 
+        ## so often 50+
         x <- apply(hapMatcher, 2, function(x) length(unique(x)))
         sort(x)
         mean(x) ## often 80 ish haplotypes
@@ -1443,7 +1462,7 @@ test_that("profile", {
         prev_alphaHat_class <- match(prev_alphaHat_col, prev_alphaHat_master)
         ##
         ## next one
-        ## 
+        ##
         dh_col <- hapMatcher[, iGrid + 1]
         eMatDH_col <- eMatDH[, iGrid + 1]
         prob_col <- eMatDH_col[dh_col]
@@ -1491,7 +1510,7 @@ test_that("profile", {
         ## now re-class those that have been split?
 
         ## OK, from this, for those split, get split
-        
+
         expect_equal(new_alphaHat_col_old, new_alphaHat_col_new)
         ## now need to re-set class
         for(i in 1:(count - 1)) {
@@ -1500,17 +1519,17 @@ test_that("profile", {
         ## OK this is now blank, that is good. count re-sets itself
         expect_equal(sum(class_compare != 0), 0)
         ## now need to update class for next round
-        ## 
-
-        
-        
+        ##
 
 
-        
-        
-        
+
+
+
+
+
+
     }
-    
+
 })
 
 
@@ -1528,7 +1547,7 @@ test_that("prototype idea of classes for faster alphaHat", {
 
     skip("not sure this is the right idea")
 
-    
+
     ## so have initial class
     ## and then have prob, some change
     ## re-make class in efficient way after calc

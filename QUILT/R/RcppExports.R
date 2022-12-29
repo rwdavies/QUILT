@@ -187,6 +187,11 @@ rcpp_forwardBackwardGibbsNIPT <- function(sampleReads, priorCurrent_m, alphaMatC
 }
 
 #' @export
+rcpp_simple_binary_search <- function(val, vec) {
+    .Call('_QUILT_rcpp_simple_binary_search', PACKAGE = 'QUILT', val, vec)
+}
+
+#' @export
 Rcpp_make_eMatRead_t_for_gibbs_using_objects <- function(eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads) {
     invisible(.Call('_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects', PACKAGE = 'QUILT', eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads))
 }
@@ -199,6 +204,16 @@ rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects <- functio
 #' @export
 Rcpp_quilt_test_doubler <- function(a) {
     .Call('_QUILT_Rcpp_quilt_test_doubler', PACKAGE = 'QUILT', a)
+}
+
+#' @export
+Rcpp_raw_test <- function(a, b) {
+    .Call('_QUILT_Rcpp_raw_test', PACKAGE = 'QUILT', a, b)
+}
+
+#' @export
+Rcpp_raw_test_int <- function(a, b) {
+    .Call('_QUILT_Rcpp_raw_test_int', PACKAGE = 'QUILT', a, b)
 }
 
 #' @export
