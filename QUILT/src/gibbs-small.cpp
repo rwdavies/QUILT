@@ -130,7 +130,8 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
     Rcpp::IntegerVector hap(32);
     double d2 = 1 / maxDifferenceBetweenReads;
     int bvtd; // binary value to decompose
-    int is;
+    int s1 = 0;
+    int e1 = 0;
     for(iRead = 0; iRead < nReads; iRead++) {
         Rcpp::List readData = as<Rcpp::List>(sampleReads[iRead]);
         int J = as<int>(readData[0]); // number of Unique SNPs on read
@@ -160,6 +161,10 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
 	        for(k = 0; k < K; k++) {
 		    haps_at_grid(k) = hapMatcher(which_haps_to_use(k) - 1, iGrid0);
 	        }
+                if (use_eMatDH_special_symbols) {
+                    s1 = eMatDH_special_matrix_helper(iGrid0, 0);
+                    e1 = eMatDH_special_matrix_helper(iGrid0, 1);
+                }
 	    }
 	    iGrid0_prev = iGrid0;
 	    for(k = 0; k < K; k++) {
@@ -170,8 +175,8 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
                         bvtd = rcpp_simple_binary_matrix_search(
                             which_haps_to_use(k) - 1,
                             eMatDH_special_matrix,
-                            eMatDH_special_matrix_helper(iGrid0, 0),
-                            eMatDH_special_matrix_helper(iGrid0, 1)
+                            s1,
+                            e1
                         );
                     } else {
                         bvtd = rhb_t(which_haps_to_use(k) - 1, iGrid0);

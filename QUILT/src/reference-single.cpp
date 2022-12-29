@@ -36,6 +36,13 @@ double print_times(
 );
 
 
+int rcpp_simple_binary_matrix_search(
+    int val,
+    Rcpp::IntegerMatrix mat,
+    int s1,
+    int e1
+);
+
 
 //' @export
 // [[Rcpp::export]]
@@ -511,6 +518,9 @@ void Rcpp_haploid_reference_single_forward_version2(
     arma::rowvec& c,
     const arma::mat& transMatRate_t,
     const arma::imat& rhb_t,
+    Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
+    Rcpp::IntegerMatrix& eMatDH_special_matrix,
+    const bool use_eMatDH_special_symbols,    
     arma::imat& hapMatcher,
     arma::mat& eMatDH,
     const int& nGrids,
@@ -529,6 +539,7 @@ void Rcpp_haploid_reference_single_forward_version2(
     double jump_prob, not_jump_prob; //
     double one_minus_jump_prob = 1;
     int s, e, nSNPsLocal, i, iGrid, k;
+    int bvtd, s1, e1;
     double ref_one_minus_error = 1 - ref_error;
     //const int n_which_hapMatcher_0 = which_hapMatcher_0.n_rows;
     //int hapMatcher_0_position = 0;
@@ -616,10 +627,26 @@ void Rcpp_haploid_reference_single_forward_version2(
                 // first, do special cases
                 //
                 if (eMatDH_special_grid_which(iGrid) > 0) {
-                    vals_to_redo = Rcpp::as<Rcpp::IntegerVector>(eMatDH_special_values_list(eMatDH_special_grid_which(iGrid) - 1));
+                    if (use_eMatDH_special_symbols) {
+                        s1 = eMatDH_special_matrix_helper(iGrid, 0);
+                        e1 = eMatDH_special_matrix_helper(iGrid, 1);
+                        // there is undoubtledly better code to do this
+                        Rcpp::IntegerVector temp_vec(e1 - s1 + 1);
+                        for(int ii = 0; ii < e1 - s1 + 1; ii++) {
+                            temp_vec(ii) = eMatDH_special_matrix(s1 - 1 + ii, 0);
+                        }
+                        vals_to_redo = temp_vec;
+                    } else {
+                        vals_to_redo = Rcpp::as<Rcpp::IntegerVector>(eMatDH_special_values_list(eMatDH_special_grid_which(iGrid) - 1));
+                    }
                     for(i = 0; i < vals_to_redo.size(); i++) {
                         k = vals_to_redo(i);
-                        std::uint32_t tmp(rhb_t(k, iGrid));
+                        if (use_eMatDH_special_symbols) {
+                            bvtd = rcpp_simple_binary_matrix_search(k, eMatDH_special_matrix, s1, e1);
+                        } else {
+                            bvtd = rhb_t(k, iGrid);
+                        }
+                        std::uint32_t tmp(bvtd);
                         prob = 1;
                         for(int b = 0; b < nSNPsLocal; b++) {
                             dR = gl_local(0, b);
@@ -1033,6 +1060,9 @@ void Rcpp_haploid_reference_single_backward_version2(
     const int& K,
     const bool& use_eMatDH,
     const arma::imat& rhb_t,
+    Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
+    Rcpp::IntegerMatrix& eMatDH_special_matrix,
+    const bool use_eMatDH_special_symbols,    
     double ref_error,
     const arma::mat& gl,
     arma::rowvec& c,
@@ -1081,6 +1111,7 @@ void Rcpp_haploid_reference_single_backward_version2(
     double B_prev_star = 1;
     double emission_max = 1;
     Rcpp::IntegerVector vals_to_redo;
+    int bvtd, s1, e1;    
     //
     //
     for(iGrid = nGrids - 1; iGrid >= 0; --iGrid) {
@@ -1128,11 +1159,27 @@ void Rcpp_haploid_reference_single_backward_version2(
                     // first, do special cases
                     //
                     if (eMatDH_special_grid_which(iGrid + 1) > 0) {
-                        vals_to_redo = Rcpp::as<Rcpp::IntegerVector>(eMatDH_special_values_list(eMatDH_special_grid_which(iGrid + 1) - 1));
+                        if (use_eMatDH_special_symbols) {
+                            s1 = eMatDH_special_matrix_helper(iGrid + 1, 0);
+                            e1 = eMatDH_special_matrix_helper(iGrid + 1, 1);
+                            // there is undoubtledly better code to do this
+                            Rcpp::IntegerVector temp_vec(e1 - s1 + 1);
+                            for(int ii = 0; ii < e1 - s1 + 1; ii++) {
+                                temp_vec(ii) = eMatDH_special_matrix(s1 - 1 + ii, 0);
+                            }
+                            vals_to_redo = temp_vec;
+                        } else {
+                            vals_to_redo = Rcpp::as<Rcpp::IntegerVector>(eMatDH_special_values_list(eMatDH_special_grid_which(iGrid + 1) - 1));
+                        }
                         for(i = 0; i < vals_to_redo.size(); i++) {
                             k = vals_to_redo(i);
+                            if (use_eMatDH_special_symbols) {
+                                bvtd = rcpp_simple_binary_matrix_search(k, eMatDH_special_matrix, s1, e1);
+                            } else {
+                                bvtd = rhb_t(k, iGrid + 1);
+                            }
 			    //
-			    std::uint32_t tmp(rhb_t(k, iGrid + 1));
+                            std::uint32_t tmp(bvtd);
 			    //
 			    prob = 1;
 			    for(int b = 0; b < nSNPsLocal; b++) {
@@ -1346,6 +1393,9 @@ void Rcpp_haploid_dosage_versus_refs(
     const bool use_eMatDH,
     arma::imat& distinctHapsB,
     arma::mat& distinctHapsIE,
+    Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
+    Rcpp::IntegerMatrix& eMatDH_special_matrix,
+    const bool use_eMatDH_special_symbols,    
     arma::imat& hapMatcher,
     Rcpp::IntegerVector& gammaSmall_cols_to_get,
     const Rcpp::IntegerVector& eMatDH_special_grid_which,
@@ -1388,7 +1438,7 @@ void Rcpp_haploid_dosage_versus_refs(
     prev=print_times(prev, suppressOutput, prev_section, next_section);
     prev_section=next_section;
     //
-    const int K = rhb_t.n_rows;
+    const int K = hapMatcher.n_rows;
     const int nGrids = alphaHat_t.n_cols;
     const int nSNPs = gl.n_cols;
     double one_over_K = 1 / (double)K;
@@ -1438,6 +1488,13 @@ void Rcpp_haploid_dosage_versus_refs(
       gl_local(0, i) = gl(0, i + s);
       gl_local(1, i) = gl(1, i + s);      
     }
+    int s1 = 0;
+    int e1 = 0;
+    int bvtd;
+    if (use_eMatDH_special_symbols) {    
+        s1 = eMatDH_special_matrix_helper(0, 0);
+        e1 = eMatDH_special_matrix_helper(0, 1);
+    }
     for(k = 0; k < K; k++) {
         if (use_eMatDH) {
             dh = hapMatcher(k, iGrid);
@@ -1448,7 +1505,12 @@ void Rcpp_haploid_dosage_versus_refs(
             prob = eMatDH(dh, iGrid);
         } else {
             //
-            std::uint32_t tmp(rhb_t(k, iGrid));            
+            if (use_eMatDH_special_symbols) {
+                bvtd = rcpp_simple_binary_matrix_search(k, eMatDH_special_matrix, s1, e1);
+            } else {
+                bvtd = rhb_t(k, iGrid);
+            }
+            std::uint32_t tmp(bvtd);
             //
             prob = 1;
             for(int b = 0; b < nSNPsLocal; b++) {
@@ -1473,7 +1535,7 @@ void Rcpp_haploid_dosage_versus_refs(
     prev=print_times(prev, suppressOutput, prev_section, next_section);
     prev_section=next_section;
     if (is_version_2) {
-        Rcpp_haploid_reference_single_forward_version2(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions);
+        Rcpp_haploid_reference_single_forward_version2(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions);
     } else {
         Rcpp_haploid_reference_single_forward(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, maxEmissionMatrixDifference, normalize_emissions);
     }
@@ -1491,7 +1553,7 @@ void Rcpp_haploid_dosage_versus_refs(
     prev=print_times(prev, suppressOutput, prev_section, next_section);
     prev_section=next_section;
     if (is_version_2) {
-        Rcpp_haploid_reference_single_backward_version2(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage,     nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions);
+        Rcpp_haploid_reference_single_backward_version2(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage,     nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions);
     } else {
         Rcpp_haploid_reference_single_backward(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage,     nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches, maxEmissionMatrixDifference, normalize_emissions);
     }

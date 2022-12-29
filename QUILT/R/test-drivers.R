@@ -384,6 +384,8 @@ make_reference_single_test_package <- function(
     hapMatcher <- out[["hapMatcher"]]
     eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
     eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
+    eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
+    eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
     my_hap <- c(
         rhi_t[1, 1:36],
         rhi_t[2, 37:60],
@@ -418,6 +420,8 @@ make_reference_single_test_package <- function(
             ref_error = ref_error,
             eMatDH_special_values_list = eMatDH_special_values_list,
             eMatDH_special_grid_which = eMatDH_special_grid_which,
+            eMatDH_special_matrix = eMatDH_special_matrix,
+            eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
             gammaSmall_cols_to_get = gammaSmall_cols_to_get,
             truth_hap = my_hap
         )

@@ -161,6 +161,10 @@ get_and_impute_one_sample <- function(
     small_ref_panel_equally_likely_reads_update_iterations
 ) {
 
+
+    print("here it is!")
+    print(dim(rhb_t))
+
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
     nGrids <- ncol(rhb_t)

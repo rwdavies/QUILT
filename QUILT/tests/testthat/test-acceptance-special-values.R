@@ -34,7 +34,7 @@ data_package <- STITCH::make_acceptance_test_data_package(
 )
 refpack <- STITCH::make_reference_package(
     n_snps = n_snps,
-    n_samples_per_pop = 500,
+    n_samples_per_pop = 1000,
     reference_populations = c("CEU", "GBR"),
     chr = chr,
     phasemaster = phasemaster
@@ -71,7 +71,8 @@ test_that("QUILT can impute a few samples using RAM efficient version without rh
         n_seek_its = 3,
         nCores = 1,
         nGen = 100,
-        use_eMatDH_special_symbols = TRUE
+        use_eMatDH_special_symbols = TRUE,
+        use_mspbwt = TRUE ## need to turn on
     )
 
     regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)

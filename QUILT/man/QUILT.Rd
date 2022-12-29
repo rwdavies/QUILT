@@ -80,7 +80,7 @@ QUILT(
   use_mspbwt = FALSE,
   mspbwt_nindices = 4L,
   use_splitreadgl = FALSE,
-  use_eMatDH_special_symbols = TRUE
+  use_eMatDH_special_symbols = FALSE
 )
 }
 \arguments{

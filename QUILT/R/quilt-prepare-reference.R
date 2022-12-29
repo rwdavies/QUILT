@@ -410,8 +410,6 @@ QUILT_prepare_reference <- function(
         eMatDH_special_matrix_helper <- matrix(as.integer(1), 1, 1) ## nuke!
         eMatDH_special_matrix <- matrix(as.integer(1), 1, 1) ## nuke!
     }
-    rm(out)
-    gc(reset = TRUE);    gc(reset = TRUE);
 
 
     if (use_mspbwt) {
