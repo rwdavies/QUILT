@@ -106,15 +106,15 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
     const Rcpp::IntegerVector& grid,
     const arma::imat& rhb_t,
     const arma::mat& distinctHapsIE,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix,
     const double ref_error,
     const Rcpp::IntegerVector& which_haps_to_use,
     const bool rescale_eMatRead_t,
     const int Jmax,
-    const double maxDifferenceBetweenReads
+    const double maxDifferenceBetweenReads,
+    const bool use_eMatDH_special_symbols
 ) {
-    //const Rcpp::IntegerMatrix& eMatDH_special_helper,
-    //const Rcpp::IntegerMatrix& eMatDH_special_matrix,
-    //const bool use_eMatDH_special_symbols
     const int nReads = sampleReads.size();
     const int K = which_haps_to_use.length();
     int iRead, iGrid0, iGrid0_prev, k, j;
@@ -125,6 +125,8 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
     Rcpp::IntegerVector haps_at_grid(K);
     Rcpp::IntegerVector hap(32);
     double d2 = 1 / maxDifferenceBetweenReads;
+    int bvtd; // binary value to decompose
+    int is;
     for(iRead = 0; iRead < nReads; iRead++) {
         Rcpp::List readData = as<Rcpp::List>(sampleReads[iRead]);
         int J = as<int>(readData[0]); // number of Unique SNPs on read
@@ -154,24 +156,23 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
 	        for(k = 0; k < K; k++) {
 		    haps_at_grid(k) = hapMatcher(which_haps_to_use(k) - 1, iGrid0);
 	        }
-                //if (use_eMatDH_special_symbols) {
-                    //werwer
-                //}
 	    }
 	    iGrid0_prev = iGrid0;
-	    //
 	    for(k = 0; k < K; k++) {
 	        if (haps_at_grid(k) > 0) {
 		  e = distinctHapsIE(haps_at_grid(k) - 1, u(j));
 		} else {
-                    //if (use_eMatDH_special_symbols) {
-                        // pretty efficient, not perfect, but meh
-                        std::uint32_t tmp(rhb_t(which_haps_to_use(k) - 1, iGrid0));
-                        //} else {
-                        //eMatDH_special_values_list
-                        //    eMatDH_special_symbols_list
-                        //   rcpp_simple_binary_search(val, vec)
-                        //}
+                    if (use_eMatDH_special_symbols) {
+                        bvtd = rcpp_simple_binary_matrix_search(
+                            k,
+                            eMatDH_special_matrix,
+                            eMatDH_special_matrix_helper(iGrid0, 0),
+                            eMatDH_special_matrix_helper(iGrid0, 1)
+                        );
+                    } else {
+                        bvtd = rhb_t(which_haps_to_use(k) - 1, iGrid0);
+                    }
+                    std::uint32_t tmp(bvtd);
                     int j2 = 0;
                     for (int i = 0; i < 32; i++, tmp >>= 1) {
                         hap(j2++) = tmp & 0x1;

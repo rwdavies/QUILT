@@ -197,8 +197,8 @@ rcpp_simple_binary_matrix_search <- function(val, mat, s1, e1) {
 }
 
 #' @export
-Rcpp_make_eMatRead_t_for_gibbs_using_objects <- function(eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads) {
-    invisible(.Call('_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects', PACKAGE = 'QUILT', eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads))
+Rcpp_make_eMatRead_t_for_gibbs_using_objects <- function(eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads, use_eMatDH_special_symbols) {
+    invisible(.Call('_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects', PACKAGE = 'QUILT', eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads, use_eMatDH_special_symbols))
 }
 
 #' @export

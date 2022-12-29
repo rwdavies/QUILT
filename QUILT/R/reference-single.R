@@ -504,7 +504,8 @@ make_rhb_t_equality <- function(
             unlist(eMatDH_special_values_list),
             unlist(eMatDH_special_symbols_list)
         )
-        eMatDH_special_matrix_helper <- cbind(starts, ends)
+        eMatDH_special_matrix_helper <- array(as.integer(NA), c(length(eMatDH_special_grid_which > 0), 2))
+        eMatDH_special_matrix_helper[eMatDH_special_grid_which > 0, ] <- cbind(as.integer(starts),as.integer(ends))
         ##
         ## fix all_symbols
         ##
@@ -541,22 +542,6 @@ make_rhb_t_equality <- function(
 }
 
 
-get_eMatDH_special_entry <- function(
-    k,
-    iGrid,
-    eMatDH_special_grid_which,
-    eMatDH_special_matrix_helper,
-    eMatDH_special_matrix
-) {
-    ##
-    is <- eMatDH_special_grid_which[iGrid] ## 1-based
-    simple_binary_matrix_search(
-        val = k,
-        mat = eMatDH_special_matrix,
-        s1 = eMatDH_special_matrix_helper[is, 1],
-        e1 = eMatDH_special_matrix_helper[is, 2]
-    )
-}
 
 ## have a vector with entries
 ## e.g. 100 values between 1 and 10000

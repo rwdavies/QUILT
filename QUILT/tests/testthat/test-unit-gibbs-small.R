@@ -228,6 +228,8 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
     eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
     eMatDH_special_symbols_list <- out[["eMatDH_special_symbols_list"]]
     nrow_which_hapMatcher_0 <- out[["nrow_which_hapMatcher_0"]]
+    eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
+    eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
 
     eMatRead_t <- R_make_eMatRead_t_for_gibbs_using_objects(
         sampleReads = sampleReads,
@@ -244,27 +246,28 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
     expect_equal(eMatRead_t, eMatRead_t_old)
 
 
+    for(use_eMatDH_special_symbols in c(FALSE, TRUE)) {
 
-    eMatRead_t_new <- array(1, c(Ksmall, nReads))
-    Rcpp_make_eMatRead_t_for_gibbs_using_objects(
-        eMatRead_t = eMatRead_t_new,
-        sampleReads = sampleReads,
-        hapMatcher = hapMatcher,
-        grid = grid,
-        rhb_t = rhb_t,
-        distinctHapsIE = distinctHapsIE,
-        ref_error = ref_error,
-        which_haps_to_use = which_haps_to_use,
-        rescale_eMatRead_t = rescale_eMatRead_t,
-        Jmax = Jmax,
-        maxDifferenceBetweenReads = maxDifferenceBetweenReads
-    )
-    expect_equal(eMatRead_t_new, eMatRead_t_old)
+        eMatRead_t_new <- array(1, c(Ksmall, nReads))
+        Rcpp_make_eMatRead_t_for_gibbs_using_objects(
+            eMatRead_t = eMatRead_t_new,
+            sampleReads = sampleReads,
+            hapMatcher = hapMatcher,
+            grid = grid,
+            rhb_t = rhb_t,
+            distinctHapsIE = distinctHapsIE,
+            eMatDH_special_helper = eMatDH_special_helper,
+            eMatDH_special_matrix = eMatDH_special_matrix,
+            ref_error = ref_error,
+            which_haps_to_use = which_haps_to_use,
+            rescale_eMatRead_t = rescale_eMatRead_t,
+            Jmax = Jmax,
+            maxDifferenceBetweenReads = maxDifferenceBetweenReads,
+            use_eMatDH_special_symbols = use_eMatDH_special_symbols
+        )
+        expect_equal(eMatRead_t_new, eMatRead_t_old)
 
-
-
-    ##
-    werwer
+    }
 
 })
 

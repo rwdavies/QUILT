@@ -49,11 +49,14 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
     const Rcpp::IntegerVector& grid,
     const arma::imat& rhb_t,
     const arma::mat& distinctHapsIE,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix,
     const double ref_error,
     const Rcpp::IntegerVector& which_haps_to_use,
     const bool rescale_eMatRead_t,
     const int Jmax,
-    const double maxDifferenceBetweenReads
+    const double maxDifferenceBetweenReads,
+    const bool use_eMatDH_special_symbols    
 );
 
 void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
@@ -2431,7 +2434,10 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         if (use_small_eHapsCurrent_tc) {
             rcpp_make_eMatRead_t(eMatRead_t, sampleReads, eHapsCurrent_tc, s, maxDifferenceBetweenReads, Jmax_local, eMatHapOri_t, pRgivenH1, pRgivenH2, prev, suppressOutput, prev_section, next_section, run_pseudo_haploid, rescale_eMatRead_t);
         } else {
-            Rcpp_make_eMatRead_t_for_gibbs_using_objects(eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax_local, maxDifferenceBetweenReads);
+            Rcpp::IntegerMatrix eMatDH_special_matrix_helper;
+            Rcpp::IntegerMatrix eMatDH_special_matrix;
+            bool use_eMatDH_special_symbols;
+            Rcpp_make_eMatRead_t_for_gibbs_using_objects(eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax_local, maxDifferenceBetweenReads, use_eMatDH_special_symbols);
         }
         //
         //

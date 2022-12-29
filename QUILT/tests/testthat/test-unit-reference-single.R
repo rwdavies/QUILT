@@ -272,12 +272,11 @@ test_that("can build necessary components from make_rhb_t_equality", {
                 if (i > 0) {
                     b <- distinctHapsB[i, iGrid]
                 } else {
-                    b <- get_eMatDH_special_entry(
-                        k - 1,
-                        iGrid,
-                        eMatDH_special_grid_which,
-                        eMatDH_special_matrix_helper,
-                        eMatDH_special_matrix
+                    b <- simple_binary_matrix_search(
+                        val = k - 1,
+                        mat = eMatDH_special_matrix,
+                        s1 = eMatDH_special_matrix_helper[iGrid, 1],
+                        e1 = eMatDH_special_matrix_helper[iGrid, 2]
                     )
                 }
                 rebuilt_rhb_t[k, iGrid] <- b
