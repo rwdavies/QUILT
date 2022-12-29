@@ -134,6 +134,8 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
 
 })
 
+
+
 test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", {
 
     ##
@@ -256,7 +258,7 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
             grid = grid,
             rhb_t = rhb_t,
             distinctHapsIE = distinctHapsIE,
-            eMatDH_special_helper = eMatDH_special_helper,
+            eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
             eMatDH_special_matrix = eMatDH_special_matrix,
             ref_error = ref_error,
             which_haps_to_use = which_haps_to_use,

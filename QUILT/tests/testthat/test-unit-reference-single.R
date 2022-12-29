@@ -265,21 +265,29 @@ test_that("can build necessary components from make_rhb_t_equality", {
         ##
         ## check can re-build
         ##
-        rebuilt_rhb_t <- array(as.integer(1), c(nrow(rhb_t), ncol(rhb_t)))
-        for(k in 1:nrow(rhb_t)) {
-            for(iGrid in 1:ncol(rhb_t)) {
-                i <- hapMatcher[k, iGrid]
-                if (i > 0) {
-                    b <- distinctHapsB[i, iGrid]
-                } else {
-                    b <- simple_binary_matrix_search(
-                        val = k - 1,
-                        mat = eMatDH_special_matrix,
-                        s1 = eMatDH_special_matrix_helper[iGrid, 1],
-                        e1 = eMatDH_special_matrix_helper[iGrid, 2]
-                    )
+        for(i in 1:2) {
+            if (i == 1) {
+                f <- simple_binary_matrix_search
+            } else {
+                f <- rcpp_simple_binary_matrix_search
+            }
+
+            rebuilt_rhb_t <- array(as.integer(1), c(nrow(rhb_t), ncol(rhb_t)))
+            for(k in 1:nrow(rhb_t)) {
+                for(iGrid in 1:ncol(rhb_t)) {
+                    i <- hapMatcher[k, iGrid]
+                    if (i > 0) {
+                        b <- distinctHapsB[i, iGrid]
+                    } else {
+                        b <- f( ## test both R and Rcpp versions
+                            val = k - 1,
+                            mat = eMatDH_special_matrix,
+                            s1 = eMatDH_special_matrix_helper[iGrid, 1],
+                            e1 = eMatDH_special_matrix_helper[iGrid, 2]
+                        )
+                    }
+                    rebuilt_rhb_t[k, iGrid] <- b
                 }
-                rebuilt_rhb_t[k, iGrid] <- b
             }
         }
 

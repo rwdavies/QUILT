@@ -76,7 +76,9 @@ int rcpp_simple_binary_matrix_search(
     int n = nori;
     int i = n / 2; // 0-based here
     n = n / 4;
-    while(true) {
+    int c = 0;
+    while(c < 100) {
+        c++;
         if (mat(s1 - 1 + i, 0) == val) {
             return(mat(s1 - 1 + i, 1));
         } else if (mat(s1 - 1 + i, 0) < val) {
@@ -95,6 +97,8 @@ int rcpp_simple_binary_matrix_search(
             i = nori - 1;
         }
     }
+    std::cout << "Something has gone wrong with binary matrix search, val = " << val << ", s1 = " << s1 << ", e1 = " << e1 << std::endl;
+    return(mat(s1, 1));
 }
 
 //' @export
@@ -164,7 +168,7 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
 		} else {
                     if (use_eMatDH_special_symbols) {
                         bvtd = rcpp_simple_binary_matrix_search(
-                            k,
+                            which_haps_to_use(k) - 1,
                             eMatDH_special_matrix,
                             eMatDH_special_matrix_helper(iGrid0, 0),
                             eMatDH_special_matrix_helper(iGrid0, 1)
