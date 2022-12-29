@@ -72,7 +72,7 @@ test_that("QUILT can impute a few samples using RAM efficient version without rh
         nCores = 1,
         nGen = 100,
         use_eMatDH_special_symbols = TRUE,
-        use_mspbwt = TRUE ## need to turn on
+        use_mspbwt = TRUE ## need to turn on, otherwise will need!
     )
 
     regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)

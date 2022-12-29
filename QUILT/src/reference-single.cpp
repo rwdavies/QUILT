@@ -1491,9 +1491,11 @@ void Rcpp_haploid_dosage_versus_refs(
     int s1 = 0;
     int e1 = 0;
     int bvtd;
-    if (use_eMatDH_special_symbols) {    
-        s1 = eMatDH_special_matrix_helper(0, 0);
-        e1 = eMatDH_special_matrix_helper(0, 1);
+    if (use_eMatDH_special_symbols) {
+        if (eMatDH_special_grid_which(iGrid) > 0) {
+            s1 = eMatDH_special_matrix_helper(0, 0);
+            e1 = eMatDH_special_matrix_helper(0, 1);
+        }
     }
     for(k = 0; k < K; k++) {
         if (use_eMatDH) {

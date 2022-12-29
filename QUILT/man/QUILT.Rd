@@ -80,7 +80,7 @@ QUILT(
   use_mspbwt = FALSE,
   mspbwt_nindices = 4L,
   use_splitreadgl = FALSE,
-  use_eMatDH_special_symbols = FALSE
+  override_use_eMatDH_special_symbols = NA
 )
 }
 \arguments{
@@ -234,7 +234,7 @@ QUILT(
 
 \item{use_splitreadgl}{Use split real GL in hap selection and imputation}
 
-\item{use_eMatDH_special_symbols}{Whether to use RAM efficient version (not for general use)}
+\item{override_use_eMatDH_special_symbols}{Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.}
 }
 \value{
 Results in properly formatted version

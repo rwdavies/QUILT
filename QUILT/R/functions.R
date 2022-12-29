@@ -161,13 +161,10 @@ get_and_impute_one_sample <- function(
     small_ref_panel_equally_likely_reads_update_iterations
 ) {
 
-
-    print("here it is!")
-    print(dim(rhb_t))
-
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
-    nGrids <- ncol(rhb_t)
+    nGrids <- ncol(hapMatcher)
+    K <- nrow(hapMatcher)
     suppressOutput <- !print_extra_timing_information
 
     ##
@@ -262,7 +259,7 @@ get_and_impute_one_sample <- function(
 
     if (hla_run) {
         ## print_message("SPECIAL HLA CODE SIMON")
-        gamma_total <- array(0, nrow(rhb_t))
+        gamma_total <- array(0, nrow(hapMatcher))
         list_of_gammas <- as.list(1:nGibbsSamples)
     }
 
@@ -338,6 +335,9 @@ get_and_impute_one_sample <- function(
             }
 
             truth_all <- impute_using_everything(
+                eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                eMatDH_special_matrix = eMatDH_special_matrix,
+                use_eMatDH_special_symbols = use_eMatDH_special_symbols,
                 H = truth_labels,
                 sampleReads = sampleReads,
                 rhb_t = rhb_t,
@@ -414,7 +414,7 @@ get_and_impute_one_sample <- function(
             ## here it is 1
             n_gibbs_starts <- 1
             if (i_it == 1 & !phasing_it) {
-                which_haps_to_use <- sort(sample(1:nrow(rhb_t), Ksubset))
+                which_haps_to_use <- sort(sample(1:K, Ksubset))
                 double_list_of_starting_read_labels <- list(
                     lapply(1:n_gibbs_starts, function(i) {
                         H <- sample(c(1, 2), length(sampleReads), replace = TRUE)
@@ -539,7 +539,7 @@ get_and_impute_one_sample <- function(
                 ) {
                     ## print_message("HLA SPECIAL CODE SIMON")
                     return_gamma_t <- TRUE
-                    full_gamma_t <- array(0, c(nrow(rhb_t), ncol(rhb_t)))
+                    full_gamma_t <- array(0, c(K, nGrids))
                 } else {
                     return_gamma_t <- FALSE
                 }
@@ -573,7 +573,7 @@ get_and_impute_one_sample <- function(
             if (zilong) {
                 ## TODO which_haps_to_use should be returned by PBWT selection
                 which_haps_to_use <- select_new_haps_zilong(gibbs_iterate$hapProbs_t,
-                                                            Kfull =  nrow(rhb_t),
+                                                            Kfull =  nrow(hapMatcher),
                                                             Knew = Knew,
                                                             mspbwtX = zilong_indices$X,
                                                             mspbwtA = zilong_indices$A,
@@ -645,7 +645,7 @@ get_and_impute_one_sample <- function(
                 }
 
                 hapProbs_t <- rbind(hap1, hap2)
-                Kfull <- nrow(rhb_t)
+                Kfull <- nrow(hapMatcher)
                 which_haps_to_use <- select_new_haps_mspbwt_v2(
                     hapProbs_t = hapProbs_t,
                     hapMatcher = hapMatcher,
@@ -674,6 +674,9 @@ get_and_impute_one_sample <- function(
             ## }
             } else {
                 impute_all <- impute_using_everything(
+                    eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                    eMatDH_special_matrix = eMatDH_special_matrix,
+                    use_eMatDH_special_symbols = use_eMatDH_special_symbols,
                     H = read_labels,
                     sampleReads = sampleReads,
                     rhb_t = rhb_t,
@@ -1315,6 +1318,9 @@ determine_a_set_of_truth_labels <- function(sampleReads, truth_hap1, truth_hap2,
 
 
 impute_using_everything <- function(
+    eMatDH_special_matrix_helper,
+    eMatDH_special_matrix,
+    use_eMatDH_special_symbols,
     H,
     sampleReads,
     rhb_t,
@@ -1362,7 +1368,7 @@ impute_using_everything <- function(
     ##
     K <- nrow(rhb_t)
     dosage <- numeric(nSNPs)
-    nGrids <- ncol(rhb_t)
+    nGrids <- ncol(hapMatcher)
     if (return_good_haps) {
         return_gammaSmall_t <- FALSE
         get_best_haps_from_thinned_sites <- TRUE
@@ -1413,6 +1419,9 @@ impute_using_everything <- function(
             hapMatcher = hapMatcher,
             eMatDH_special_grid_which = eMatDH_special_grid_which,
             eMatDH_special_values_list = eMatDH_special_values_list,
+            eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+            eMatDH_special_matrix = eMatDH_special_matrix,
+            use_eMatDH_special_symbols = use_eMatDH_special_symbols,
             suppressOutput = suppressOutput,
             return_dosage = return_dosage,
             return_betaHat_t = return_betaHat_t,

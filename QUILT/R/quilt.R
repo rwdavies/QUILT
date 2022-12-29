@@ -76,7 +76,7 @@
 #' @param use_mspbwt Use msPBWT to select new haplotypes
 #' @param mspbwt_nindices How many mspbwt indices to build
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
-#' @param use_eMatDH_special_symbols Whether to use RAM efficient version (not for general use)
+#' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -156,7 +156,7 @@ QUILT <- function(
     use_mspbwt = FALSE,
     mspbwt_nindices = 4L,
     use_splitreadgl = FALSE,
-    use_eMatDH_special_symbols = FALSE
+    override_use_eMatDH_special_symbols = NA
 ) {
 
     x <- as.list(environment())
@@ -326,7 +326,7 @@ QUILT <- function(
                 mspbwt_nindices =  mspbwt_nindices,
                 reference_vcf_file = reference_vcf_file,
                 output_file = prepared_reference_filename,
-                use_eMatDH_special_symbols = use_eMatDH_special_symbols
+                override_use_eMatDH_special_symbols = override_use_eMatDH_special_symbols
             )
         } else {
             stop(paste0("Cannot find prepared haplotype reference file, expecting:", prepared_reference_filename))
@@ -405,7 +405,7 @@ QUILT <- function(
     ## possibly reset values
     ##
     if (override_default_params_for_small_ref_panel) {
-        K <- nrow(rhb_t)
+        K <- nrow(hapMatcher)
         if (K < Ksubset) {
             print_message("Overriding default parameters for small reference panel")
             print_message(paste0("Observing number of reference haplotypes K=", K))
@@ -476,8 +476,8 @@ QUILT <- function(
     ## can request smaller panel size, only really useful for testing speed
     ##
     if (!is.na(panel_size)) {
-        if (use_mspbwt | use_zilong) {
-            stop("This functionality does not work when using mspwt or zilong. Sorry!")
+        if (use_eMatDH_special_symbols) {
+            stop("This functionality does not work when using use_eMatDH_special_symbols as part of mspwt or zilong. Sorry!")
         }
         rhb_t <- rhb_t[1:as.integer(panel_size), ] ## this is the number of HAPLOTYPES
         reference_samples <- reference_samples[1:as.integer(panel_size), ]
@@ -495,7 +495,7 @@ QUILT <- function(
         eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
 
     }
-    K <- nrow(rhb_t)
+    K <- nrow(hapMatcher)
     ancAlleleFreqAll <- ref_alleleCount[, 3]
 
 
@@ -630,7 +630,7 @@ QUILT <- function(
         afCount <- array(0, nSNPs)
         alleleCount <- array(0, c(nSNPs, 2))
 
-        K <- nrow(rhb_t)
+        K <- nrow(hapMatcher)
         full_alphaHat_t <- array(0, c(K, nGrids))
         ## full_betaHat_t <- array(0, c(K, nGrids))
         full_betaHat_t <- array(0, c(1, 1))

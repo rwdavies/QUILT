@@ -1,5 +1,5 @@
 if ( 1 == 0 ) {
-    
+
     library("testthat")
     library("QUILT")
     dir <- "~/proj/QUILT/"
@@ -45,16 +45,16 @@ set.seed(010)
 
 
 test_that("QUILT can impute a few samples in a standard way using mspbwt, using either robbie or zilong", {
-    
+
     outputdir <- STITCH::make_unique_tempdir()
-    
+
     regionStart <- 11
     regionEnd <- 200 - 10
     buffer <- 5
     i_method <- 2
 
-    for(i_method in 1:2) {
-        
+    for(i_method in 2:2) {
+
         if (i_method == 1) {
             zilong <- FALSE
             use_mspbwt <- TRUE
@@ -62,7 +62,7 @@ test_that("QUILT can impute a few samples in a standard way using mspbwt, using 
             zilong <- TRUE
             use_mspbwt <- FALSE
         }
-        
+
         QUILT(
             outputdir = outputdir,
             chr = data_package$chr,
@@ -87,7 +87,7 @@ test_that("QUILT can impute a few samples in a standard way using mspbwt, using 
 
         regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
         which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
-        
+
         ## now evaluate versus truth!
         check_quilt_output(
             file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
@@ -98,6 +98,6 @@ test_that("QUILT can impute a few samples in a standard way using mspbwt, using 
         )
 
     }
-    
+
 })
 

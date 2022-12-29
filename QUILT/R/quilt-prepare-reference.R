@@ -25,7 +25,7 @@
 #' @param use_pbwt_index Build zilong pbwt indices to be used in imputation
 #' @param use_mspbwt Build mspbwt indices to be used in imputation
 #' @param mspbwt_nindices How many mspbwt indices to build
-#' @param use_eMatDH_special_symbols Whether to use RAM efficient version (not for general use)
+#' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -56,7 +56,7 @@ QUILT_prepare_reference <- function(
     use_pbwt_index = FALSE,
     use_mspbwt = FALSE,
     mspbwt_nindices = 4L,
-    use_eMatDH_special_symbols = FALSE
+    override_use_eMatDH_special_symbols = NA
 ) {
 
     x <- as.list(environment())
@@ -400,6 +400,16 @@ QUILT_prepare_reference <- function(
     eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
     eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
 
+    if (!is.na(override_use_eMatDH_special_symbols)) {
+        use_eMatDH_special_symbols <- override_use_eMatDH_special_symbols
+    } else {
+        if (use_pbwt_index | use_mspbwt) {
+            use_eMatDH_special_symbols <- TRUE
+        } else {
+            use_eMatDH_special_symbols <- FALSE
+        }
+    }
+
     if (use_eMatDH_special_symbols) {
         eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
         eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
@@ -491,6 +501,7 @@ QUILT_prepare_reference <- function(
         chr,
         ms_indices,
         zilong_indices,
+        use_eMatDH_special_symbols,
         file = output_file,
         compress = FALSE
     )
