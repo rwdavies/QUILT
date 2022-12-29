@@ -30,7 +30,8 @@ QUILT_prepare_reference(
   minRate = 0.1,
   use_pbwt_index = FALSE,
   use_mspbwt = FALSE,
-  mspbwt_nindices = 4L
+  mspbwt_nindices = 4L,
+  use_eMatDH_special_symbols = TRUE
 )
 }
 \arguments{
@@ -85,6 +86,8 @@ QUILT_prepare_reference(
 \item{use_mspbwt}{Build mspbwt indices to be used in imputation}
 
 \item{mspbwt_nindices}{How many mspbwt indices to build}
+
+\item{use_eMatDH_special_symbols}{Whether to use more RAM efficient version (not for general use)}
 }
 \value{
 Results in properly formatted version

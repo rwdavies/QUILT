@@ -11,7 +11,7 @@
 #' @param nCores How many cores to use
 #' @param nGibbsSamples How many Gibbs samples to use
 #' @param n_seek_its How many iterations between first using current haplotypes to update read labels, and using current read labels to get new reference haplotypes, to perform
-#' @param n_burn_in_seek_its How many iterations of the seek_its should be burn in. As an example, if n_seek_its is 3 and n_burn_in_seek_its is 2, then only the dosage from the final round is included. If n_seek_its is 4 and n_burn_in_seek_its is 2, then dosages from the last two rounds are used. Default value NA sets n_burn_in_seek_its to n_seek_its minus 1 
+#' @param n_burn_in_seek_its How many iterations of the seek_its should be burn in. As an example, if n_seek_its is 3 and n_burn_in_seek_its is 2, then only the dosage from the final round is included. If n_seek_its is 4 and n_burn_in_seek_its is 2, then dosages from the last two rounds are used. Default value NA sets n_burn_in_seek_its to n_seek_its minus 1
 #' @param Ksubset How many haplotypes to use in the faster Gibbs sampling
 #' @param Knew How many haplotypes to replace per-iteration after doing the full reference panel imputation
 #' @param K_top_matches How many top haplotypes to store in each grid site when looking for good matches in the full haplotype reference panel. Large values potentially bring in more haplotype diversity, but risk losing haplotypes that are good matches over shorter distances
@@ -67,7 +67,7 @@
 #' @param print_extra_timing_information Print extra timing information, i.e. how long sub-processes take, to better understand why things take as long as they do
 #' @param small_ref_panel_block_gibbs_iterations What iterations to perform block Gibbs sampling for the Gibbs sampler
 #' @param small_ref_panel_gibbs_iterations How many iterations to run the Gibbs sampler for each time it is run (i.e. how many full passes to run the Gibbs sampler over all the reads)
-#' 
+#'
 #' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
 #' @param use_small_eHapsCurrent_tc For testing purposes only
 #' @param pbwtL How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected.
@@ -165,7 +165,7 @@ QUILT <- function(
     )
     print_message(paste0("Running ", command_line))
 
-    ## 
+    ##
     use_sample_is_diploid <- TRUE
     ## turn this off for now
     ## plot_p1 Plot first haplotype read sampling probabilities
@@ -179,7 +179,7 @@ QUILT <- function(
     ## re-label these internally
     ## n_gibbs_burn_in_its <- small_ref_panel_gibbs_iterations
     ## block_gibbs_iterations <- small_ref_panel_block_gibbs_iterations
-    
+
     ## #' @param make_plots_block_gibbs Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs
 
     options(digits.secs=6)
@@ -212,15 +212,15 @@ QUILT <- function(
     validate_niterations_and_small_ref_panel_block_gibbs(small_ref_panel_block_gibbs_iterations, small_ref_panel_gibbs_iterations)
 
     if (is.na(n_burn_in_seek_its)) {
-        n_burn_in_seek_its <- n_seek_its - 1        
+        n_burn_in_seek_its <- n_seek_its - 1
         print_message(paste0("Auto-set n_burn_in_seek_its to ", n_burn_in_seek_its, " i.e. only sample one dosage per Gibbs sample"))
     }
     validate_n_seek_its_and_n_burn_in_seek_its(n_seek_its, n_burn_in_seek_its)
-    
+
     ## if (make_plots && phasefile == "") {
     ##     stop("If you want to make plots using make_plots, you need to provide phase information using phasefile")
     ## }
-    
+
     if (is.na(tempdir)) {
         ## tempdir <- tempdir()
         tempdir <- tempfile()
@@ -346,7 +346,7 @@ QUILT <- function(
             stop("To use mspbwt and QUILT, you must prepare the reference package using use_mspbt=TRUE")
         }
     }
-    
+
     if (zilong && use_mspbwt) {
         stop("Please select only one of zilong or use_mspbwt")
     }
@@ -473,6 +473,9 @@ QUILT <- function(
     ## can request smaller panel size, only really useful for testing speed
     ##
     if (!is.na(panel_size)) {
+        if (use_mspbwt | use_zilong) {
+            stop("This functionality does not work when using mspwt or zilong. Sorry!")
+        }
         rhb_t <- rhb_t[1:as.integer(panel_size), ] ## this is the number of HAPLOTYPES
         reference_samples <- reference_samples[1:as.integer(panel_size), ]
         ##nMaxDH <- 2 ** 8 - 1
@@ -487,6 +490,7 @@ QUILT <- function(
         hapMatcher <- out[["hapMatcher"]]
         eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
         eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
+
     }
     K <- nrow(rhb_t)
     ancAlleleFreqAll <- ref_alleleCount[, 3]
@@ -730,7 +734,10 @@ QUILT <- function(
                 ref_error = ref_error,
                 distinctHapsB = distinctHapsB,
                 distinctHapsIE = distinctHapsIE,
+                eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                eMatDH_special_matrix = eMatDH_special_matrix,
                 hapMatcher = hapMatcher,
+                use_eMatDH_special_symbols = use_eMatDH_special_symbols,
                 eMatDH_special_grid_which = eMatDH_special_grid_which,
                 eMatDH_special_values_list = eMatDH_special_values_list,
                 inRegion2 = inRegion2,

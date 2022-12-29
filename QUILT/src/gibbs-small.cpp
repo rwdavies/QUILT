@@ -236,13 +236,17 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
     const arma::mat& gammaMU_t,
     const arma::mat& gammaP_t,
     const arma::imat& hapMatcher,
+    const arma::imat& distinctHapsB,
     const arma::mat& distinctHapsIE,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix,
     const Rcpp::IntegerVector& which_haps_to_use,
     const double ref_error,
-    const arma::imat& rhb_t
+    const arma::imat& rhb_t,
+    const bool use_eMatDH_special_symbols
 ) {
     // loop over grids
-    int k, iGrid, s, e, b, dh, nSNPsLocal;
+    int k, iGrid, s, e, b, dh, nSNPsLocal, bvtd, kk;
     const int K = gammaMT_t.n_rows;
     const int nGrids = gammaMT_t.n_cols;
     const int nSNPs = genProbsM_t.n_cols;
@@ -282,9 +286,26 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
         for(k = 0; k < K; k++) {
             gk0 = gammaMT_t(k, iGrid);
             gk1 = gammaMU_t(k, iGrid);
-            gk2 = gammaP_t(k, iGrid);                
-            std::uint32_t tmp(rhb_t(which_haps_to_use(k) - 1, iGrid));
-            //std::uint32_t tmp(rhb_t_subset(k, iGrid));
+            gk2 = gammaP_t(k, iGrid);
+            //
+            // get the binary value to decompose
+            //
+            kk = hapMatcher(which_haps_to_use(k) - 1, iGrid);
+            if (kk > 0) {
+                bvtd = distinctHapsB(kk - 1, iGrid);
+            } else {
+                if (use_eMatDH_special_symbols) {
+                    bvtd = rcpp_simple_binary_matrix_search(
+                        which_haps_to_use(k) - 1,
+                        eMatDH_special_matrix,
+                        eMatDH_special_matrix_helper(iGrid, 0),
+                        eMatDH_special_matrix_helper(iGrid, 1)
+                    );
+                } else {
+                    bvtd = rhb_t(which_haps_to_use(k) - 1, iGrid);
+                }
+            }
+            std::uint32_t tmp(bvtd);
             for(b = 0; b < nSNPsLocal; b++, tmp >>= 1) {
                 if ((tmp & 0x1) == 0) {
                 //if (tmp & (1<<b)) {                    

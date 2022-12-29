@@ -17,6 +17,8 @@ if ( 1 == 0 ) {
 
 test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
 
+    set.seed(12)
+
     ## OK am here
     ## want to test this function
     ## using either eHapsCurrent_tc, or other approach used for eMatRead_t
@@ -109,28 +111,38 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
     eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
     eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
     nrow_which_hapMatcher_0 <- out[["nrow_which_hapMatcher_0"]]
+    eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
+    eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
 
     genProbsM_t_new <- array(0, c(3, nSNPs))
     genProbsF_t_new <- array(0, c(3, nSNPs))
     hapProbs_t_new <- array(0, c(3, nSNPs))
 
-    rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
-        genProbsM_t = genProbsM_t_new,
-        genProbsF_t = genProbsF_t_new,
-        hapProbs_t = hapProbs_t_new,
-        gammaMT_t = gammaMT_t,
-        gammaMU_t = gammaMU_t,
-        gammaP_t = gammaP_t,
-        hapMatcher = hapMatcher,
-        distinctHapsIE = distinctHapsIE,
-        which_haps_to_use = which_haps_to_use,
-        ref_error = ref_error,
-        rhb_t = rhb_t
-    )
+    for(use_eMatDH_special_symbols in c(TRUE, FALSE)) {
 
-    expect_equal( genProbsM_t_new,  genProbsM_t)
-    expect_equal( genProbsF_t_new,  genProbsF_t)
-    expect_equal( hapProbs_t_new, hapProbs_t)
+        rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
+            genProbsM_t = genProbsM_t_new,
+            genProbsF_t = genProbsF_t_new,
+            hapProbs_t = hapProbs_t_new,
+            gammaMT_t = gammaMT_t,
+            gammaMU_t = gammaMU_t,
+            gammaP_t = gammaP_t,
+            hapMatcher = hapMatcher,
+            distinctHapsB = distinctHapsB,
+            distinctHapsIE = distinctHapsIE,
+            which_haps_to_use = which_haps_to_use,
+            ref_error = ref_error,
+            rhb_t = rhb_t,
+            eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+            eMatDH_special_matrix = eMatDH_special_matrix,
+            use_eMatDH_special_symbols = use_eMatDH_special_symbols
+        )
+
+        expect_equal( hapProbs_t_new, hapProbs_t)
+        expect_equal( genProbsM_t_new, genProbsM_t)
+        expect_equal( genProbsF_t_new, genProbsF_t)
+
+    }
 
 })
 

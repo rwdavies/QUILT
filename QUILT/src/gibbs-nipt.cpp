@@ -67,10 +67,14 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
     const arma::mat& gammaMU_t,
     const arma::mat& gammaP_t,
     const arma::imat& hapMatcher,
+    const arma::imat& distinctHapsB,
     const arma::mat& distinctHapsIE,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix,
     const Rcpp::IntegerVector& which_haps_to_use,
     const double ref_error,
-    const arma::imat& rhb_t
+    const arma::imat& rhb_t,
+    const bool use_eMatDH_special_symbols
 );
 
 void rcpp_make_eMatGrid_t(
@@ -1863,8 +1867,12 @@ void set_seed(double seed) {
 
 
 Rcpp::NumericMatrix unpack_gammas(
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix,
+    const bool use_eMatDH_special_symbols,
     const bool use_small_eHapsCurrent_tc,
     const arma::imat& hapMatcher,
+    const arma::imat& distinctHapsB,    
     const arma::mat& distinctHapsIE,
     const Rcpp::IntegerVector& which_haps_to_use,    
     const double ref_error,
@@ -1923,6 +1931,11 @@ Rcpp::NumericMatrix unpack_gammas(
     Rcpp::NumericVector& hg_ll_rescaled,
     const int log_mult_max = 40
 ) {
+    //
+    //
+    //
+    //
+    //
     //
     next_section="unpack gammas";
     prev=print_times(prev, suppressOutput, prev_section, next_section);
@@ -2017,7 +2030,9 @@ Rcpp::NumericMatrix unpack_gammas(
             rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
                 genProbsM_t_local, genProbsF_t_local, hapProbs_t_local,
                 gammaMT_t_local, gammaMU_t_local, gammaP_t_local,
-                hapMatcher, distinctHapsIE, which_haps_to_use, ref_error, rhb_t
+                hapMatcher, distinctHapsB, distinctHapsIE,
+                eMatDH_special_matrix_helper, eMatDH_special_matrix,
+                which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols
             );
         }
     }
@@ -2102,7 +2117,10 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     arma::mat& gammaP_t_local,
     arma::cube& hapSum_tc,
     arma::imat& hapMatcher,
+    arma::imat distinctHapsB,    
     arma::mat& distinctHapsIE,
+    Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
+    Rcpp::IntegerMatrix& eMatDH_special_matrix,
     const arma::imat& rhb_t,
     double ref_error,
     const Rcpp::IntegerVector& which_haps_to_use,    
@@ -2143,8 +2161,15 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const double block_gibbs_quantile_prob = 0.9,
     const bool do_shard_ff0_block_gibbs = true,
     const bool use_small_eHapsCurrent_tc = true,
-    bool sample_is_diploid = false    
+    bool sample_is_diploid = false,
+    const bool use_eMatDH_special_symbols = true
 ) {
+    //
+    //
+    //
+    //
+    //
+    //
     // I think these break the gibbs-ness - disable for now!
     // rescale_eMatRead_t should be fine to reset - will be constant across reads - only the read not per-base input considered
     const bool bound_eMatGrid_t = false;
@@ -2434,9 +2459,6 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         if (use_small_eHapsCurrent_tc) {
             rcpp_make_eMatRead_t(eMatRead_t, sampleReads, eHapsCurrent_tc, s, maxDifferenceBetweenReads, Jmax_local, eMatHapOri_t, pRgivenH1, pRgivenH2, prev, suppressOutput, prev_section, next_section, run_pseudo_haploid, rescale_eMatRead_t);
         } else {
-            Rcpp::IntegerMatrix eMatDH_special_matrix_helper;
-            Rcpp::IntegerMatrix eMatDH_special_matrix;
-            bool use_eMatDH_special_symbols;
             Rcpp_make_eMatRead_t_for_gibbs_using_objects(eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax_local, maxDifferenceBetweenReads, use_eMatDH_special_symbols);
         }
         //
@@ -2511,7 +2533,10 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                 i_result_it = i_outer;
                 i_ever_it = i_outer;
                 hap_label_prob_matrix = unpack_gammas(
-                    use_small_eHapsCurrent_tc, hapMatcher, distinctHapsIE, which_haps_to_use, ref_error, rhb_t,
+                    eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols,
+                    use_small_eHapsCurrent_tc, hapMatcher,
+                    distinctHapsB, distinctHapsIE,
+                    which_haps_to_use, ref_error, rhb_t,
                     s, prev_section, next_section, suppressOutput, prev,
                     verbose, nReads, H, nGrids,
                     eHapsCurrent_tc, grid, snp_start_1_based, snp_end_1_based, run_fb_grid_offset,
@@ -2674,7 +2699,10 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                     // 
                     if ((iteration + 1) > n_gibbs_burn_in_its) {
                         hap_label_prob_matrix = unpack_gammas(
-                            use_small_eHapsCurrent_tc, hapMatcher, distinctHapsIE, which_haps_to_use, ref_error, rhb_t,
+                            eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols,
+                            use_small_eHapsCurrent_tc, hapMatcher,
+                            distinctHapsB, distinctHapsIE,
+                            which_haps_to_use, ref_error, rhb_t,
                             s, prev_section, next_section, suppressOutput, prev,
                             verbose, nReads, H, nGrids,
                             eHapsCurrent_tc, grid, snp_start_1_based, snp_end_1_based, run_fb_grid_offset,

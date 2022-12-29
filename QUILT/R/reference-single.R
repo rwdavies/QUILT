@@ -389,7 +389,7 @@ make_rhb_t_equality <- function(
     ## --- distinctHapsB
     ## matrix with nMaxDH x nGrids
     ## matrix with the distinct haplotypes
-    distinctHapsB <- array(0, c(nMaxDH_default, nGrids)) ## store encoded binary
+    distinctHapsB <- array(as.integer(0), c(nMaxDH_default, nGrids)) ## store encoded binary
     ## --- all_symbols
     ## list with nGrid entries
     ## each entry is a matrix with each row containing the ID of a symbol, and the 1-based number of entries
@@ -526,6 +526,7 @@ make_rhb_t_equality <- function(
         eMatDH_special_matrix_helper <- matrix()
     }
     nrow_which_hapMatcher_0 <- nrow(which_hapMatcher_0) ## for testing
+    ##
     return(
         list(
             distinctHapsB = distinctHapsB,

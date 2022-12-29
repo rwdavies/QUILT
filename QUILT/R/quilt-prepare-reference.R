@@ -25,6 +25,7 @@
 #' @param use_pbwt_index Build zilong pbwt indices to be used in imputation
 #' @param use_mspbwt Build mspbwt indices to be used in imputation
 #' @param mspbwt_nindices How many mspbwt indices to build
+#' @param use_eMatDH_special_symbols Whether to use more RAM efficient version (not for general use)
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -54,7 +55,8 @@ QUILT_prepare_reference <- function(
     minRate = 0.1,
     use_pbwt_index = FALSE,
     use_mspbwt = FALSE,
-    mspbwt_nindices = 4L
+    mspbwt_nindices = 4L,
+    use_eMatDH_special_symbols = TRUE
 ) {
 
     x <- as.list(environment())
@@ -398,6 +400,19 @@ QUILT_prepare_reference <- function(
     hapMatcher <- out[["hapMatcher"]]
     eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
     eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
+
+    if (use_eMatDH_special_symbols) {
+        eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
+        eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
+        if (use_pbwt_index | use_mspbwt) {
+            rhb_t <- matrix(as.integer(1), 1, 1) ## nuke!
+        }
+    } else {
+        eMatDH_special_matrix_helper <- matrix(as.integer(1), 1, 1) ## nuke!
+        eMatDH_special_matrix <- matrix(as.integer(1), 1, 1) ## nuke!
+    }
+    rm(out)
+    gc(reset = TRUE);    gc(reset = TRUE);
 
 
     if (use_mspbwt) {

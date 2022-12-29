@@ -121,6 +121,9 @@ get_and_impute_one_sample <- function(
     ref_error,
     distinctHapsB,
     distinctHapsIE,
+    eMatDH_special_matrix_helper,
+    eMatDH_special_matrix,
+    use_eMatDH_special_symbols,
     hapMatcher,
     eMatDH_special_grid_which,
     eMatDH_special_values_list,
@@ -398,7 +401,7 @@ get_and_impute_one_sample <- function(
             }
         }
         i_it <- 1
-        
+
         ##
         ## now loop, first on subset, then on all
         ##
@@ -444,6 +447,10 @@ get_and_impute_one_sample <- function(
             }
 
             gibbs_iterate <- impute_one_sample(
+                eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                eMatDH_special_matrix = eMatDH_special_matrix,
+                use_eMatDH_special_symbols = use_eMatDH_special_symbols,
+                distinctHapsB = distinctHapsB,
                 distinctHapsIE = distinctHapsIE,
                 hapMatcher = hapMatcher,
                 rhb_t = rhb_t,
@@ -515,7 +522,7 @@ get_and_impute_one_sample <- function(
                 small_ref_panel_skip_equally_likely_reads = small_ref_panel_skip_equally_likely_reads,
                 small_ref_panel_equally_likely_reads_update_iterations = small_ref_panel_equally_likely_reads_update_iterations
             )
-            
+
             if (plot_p1) {
                 p1_store[[i_gibbs_sample]][[i_it]] <- gibbs_iterate[["p1"]]
                 read_store[[i_gibbs_sample]][[i_it]] <- gibbs_iterate[["pH"]]
@@ -632,7 +639,7 @@ get_and_impute_one_sample <- function(
                     hap1 <- gibbs_iterate$hapProbs_t[1, ]
                     hap2 <- gibbs_iterate$hapProbs_t[2, ]
                 }
-                
+
                 hapProbs_t <- rbind(hap1, hap2)
                 Kfull <- nrow(rhb_t)
                 which_haps_to_use <- select_new_haps_mspbwt_v2(
@@ -650,7 +657,7 @@ get_and_impute_one_sample <- function(
                     ## hap1_gibbs <- gibbs_iterate$hapProbs_t[1, ]
                     ## hap2_gibbs <- gibbs_iterate$hapProbs_t[2, ]
                     ## x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1_gibbs, hap2 = hap2_gibbs, truth_haps = truth_haps, af = af, verbose = verbose)
-                    ## print_message("Special compare - from split")                    
+                    ## print_message("Special compare - from split")
                     ## x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = impute_all[["dosage1"]], hap2 = impute_all[["dosage2"]], truth_haps = truth_haps, af = af, verbose = verbose)
                     ## print_message("Special compare - both")
                     ## g <- truth_haps[inRegion2, 1] + truth_haps[inRegion2, 2]
@@ -728,7 +735,7 @@ get_and_impute_one_sample <- function(
                 gp_t <- gp_t +
                     rbind((1 - hap1) * (1 - hap2), (1 - hap1) * hap2 + hap1 * (1 - hap2), hap1 * hap2)
                 nDosage <- nDosage + 1
-            
+
                 if (have_truth_haplotypes) {
                     w <- i_it + n_seek_its * (i_gibbs_sample - 1)
                     x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose)
@@ -1463,7 +1470,7 @@ impute_using_everything <- function(
         new_haps = new_haps,
         fbsoL = fbsoL
     )
-    
+
     if (make_plots) {
         plot_single_gamma_dosage(
             sampleReads = sampleReads,
@@ -1647,6 +1654,10 @@ everything_select_good_haps <- function(
 
 
 impute_one_sample <- function(
+    eMatDH_special_matrix_helper,
+    eMatDH_special_matrix,
+    use_eMatDH_special_symbols,
+    distinctHapsB,
     distinctHapsIE,
     hapMatcher,
     rhb_t,
@@ -1795,7 +1806,11 @@ impute_one_sample <- function(
             eHapsCurrent_tc = small_eHapsCurrent_tc,
             transMatRate_tc_H = small_transMatRate_tc_H,
             hapMatcher = hapMatcher,
+            distinctHapsB =distinctHapsB,
             distinctHapsIE = distinctHapsIE,
+            eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+            eMatDH_special_matrix = eMatDH_special_matrix,
+            use_eMatDH_special_symbols = use_eMatDH_special_symbols,
             rhb_t = rhb_t,
             ref_error = ref_error,
             which_haps_to_use = which_haps_to_use,
