@@ -25,7 +25,7 @@
 #' @param use_pbwt_index Build zilong pbwt indices to be used in imputation
 #' @param use_mspbwt Build mspbwt indices to be used in imputation
 #' @param mspbwt_nindices How many mspbwt indices to build
-#' @param use_eMatDH_special_symbols Whether to use more RAM efficient version (not for general use)
+#' @param use_eMatDH_special_symbols Whether to use RAM efficient version (not for general use)
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -56,7 +56,7 @@ QUILT_prepare_reference <- function(
     use_pbwt_index = FALSE,
     use_mspbwt = FALSE,
     mspbwt_nindices = 4L,
-    use_eMatDH_special_symbols = TRUE
+    use_eMatDH_special_symbols = FALSE
 ) {
 
     x <- as.list(environment())
@@ -75,7 +75,6 @@ QUILT_prepare_reference <- function(
     options(scipen = 999) ## Dangit rounding
     if(is.na(regionStart) == FALSE & is.na(regionEnd) == FALSE)
         regionName <- paste0(chr, ".", regionStart,".", regionEnd)
-
 
 
     ##
@@ -470,6 +469,8 @@ QUILT_prepare_reference <- function(
         distinctHapsB,
         eMatDH_special_grid_which,
         eMatDH_special_values_list,
+        eMatDH_special_matrix,
+        eMatDH_special_matrix_helper,
         inRegion2,
         rhb_t,
         reference_samples,

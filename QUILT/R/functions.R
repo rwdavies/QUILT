@@ -1786,7 +1786,12 @@ impute_one_sample <- function(
         run_fb_subset = FALSE,
         haploid_gibbs_equal_weighting = TRUE,
         gibbs_initialize_iteratively = gibbs_initialize_iteratively,
-        gibbs_initialize_at_first_read = gibbs_initialize_at_first_read
+        gibbs_initialize_at_first_read = gibbs_initialize_at_first_read,
+        use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
+        use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
+        sample_is_diploid = sample_is_diploid,
+        update_in_place = FALSE,
+        do_shard_ff0_block_gibbs = TRUE
     )
     ## this should catch hopefully rare underflow problems and re-run the samples
     done_imputing <- FALSE
@@ -1860,13 +1865,8 @@ impute_one_sample <- function(
             rescale_eMatRead_t = rescale_eMatRead_t,
             smooth_cm = smooth_cm,
             param_list = param_list,
-            use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
             block_gibbs_quantile_prob = block_gibbs_quantile_prob,
-            use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
-            sample_is_diploid = sample_is_diploid,
-            artificial_relabel = -1,
-            update_in_place = FALSE,
-            do_shard_ff0_block_gibbs = TRUE
+            artificial_relabel = -1
         )
         if (out[["underflow_problem"]]) {
             new_maxDifferenceBetweenReads <- max(1, maxDifferenceBetweenReads / 10)

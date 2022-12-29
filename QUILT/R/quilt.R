@@ -76,6 +76,7 @@
 #' @param use_mspbwt Use msPBWT to select new haplotypes
 #' @param mspbwt_nindices How many mspbwt indices to build
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
+#' @param use_eMatDH_special_symbols Whether to use RAM efficient version (not for general use)
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -154,7 +155,8 @@ QUILT <- function(
     zilong = FALSE,
     use_mspbwt = FALSE,
     mspbwt_nindices = 4L,
-    use_splitreadgl = FALSE
+    use_splitreadgl = FALSE,
+    use_eMatDH_special_symbols = TRUE
 ) {
 
     x <- as.list(environment())
@@ -323,7 +325,8 @@ QUILT <- function(
                 use_pbwt_index = zilong,
                 mspbwt_nindices =  mspbwt_nindices,
                 reference_vcf_file = reference_vcf_file,
-                output_file = prepared_reference_filename
+                output_file = prepared_reference_filename,
+                use_eMatDH_special_symbols = use_eMatDH_special_symbols
             )
         } else {
             stop(paste0("Cannot find prepared haplotype reference file, expecting:", prepared_reference_filename))

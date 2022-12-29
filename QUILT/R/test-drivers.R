@@ -51,7 +51,7 @@ check_quilt_output <- function(
             expect_true(max(gps) <= 1)
             ##
             ## check dosages are close to truth
-            ## 
+            ##
             expect_true(max(abs(as.numeric(sample_results[, "DS"]) - sample_truth_gen)) < tol)
             ## now check haplotype dosages - hmm, not sure if safe, could be recombs
             ## should ideally be PSE based, but oh well, these are small tests
@@ -67,6 +67,11 @@ check_quilt_output <- function(
             check_value <- (val1 < tol) | (val2 < tol)
             if (!check_value) {
                 print("observed then truth")
+                print(paste0("val1 = ", val1, ", val2 = ", val2, ", tol = ", tol))
+                print(table(observed_haps[, 1], sample_truth_haps[, 1]))
+                print(table(observed_haps[, 1], sample_truth_haps[, 2]))
+                print(table(observed_haps[, 2], sample_truth_haps[, 1]))
+                print(table(observed_haps[, 2], sample_truth_haps[, 2]))
                 print(data.frame(observed_haps, sample_truth_haps))
                 print(val1)
                 print(val2)
@@ -100,7 +105,7 @@ check_sew_phase <- function(vcf, phase, which_snps = NULL) {
         print(paste0("truth is:", apply(phase[, 1, ], 1, paste, collapse = "|")))
     }
     expect_equal(hap1_check, TRUE)
-    expect_equal(hap2_check, TRUE)    
+    expect_equal(hap2_check, TRUE)
 }
 
 
@@ -155,12 +160,12 @@ make_quilt_fb_test_package <- function(
     ## make almost the same
     eHapsCurrent_tc <- array(NA, c(K, nSNPs, S))
     alphaMatCurrent_tc <- array(NA, c(K, nGrids - 1, S))
-    ## 
+    ##
     for(s in 1:S) {
         eHapsCurrent_tc[, , s] <-
             0.1 * array(runif(K * nSNPs), c(K, nSNPs)) +
             0.9 * array(sample(c(0, 1), K * nSNPs, replace = TRUE), c(K, nSNPs))
-        if ((method == "triploid-nipt") & (K >= 3)) {        
+        if ((method == "triploid-nipt") & (K >= 3)) {
             eHapsCurrent_tc[1, ,s] <- rep(c(eHapsMin, 1 - eHapsMin), each = 1, len = nSNPs)
             eHapsCurrent_tc[2, ,s] <- rep(c(eHapsMin, 1 - eHapsMin), each = 2, len = nSNPs)
             eHapsCurrent_tc[3, ,s] <- (1 - eHapsMin)
@@ -237,7 +242,7 @@ make_quilt_fb_test_package <- function(
             )
         })
     }
-    ## 
+    ##
     list_of_eMatGrid_t <- lapply(0:(S - 1), function(s) {
         eMatGrid_t <- array(1, c(K, nGrids))
         rcpp_make_eMatGrid_t(
@@ -336,7 +341,7 @@ make_reference_single_test_package <- function(
         y <- rpois(n = K, lambda = 10)
         nLocal <- 4
         if (iGrid == 3 | iGrid == 10) {
-            ## 
+            ##
             y[sample(1:K, nMaxDH + 20, replace = FALSE)] <- 1:(nMaxDH + 20)
             ##
             nLocal <- 6
@@ -354,7 +359,7 @@ make_reference_single_test_package <- function(
             }
             y2[iSNP, 1:z] <- sample(c(0, 1), z, replace = TRUE, prob = c(1 - af, af))
         }
-        ## 
+        ##
         for(i in (z + 1):n) {
             y2[, i] <- y2[, sample(1:z, 1)]
             y2[sample(1:32, nLocal), i] <- sample(c(0, 1), nLocal, replace = TRUE)
@@ -375,7 +380,7 @@ make_reference_single_test_package <- function(
         ref_error = ref_error
     )
     distinctHapsB <- out[["distinctHapsB"]]
-    distinctHapsIE <- out[["distinctHapsIE"]]            
+    distinctHapsIE <- out[["distinctHapsIE"]]
     hapMatcher <- out[["hapMatcher"]]
     eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
     eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
@@ -391,7 +396,7 @@ make_reference_single_test_package <- function(
     u <- sort(sample(1:nSNPs, nReads, replace = TRUE))
     ## though specifically remove some regions, make have no variants
     u <- u[!(u %in% 200:300)]
-    ## 
+    ##
     bq <- rep(-10, length(u))
     bq[my_hap[u] == 1] <- 10
     gl <- make_gl_from_u_bq(u, bq, nSNPs)
@@ -404,7 +409,7 @@ make_reference_single_test_package <- function(
     }
     return(
         list(
-            distinctHapsB = distinctHapsB, 
+            distinctHapsB = distinctHapsB,
             distinctHapsIE = distinctHapsIE,
             hapMatcher = hapMatcher,
             rhb_t = rhb_t,

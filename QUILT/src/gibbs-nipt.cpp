@@ -2149,7 +2149,6 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool do_block_resampling = false,
     const int artificial_relabel = -1,
     const bool pass_in_alphaBeta = false,
-    const bool update_in_place = false,
     const bool update_hapSum = false,
     const bool record_read_set = false,
     const double class_sum_cutoff = 0.06,
@@ -2157,11 +2156,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const int shuffle_bin_radius = 5000,
     const Rcpp::IntegerVector block_gibbs_iterations = Rcpp::IntegerVector::create(0),
     const bool rescale_eMatRead_t = true,
-    const bool use_smooth_cm_in_block_gibbs = false,
     const double block_gibbs_quantile_prob = 0.9,
-    const bool do_shard_ff0_block_gibbs = true,
-    const bool use_small_eHapsCurrent_tc = true,
-    bool sample_is_diploid = false,
     const bool use_eMatDH_special_symbols = true
 ) {
     //
@@ -2211,6 +2206,11 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool haploid_gibbs_equal_weighting = as<bool>(param_list["haploid_gibbs_equal_weighting"]);
     const bool gibbs_initialize_iteratively = as<bool>(param_list["gibbs_initialize_iteratively"]);
     const bool gibbs_initialize_at_first_read = as<bool>(param_list["gibbs_initialize_at_first_read"]);
+    const bool use_smooth_cm_in_block_gibbs = as<bool>(param_list["use_smooth_cm_in_block_gibbs"]);
+    const bool use_small_eHapsCurrent_tc = as<bool>(param_list["use_small_eHapsCurrent_tc"]);
+    const bool sample_is_diploid = as<bool>(param_list["sample_is_diploid"]);        
+    const bool update_in_place = as<bool>(param_list["update_in_place"]);
+    const bool do_shard_ff0_block_gibbs = as<bool>(param_list["do_shard_ff0_block_gibbs"]);        
     //
     //
     // initialize variables 
