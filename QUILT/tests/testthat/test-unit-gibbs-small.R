@@ -1,5 +1,5 @@
 if ( 1 == 0 ) {
-    
+
     library("testthat")
     library("QUILT")
     dir <- "~/proj/QUILT/"
@@ -48,7 +48,7 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
     rhi_t <- t(rhi)
     rhb_t <- make_rhb_t_from_rhi_t(rhi_t)
     rhb <- t(rhb_t)
-    
+
     ##
     f <- function() {
         gammaMT_t <- array(runif(K * nGrids), c(Ksmall, nGrids))
@@ -64,7 +64,7 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
     small_eHapsCurrent_tc <- array(NA, c(Ksmall, nSNPs, 1))
     small_eHapsCurrent_tc[, , 1] <- rhi_t[which_haps_to_use, ]
     small_eHapsCurrent_tc[small_eHapsCurrent_tc == 1] <- 1 - ref_error
-    small_eHapsCurrent_tc[small_eHapsCurrent_tc == 0] <- ref_error    
+    small_eHapsCurrent_tc[small_eHapsCurrent_tc == 0] <- ref_error
 
 
     ##
@@ -73,9 +73,9 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
     genProbsM_t <- array(0, c(3, nSNPs))
     genProbsF_t <- array(0, c(3, nSNPs))
     hapProbs_t <- array(0, c(3, nSNPs))
-    
-    ## ame here, write this first 
-    ## 
+
+    ## ame here, write this first
+    ##
     rcpp_calculate_gn_genProbs_and_hapProbs(
         genProbsM_t = genProbsM_t,
         genProbsF_t = genProbsF_t,
@@ -93,7 +93,7 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
 
 
 
-    
+
     ##
     ## new version
     ##
@@ -104,16 +104,16 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
         ref_error = ref_error
     )
     distinctHapsB <- out[["distinctHapsB"]]
-    distinctHapsIE <- out[["distinctHapsIE"]]            
+    distinctHapsIE <- out[["distinctHapsIE"]]
     hapMatcher <- out[["hapMatcher"]]
     eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
     eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
     nrow_which_hapMatcher_0 <- out[["nrow_which_hapMatcher_0"]]
-    
+
     genProbsM_t_new <- array(0, c(3, nSNPs))
     genProbsF_t_new <- array(0, c(3, nSNPs))
     hapProbs_t_new <- array(0, c(3, nSNPs))
-    
+
     rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
         genProbsM_t = genProbsM_t_new,
         genProbsF_t = genProbsF_t_new,
@@ -131,7 +131,7 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
     expect_equal( genProbsM_t_new,  genProbsM_t)
     expect_equal( genProbsF_t_new,  genProbsF_t)
     expect_equal( hapProbs_t_new, hapProbs_t)
-    
+
 })
 
 test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", {
@@ -151,7 +151,7 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
     ref_error <- 0.01
     maxDifferenceBetweenReads <- 1e100
     rescale_eMatRead_t <- TRUE
-    
+
     ## make some test data
     which_haps_to_use <- sort(sample(K, Ksmall)) ## 1-based
     out <- make_fb_test_package(
@@ -179,11 +179,11 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
         matrix(c(read1[[4]], read2[[4]], read3[[4]]), ncol = 1)
     )
     nReads <- length(sampleReads)
-    
+
     ##
     ## here is original version, using inflation, resulting in eMatRead_t
     ##
-    small_eHapsCurrent_tc <- array(0, c(Ksmall, nSNPs, S))    
+    small_eHapsCurrent_tc <- array(0, c(Ksmall, nSNPs, S))
     inflate_fhb_t_in_place(
         rhb_t = rhb_t,
         small_eHapsCurrent_tc,
@@ -209,7 +209,7 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
         run_pseudo_haploid = FALSE,
         rescale_eMatRead_t = rescale_eMatRead_t
     );
-    
+
     ##
     ## here will be new version, based on subset, doing the same thing
     ##
@@ -222,10 +222,11 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
         ref_error = ref_error
     )
     distinctHapsB <- out[["distinctHapsB"]]
-    distinctHapsIE <- out[["distinctHapsIE"]]            
+    distinctHapsIE <- out[["distinctHapsIE"]]
     hapMatcher <- out[["hapMatcher"]]
     eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
     eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
+    eMatDH_special_symbols_list <- out[["eMatDH_special_symbols_list"]]
     nrow_which_hapMatcher_0 <- out[["nrow_which_hapMatcher_0"]]
 
     eMatRead_t <- R_make_eMatRead_t_for_gibbs_using_objects(
@@ -243,7 +244,7 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
     expect_equal(eMatRead_t, eMatRead_t_old)
 
 
-    
+
     eMatRead_t_new <- array(1, c(Ksmall, nReads))
     Rcpp_make_eMatRead_t_for_gibbs_using_objects(
         eMatRead_t = eMatRead_t_new,
@@ -258,10 +259,13 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
         Jmax = Jmax,
         maxDifferenceBetweenReads = maxDifferenceBetweenReads
     )
-    expect_equal(eMatRead_t_new, eMatRead_t_old)    
+    expect_equal(eMatRead_t_new, eMatRead_t_old)
 
 
-    
+
+    ##
+    werwer
+
 })
 
 
@@ -275,7 +279,7 @@ test_that("profile using riyan fish data", {
     setwd("/data/smew1/rdavies/riyan_debug_2021_03_15")
 
     i_chr <- 2
-    
+
     ## compare speed between old, new
     set.seed(i_chr)
     regionStart <- regionEnd <- buffer <- NA
@@ -290,8 +294,8 @@ test_that("profile using riyan fish data", {
         quote = FALSE,
         sep = ""
     )
-    
-    ## 
+
+    ##
     QUILT(
         outputdir = "/data/smew1/rdavies/riyan_debug_2021_03_15",
         chr = chr,
@@ -309,7 +313,7 @@ test_that("profile using riyan fish data", {
     if (1 == 0) {
 
         load("~/temp/20191209_Plate1_10A.RData")
-        
+
         temp_compare_two_versions(
                 rhb_t,
                 small_eHapsCurrent_tc,
@@ -334,7 +338,7 @@ test_that("profile using riyan fish data", {
 test_that("profile using HRC data", {
 
     skip("speed test")
-    
+
     setwd("~/proj/QUILT/")
     dir <- "/data/smew1/rdavies/quilt_data/hrc_2021_04_20/2021_04_20_bams"
     f <- dir(dir)[grep(".1.0.bam", dir(dir))]
@@ -370,7 +374,7 @@ test_that("profile using HRC data", {
             K <- length(which_haps_to_use)
             rescale_eMatRead_t <- TRUE
             nReads <- length(sampleReads)
-            
+
             f1 <- function() {
                 ##
                 S <- 1
@@ -383,7 +387,7 @@ test_that("profile using HRC data", {
                     nSNPs = nSNPs,
                     ref_error = ref_error
                 )
-                eMatRead_t_old <- array(1, c(K, nReads))        
+                eMatRead_t_old <- array(1, c(K, nReads))
                 rcpp_make_eMatRead_t(
                     eMatRead_t = eMatRead_t_old,
                     sampleReads = sampleReads,
@@ -434,7 +438,7 @@ test_that("profile using HRC data", {
 
         }
 
-        
+
         skip("woo")
         for(sample_name in c("NA12878", "NA12878HT", "NA12878ONT")) {
             print(sample_name)
@@ -464,15 +468,15 @@ test_that("profile using HRC data", {
 test_that("profile genProbs making with or without eHapsCurrent_tc", {
 
     skip("test")
-    
+
     for(sample_name in c("NA12878", "NA12878HT", "NA12878ONT")) {
-        
+
             print(sample_name)
             load(paste0("/dev/shm/rwdavies/", sample_name, ".RData")    )
 snp_start_1_based <- 1
-    snp_end_1_based <- nSNPs    
+    snp_end_1_based <- nSNPs
 class(hapMatcher) <- "integer"
-    
+
             f1 <- function() {
         inflate_fhb_t_in_place(
             rhb_t,
@@ -501,7 +505,7 @@ class(hapMatcher) <- "integer"
     }
 
 
-        
+
         f2 <- function() {
             ## rhb_t_subset <- rhb_t[which_haps_to_use, ]
     rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
@@ -525,8 +529,8 @@ class(hapMatcher) <- "integer"
     genProbsM_t <- array(0, c(3, nSNPs))
     genProbsF_t <- array(0, c(3, nSNPs))
     hapProbs_t <- array(0, c(3, nSNPs))
-    
-    
+
+
     genProbsM_t_new <- array(0, c(3, nSNPs))
     genProbsF_t_new <- array(0, c(3, nSNPs))
     hapProbs_t_new <- array(0, c(3, nSNPs))
@@ -538,7 +542,7 @@ class(hapMatcher) <- "integer"
             nSNPs = nSNPs,
             ref_error = ref_error
         )
-    
+
     f <- function() {
         K <- nrow(small_eHapsCurrent_tc)
         nGrids <- ncol(rhb_t)
@@ -565,7 +569,7 @@ class(hapMatcher) <- "integer"
         }
 
         ## other one
-        
+
         ## slower but no problems!
         ## hmm, though does add up, when run repeatedly
         ## can I make faster, or is it just what it is?

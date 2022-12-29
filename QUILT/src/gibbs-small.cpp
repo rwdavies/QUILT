@@ -30,7 +30,11 @@ int rcpp_simple_binary_search(
     //
     // note that this returns the 0-based value
     //
-    int n = vec.length();
+    int nori = vec.length();
+    if (nori == 1) {
+        return(0);
+    }
+    int n = nori;
     int i = n / 2;
     n = n / 4;
     while(true) {
@@ -45,9 +49,53 @@ int rcpp_simple_binary_search(
         if (n < 1) {
             n = 1;
         }
+        if (i < 0) {
+            i = 0;
+        }
+        if (i > (nori - 1)) {
+            i = nori - 1;
+        }
     }
 }
 
+
+
+
+//' @export
+// [[Rcpp::export]]
+int rcpp_simple_binary_matrix_search(
+    int val,
+    Rcpp::IntegerMatrix mat,
+    int s1,
+    int e1
+) {
+    int nori = e1 - s1 + 1; // width (1-based)
+    if (nori == 1) {
+        return(0);
+    }
+    int n = nori;
+    int i = n / 2; // 0-based here
+    n = n / 4;
+    while(true) {
+        if (mat(s1 - 1 + i, 0) == val) {
+            return(mat(s1 - 1 + i, 1));
+        } else if (mat(s1 - 1 + i, 0) < val) {
+            i += n;
+        } else {
+            i -= n;
+        }
+        n = n / 2;
+        if (n < 1) {
+            n = 1;
+        }
+        if (i < 0) {
+            i = 0;
+        }
+        if (i > (nori - 1)) {
+            i = nori - 1;
+        }
+    }
+}
 
 //' @export
 // [[Rcpp::export]]
@@ -64,6 +112,9 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
     const int Jmax,
     const double maxDifferenceBetweenReads
 ) {
+    //const Rcpp::IntegerMatrix& eMatDH_special_helper,
+    //const Rcpp::IntegerMatrix& eMatDH_special_matrix,
+    //const bool use_eMatDH_special_symbols
     const int nReads = sampleReads.size();
     const int K = which_haps_to_use.length();
     int iRead, iGrid0, iGrid0_prev, k, j;
@@ -73,7 +124,7 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
     double e;
     Rcpp::IntegerVector haps_at_grid(K);
     Rcpp::IntegerVector hap(32);
-    double d2 = 1 / maxDifferenceBetweenReads;    
+    double d2 = 1 / maxDifferenceBetweenReads;
     for(iRead = 0; iRead < nReads; iRead++) {
         Rcpp::List readData = as<Rcpp::List>(sampleReads[iRead]);
         int J = as<int>(readData[0]); // number of Unique SNPs on read
@@ -103,6 +154,9 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
 	        for(k = 0; k < K; k++) {
 		    haps_at_grid(k) = hapMatcher(which_haps_to_use(k) - 1, iGrid0);
 	        }
+                //if (use_eMatDH_special_symbols) {
+                    //werwer
+                //}
 	    }
 	    iGrid0_prev = iGrid0;
 	    //
@@ -110,17 +164,23 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
 	        if (haps_at_grid(k) > 0) {
 		  e = distinctHapsIE(haps_at_grid(k) - 1, u(j));
 		} else {
-                    // pretty efficient, not perfect, but meh
-                    std::uint32_t tmp(rhb_t(which_haps_to_use(k) - 1, iGrid0));
-		  int j2 = 0;
-		  for (int i = 0; i < 32; i++, tmp >>= 1) {
-		      hap(j2++) = tmp & 0x1;
-		  }
-		  if (hap(u(j) - iGrid0 * 32) == 1) {
-		      e = 1 - ref_error;
-		  } else {
-		      e = ref_error;
-		  }
+                    //if (use_eMatDH_special_symbols) {
+                        // pretty efficient, not perfect, but meh
+                        std::uint32_t tmp(rhb_t(which_haps_to_use(k) - 1, iGrid0));
+                        //} else {
+                        //eMatDH_special_values_list
+                        //    eMatDH_special_symbols_list
+                        //   rcpp_simple_binary_search(val, vec)
+                        //}
+                    int j2 = 0;
+                    for (int i = 0; i < 32; i++, tmp >>= 1) {
+                        hap(j2++) = tmp & 0x1;
+                    }
+                    if (hap(u(j) - iGrid0 * 32) == 1) {
+                        e = 1 - ref_error;
+                    } else {
+                        e = ref_error;
+                    }
 		}
                 eMatRead_t(k, iRead) *= (e * pA + (1 - e) * pR);
 	    }

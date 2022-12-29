@@ -149,20 +149,57 @@ test_that("can quickly in cpp get positions greater than certain value", {
 test_that("can do simple binary search", {
 
     vec <- sort(sample(100000, 1000))
+    vec2 <- sort(sample(100000, 500))
+    vec3 <- sort(sample(100000, 300))
     locations <- c(1, 37, 50, 900, 1000)
 
     ##
-    for(i in 1:length(locations)) {
+    out <- t(sapply(1:length(locations), function(i) {
         index <- locations[i]
         val <- vec[index]
-        expect_equal(
-            match(val, vec),
-            simple_binary_search(val, vec)
-        )
-        expect_equal(
-            match(val, vec),
+        c(
+            simple_binary_search(val, vec),
             rcpp_simple_binary_search(val, vec) + 1
         )
+    }))
+
+    expect_equal(out[, 1], out[, 2])
+    expect_equal(out[, 1], match(vec[locations], vec))
+
+    ## length 1
+    expect_equal(1, simple_binary_search(7, 7))
+    expect_equal(0, rcpp_simple_binary_search(7, 7))
+
+    ## same thing but pad
+    for(i_pad in 1:3) {
+
+        if (i_pad == 1) {
+            ## top and bottom
+            mat <- rbind(cbind(vec2, vec2 + 10), cbind(vec, vec + 10), cbind(vec3, vec3 + 10))
+            s1 <- 501; e1 <- 1500
+        } else if (i_pad == 2) {
+            ## top only
+            mat <- rbind(cbind(vec2, vec2 + 10), cbind(vec, vec + 10))
+            s1 <- 501; e1 <- 1500
+        } else {
+            ## bottom only
+            mat <- rbind(cbind(vec, vec + 10), cbind(vec3, vec3 + 10))
+            s1 <- 1; e1 <- 1000
+        }
+
+        ##
+        out <- t(sapply(1:length(locations), function(i) {
+            index <- locations[i]
+            val <- vec[index]
+            c(
+                simple_binary_matrix_search(val, mat, s1, e1),
+                rcpp_simple_binary_matrix_search(val, mat, s1, e1)
+            )
+        }))
+
+        expect_equal(out[, 1], out[, 2])
+        expect_equal(out[, 1], vec[locations] + 10)
+
     }
 
 })
@@ -170,6 +207,9 @@ test_that("can do simple binary search", {
 
 
 test_that("can build necessary components from make_rhb_t_equality", {
+
+
+    set.seed(9920)
 
     ## make them mostly one of three options, with a few small changes
     K <- 500
@@ -194,7 +234,7 @@ test_that("can build necessary components from make_rhb_t_equality", {
     ref_one_minus_error <- 1 - ref_error
     nMaxDH <- 6
 
-    for(nMaxDH in c(3, 255, NA)) {
+    for(nMaxDH in c(3, 6, 255, NA)) {
 
         ## make haplotype matching objects
         out <- make_rhb_t_equality(
@@ -209,8 +249,8 @@ test_that("can build necessary components from make_rhb_t_equality", {
         hapMatcher <- out[["hapMatcher"]]
         eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
         eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
-        eMatDH_special_symbols_list <- out[["eMatDH_special_symbols_list"]]
-        ## eMatDH_special_symbols_list <- out[["eMatDH_special_symbols_list"]]
+        eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
+        eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
         nrow_which_hapMatcher_0 <- out[["nrow_which_hapMatcher_0"]]
         ##
         ## perform
@@ -232,11 +272,18 @@ test_that("can build necessary components from make_rhb_t_equality", {
                 if (i > 0) {
                     b <- distinctHapsB[i, iGrid]
                 } else {
-                    b <- get_eMatDH_special_entry(k, iGrid, eMatDH_special_values_list, eMatDH_special_symbols_list)
+                    b <- get_eMatDH_special_entry(
+                        k - 1,
+                        iGrid,
+                        eMatDH_special_grid_which,
+                        eMatDH_special_matrix_helper,
+                        eMatDH_special_matrix
+                    )
                 }
                 rebuilt_rhb_t[k, iGrid] <- b
             }
         }
+
         expect_equal(rhb_t, rebuilt_rhb_t)
 
     }

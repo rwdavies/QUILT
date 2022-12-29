@@ -491,8 +491,20 @@ make_rhb_t_equality <- function(
         ##   not great name, but these are the actual symbols
         ##
         eMatDH_special_symbols_list <- lapply(1:length(starts), function(i) {
-            rhb_t[as.integer(which_hapMatcher_0[starts[i]:ends[i], 1]) + 1, i]
+            rhb_t[
+                as.integer(which_hapMatcher_0[starts[i]:ends[i], 1]) + 1,
+                which_hapMatcher_0[starts[i], 2] + 1
+            ]
         })
+        ##
+        ## make a new matrix version that doesn't need to be converted (ARGH!)
+        ## and an index into it
+        ##
+        eMatDH_special_matrix <- cbind(
+            unlist(eMatDH_special_values_list),
+            unlist(eMatDH_special_symbols_list)
+        )
+        eMatDH_special_matrix_helper <- cbind(starts, ends)
         ##
         ## fix all_symbols
         ##
@@ -509,6 +521,8 @@ make_rhb_t_equality <- function(
         }
     } else {
         eMatDH_special_values_list <- list()
+        eMatDH_special_matrix <- matrix()
+        eMatDH_special_matrix_helper <- matrix()
     }
     nrow_which_hapMatcher_0 <- nrow(which_hapMatcher_0) ## for testing
     return(
@@ -518,7 +532,8 @@ make_rhb_t_equality <- function(
             hapMatcher = hapMatcher,
             eMatDH_special_values_list = eMatDH_special_values_list,
             eMatDH_special_grid_which = eMatDH_special_grid_which,
-            eMatDH_special_symbols_list = eMatDH_special_symbols_list,
+            eMatDH_special_matrix = eMatDH_special_matrix,
+            eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
             nrow_which_hapMatcher_0 = nrow_which_hapMatcher_0,
             all_symbols = all_symbols
         )
@@ -527,14 +542,20 @@ make_rhb_t_equality <- function(
 
 
 get_eMatDH_special_entry <- function(
-    k1,
-    iGrid1,
-    eMatDH_special_values_list,
-    eMatDH_special_symbols_list
+    k,
+    iGrid,
+    eMatDH_special_grid_which,
+    eMatDH_special_matrix_helper,
+    eMatDH_special_matrix
 ) {
-    eMatDH_special_symbols_list[[iGrid1]][
-        simple_binary_search(k1 - 1, eMatDH_special_values_list[[iGrid1]])
-    ]
+    ##
+    is <- eMatDH_special_grid_which[iGrid] ## 1-based
+    simple_binary_matrix_search(
+        val = k,
+        mat = eMatDH_special_matrix,
+        s1 = eMatDH_special_matrix_helper[is, 1],
+        e1 = eMatDH_special_matrix_helper[is, 2]
+    )
 }
 
 ## have a vector with entries
@@ -542,7 +563,11 @@ get_eMatDH_special_entry <- function(
 ## we have a specific value we want to match, e.g. 37th value
 ## so we start at 50, then 25, then 33, etc, until we get there
 simple_binary_search <- function(val, vec) {
-    n <- length(vec)
+    nori <- length(vec)
+    if (nori == 1) {
+        return(1)
+    }
+    n <- nori
     i <- round(n / 2)
     n <- round(n / 4)
     while(TRUE) {
@@ -556,6 +581,42 @@ simple_binary_search <- function(val, vec) {
         n <- round(n / 2)
         if (n < 1) {
             n <- 1
+        }
+        if (i < 1) {
+            i <- 1
+        }
+        if (i > nori) {
+            i <- nori
+        }
+    }
+}
+
+## same as above but given s1 = first row in mat, s2 = last entry in mat, use first column of mat
+## also, return the value
+simple_binary_matrix_search <- function(val, mat, s1, e1) {
+    nori <- e1 - s1 + 1
+    n <- nori
+    i <- round(n / 2) ## index in mat
+    n <- round(n / 4)
+    c <- 0
+    while(c < 100) {
+        c <- c + 1
+        if (mat[s1 + i - 1, 1] == val) {
+            return(mat[s1 + i - 1, 2])
+        } else if (mat[s1 + i - 1, 1] < val) {
+            i <- i + n
+        } else {
+            i <- i - n
+        }
+        n <- round(n / 2)
+        if (n < 1) {
+            n <- 1
+        }
+        if (i < 1) {
+            i <- 1
+        }
+        if (i > nori) {
+            i <- nori
         }
     }
 }

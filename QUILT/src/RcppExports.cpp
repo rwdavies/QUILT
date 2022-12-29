@@ -943,6 +943,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcpp_simple_binary_matrix_search
+int rcpp_simple_binary_matrix_search(int val, Rcpp::IntegerMatrix mat, int s1, int e1);
+RcppExport SEXP _QUILT_rcpp_simple_binary_matrix_search(SEXP valSEXP, SEXP matSEXP, SEXP s1SEXP, SEXP e1SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type val(valSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< int >::type s1(s1SEXP);
+    Rcpp::traits::input_parameter< int >::type e1(e1SEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_simple_binary_matrix_search(val, mat, s1, e1));
+    return rcpp_result_gen;
+END_RCPP
+}
 // Rcpp_make_eMatRead_t_for_gibbs_using_objects
 void Rcpp_make_eMatRead_t_for_gibbs_using_objects(arma::mat& eMatRead_t, const Rcpp::List& sampleReads, const arma::imat& hapMatcher, const Rcpp::IntegerVector& grid, const arma::imat& rhb_t, const arma::mat& distinctHapsIE, const double ref_error, const Rcpp::IntegerVector& which_haps_to_use, const bool rescale_eMatRead_t, const int Jmax, const double maxDifferenceBetweenReads);
 RcppExport SEXP _QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects(SEXP eMatRead_tSEXP, SEXP sampleReadsSEXP, SEXP hapMatcherSEXP, SEXP gridSEXP, SEXP rhb_tSEXP, SEXP distinctHapsIESEXP, SEXP ref_errorSEXP, SEXP which_haps_to_useSEXP, SEXP rescale_eMatRead_tSEXP, SEXP JmaxSEXP, SEXP maxDifferenceBetweenReadsSEXP) {
@@ -1358,6 +1372,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_fly_weighter", (DL_FUNC) &_QUILT_rcpp_fly_weighter, 14},
     {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 63},
     {"_QUILT_rcpp_simple_binary_search", (DL_FUNC) &_QUILT_rcpp_simple_binary_search, 2},
+    {"_QUILT_rcpp_simple_binary_matrix_search", (DL_FUNC) &_QUILT_rcpp_simple_binary_matrix_search, 4},
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 11},
     {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 11},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
