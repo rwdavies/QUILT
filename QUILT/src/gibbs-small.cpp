@@ -141,6 +141,10 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
 	for(k = 0; k < K; k++) {
 	  haps_at_grid(k) = hapMatcher(which_haps_to_use(k) - 1, iGrid0);
 	}
+        if (use_eMatDH_special_symbols) {
+            s1 = eMatDH_special_matrix_helper(iGrid0, 0);
+            e1 = eMatDH_special_matrix_helper(iGrid0, 1);
+        }
 	iGrid0_prev = iGrid0;	
         if(J >= Jmax) {
             J = Jmax;
