@@ -370,10 +370,16 @@ make_rhb_t_equality <- function(
     nSNPs,
     ref_error,
     nMaxDH = NA,
-    verbose = TRUE
+    verbose = TRUE,
+    use_hapMatcherR = FALSE
 ) {
+    ## this overrides everything else
     if (is.na(nMaxDH)) {
-        nMaxDH_default <- 2 ** 10 - 1
+        if (!use_hapMatcherR) {
+            nMaxDH_default <- 2 ** 10 - 1
+        } else {
+            nMaxDH_default <- 2 ** 8 - 1
+        }
         infer_nMaxDH <- TRUE
     } else {
         nMaxDH_default <- nMaxDH
@@ -381,11 +387,19 @@ make_rhb_t_equality <- function(
     }
     K <- nrow(rhb_t)
     nGrids <- ncol(rhb_t)
-    ## --- hapMatcher
-    ## matrix K x nGrids
-    ## 0 = no match
-    ## i is match to ith haplotype in distinctHaps i.e. i
-    hapMatcher <- array(0L, c(K, nGrids))
+    if (!use_hapMatcherR) {
+        ## --- hapMatcher
+        ## matrix K x nGrids
+        ## 0 = no match
+        ## i is match to ith haplotype in distinctHaps i.e. i
+        hapMatcher <- array(0L, c(K, nGrids))
+        hapMatcherR <- array(as.raw(0), c(1, 1))
+    } else {
+        ## --- hapMatcherR
+        ## same as above, but raw, and therefore 0 through 255, so use 255
+        hapMatcher <- array(0L, c(1, 1))
+        hapMatcherR <- array(as.raw(0), c(K, nGrids))
+    }
     if (infer_nMaxDH) {
         temp_counter <- array(0L, c(nMaxDH_default, nGrids))
     }
@@ -413,8 +427,14 @@ make_rhb_t_equality <- function(
         w <- names_a[1:min(length(names_a), nMaxDH_default)]
         distinctHapsB[1:length(w), iGrid] <- w
         ## match against
-        hapMatcher[, iGrid] <- as.integer(match(rhb_t[, iGrid], distinctHapsB[, iGrid]))
-        hapMatcher[which(is.na(hapMatcher[, iGrid])), iGrid] <- 0L
+        if (!use_hapMatcherR) {
+            hapMatcher[, iGrid] <- as.integer(match(rhb_t[, iGrid], distinctHapsB[, iGrid]))
+            hapMatcher[which(is.na(hapMatcher[, iGrid])), iGrid] <- 0L
+        } else {
+            m <- match(rhb_t[, iGrid], distinctHapsB[, iGrid])
+            hapMatcherR[is.na(m), iGrid] <- as.raw(0)
+            hapMatcherR[!is.na(m), iGrid] <- as.raw(m[!is.na(m)])
+        }
         ##
         a <- cbind(names_a, a)
         rownames(a) <- NULL
@@ -447,11 +467,20 @@ make_rhb_t_equality <- function(
             max(c(2 ** 4 - 1, suggested_value)),
             nMaxDH_default
         )
+        if (use_hapMatcherR) {
+            if (nMaxDH > 255) {
+                nMaxDH <- 255
+            }
+        }
         if (verbose) {
             print_message(paste0("Using nMaxDH = ", nMaxDH))
         }
         distinctHapsB <- distinctHapsB[1:nMaxDH, ]
-        hapMatcher[hapMatcher > (nMaxDH)] <- 0L
+        if (!use_hapMatcherR) {
+            hapMatcher[hapMatcher > (nMaxDH)] <- 0L
+        } else {
+            hapMatcherR[hapMatcherR > (nMaxDH)] <- as.raw(0)
+        }
     }
     ##
     ## inflate them too, they're pretty small
@@ -471,9 +500,13 @@ make_rhb_t_equality <- function(
     ##
     ## also, look specifically at the 0 matches
     ##
-    which_hapMatcher_0 <- which(hapMatcher == 0, arr.ind = TRUE) - 1
-    eMatDH_special_grid_which <- integer(nGrids)
+    if (!use_hapMatcherR) {
+        which_hapMatcher_0 <- which(hapMatcher == 0, arr.ind = TRUE) - 1
+    } else {
+        which_hapMatcher_0 <- which(hapMatcherR == 0, arr.ind = TRUE) - 1
+    }
     special_grids <- unique(which_hapMatcher_0[, 2]) + 1 ## this-is-1-based
+    eMatDH_special_grid_which <- integer(nGrids)
     eMatDH_special_grid_which[special_grids] <- as.integer(1:length(special_grids))
     if (nrow(which_hapMatcher_0) > 0) {
         ## now build list with them
@@ -535,6 +568,7 @@ make_rhb_t_equality <- function(
             distinctHapsB = distinctHapsB,
             distinctHapsIE = distinctHapsIE,
             hapMatcher = hapMatcher,
+            hapMatcherR = hapMatcherR,
             eMatDH_special_values_list = eMatDH_special_values_list,
             eMatDH_special_grid_which = eMatDH_special_grid_which,
             eMatDH_special_matrix = eMatDH_special_matrix,

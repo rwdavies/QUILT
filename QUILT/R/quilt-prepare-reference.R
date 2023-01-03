@@ -103,6 +103,12 @@ QUILT_prepare_reference <- function(
     if (round(mspbwt_nindices) != mspbwt_nindices) {
         stop("mspbwt_nindices must be an integer")
     }
+    if (!is.na(nMaxDH)) {
+        if (nMaxDH > 255 & use_hapMatcherR) {
+            stop("Can only use hapMatcherR with nMaxDH <= 255")
+        }
+    }
+
 
     ##
     ## new validations
