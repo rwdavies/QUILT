@@ -698,6 +698,8 @@ get_and_impute_one_sample <- function(
                     distinctHapsB = distinctHapsB,
                     distinctHapsIE = distinctHapsIE,
                     hapMatcher = hapMatcher,
+                    hapMatcherR = hapMatcherR,
+                    use_hapMatcherR = use_hapMatcherR,
                     eMatDH_special_grid_which = eMatDH_special_grid_which,
                     eMatDH_special_values_list = eMatDH_special_values_list,
                     ref_error = ref_error,

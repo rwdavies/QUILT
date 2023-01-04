@@ -33,6 +33,7 @@ OUTPUTDIR <- Sys.getenv("OUTPUTDIR")
 profout <- tempfile()
 Rprof(file = profout, gc.profiling = TRUE, line.profiling = TRUE)
 profile_start <- Sys.time()
+
 ################## PROFILE HERE
 QUILT(
     outputdir = OUTPUTDIR,
@@ -49,6 +50,7 @@ QUILT(
     use_hapMatcherR = use_hapMatcherR
 )
 ################## END OF PROFILE
+
 profile_end <- Sys.time()
 setwd(stitch_dir)
 Rprof(NULL)
