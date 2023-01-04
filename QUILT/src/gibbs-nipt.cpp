@@ -46,6 +46,8 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
     arma::mat& eMatRead_t,
     const Rcpp::List& sampleReads,
     const arma::imat& hapMatcher,
+    const Rcpp::RawMatrix hapMatcherR,
+    const bool use_hapMatcherR,
     const Rcpp::IntegerVector& grid,
     const arma::imat& rhb_t,
     const arma::mat& distinctHapsIE,
@@ -67,6 +69,8 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
     const arma::mat& gammaMU_t,
     const arma::mat& gammaP_t,
     const arma::imat& hapMatcher,
+    const Rcpp::RawMatrix& hapMatcherR,
+    bool use_hapMatcherR,
     const arma::imat& distinctHapsB,
     const arma::mat& distinctHapsIE,
     const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
@@ -1872,6 +1876,8 @@ Rcpp::NumericMatrix unpack_gammas(
     const bool use_eMatDH_special_symbols,
     const bool use_small_eHapsCurrent_tc,
     const arma::imat& hapMatcher,
+    const Rcpp::RawMatrix& hapMatcherR,
+    bool use_hapMatcherR,
     const arma::imat& distinctHapsB,    
     const arma::mat& distinctHapsIE,
     const Rcpp::IntegerVector& which_haps_to_use,    
@@ -2030,7 +2036,8 @@ Rcpp::NumericMatrix unpack_gammas(
             rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
                 genProbsM_t_local, genProbsF_t_local, hapProbs_t_local,
                 gammaMT_t_local, gammaMU_t_local, gammaP_t_local,
-                hapMatcher, distinctHapsB, distinctHapsIE,
+                hapMatcher, hapMatcherR, use_hapMatcherR,
+                distinctHapsB, distinctHapsIE,
                 eMatDH_special_matrix_helper, eMatDH_special_matrix,
                 which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols
             );
@@ -2117,6 +2124,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     arma::mat& gammaP_t_local,
     arma::cube& hapSum_tc,
     arma::imat& hapMatcher,
+    Rcpp::RawMatrix& hapMatcherR,
+    bool use_hapMatcherR,
     arma::imat distinctHapsB,    
     arma::mat& distinctHapsIE,
     Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
@@ -2459,7 +2468,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         if (use_small_eHapsCurrent_tc) {
             rcpp_make_eMatRead_t(eMatRead_t, sampleReads, eHapsCurrent_tc, s, maxDifferenceBetweenReads, Jmax_local, eMatHapOri_t, pRgivenH1, pRgivenH2, prev, suppressOutput, prev_section, next_section, run_pseudo_haploid, rescale_eMatRead_t);
         } else {
-            Rcpp_make_eMatRead_t_for_gibbs_using_objects(eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax_local, maxDifferenceBetweenReads, use_eMatDH_special_symbols);
+            Rcpp_make_eMatRead_t_for_gibbs_using_objects(eMatRead_t, sampleReads, hapMatcher, hapMatcherR, use_hapMatcherR, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax_local, maxDifferenceBetweenReads, use_eMatDH_special_symbols);
         }
         //
         //
@@ -2534,7 +2543,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                 i_ever_it = i_outer;
                 hap_label_prob_matrix = unpack_gammas(
                     eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols,
-                    use_small_eHapsCurrent_tc, hapMatcher,
+                    use_small_eHapsCurrent_tc, 
+                    hapMatcher, hapMatcherR, use_hapMatcherR,                    
                     distinctHapsB, distinctHapsIE,
                     which_haps_to_use, ref_error, rhb_t,
                     s, prev_section, next_section, suppressOutput, prev,
@@ -2700,7 +2710,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                     if ((iteration + 1) > n_gibbs_burn_in_its) {
                         hap_label_prob_matrix = unpack_gammas(
                             eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols,
-                            use_small_eHapsCurrent_tc, hapMatcher,
+                            use_small_eHapsCurrent_tc,
+                            hapMatcher, hapMatcherR, use_hapMatcherR,
                             distinctHapsB, distinctHapsIE,
                             which_haps_to_use, ref_error, rhb_t,
                             s, prev_section, next_section, suppressOutput, prev,

@@ -26,6 +26,7 @@
 #' @param use_mspbwt Build mspbwt indices to be used in imputation
 #' @param mspbwt_nindices How many mspbwt indices to build
 #' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
+#' @param use_hapMatcherR Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -56,7 +57,8 @@ QUILT_prepare_reference <- function(
     use_pbwt_index = FALSE,
     use_mspbwt = FALSE,
     mspbwt_nindices = 4L,
-    override_use_eMatDH_special_symbols = NA
+    override_use_eMatDH_special_symbols = NA,
+    use_hapMatcherR = TRUE
 ) {
 
     x <- as.list(environment())
@@ -398,11 +400,13 @@ QUILT_prepare_reference <- function(
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,
         nSNPs = nSNPs,
-        ref_error = ref_error
+        ref_error = ref_error,
+        use_hapMatcherR = use_hapMatcherR
     )
     distinctHapsB <- out[["distinctHapsB"]]
     distinctHapsIE <- out[["distinctHapsIE"]]
     hapMatcher <- out[["hapMatcher"]]
+    hapMatcherR <- out[["hapMatcherR"]]
     eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
     eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
 
@@ -431,16 +435,13 @@ QUILT_prepare_reference <- function(
     if (use_mspbwt) {
         print_message("Build mspbwt indices")
         all_symbols <- out$all_symbols
-        mspbwt_nindices
-        ms_indices <- lapply(1:mspbwt_nindices, function(iIndex) {
-            w <- seq(iIndex, ncol(hapMatcher), mspbwt_nindices)
-            return(mspbwt::Rcpp_ms_BuildIndices_Algorithm5(
-                X1C = hapMatcher[, w, drop = FALSE],
-                all_symbols = all_symbols[w],
-                indices = list(),
-                verbose = FALSE
-            ))
-        })
+        ms_indices <- build_mspbwt_indices(
+            hapMatcher = hapMatcher,
+            hapMatcherR = hapMatcherR,
+            mspbwt_nindices = mspbwt_nindices,
+            use_hapMatcherR = use_hapMatcherR,
+            all_symbols = all_symbols
+        )
         print_message("Done building mspbwt indices")
     } else {
         ms_indices <- NULL
@@ -479,6 +480,8 @@ QUILT_prepare_reference <- function(
     save(
         ref_error,
         hapMatcher,
+        hapMatcherR,
+        use_hapMatcherR,
         distinctHapsIE,
         distinctHapsB,
         eMatDH_special_grid_which,

@@ -125,6 +125,8 @@ get_and_impute_one_sample <- function(
     eMatDH_special_matrix,
     use_eMatDH_special_symbols,
     hapMatcher,
+    hapMatcherR,
+    use_hapMatcherR,
     eMatDH_special_grid_which,
     eMatDH_special_values_list,
     inRegion2,
@@ -163,7 +165,7 @@ get_and_impute_one_sample <- function(
 
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
-    nGrids <- ncol(hapMatcher)
+    nGrids <- ncol(distinctHapsB)
     K <- nrow(hapMatcher)
     suppressOutput <- !print_extra_timing_information
 
@@ -349,6 +351,8 @@ get_and_impute_one_sample <- function(
                 distinctHapsB = distinctHapsB,
                 distinctHapsIE = distinctHapsIE,
                 hapMatcher = hapMatcher,
+                hapMatcherR = hapMatcherR,
+                use_hapMatcherR = use_hapMatcherR,
                 eMatDH_special_grid_which = eMatDH_special_grid_which,
                 eMatDH_special_values_list = eMatDH_special_values_list,
                 ref_error = ref_error,
@@ -457,6 +461,8 @@ get_and_impute_one_sample <- function(
                 distinctHapsB = distinctHapsB,
                 distinctHapsIE = distinctHapsIE,
                 hapMatcher = hapMatcher,
+                hapMatcherR = hapMatcherR,
+                use_hapMatcherR = use_hapMatcherR,
                 rhb_t = rhb_t,
                 ref_error = ref_error,
                 nSNPs = nSNPs,
@@ -1334,6 +1340,8 @@ impute_using_everything <- function(
     distinctHapsB,
     distinctHapsIE,
     hapMatcher,
+    hapMatcherR,
+    use_hapMatcherR,
     eMatDH_special_grid_which,
     eMatDH_special_values_list,
     ref_error,
@@ -1368,7 +1376,7 @@ impute_using_everything <- function(
     ##
     K <- nrow(rhb_t)
     dosage <- numeric(nSNPs)
-    nGrids <- ncol(hapMatcher)
+    nGrids <- ncol(distinctHapsB)
     if (return_good_haps) {
         return_gammaSmall_t <- FALSE
         get_best_haps_from_thinned_sites <- TRUE
@@ -1417,6 +1425,8 @@ impute_using_everything <- function(
             distinctHapsB = distinctHapsB,
             distinctHapsIE = distinctHapsIE,
             hapMatcher = hapMatcher,
+            hapMatcherR = hapMatcherR,
+            use_hapMatcherR = use_hapMatcherR,
             eMatDH_special_grid_which = eMatDH_special_grid_which,
             eMatDH_special_values_list = eMatDH_special_values_list,
             eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
@@ -1673,6 +1683,8 @@ impute_one_sample <- function(
     distinctHapsB,
     distinctHapsIE,
     hapMatcher,
+    hapMatcherR,
+    use_hapMatcherR,
     rhb_t,
     ref_error,
     nSNPs,
@@ -1824,6 +1836,8 @@ impute_one_sample <- function(
             eHapsCurrent_tc = small_eHapsCurrent_tc,
             transMatRate_tc_H = small_transMatRate_tc_H,
             hapMatcher = hapMatcher,
+            hapMatcherR = hapMatcherR,
+            use_hapMatcherR = use_hapMatcherR,
             distinctHapsB =distinctHapsB,
             distinctHapsIE = distinctHapsIE,
             eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,

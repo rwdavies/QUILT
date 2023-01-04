@@ -103,7 +103,8 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,
         nSNPs = nSNPs,
-        ref_error = ref_error
+        ref_error = ref_error,
+        use_hapMatcherR = FALSE
     )
     distinctHapsB <- out[["distinctHapsB"]]
     distinctHapsIE <- out[["distinctHapsIE"]]
@@ -113,6 +114,14 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
     nrow_which_hapMatcher_0 <- out[["nrow_which_hapMatcher_0"]]
     eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
     eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
+    out <- make_rhb_t_equality(
+        rhb_t = rhb_t,
+        nMaxDH = nMaxDH,
+        nSNPs = nSNPs,
+        ref_error = ref_error,
+        use_hapMatcherR = TRUE
+    )
+    hapMatcherR <- out[["hapMatcherR"]]
 
     genProbsM_t_new <- array(0, c(3, nSNPs))
     genProbsF_t_new <- array(0, c(3, nSNPs))
@@ -120,27 +129,33 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
 
     for(use_eMatDH_special_symbols in c(TRUE, FALSE)) {
 
-        rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
-            genProbsM_t = genProbsM_t_new,
-            genProbsF_t = genProbsF_t_new,
-            hapProbs_t = hapProbs_t_new,
-            gammaMT_t = gammaMT_t,
-            gammaMU_t = gammaMU_t,
-            gammaP_t = gammaP_t,
-            hapMatcher = hapMatcher,
-            distinctHapsB = distinctHapsB,
-            distinctHapsIE = distinctHapsIE,
-            which_haps_to_use = which_haps_to_use,
-            ref_error = ref_error,
-            rhb_t = rhb_t,
-            eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
-            eMatDH_special_matrix = eMatDH_special_matrix,
-            use_eMatDH_special_symbols = use_eMatDH_special_symbols
-        )
+        for(use_hapMatcherR in c(FALSE, TRUE)) {
 
-        expect_equal( hapProbs_t_new, hapProbs_t)
-        expect_equal( genProbsM_t_new, genProbsM_t)
-        expect_equal( genProbsF_t_new, genProbsF_t)
+            rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
+                genProbsM_t = genProbsM_t_new,
+                genProbsF_t = genProbsF_t_new,
+                hapProbs_t = hapProbs_t_new,
+                gammaMT_t = gammaMT_t,
+                gammaMU_t = gammaMU_t,
+                gammaP_t = gammaP_t,
+                hapMatcher = hapMatcher,
+                hapMatcherR = hapMatcherR,
+                use_hapMatcherR = use_hapMatcherR,
+                distinctHapsB = distinctHapsB,
+                distinctHapsIE = distinctHapsIE,
+                which_haps_to_use = which_haps_to_use,
+                ref_error = ref_error,
+                rhb_t = rhb_t,
+                eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                eMatDH_special_matrix = eMatDH_special_matrix,
+                use_eMatDH_special_symbols = use_eMatDH_special_symbols
+            )
+
+            expect_equal( hapProbs_t_new, hapProbs_t)
+            expect_equal( genProbsM_t_new, genProbsM_t)
+            expect_equal( genProbsF_t_new, genProbsF_t)
+
+        }
 
     }
 
@@ -262,24 +277,40 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
 
     for(use_eMatDH_special_symbols in c(FALSE, TRUE)) {
 
-        eMatRead_t_new <- array(1, c(Ksmall, nReads))
-        Rcpp_make_eMatRead_t_for_gibbs_using_objects(
-            eMatRead_t = eMatRead_t_new,
-            sampleReads = sampleReads,
-            hapMatcher = hapMatcher,
-            grid = grid,
-            rhb_t = rhb_t,
-            distinctHapsIE = distinctHapsIE,
-            eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
-            eMatDH_special_matrix = eMatDH_special_matrix,
-            ref_error = ref_error,
-            which_haps_to_use = which_haps_to_use,
-            rescale_eMatRead_t = rescale_eMatRead_t,
-            Jmax = Jmax,
-            maxDifferenceBetweenReads = maxDifferenceBetweenReads,
-            use_eMatDH_special_symbols = use_eMatDH_special_symbols
-        )
-        expect_equal(eMatRead_t_new, eMatRead_t_old)
+        for(use_hapMatcherR in c(FALSE, TRUE)) {
+
+            out <- make_rhb_t_equality(
+                rhb_t = rhb_t,
+                nMaxDH = nMaxDH,
+                nSNPs = nSNPs,
+                ref_error = ref_error,
+                use_hapMatcherR = use_hapMatcherR
+            )
+            hapMatcher <- out[["hapMatcher"]]
+            hapMatcherR <- out[["hapMatcherR"]]
+
+            eMatRead_t_new <- array(1, c(Ksmall, nReads))
+            Rcpp_make_eMatRead_t_for_gibbs_using_objects(
+                eMatRead_t = eMatRead_t_new,
+                sampleReads = sampleReads,
+                hapMatcher = hapMatcher,
+                hapMatcherR = hapMatcherR,
+                use_hapMatcherR = use_hapMatcherR,
+                grid = grid,
+                rhb_t = rhb_t,
+                distinctHapsIE = distinctHapsIE,
+                eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                eMatDH_special_matrix = eMatDH_special_matrix,
+                ref_error = ref_error,
+                which_haps_to_use = which_haps_to_use,
+                rescale_eMatRead_t = rescale_eMatRead_t,
+                Jmax = Jmax,
+                maxDifferenceBetweenReads = maxDifferenceBetweenReads,
+                use_eMatDH_special_symbols = use_eMatDH_special_symbols
+            )
+            expect_equal(eMatRead_t_new, eMatRead_t_old)
+
+        }
 
     }
 

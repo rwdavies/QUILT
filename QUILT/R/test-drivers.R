@@ -377,7 +377,8 @@ make_reference_single_test_package <- function(
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,
         nSNPs = nSNPs,
-        ref_error = ref_error
+        ref_error = ref_error,
+        use_hapMatcherR = FALSE
     )
     distinctHapsB <- out[["distinctHapsB"]]
     distinctHapsIE <- out[["distinctHapsIE"]]
@@ -386,6 +387,15 @@ make_reference_single_test_package <- function(
     eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
     eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
     eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
+    ## get hapMatcherR as well
+    out <- make_rhb_t_equality(
+        rhb_t = rhb_t,
+        nMaxDH = nMaxDH,
+        nSNPs = nSNPs,
+        ref_error = ref_error,
+        use_hapMatcherR = TRUE
+    )
+    hapMatcherR <- out[["hapMatcherR"]]
     my_hap <- c(
         rhi_t[1, 1:36],
         rhi_t[2, 37:60],
@@ -414,6 +424,7 @@ make_reference_single_test_package <- function(
             distinctHapsB = distinctHapsB,
             distinctHapsIE = distinctHapsIE,
             hapMatcher = hapMatcher,
+            hapMatcherR = hapMatcherR,
             rhb_t = rhb_t,
             gl = gl,
             transMatRate_t = transMatRate_t,

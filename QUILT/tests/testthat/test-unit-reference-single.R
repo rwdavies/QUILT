@@ -387,6 +387,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     ##
     speed_test <- FALSE
     rebuild <- FALSE
+    use_hapMatcherR <- FALSE
     if (!speed_test) {
         nSNPs <- 500
         K <- 100
@@ -418,6 +419,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     distinctHapsB <- test_package[["distinctHapsB"]]
     distinctHapsIE <- test_package[["distinctHapsIE"]]
     hapMatcher <- test_package[["hapMatcher"]]
+    hapMatcherR <- test_package[["hapMatcherR"]]
     rhb_t <- test_package[["rhb_t"]]
     gl <- test_package[["gl"]]
     transMatRate_t <- test_package[["transMatRate_t"]]
@@ -445,7 +447,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     ##
     ## run normal version in R, or Rcpp, and make sure the same
     ##
-    master_f <- function(always_normalize, language, is_version_2, normalize_emissions  = FALSE, use_eMatDH_special_symbols = FALSE) {
+    master_f <- function(always_normalize, language, is_version_2, normalize_emissions  = FALSE, use_eMatDH_special_symbols = FALSE, use_hapMatcherR = FALSE) {
 
         if (language == "R") {
             f <- R_haploid_dosage_versus_refs
@@ -492,6 +494,8 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
             distinctHapsB = distinctHapsB,
             distinctHapsIE = distinctHapsIE,
             hapMatcher = hapMatcher,
+            hapMatcherR = hapMatcherR,
+            use_hapMatcherR = use_hapMatcherR,
             return_extra = TRUE,
             gammaSmall_cols_to_get = gammaSmall_cols_to_get,
             get_best_haps_from_thinned_sites = get_best_haps_from_thinned_sites,
@@ -531,11 +535,13 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     out_Rcpp_always_normalize <- master_f(TRUE, "Rcpp", FALSE)
     out_Rcpp2_always_normalize <- master_f(TRUE, "Rcpp", TRUE)
     out_Rcpp3_always_normalize <- master_f(TRUE, "Rcpp", TRUE, use_eMatDH_special_symbols = TRUE)
+    out_Rcpp4_always_normalize <- master_f(TRUE, "Rcpp", TRUE, use_eMatDH_special_symbols = TRUE, use_hapMatcherR = TRUE)
 
     out_R_seldom_normalize <- master_f(FALSE, "R", NA)
     out_Rcpp_seldom_normalize <- master_f(FALSE, "Rcpp", FALSE)
     out_Rcpp2_seldom_normalize <- master_f(FALSE, "Rcpp", TRUE)
     out_Rcpp3_seldom_normalize <- master_f(FALSE, "Rcpp", TRUE, use_eMatDH_special_symbols = TRUE)
+    out_Rcpp4_seldom_normalize <- master_f(FALSE, "Rcpp", TRUE, use_eMatDH_special_symbols = TRUE, use_hapMatcherR = TRUE)
 
 
     ##
@@ -580,6 +586,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
         expect_equal(sum(log(out_R_always_normalize[["c"]])), sum(log(out_Rcpp2_always_normalize[["c"]])))
         expect_equal(sum(log(out_R_always_normalize[["c"]])), sum(log(out_Rcpp2_seldom_normalize[["c"]])))
         expect_equal(sum(log(out_R_always_normalize[["c"]])), sum(log(out_Rcpp3_seldom_normalize[["c"]])))
+        expect_equal(sum(log(out_R_always_normalize[["c"]])), sum(log(out_Rcpp4_seldom_normalize[["c"]])))
         ##
         ## dosages
         ##
@@ -587,6 +594,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
         expect_equal(out_R_always_normalize[["dosage"]], out_Rcpp2_seldom_normalize[["dosage"]], tolerance = 1e-5)
         expect_equal(out_Rcpp_always_normalize[["dosage"]], out_Rcpp2_always_normalize[["dosage"]], tolerance = 1e-5)
         expect_equal(out_Rcpp_always_normalize[["dosage"]], out_Rcpp3_always_normalize[["dosage"]], tolerance = 1e-5)
+        expect_equal(out_Rcpp_always_normalize[["dosage"]], out_Rcpp4_always_normalize[["dosage"]], tolerance = 1e-5)
         ##
         ## gammas
         ##
@@ -594,6 +602,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
         expect_equal(out_R_always_normalize[["gammaSmall_t"]], out_Rcpp2_seldom_normalize[["gammaSmall_t"]])
         expect_equal(out_Rcpp_always_normalize[["gammaSmall_t"]], out_Rcpp2_always_normalize[["gammaSmall_t"]])
         expect_equal(out_Rcpp_always_normalize[["gammaSmall_t"]], out_Rcpp3_always_normalize[["gammaSmall_t"]])
+        expect_equal(out_Rcpp_always_normalize[["gammaSmall_t"]], out_Rcpp4_always_normalize[["gammaSmall_t"]])
     }
 
 
@@ -780,7 +789,8 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                     rhb_t = rhb_t,
                     nMaxDH = nMaxDH,
                     nSNPs = nSNPs,
-                    ref_error = ref_error
+                    ref_error = ref_error,
+                    use_hapMatcherR = FALSE
                 )
                 distinctHapsB <- out[["distinctHapsB"]]
                 distinctHapsIE <- out[["distinctHapsIE"]]
@@ -794,6 +804,16 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                 } else {
                     use_eMatDH_special_symbols <- TRUE
                 }
+                use_hapMatcherR <- FALSE ## possibly change this!
+                out <- make_rhb_t_equality(
+                    rhb_t = rhb_t,
+                    nMaxDH = nMaxDH,
+                    nSNPs = nSNPs,
+                    ref_error = ref_error,
+                    use_hapMatcherR = TRUE
+                )
+                hapMatcherR <- out[["hapMatcherR"]]
+
 
                 ## make some gls from this
                 my_hap <- c(
@@ -905,6 +925,8 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                         eMatDH_special_grid_which = eMatDH_special_grid_which,
                         eMatDH_special_values_list = eMatDH_special_values_list,
                         hapMatcher = hapMatcher,
+                        hapMatcherR = hapMatcherR,
+                        use_hapMatcherR = use_hapMatcherR,
                         gammaSmall_t = gammaSmall_t,
                         gammaSmall_cols_to_get = gammaSmall_cols_to_get,
                         suppressOutput = suppressOutput,

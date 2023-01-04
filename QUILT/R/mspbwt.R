@@ -1,3 +1,32 @@
+build_mspbwt_indices <- function(
+   hapMatcher,
+   hapMatcherR,
+   mspbwt_nindices,
+   use_hapMatcherR,
+   all_symbols
+) {
+    if (use_hapMatcherR) {
+        ncol <- ncol(hapMatcherR)
+    } else {
+        ncol <- ncol(hapMatcher)
+    }
+    ms_indices <- lapply(1:mspbwt_nindices, function(iIndex) {
+        w <- seq(iIndex, ncol, mspbwt_nindices)
+        if (use_hapMatcherR) {
+            X1C <- hapMatcherR[, w, drop = FALSE]
+        } else {
+            X1C <- hapMatcher[, w, drop = FALSE]
+        }
+        return(mspbwt::Rcpp_ms_BuildIndices_Algorithm5(
+            X1C = X1C,
+            all_symbols = all_symbols[w],
+            indices = list(),
+            verbose = FALSE
+        ))
+    })
+    ms_indices
+}
+
 select_new_haps_internal <- function(hap)  {
     Z <- round(hap)
     Z[mono0] <- 0
@@ -156,13 +185,13 @@ select_new_haps_mspbwt_v2 <- function(
 
 
 ##             print("--------------wer----------------saving stuff--------------wer--------------")
-##                 hapProbs_t = gibbs_iterate[["hapProbs_t"]]                
+##                 hapProbs_t = gibbs_iterate[["hapProbs_t"]]
 ##                 hapMatcher = hapMatcher
 ##                 ms_indices = ms_indices
 ##                 Knew = Knew
 ##                 Kfull = nrow(rhb_t)
 ##             all_symbols = ms_indices[["all_symbols"]]
-##             dir <- "/well/davies/users/dcc832/QUILT_nicola_testing_2022_08_26/"                
+##             dir <- "/well/davies/users/dcc832/QUILT_nicola_testing_2022_08_26/"
 ##             if (i_gibbs_sample == 1 & i_it == 1) {
 ##             save(
 ## hapProbs_t,
@@ -178,7 +207,7 @@ select_new_haps_mspbwt_v2 <- function(
 ##             save(
 ## hapProbs_t,
 ## file = paste0(dir, "stuff.", i_gibbs_sample, ".", i_it, ".RData"))
-##             print("--------------wer----------------done saving stuff--------------wer--------------")    
+##             print("--------------wer----------------done saving stuff--------------wer--------------")
 
 
 
@@ -241,7 +270,7 @@ impute_using_split_reads_and_small_ref_panel <- function(
     ## for now - can be ruthless - don't worry about speed
     ##
     full_alphaHat_t <- array(0, c(length(which_haps_to_use), nGrids))
-    
+
     hapMatcherL <- hapMatcher[which_haps_to_use, ]
     rhb_tL <- rhb_t[which_haps_to_use, ]
 
@@ -309,10 +338,10 @@ impute_using_split_reads_and_small_ref_panel <- function(
             }
         }
     }
-    
+
     ##
     ##
-    ## 
+    ##
     return_gammaSmall_t <- FALSE
     get_best_haps_from_thinned_sites <- FALSE
     best_haps_stuff_list <- list()
@@ -378,7 +407,7 @@ impute_using_split_reads_and_small_ref_panel <- function(
         if (i_hap == 1) { dosage1 <- dosageNew}
         if (i_hap == 2) { dosage2 <- dosageNew}
     }
-    
+
     to_return <- list(
         dosage1 = dosage1,
         dosage2 = dosage2

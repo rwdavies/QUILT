@@ -107,6 +107,8 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
     arma::mat& eMatRead_t,
     const Rcpp::List& sampleReads,
     const arma::imat& hapMatcher,
+    const Rcpp::RawMatrix hapMatcherR,
+    const bool use_hapMatcherR,
     const Rcpp::IntegerVector& grid,
     const arma::imat& rhb_t,
     const arma::mat& distinctHapsIE,
@@ -126,6 +128,7 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
     double pR = 1;
     double pA = 1;
     double e;
+    Rcpp::RawVector haps_at_gridR(K);
     Rcpp::IntegerVector haps_at_grid(K);
     Rcpp::IntegerVector hap(32);
     double d2 = 1 / maxDifferenceBetweenReads;
@@ -137,10 +140,16 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
         int J = as<int>(readData[0]); // number of Unique SNPs on read
         arma::ivec bq = as<arma::ivec>(readData[2]); // bq for each SNP
         arma::ivec u = as<arma::ivec>(readData[3]); // position of each SNP from 0 to T-1
-	iGrid0 = grid(u(0));	
-	for(k = 0; k < K; k++) {
-	  haps_at_grid(k) = hapMatcher(which_haps_to_use(k) - 1, iGrid0);
-	}
+	iGrid0 = grid(u(0));
+        if (use_hapMatcherR) {
+            for(k = 0; k < K; k++) {
+                haps_at_gridR(k) = hapMatcherR(which_haps_to_use(k) - 1, iGrid0);
+            }
+        } else {
+            for(k = 0; k < K; k++) {
+                haps_at_grid(k) = hapMatcher(which_haps_to_use(k) - 1, iGrid0);
+            }
+        }
         if (use_eMatDH_special_symbols) {
             s1 = eMatDH_special_matrix_helper(iGrid0, 0);
             e1 = eMatDH_special_matrix_helper(iGrid0, 1);
@@ -161,10 +170,16 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
                 pA = 1 - eps;
             }
 	    iGrid0 = grid(u(j));
-            if (iGrid0 != iGrid0_prev) {	    
-	        for(k = 0; k < K; k++) {
-		    haps_at_grid(k) = hapMatcher(which_haps_to_use(k) - 1, iGrid0);
-	        }
+            if (iGrid0 != iGrid0_prev) {
+                if (use_hapMatcherR) {
+                    for(k = 0; k < K; k++) {
+                        haps_at_gridR(k) = hapMatcherR(which_haps_to_use(k) - 1, iGrid0);
+                    }
+                } else {
+                    for(k = 0; k < K; k++) {
+                        haps_at_grid(k) = hapMatcher(which_haps_to_use(k) - 1, iGrid0);
+                    }
+                }
                 if (use_eMatDH_special_symbols) {
                     s1 = eMatDH_special_matrix_helper(iGrid0, 0);
                     e1 = eMatDH_special_matrix_helper(iGrid0, 1);
@@ -172,7 +187,9 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
 	    }
 	    iGrid0_prev = iGrid0;
 	    for(k = 0; k < K; k++) {
-	        if (haps_at_grid(k) > 0) {
+                if (use_hapMatcherR & (haps_at_gridR(k) > 0)) {
+                    e = distinctHapsIE(haps_at_gridR(k) - 1, u(j));
+                } else if (haps_at_grid(k) > 0) {
 		  e = distinctHapsIE(haps_at_grid(k) - 1, u(j));
 		} else {
                     if (use_eMatDH_special_symbols) {
@@ -245,6 +262,8 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
     const arma::mat& gammaMU_t,
     const arma::mat& gammaP_t,
     const arma::imat& hapMatcher,
+    const Rcpp::RawMatrix& hapMatcherR,
+    bool use_hapMatcherR,
     const arma::imat& distinctHapsB,
     const arma::mat& distinctHapsIE,
     const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
@@ -299,7 +318,11 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
             //
             // get the binary value to decompose
             //
-            kk = hapMatcher(which_haps_to_use(k) - 1, iGrid);
+            if (use_hapMatcherR) {
+                kk = hapMatcherR(which_haps_to_use(k) - 1, iGrid);
+            } else {
+                kk = hapMatcher(which_haps_to_use(k) - 1, iGrid);
+            }
             if (kk > 0) {
                 bvtd = distinctHapsB(kk - 1, iGrid);
             } else {

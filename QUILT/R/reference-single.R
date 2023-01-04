@@ -111,6 +111,8 @@ R_haploid_dosage_versus_refs <- function(
     eMatDH_special_matrix,
     use_eMatDH_special_symbols,
     hapMatcher,
+    hapMatcherR,
+    use_hapMatcherR = FALSE,
     return_extra = FALSE,
     gammaSmall_cols_to_get = array(-1, c(1)),
     get_best_haps_from_thinned_sites = FALSE,
@@ -126,6 +128,9 @@ R_haploid_dosage_versus_refs <- function(
     make_c_exact = TRUE,
     normalize_emissions = FALSE
 ) {
+    if ( use_hapMatcherR) {
+        stop("use_hapMatcherR functionality not in R version")
+    }
     ## run one sample haplotype against potentially very many other haplotypes
     K <- nrow(alphaHat_t)
     nGrids <- ncol(alphaHat_t)
@@ -393,11 +398,11 @@ make_rhb_t_equality <- function(
         ## 0 = no match
         ## i is match to ith haplotype in distinctHaps i.e. i
         hapMatcher <- array(0L, c(K, nGrids))
-        hapMatcherR <- array(as.raw(0), c(1, 1))
+        hapMatcherR <- array(as.raw(0), c(K, 1))
     } else {
         ## --- hapMatcherR
         ## same as above, but raw, and therefore 0 through 255, so use 255
-        hapMatcher <- array(0L, c(1, 1))
+        hapMatcher <- array(0L, c(K, 1))
         hapMatcherR <- array(as.raw(0), c(K, nGrids))
     }
     if (infer_nMaxDH) {

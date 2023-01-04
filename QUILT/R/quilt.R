@@ -77,6 +77,7 @@
 #' @param mspbwt_nindices How many mspbwt indices to build
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
 #' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
+#' @param use_hapMatcherR Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -156,7 +157,8 @@ QUILT <- function(
     use_mspbwt = FALSE,
     mspbwt_nindices = 4L,
     use_splitreadgl = FALSE,
-    override_use_eMatDH_special_symbols = NA
+    override_use_eMatDH_special_symbols = NA,
+    use_hapMatcherR = TRUE
 ) {
 
     x <- as.list(environment())
@@ -326,7 +328,8 @@ QUILT <- function(
                 mspbwt_nindices =  mspbwt_nindices,
                 reference_vcf_file = reference_vcf_file,
                 output_file = prepared_reference_filename,
-                override_use_eMatDH_special_symbols = override_use_eMatDH_special_symbols
+                override_use_eMatDH_special_symbols = override_use_eMatDH_special_symbols,
+                use_hapMatcherR = use_hapMatcherR
             )
         } else {
             stop(paste0("Cannot find prepared haplotype reference file, expecting:", prepared_reference_filename))
@@ -363,33 +366,31 @@ QUILT <- function(
         }
     }
 
-
-    if (hla_run) {
-
-        ## print_message("SIMON HLA CODE - fix this eventually!")
-        which_hapMatcher_0 <- which(hapMatcher == 0, arr.ind = TRUE) - 1
-        eMatDH_special_grid_which <- integer(nGrids)
-        special_grids <- unique(which_hapMatcher_0[, 2]) + 1 ## this-is-1-based
-        eMatDH_special_grid_which[special_grids] <- as.integer(1:length(special_grids))
-        if (nrow(which_hapMatcher_0) > 0) {
-            ## now build list with them
-            x <- which_hapMatcher_0[, 2]
-            y <- which((x[-1] - x[-length(x)]) > 0) ## last entry that is OK
-            starts <- c(1, y + 1)
-            ends <- c(y, length(x))
-            ##
-            ## eMatDH_special_values
-            ##   list of length the number of special grids
-            ##   entries are which ones to re-do, and where they are in rhb_t
-            ##   entries inside this are 0-based
-            eMatDH_special_values_list <- lapply(1:length(starts), function(i) {
-                return(as.integer(which_hapMatcher_0[starts[i]:ends[i], 1]))
-            })
-        } else {
-            eMatDH_special_values_list <- list()
-        }
-        nrow_which_hapMatcher_0 <- nrow(which_hapMatcher_0) ## for testing
-    }
+    ## if (hla_run) {
+    ##     ## print_message("SIMON HLA CODE - fix this eventually!")
+    ##     which_hapMatcher_0 <- which(hapMatcher == 0, arr.ind = TRUE) - 1
+    ##     eMatDH_special_grid_which <- integer(nGrids)
+    ##     special_grids <- unique(which_hapMatcher_0[, 2]) + 1 ## this-is-1-based
+    ##     eMatDH_special_grid_which[special_grids] <- as.integer(1:length(special_grids))
+    ##     if (nrow(which_hapMatcher_0) > 0) {
+    ##         ## now build list with them
+    ##         x <- which_hapMatcher_0[, 2]
+    ##         y <- which((x[-1] - x[-length(x)]) > 0) ## last entry that is OK
+    ##         starts <- c(1, y + 1)
+    ##         ends <- c(y, length(x))
+    ##         ##
+    ##         ## eMatDH_special_values
+    ##         ##   list of length the number of special grids
+    ##         ##   entries are which ones to re-do, and where they are in rhb_t
+    ##         ##   entries inside this are 0-based
+    ##         eMatDH_special_values_list <- lapply(1:length(starts), function(i) {
+    ##             return(as.integer(which_hapMatcher_0[starts[i]:ends[i], 1]))
+    ##         })
+    ##     } else {
+    ##         eMatDH_special_values_list <- list()
+    ##     }
+    ##     nrow_which_hapMatcher_0 <- nrow(which_hapMatcher_0) ## for testing
+    ## }
 
     validate_quilt_use_of_region_variables(
         regionStart,
@@ -486,11 +487,13 @@ QUILT <- function(
             rhb_t = rhb_t,
             nMaxDH = nMaxDH,
             nSNPs = nSNPs,
-            ref_error = ref_error
+            ref_error = ref_error,
+            use_hapMatcherR = use_hapMatcherR
         )
         distinctHapsB <- out[["distinctHapsB"]]
         distinctHapsIE <- out[["distinctHapsIE"]]
         hapMatcher <- out[["hapMatcher"]]
+        hapMatcherR <- out[["hapMatcherR"]]
         eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
         eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
 
@@ -740,6 +743,8 @@ QUILT <- function(
                 eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
                 eMatDH_special_matrix = eMatDH_special_matrix,
                 hapMatcher = hapMatcher,
+                hapMatcherR = hapMatcherR,
+                use_hapMatcherR = use_hapMatcherR,
                 use_eMatDH_special_symbols = use_eMatDH_special_symbols,
                 eMatDH_special_grid_which = eMatDH_special_grid_which,
                 eMatDH_special_values_list = eMatDH_special_values_list,
