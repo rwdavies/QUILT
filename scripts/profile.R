@@ -17,73 +17,37 @@ for(key in c("--file=", "--f=")) {
 setwd(stitch_dir)
 
 
-n_snps <- 200
-chr <- 10
-K <- 6
-set.seed(919)
-phasemaster <- array(sample(c(0, 1), n_snps * K, replace = TRUE), c(n_snps, K))
-reads_span_n_snps <- 3
-## want about 4X here
-n_reads <- round(4 * n_snps / reads_span_n_snps)
-data_package <- STITCH::make_acceptance_test_data_package(
-    reads_span_n_snps = reads_span_n_snps,
-    n_samples = 3,
-    n_snps = n_snps,
-    n_reads = n_reads,
-    seed = 2,
-    chr = chr,
-    K = K,
-    phasemaster = phasemaster
-)
-refpack <- STITCH::make_reference_package(
-    n_snps = n_snps,
-    n_samples_per_pop = 500,
-    reference_populations = c("CEU", "GBR"),
-    chr = chr,
-    phasemaster = phasemaster
-)
-set.seed(010)
 
 
+library("QUILT")
+setwd("/well/davies/users/dcc832/hrc_test_2022_12_15/")
+CHR="chr20"
+REGIONSTART=10000001
+REGIONEND=12000000
+BUFFER=500000
+reference_sample_file = "hg38_liftover_chr20.samples"
+genetic_map_file = "CEU-chr20-final.b38.txt.gz"
 
+use_hapMatcherR <- Sys.getenv("USE_HAPMATCHER_R")
+OUTPUTDIR <- Sys.getenv("OUTPUTDIR")
 profout <- tempfile()
 Rprof(file = profout, gc.profiling = TRUE, line.profiling = TRUE)
 profile_start <- Sys.time()
 ################## PROFILE HERE
-
-    outputdir <- STITCH::make_unique_tempdir()
-
-    regionStart <- 11
-    regionEnd <- 200 - 10
-    buffer <- 5
-zilong <- FALSE
-use_mspbwt <- TRUE
-use_hapMatcherR <- TRUE
-
-            QUILT(
-                outputdir = outputdir,
-                chr = data_package$chr,
-                regionStart = regionStart,
-                regionEnd = regionEnd,
-                buffer = buffer,
-                bamlist = data_package$bamlist,
-                posfile = data_package$posfile,
-                genfile = data_package$genfile,
-                phasefile = data_package$phasefile,
-                reference_vcf_file = refpack$reference_vcf_file,
-                reference_haplotype_file = refpack$reference_haplotype_file,
-                reference_legend_file = refpack$reference_legend_file,
-                genetic_map_file = refpack$reference_genetic_map_file,
-                nGibbsSamples = 5,
-                n_seek_its = 3,
-                nCores = 1,
-                nGen = 100,
-                use_mspbwt = use_mspbwt,
-                zilong = zilong,
-                use_hapMatcherR = use_hapMatcherR
-            )
-
-
+QUILT(
+    outputdir = OUTPUTDIR,
+    chr=CHR,
+    regionStart=REGIONSTART,
+    regionEnd=REGIONEND,
+    buffer=BUFFER,
+    bamlist="bamlist.txt",
+    posfile="posfile.txt",
+    sampleNames_file="sampleNames.txt",
+    nGibbsSamples=3,
+    n_seek_its=2,
+    use_mspbwt = FALSE,
+    use_hapMatcherR = use_hapMatcherR
+)
 ################## END OF PROFILE
 profile_end <- Sys.time()
 setwd(stitch_dir)

@@ -806,7 +806,13 @@ get_and_impute_one_sample <- function(
 
         if (phasing_it) {
             ## just save relevant stuff here
+            out <- recast_haps(hd1 = hap1, hd2 = hap2, gp = t(gp_t))
+            ## over-write here
+            hap1 <- out$hd1
+            hap2 <- out$hd2
+            ## 
             phasing_haps <- cbind(hap1, hap2)
+            ## 
             phasing_dosage <- hap1 + hap2
             phasing_read_labels <- read_labels
         }
@@ -2366,7 +2372,8 @@ estimate_bq <- function(truth_labels, sampleReads, truth_haps) {
 
 
 
-recast_haps <- function(hd1, hd2, gp, err = 0.001) {
+## force phased haplotypes to agree with genotype posterior
+recast_haps <- function(hd1, hd2, gp) {
     gt1 <- round(hd1) + round(hd2)
     max_val <- gp[, 1]
     gt3 <- rep(0, nrow(gp))
@@ -2375,6 +2382,7 @@ recast_haps <- function(hd1, hd2, gp, err = 0.001) {
         gt3[w] <- i - 1
         max_val[w] <- gp[w, i]
     }
+    
     ##
     to_change <- which(gt3 != gt1)
     ## easy one
