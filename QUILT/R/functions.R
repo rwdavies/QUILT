@@ -1434,7 +1434,7 @@ impute_using_everything <- function(
             eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
             eMatDH_special_matrix = eMatDH_special_matrix,
             use_eMatDH_special_symbols = use_eMatDH_special_symbols,
-            suppressOutput = suppressOutput,
+            suppressOutput = 0, ## suppressOutput
             return_dosage = return_dosage,
             return_betaHat_t = return_betaHat_t,
             return_gamma_t = return_gamma_t,

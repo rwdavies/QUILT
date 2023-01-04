@@ -475,6 +475,11 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
         gammaSmall_t <- array(0, c(K, nSmallGammaGrids))
         dosage <- numeric(nSNPs)
         best_haps_stuff_list <- as.list(1:sum(gammaSmall_cols_to_get >= 0))
+
+        if (use_eMatDH_special_symbols) {
+            rhb_t <- matrix(as.integer(1), 1, 1) ## nuke!
+        }
+
         ##
         out <- f(
             gl = gl,

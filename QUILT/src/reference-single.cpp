@@ -1341,12 +1341,28 @@ void Rcpp_haploid_reference_single_backward_version2(
                 // special cases here
                 //
                 if (eMatDH_special_grid_which(iGrid) > 0) {
-                    Rcpp::IntegerVector vals_to_redo = Rcpp::as<Rcpp::IntegerVector>(eMatDH_special_values_list(eMatDH_special_grid_which(iGrid) - 1));
+                    if (use_eMatDH_special_symbols) {
+                        s1 = eMatDH_special_matrix_helper(iGrid, 0);
+                        e1 = eMatDH_special_matrix_helper(iGrid, 1);
+                        // there is undoubtledly better code to do this
+                        Rcpp::IntegerVector temp_vec(e1 - s1 + 1);
+                        for(int ii = 0; ii < e1 - s1 + 1; ii++) {
+                            temp_vec(ii) = eMatDH_special_matrix(s1 - 1 + ii, 0);
+                        }
+                        vals_to_redo = temp_vec;
+                    } else {
+                        vals_to_redo = Rcpp::as<Rcpp::IntegerVector>(eMatDH_special_values_list(eMatDH_special_grid_which(iGrid) - 1));
+                    }
                     for(i = 0; i < vals_to_redo.size(); i++) {
                         k = vals_to_redo(i);
+                        if (use_eMatDH_special_symbols) {
+                            bvtd = rcpp_simple_binary_matrix_search(k, eMatDH_special_matrix, s1, e1);
+                        } else {
+                            bvtd = rhb_t(k, iGrid);
+                        }
                         //
                         gk = gamma_t_col(k) * not_jump_prob;
-                        std::uint32_t tmp(rhb_t(k, iGrid));
+                        std::uint32_t tmp(bvtd);
                         for(b = 0; b < nSNPsLocal; b++) {
                             if (tmp & (1<<b)) {
                                 // alternate
@@ -1358,6 +1374,7 @@ void Rcpp_haploid_reference_single_backward_version2(
                         }
                     }
                 }
+                
                 //
                 // now do the sums
                 //
