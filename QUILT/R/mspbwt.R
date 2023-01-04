@@ -108,6 +108,8 @@ select_new_haps_mspbwt <- function(
 select_new_haps_mspbwt_v2 <- function(
     hapProbs_t,
     hapMatcher,
+    hapMatcherR,
+    use_hapMatcherR,
     ms_indices,
     Knew,
     Kfull
@@ -115,7 +117,11 @@ select_new_haps_mspbwt_v2 <- function(
     iIndex <- 1
     ihap <- 1
     nIndices <- length(ms_indices)
-    nGrids <- ncol(hapMatcher)
+    if (use_hapMatcherR) {
+        nGrids <- ncol(hapMatcherR)
+    } else {
+        nGrids <- ncol(hapMatcher)
+    }
     a <- lapply(1:2, function(ihap) {
         hap <- round(hapProbs_t[ihap, ])
         Zs <- rcpp_int_contract(hap)
@@ -124,6 +130,8 @@ select_new_haps_mspbwt_v2 <- function(
             Z_local <- mspbwt::map_Z_to_all_symbols(Zs[which_grids], ms_indices[[iIndex]][["all_symbols"]])
             mtm <- mspbwt::Rcpp_ms_MatchZ_Algorithm5(
                 X = hapMatcher,
+                XR = hapMatcherR,
+                use_XR = use_hapMatcherR,
                 ms_indices = ms_indices[[iIndex]],
                 Z = Z_local,
                 cols_to_use0 = as.integer(which_grids - 1L),

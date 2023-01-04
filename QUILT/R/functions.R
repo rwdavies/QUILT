@@ -655,6 +655,8 @@ get_and_impute_one_sample <- function(
                 which_haps_to_use <- select_new_haps_mspbwt_v2(
                     hapProbs_t = hapProbs_t,
                     hapMatcher = hapMatcher,
+                    hapMatcherR = hapMatcherR,
+                    use_hapMatcherR = use_hapMatcherR,
                     ms_indices = ms_indices,
                     Knew = Knew,
                     Kfull = Kfull
@@ -2187,7 +2189,7 @@ calculate_eMatRead_t_vs_two_haplotypes <- function(
     ehc <- array(0, c(K, nSNPs, 1))
     ehc[1, , 1] <- hap1
     ehc[2, , 1] <- hap2
-    gc(reset = TRUE); gc(reset = TRUE);
+    ## gc(reset = TRUE); gc(reset = TRUE);
     ##
     rcpp_make_eMatRead_t(
         eMatRead_t = eMatRead_t,
@@ -2207,7 +2209,7 @@ calculate_eMatRead_t_vs_two_haplotypes <- function(
         rescale_eMatRead_t = rescale_eMatRead_t
     )
     rm(ehc)
-    gc(reset = TRUE);    gc(reset = TRUE);
+    ## gc(reset = TRUE);    gc(reset = TRUE);
     return(eMatRead_t)
 }
 

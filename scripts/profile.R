@@ -14,95 +14,88 @@ for(key in c("--file=", "--f=")) {
         stitch_dir <- getwd()
     }
 }
-
 setwd(stitch_dir)
+
+
+n_snps <- 200
+chr <- 10
+K <- 6
+set.seed(919)
+phasemaster <- array(sample(c(0, 1), n_snps * K, replace = TRUE), c(n_snps, K))
+reads_span_n_snps <- 3
+## want about 4X here
+n_reads <- round(4 * n_snps / reads_span_n_snps)
+data_package <- STITCH::make_acceptance_test_data_package(
+    reads_span_n_snps = reads_span_n_snps,
+    n_samples = 3,
+    n_snps = n_snps,
+    n_reads = n_reads,
+    seed = 2,
+    chr = chr,
+    K = K,
+    phasemaster = phasemaster
+)
+refpack <- STITCH::make_reference_package(
+    n_snps = n_snps,
+    n_samples_per_pop = 500,
+    reference_populations = c("CEU", "GBR"),
+    chr = chr,
+    phasemaster = phasemaster
+)
+set.seed(010)
+
+
+
 profout <- tempfile()
 Rprof(file = profout, gc.profiling = TRUE, line.profiling = TRUE)
-
-
-
-
-
-dir <- "/well/davies/users/dcc832/QUILT_testing_2022_10_14/"
-setwd(dir)
-f <- function(x) file.path(dir, x)
-CHR="chr20"
-REGIONSTART=10000001
-REGIONEND=12000000
-BUFFER=500000
-
-
-if (1 == 0) {
-    
-    setwd("/well/davies/users/dcc832/QUILT_testing_2022_10_14/")
-    REF_DIR="/well/davies/shared/hrc_ega/sinan_2020_06_20"
-    RECOMB_DIR="/well/davies/shared/recomb/CEU/"
-    QUILT_prepare_reference(
-        outputdir = f("quilt_mspbwt_test2"),
-        reference_exclude_samplelist_file = "excludelist.txt",
-        nGen=100,
-        reference_haplotype_file="temp3.hap.gz",
-        reference_legend_file="temp3.legend.gz",
-        reference_sample_file=file.path(REF_DIR, "hg38_liftover_chr20.samples"),
-        genetic_map_file=file.path(RECOMB_DIR, paste0("CEU-", CHR, "-final.b38.txt.gz")),
-        chr=CHR,
-        regionStart=REGIONSTART,
-        regionEnd=REGIONEND,
-        buffer=BUFFER,
-        use_mspbwt = TRUE,
-        mspbwt_nindices = 4L
-    )
-
-
-}
-
 profile_start <- Sys.time()
+################## PROFILE HERE
 
-i_option <- Sys.getenv("I_OPTION")
+    outputdir <- STITCH::make_unique_tempdir()
 
-if (i_option == 1) {
-    use_sample_is_diploid <- TRUE
-    output_plot <- file.path("profile.diploidTRUE.pdf")    
-} else if (i_option == 2) {
-    use_sample_is_diploid <- FALSE
-    output_plot <- file.path("profile.diploidFALSE.pdf")
-}
-##################
-QUILT(
-    outputdir=f("quilt_mspbwt_test2"),
-    chr=CHR,
-    regionStart=REGIONSTART,
-    regionEnd=REGIONEND,
-    buffer=BUFFER,
-    bamlist=f("bamlist.txt"),
-    posfile=f("posfile.txt"),
-    phasefile=f("phasefile.txt"),    
-    use_mspbwt=TRUE,
-    make_plots=FALSE,
-    use_sample_is_diploid = TRUE
-)
+    regionStart <- 11
+    regionEnd <- 200 - 10
+    buffer <- 5
+zilong <- FALSE
+use_mspbwt <- TRUE
+use_hapMatcherR <- TRUE
 
-##################
-    ## n_seek_its=3,
-    ## nGibbsSamples=3,
-    ## Ksubset = 400,
-    ## Knew = 400,
-    ## block_gibbs_iterations=3,
-    ## n_gibbs_burn_in_its=6,
+            QUILT(
+                outputdir = outputdir,
+                chr = data_package$chr,
+                regionStart = regionStart,
+                regionEnd = regionEnd,
+                buffer = buffer,
+                bamlist = data_package$bamlist,
+                posfile = data_package$posfile,
+                genfile = data_package$genfile,
+                phasefile = data_package$phasefile,
+                reference_vcf_file = refpack$reference_vcf_file,
+                reference_haplotype_file = refpack$reference_haplotype_file,
+                reference_legend_file = refpack$reference_legend_file,
+                genetic_map_file = refpack$reference_genetic_map_file,
+                nGibbsSamples = 5,
+                n_seek_its = 3,
+                nCores = 1,
+                nGen = 100,
+                use_mspbwt = use_mspbwt,
+                zilong = zilong,
+                use_hapMatcherR = use_hapMatcherR
+            )
 
+
+################## END OF PROFILE
 profile_end <- Sys.time()
-
 setwd(stitch_dir)
 Rprof(NULL)
 pd <- readProfileData(profout)
 
-title <- Sys.getenv("TITLE")
+output_plot <- "profile.pdf"
 pdf(output_plot, height = 24, width = 24)
 par(mfrow = c(3, 1), oma=c(0, 0, 3, 0))
 flameGraph(pd, order = "time", main = "Time")
 flameGraph(pd, order = "alpha", main = "Alphabetically")
 flameGraph(pd, order = "hot", main = "Hot path")
-title(title, outer=TRUE)
 dev.off()
 
 print(profile_end - profile_start)
