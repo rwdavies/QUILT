@@ -635,7 +635,11 @@ QUILT <- function(
 
         K <- nrow(hapMatcher)
 
-        full_alphaHat_t <- array(0, c(K, nGrids))
+        if ((zilong | use_mspbwt) && (phasefile == "") && (genfile == "" )) {
+            full_alphaHat_t <- array(0, c(1, 1))
+        } else {
+            full_alphaHat_t <- array(0, c(K, nGrids))
+        }
         ## full_betaHat_t <- array(0, c(K, nGrids))
         full_betaHat_t <- array(0, c(1, 1))
         if (make_plots) {
