@@ -634,6 +634,7 @@ QUILT <- function(
         alleleCount <- array(0, c(nSNPs, 2))
 
         K <- nrow(hapMatcher)
+
         full_alphaHat_t <- array(0, c(K, nGrids))
         ## full_betaHat_t <- array(0, c(K, nGrids))
         full_betaHat_t <- array(0, c(1, 1))
