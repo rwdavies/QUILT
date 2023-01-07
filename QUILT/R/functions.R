@@ -7,7 +7,7 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
                                        msp,
                                        pbwtL,
                                        pbwtS,
-                                       min_len = 2) {
+                                       pbwtM = 2) {
   res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     res <- mspbwt_report(msp, hap, pbwtL, pbwtS)
@@ -15,7 +15,7 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
   })
   ## print(head(res))
   res <- do.call(rbind.data.frame, res)
-  res <- res[res$lens > max(min_len - 1, 0), ]
+  res <- res[res$lens > max(pbwtM - 1, 0), ]
   if (nrow(res) > 0) {
     # order by nindices then drop duplicated haps
     res <- res[order(res$haps, -res$lens), ]
@@ -563,14 +563,15 @@ get_and_impute_one_sample <- function(
 
             if (zilong) {
              igibbs <- (i_gibbs_sample - 1) * n_seek_its + i_it ## 1-based
+             Kfull <- nrow(hapMatcher)
              which_haps_to_use <- select_new_haps_zilong_msp(gibbs_iterate$hapProbs_t,
                                                              igibbs = igibbs,
-                                                             Kfull = nrow(rhb_t),
+                                                             Kfull = Kfull,
                                                              Knew = Knew,
                                                              msp = msp,
                                                              pbwtL = pbwtL,
                                                              pbwtS = pbwtS,
-                                                             min_len =  pbwtM
+                                                             pbwtM = pbwtM
                                                              )
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
