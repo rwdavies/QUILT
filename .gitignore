@@ -23,3 +23,8 @@ gen.txt
 pos.txt
 bamlist.txt
 Rplots.pdf
+*log
+results
+releases
+package*
+example*

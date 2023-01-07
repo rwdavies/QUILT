@@ -360,9 +360,12 @@ QUILT <- function(
     ## now build PBWT using nSNPs, nrow(rhb_t) loaded from last step
     if(zilong && reference_vcf_file == "") stop("Zilong requires VCF file. Please feed vcf file!")
 
+    msp <- NULL
     if (zilong) {
-        if (is.null(zilong_indices)) {
-            stop("To use zilong pbwt and QUILT, you must prepare the reference package using use_pbwt_index=TRUE")
+        if (is.null(mspbwt_binfile)) {
+            stop("To use zilong mspbwt and QUILT, you must prepare the reference package using use_pbwt_index=TRUE")
+        } else {
+            msp <- mspbwt32_load(mspbwt_binfile)
         }
     }
 
@@ -777,7 +780,7 @@ QUILT <- function(
                 pbwtL = pbwtL,
                 pbwtS = pbwtS,
                 zilong = zilong,
-                zilong_indices =  zilong_indices,
+                msp =  msp,
                 use_mspbwt = use_mspbwt,
                 ms_indices = ms_indices,
                 use_splitreadgl = use_splitreadgl,

@@ -1,40 +1,26 @@
-## zilong pbwt.cpp
-## @param pbwt is constructed by pbwt_build in pbwt.cpp
-select_new_haps_zilong <- function(
-    hapProbs_t,
-    Kfull,
-    Knew,
-    mspbwtX,
-    mspbwtA,
-    mspbwtC,
-    mspbwtW,
-    mspbwtSymbols,
-    mspbwtG,
-    mspbwtM,
-    mspbwtN,
-    nindices,
-    L = 0,
-    min_len = 3
-) {
-
-  L <- ifelse(L > 0, L, ceiling(Knew / mspbwtG) + 1)
-
+## zilong mspbwt32.cpp
+## @param msp is xptr to msPBWT object in C++
+select_new_haps_zilong_msp <- function(hapProbs_t,
+                                       igibbs,
+                                       Kfull,
+                                       Knew,
+                                       msp,
+                                       pbwtL,
+                                       pbwtS,
+                                       min_len = 2) {
   res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
-    seed <- 2022 # can be exposed to user
-    out <- mspbwt_query(mspbwtX, mspbwtA, mspbwtC, mspbwtW, mspbwtSymbols, mspbwtG, mspbwtM, mspbwtN, hap, nindices ,L)
-    out
+    res <- mspbwt_report(msp, hap, pbwtL, pbwtS)
+    res
   })
-
-  ## saveRDS(res,"/Users/zilong/Project/QUILT/test.rds")
-
-  # collapse into data frame with haps, lens and ends columns
+  ## print(head(res))
   res <- do.call(rbind.data.frame, res)
+  res <- res[res$lens > max(min_len - 1, 0), ]
   if (nrow(res) > 0) {
     # order by nindices then drop duplicated haps
-    res <- res[order(res$haps, -res$n),]
-    res <- res[!duplicated(res[,c('haps')]),]
-    # order by lens drop duplicated keys
+    res <- res[order(res$haps, -res$lens), ]
+    res <- res[!duplicated(res[, c("haps")]), ]
+    ## # order by lens drop duplicated keys
     res$keys <- paste0(res$lens, "_", res$ends)
     res <- res[order(-res$lens, res$keys),]
     res <- res[!duplicated(res[,c('keys')]),]
@@ -42,7 +28,7 @@ select_new_haps_zilong <- function(
   } else {
     unique_haps <- NULL
   }
-  print(paste("select",  length(unique_haps), " unique haps by mpbwt query" ) )
+  print(paste("select", length(unique_haps), " unique haps by mpbwt query"))
 
   if (length(unique_haps) >= Knew) {
     ## order by freq and pick top Knew
@@ -51,14 +37,12 @@ select_new_haps_zilong <- function(
   } else {
     ## cannot take a sample larger than the population when 'replace = FALSE'
     new_haps <- unique(c(
-        unique_haps,
-        sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
+      unique_haps,
+      sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
     ))[1:Knew]
     return(new_haps)
   }
 }
-
-
 
 get_and_impute_one_sample <- function(
     rhb_t,
@@ -153,7 +137,7 @@ get_and_impute_one_sample <- function(
     pbwtL,
     pbwtS,
     zilong,
-    zilong_indices,
+    msp,
     use_mspbwt,
     ms_indices,
     use_splitreadgl,
@@ -577,21 +561,16 @@ get_and_impute_one_sample <- function(
             return_dosage <- (have_truth_haplotypes | record_interim_dosages | (i_it > n_burn_in_seek_its))
 
             if (zilong) {
-                ## TODO which_haps_to_use should be returned by PBWT selection
-                which_haps_to_use <- select_new_haps_zilong(gibbs_iterate$hapProbs_t,
-                                                            Kfull =  nrow(hapMatcher),
-                                                            Knew = Knew,
-                                                            mspbwtX = zilong_indices$X,
-                                                            mspbwtA = zilong_indices$A,
-                                                            mspbwtC = zilong_indices$C,
-                                                            mspbwtW = zilong_indices$W,
-                                                            mspbwtSymbols =  zilong_indices$Symbols,
-                                                            mspbwtG =  zilong_indices$G,
-                                                            mspbwtM =  zilong_indices$M,
-                                                            mspbwtN =  zilong_indices$N,
-                                                            nindices =  zilong_indices$nindices,
-                                                            L = pbwtL
-                                                            )
+             igibbs <- (i_gibbs_sample - 1) * n_seek_its + i_it ## 1-based
+             which_haps_to_use <- select_new_haps_zilong_msp(gibbs_iterate$hapProbs_t,
+                                                             igibbs = igibbs,
+                                                             Kfull = nrow(rhb_t),
+                                                             Knew = Knew,
+                                                             msp = msp,
+                                                             pbwtL = pbwtL,
+                                                             pbwtS = pbwtS,
+                                                             min_len =  pbwtM
+                                                             )
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
             } else if (use_mspbwt) {

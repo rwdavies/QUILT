@@ -1009,6 +1009,57 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// mspbwt32_save
+void mspbwt32_save(const std::string& binfile, const std::string& vcfpanel, const std::string& samples, const std::string& region, double maf);
+RcppExport SEXP _QUILT_mspbwt32_save(SEXP binfileSEXP, SEXP vcfpanelSEXP, SEXP samplesSEXP, SEXP regionSEXP, SEXP mafSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type binfile(binfileSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type vcfpanel(vcfpanelSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type samples(samplesSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type region(regionSEXP);
+    Rcpp::traits::input_parameter< double >::type maf(mafSEXP);
+    mspbwt32_save(binfile, vcfpanel, samples, region, maf);
+    return R_NilValue;
+END_RCPP
+}
+// mspbwt32_load
+SEXP mspbwt32_load(const std::string& binfile);
+RcppExport SEXP _QUILT_mspbwt32_load(SEXP binfileSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type binfile(binfileSEXP);
+    rcpp_result_gen = Rcpp::wrap(mspbwt32_load(binfile));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mspbwt32_insert
+IntegerVector mspbwt32_insert(SEXP xp_, const IntegerVector& z);
+RcppExport SEXP _QUILT_mspbwt32_insert(SEXP xp_SEXP, SEXP zSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type xp_(xp_SEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type z(zSEXP);
+    rcpp_result_gen = Rcpp::wrap(mspbwt32_insert(xp_, z));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mspbwt_report
+List mspbwt_report(SEXP xp_, const IntegerVector& z, int pbwtL, int pbwtS);
+RcppExport SEXP _QUILT_mspbwt_report(SEXP xp_SEXP, SEXP zSEXP, SEXP pbwtLSEXP, SEXP pbwtSSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type xp_(xp_SEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type z(zSEXP);
+    Rcpp::traits::input_parameter< int >::type pbwtL(pbwtLSEXP);
+    Rcpp::traits::input_parameter< int >::type pbwtS(pbwtSSEXP);
+    rcpp_result_gen = Rcpp::wrap(mspbwt_report(xp_, z, pbwtL, pbwtS));
+    return rcpp_result_gen;
+END_RCPP
+}
 // Rcpp_quilt_test_doubler
 double Rcpp_quilt_test_doubler(double a);
 RcppExport SEXP _QUILT_Rcpp_quilt_test_doubler(SEXP aSEXP) {
@@ -1041,42 +1092,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type a(aSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type b(bSEXP);
     rcpp_result_gen = Rcpp::wrap(Rcpp_raw_test_int(a, b));
-    return rcpp_result_gen;
-END_RCPP
-}
-// mspbwt_index
-Rcpp::List mspbwt_index(const std::string& vcfpanel, const std::string& samples, const std::string& region, int nindices, bool fast);
-RcppExport SEXP _QUILT_mspbwt_index(SEXP vcfpanelSEXP, SEXP samplesSEXP, SEXP regionSEXP, SEXP nindicesSEXP, SEXP fastSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type vcfpanel(vcfpanelSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type samples(samplesSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type region(regionSEXP);
-    Rcpp::traits::input_parameter< int >::type nindices(nindicesSEXP);
-    Rcpp::traits::input_parameter< bool >::type fast(fastSEXP);
-    rcpp_result_gen = Rcpp::wrap(mspbwt_index(vcfpanel, samples, region, nindices, fast));
-    return rcpp_result_gen;
-END_RCPP
-}
-// mspbwt_query
-Rcpp::List mspbwt_query(const NumericMatrix& XG, const List& A, const List& C, const List& W, const List& S, int G, int M, int N, const IntegerVector& z, int nindices, int L);
-RcppExport SEXP _QUILT_mspbwt_query(SEXP XGSEXP, SEXP ASEXP, SEXP CSEXP, SEXP WSEXP, SEXP SSEXP, SEXP GSEXP, SEXP MSEXP, SEXP NSEXP, SEXP zSEXP, SEXP nindicesSEXP, SEXP LSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type XG(XGSEXP);
-    Rcpp::traits::input_parameter< const List& >::type A(ASEXP);
-    Rcpp::traits::input_parameter< const List& >::type C(CSEXP);
-    Rcpp::traits::input_parameter< const List& >::type W(WSEXP);
-    Rcpp::traits::input_parameter< const List& >::type S(SSEXP);
-    Rcpp::traits::input_parameter< int >::type G(GSEXP);
-    Rcpp::traits::input_parameter< int >::type M(MSEXP);
-    Rcpp::traits::input_parameter< int >::type N(NSEXP);
-    Rcpp::traits::input_parameter< const IntegerVector& >::type z(zSEXP);
-    Rcpp::traits::input_parameter< int >::type nindices(nindicesSEXP);
-    Rcpp::traits::input_parameter< int >::type L(LSEXP);
-    rcpp_result_gen = Rcpp::wrap(mspbwt_query(XG, A, C, W, S, G, M, N, z, nindices, L));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1402,11 +1417,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_simple_binary_matrix_search", (DL_FUNC) &_QUILT_rcpp_simple_binary_matrix_search, 4},
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 16},
     {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 17},
+    {"_QUILT_mspbwt32_save", (DL_FUNC) &_QUILT_mspbwt32_save, 5},
+    {"_QUILT_mspbwt32_load", (DL_FUNC) &_QUILT_mspbwt32_load, 1},
+    {"_QUILT_mspbwt32_insert", (DL_FUNC) &_QUILT_mspbwt32_insert, 2},
+    {"_QUILT_mspbwt_report", (DL_FUNC) &_QUILT_mspbwt_report, 4},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
     {"_QUILT_Rcpp_raw_test", (DL_FUNC) &_QUILT_Rcpp_raw_test, 2},
     {"_QUILT_Rcpp_raw_test_int", (DL_FUNC) &_QUILT_Rcpp_raw_test_int, 2},
-    {"_QUILT_mspbwt_index", (DL_FUNC) &_QUILT_mspbwt_index, 5},
-    {"_QUILT_mspbwt_query", (DL_FUNC) &_QUILT_mspbwt_query, 11},
     {"_QUILT_Rcpp_test", (DL_FUNC) &_QUILT_Rcpp_test, 3},
     {"_QUILT_Rcpp_make_gl_bound", (DL_FUNC) &_QUILT_Rcpp_make_gl_bound, 3},
     {"_QUILT_rcpp_nth_partial_sort", (DL_FUNC) &_QUILT_rcpp_nth_partial_sort, 2},

@@ -207,6 +207,26 @@ rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects <- functio
 }
 
 #' @export
+mspbwt32_save <- function(binfile, vcfpanel, samples, region, maf = 0) {
+    invisible(.Call('_QUILT_mspbwt32_save', PACKAGE = 'QUILT', binfile, vcfpanel, samples, region, maf))
+}
+
+#' @export
+mspbwt32_load <- function(binfile) {
+    .Call('_QUILT_mspbwt32_load', PACKAGE = 'QUILT', binfile)
+}
+
+#' @export
+mspbwt32_insert <- function(xp_, z) {
+    .Call('_QUILT_mspbwt32_insert', PACKAGE = 'QUILT', xp_, z)
+}
+
+#' @export
+mspbwt_report <- function(xp_, z, pbwtL, pbwtS) {
+    .Call('_QUILT_mspbwt_report', PACKAGE = 'QUILT', xp_, z, pbwtL, pbwtS)
+}
+
+#' @export
 Rcpp_quilt_test_doubler <- function(a) {
     .Call('_QUILT_Rcpp_quilt_test_doubler', PACKAGE = 'QUILT', a)
 }
@@ -219,16 +239,6 @@ Rcpp_raw_test <- function(a, b) {
 #' @export
 Rcpp_raw_test_int <- function(a, b) {
     .Call('_QUILT_Rcpp_raw_test_int', PACKAGE = 'QUILT', a, b)
-}
-
-#' @export
-mspbwt_index <- function(vcfpanel, samples, region, nindices = 4L, fast = 1L) {
-    .Call('_QUILT_mspbwt_index', PACKAGE = 'QUILT', vcfpanel, samples, region, nindices, fast)
-}
-
-#' @export
-mspbwt_query <- function(XG, A, C, W, S, G, M, N, z, nindices = 4L, L = 1L) {
-    .Call('_QUILT_mspbwt_query', PACKAGE = 'QUILT', XG, A, C, W, S, G, M, N, z, nindices, L)
 }
 
 #' @export

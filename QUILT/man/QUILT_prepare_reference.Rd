@@ -32,7 +32,8 @@ QUILT_prepare_reference(
   use_mspbwt = FALSE,
   mspbwt_nindices = 4L,
   override_use_eMatDH_special_symbols = NA,
-  use_hapMatcherR = TRUE
+  use_hapMatcherR = TRUE,
+  mspbwtMAF = 1e-04
 )
 }
 \arguments{
@@ -91,6 +92,8 @@ QUILT_prepare_reference(
 \item{override_use_eMatDH_special_symbols}{Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.}
 
 \item{use_hapMatcherR}{Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use}
+
+\item{mspbwtMAF}{MAF threadhold for building mspbwt}
 }
 \value{
 Results in properly formatted version

@@ -27,6 +27,7 @@
 #' @param mspbwt_nindices How many mspbwt indices to build
 #' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
 #' @param use_hapMatcherR Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use
+#' @param mspbwtMAF MAF threadhold for building mspbwt
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -58,7 +59,8 @@ QUILT_prepare_reference <- function(
     use_mspbwt = FALSE,
     mspbwt_nindices = 4L,
     override_use_eMatDH_special_symbols = NA,
-    use_hapMatcherR = TRUE
+    use_hapMatcherR = TRUE,
+    mspbwtMAF = 0.0001
 ) {
 
     x <- as.list(environment())
@@ -463,11 +465,12 @@ QUILT_prepare_reference <- function(
             subsamples <- paste(s1[-which(s2%in%s1)], collapse = ",")
         }
         ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
-        pbwtfile <- paste0(outputdir, "/" , regionName)
-        zilong_indices <- mspbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike, nindices = mspbwt_nindices)
-        print_message("End building and dumping Zilong PBWT indices")
+        mspbwt_binfile <- paste0(outputdir, "/" , regionName, ".mspbwt")
+        ## zilong_indices <- mspbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike, nindices = mspbwt_nindices)
+        mspbwt32_save(mspbwt_binfile, reference_vcf_file, subsamples, samtoolslike, mspbwtMAF)
+        print_message("End building and dumping Zilong msPBWT indices")
     } else {
-        zilong_indices <- NULL
+        mspbwt_binfile <- NULL
     }
 
 
@@ -509,7 +512,7 @@ QUILT_prepare_reference <- function(
         buffer,
         chr,
         ms_indices,
-        zilong_indices,
+        mspbwt_binfile,
         use_eMatDH_special_symbols,
         file = output_file,
         compress = FALSE
