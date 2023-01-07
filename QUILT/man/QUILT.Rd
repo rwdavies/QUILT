@@ -74,8 +74,9 @@ QUILT(
   small_ref_panel_gibbs_iterations = 20,
   plot_per_sample_likelihoods = FALSE,
   use_small_eHapsCurrent_tc = FALSE,
-  pbwtL = 0,
+  pbwtL = 32,
   pbwtS = 1,
+  pbwtM = 4,
   zilong = FALSE,
   use_mspbwt = FALSE,
   mspbwt_nindices = 4L,
@@ -226,6 +227,8 @@ QUILT(
 \item{pbwtL}{How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected.}
 
 \item{pbwtS}{How many grids as one step}
+
+\item{pbwtM}{Minimun long grids matches}
 
 \item{zilong}{Using zilong's solution}
 

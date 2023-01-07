@@ -156,6 +156,24 @@ option_list <- list(
         type = "integer",
         help = "How many mspbwt indices to build [default 4L] ",
         default = 4L
+    ), 
+    make_option(
+        "--override_use_eMatDH_special_symbols",
+        type = "integer",
+        help = "Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used. [default NA] ",
+        default = NA
+    ), 
+    make_option(
+        "--use_hapMatcherR",
+        type = "logical",
+        help = "Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use [default TRUE] ",
+        default = TRUE
+    ), 
+    make_option(
+        "--mspbwtMAF",
+        type = "double",
+        help = "MAF threadhold for building mspbwt [default 0.0001] ",
+        default = 0.0001
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -187,5 +205,8 @@ QUILT_prepare_reference(
     minRate = opt$minRate,
     use_pbwt_index = opt$use_pbwt_index,
     use_mspbwt = opt$use_mspbwt,
-    mspbwt_nindices = opt$mspbwt_nindices
+    mspbwt_nindices = opt$mspbwt_nindices,
+    override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
+    use_hapMatcherR = opt$use_hapMatcherR,
+    mspbwtMAF = opt$mspbwtMAF
 )

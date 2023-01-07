@@ -419,14 +419,20 @@ option_list <- list(
     make_option(
         "--pbwtL",
         type = "integer",
-        help = "How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected. [default 0] ",
-        default = 0
+        help = "How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected. [default 32] ",
+        default = 32
     ), 
     make_option(
         "--pbwtS",
         type = "integer",
         help = "How many grids as one step [default 1] ",
         default = 1
+    ), 
+    make_option(
+        "--pbwtM",
+        type = "integer",
+        help = "Minimun long grids matches [default 4] ",
+        default = 4
     ), 
     make_option(
         "--zilong",
@@ -451,6 +457,18 @@ option_list <- list(
         type = "logical",
         help = "Use split real GL in hap selection and imputation [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--override_use_eMatDH_special_symbols",
+        type = "integer",
+        help = "Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used. [default NA] ",
+        default = NA
+    ), 
+    make_option(
+        "--use_hapMatcherR",
+        type = "logical",
+        help = "Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use [default TRUE] ",
+        default = TRUE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -528,8 +546,11 @@ QUILT(
     use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
     pbwtL = opt$pbwtL,
     pbwtS = opt$pbwtS,
+    pbwtM = opt$pbwtM,
     zilong = opt$zilong,
     use_mspbwt = opt$use_mspbwt,
     mspbwt_nindices = opt$mspbwt_nindices,
-    use_splitreadgl = opt$use_splitreadgl
+    use_splitreadgl = opt$use_splitreadgl,
+    override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
+    use_hapMatcherR = opt$use_hapMatcherR
 )

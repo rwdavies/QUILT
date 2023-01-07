@@ -136,6 +136,7 @@ get_and_impute_one_sample <- function(
     output_gt_phased_genotypes,
     pbwtL,
     pbwtS,
+    pbwtM,
     zilong,
     msp,
     use_mspbwt,

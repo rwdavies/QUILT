@@ -72,6 +72,7 @@
 #' @param use_small_eHapsCurrent_tc For testing purposes only
 #' @param pbwtL How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected.
 #' @param pbwtS How many grids as one step
+#' @param pbwtM Minimun long grids matches
 #' @param zilong Using zilong's solution
 #' @param use_mspbwt Use msPBWT to select new haplotypes
 #' @param mspbwt_nindices How many mspbwt indices to build
@@ -151,8 +152,9 @@ QUILT <- function(
     small_ref_panel_gibbs_iterations = 20,
     plot_per_sample_likelihoods = FALSE,
     use_small_eHapsCurrent_tc = FALSE,
-    pbwtL = 0,
+    pbwtL = 32,
     pbwtS = 1,
+    pbwtM = 4,
     zilong = FALSE,
     use_mspbwt = FALSE,
     mspbwt_nindices = 4L,
@@ -779,6 +781,7 @@ QUILT <- function(
                 output_gt_phased_genotypes = output_gt_phased_genotypes,
                 pbwtL = pbwtL,
                 pbwtS = pbwtS,
+                pbwtM = pbwtM,
                 zilong = zilong,
                 msp =  msp,
                 use_mspbwt = use_mspbwt,
