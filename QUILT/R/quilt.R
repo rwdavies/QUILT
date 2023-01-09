@@ -633,6 +633,7 @@ QUILT <- function(
                 small_priorCurrent_m = small_priorCurrent_m,
                 small_eHapsCurrent_tc = small_eHapsCurrent_tc,
                 bam_files = bam_files,
+                cram_files = cram_files,
                 L = L,
                 pos = pos,
                 chr = chr,
