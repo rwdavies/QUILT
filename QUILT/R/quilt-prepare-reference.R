@@ -467,7 +467,7 @@ QUILT_prepare_reference <- function(
         ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
         mspbwt_binfile <- paste0(outputdir, "/" , regionName, ".mspbwt")
         ## zilong_indices <- mspbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike, nindices = mspbwt_nindices)
-        mspbwt32_save(mspbwt_binfile, reference_vcf_file, subsamples, samtoolslike, mspbwtMAF)
+        mspbwt_build(mspbwt_binfile, reference_vcf_file, subsamples, samtoolslike, mspbwtMAF)
         print_message("End building and dumping Zilong msPBWT indices")
     } else {
         mspbwt_binfile <- NULL

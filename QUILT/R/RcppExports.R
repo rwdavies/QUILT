@@ -207,18 +207,13 @@ rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects <- functio
 }
 
 #' @export
-mspbwt32_save <- function(binfile, vcfpanel, samples, region, maf = 0) {
-    invisible(.Call('_QUILT_mspbwt32_save', PACKAGE = 'QUILT', binfile, vcfpanel, samples, region, maf))
+mspbwt_build <- function(binfile, vcfpanel, samples, region, maf = 0) {
+    invisible(.Call('_QUILT_mspbwt_build', PACKAGE = 'QUILT', binfile, vcfpanel, samples, region, maf))
 }
 
 #' @export
-mspbwt32_load <- function(binfile) {
-    .Call('_QUILT_mspbwt32_load', PACKAGE = 'QUILT', binfile)
-}
-
-#' @export
-mspbwt32_insert <- function(xp_, z) {
-    .Call('_QUILT_mspbwt32_insert', PACKAGE = 'QUILT', xp_, z)
+mspbwt_load <- function(binfile) {
+    .Call('_QUILT_mspbwt_load', PACKAGE = 'QUILT', binfile)
 }
 
 #' @export

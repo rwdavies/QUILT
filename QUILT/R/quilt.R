@@ -367,7 +367,7 @@ QUILT <- function(
         if (is.null(mspbwt_binfile)) {
             stop("To use zilong mspbwt and QUILT, you must prepare the reference package using use_pbwt_index=TRUE")
         } else {
-            msp <- mspbwt32_load(mspbwt_binfile)
+            msp <- mspbwt_load(mspbwt_binfile)
         }
     }
 
