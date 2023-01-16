@@ -140,7 +140,7 @@ option_list <- list(
         default = 0.1
     ), 
     make_option(
-        "--use_pbwt_index",
+        "--use_zilong",
         type = "logical",
         help = "Build zilong pbwt indices to be used in imputation [default FALSE] ",
         default = FALSE
@@ -170,9 +170,15 @@ option_list <- list(
         default = TRUE
     ), 
     make_option(
+        "--mspbwtB",
+        type = "integer",
+        help = "How many SNPs will be encoded as one grid [default 64L] ",
+        default = 64L
+    ), 
+    make_option(
         "--mspbwtMAF",
         type = "double",
-        help = "MAF threadhold for building mspbwt [default 0.0001] ",
+        help = "Building mspbwt indices for common and rare variants seperately [default 0.0001] ",
         default = 0.0001
     )
 )
@@ -203,10 +209,11 @@ QUILT_prepare_reference(
     expRate = opt$expRate,
     maxRate = opt$maxRate,
     minRate = opt$minRate,
-    use_pbwt_index = opt$use_pbwt_index,
+    use_zilong = opt$use_zilong,
     use_mspbwt = opt$use_mspbwt,
     mspbwt_nindices = opt$mspbwt_nindices,
     override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
     use_hapMatcherR = opt$use_hapMatcherR,
+    mspbwtB = opt$mspbwtB,
     mspbwtMAF = opt$mspbwtMAF
 )

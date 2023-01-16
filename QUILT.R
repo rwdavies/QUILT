@@ -417,27 +417,21 @@ option_list <- list(
         default = FALSE
     ), 
     make_option(
-        "--pbwtL",
+        "--mspbwtL",
         type = "integer",
-        help = "How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected. [default 32] ",
-        default = 32
+        help = "How many neighouring haplotypes to scan up and down at each grid. [default 40] ",
+        default = 40
     ), 
     make_option(
-        "--pbwtS",
+        "--mspbwtM",
         type = "integer",
-        help = "How many grids as one step [default 1] ",
+        help = "Minimun long grids matches [default 1] ",
         default = 1
-    ), 
-    make_option(
-        "--pbwtM",
-        type = "integer",
-        help = "Minimun long grids matches [default 4] ",
-        default = 4
     ), 
     make_option(
         "--zilong",
         type = "logical",
-        help = "Using zilong's solution [default FALSE] ",
+        help = "Using zilong's mspbwt solution [default FALSE] ",
         default = FALSE
     ), 
     make_option(
@@ -445,12 +439,6 @@ option_list <- list(
         type = "logical",
         help = "Use msPBWT to select new haplotypes [default FALSE] ",
         default = FALSE
-    ), 
-    make_option(
-        "--mspbwt_nindices",
-        type = "integer",
-        help = "How many mspbwt indices to build [default 4L] ",
-        default = 4L
     ), 
     make_option(
         "--use_splitreadgl",
@@ -544,12 +532,10 @@ QUILT(
     small_ref_panel_gibbs_iterations = opt$small_ref_panel_gibbs_iterations,
     plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
-    pbwtL = opt$pbwtL,
-    pbwtS = opt$pbwtS,
-    pbwtM = opt$pbwtM,
+    mspbwtL = opt$mspbwtL,
+    mspbwtM = opt$mspbwtM,
     zilong = opt$zilong,
     use_mspbwt = opt$use_mspbwt,
-    mspbwt_nindices = opt$mspbwt_nindices,
     use_splitreadgl = opt$use_splitreadgl,
     override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
     use_hapMatcherR = opt$use_hapMatcherR

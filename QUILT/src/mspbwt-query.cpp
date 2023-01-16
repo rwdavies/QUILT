@@ -8,58 +8,130 @@ using namespace std;
 //' @export
 // [[Rcpp::export]]
 void mspbwt_build(const std::string& binfile, const std::string& vcfpanel,
-                  const std::string& samples, const std::string& region, double maf = 0)
+                  const std::string& samples, const std::string& region, int nindices = 4,
+                  int mspbwtB = 64, double maf = 0)
 {
-    msPBWT<uint64_t> msp;
-    msp.build(vcfpanel, samples, region, maf);
-    msp.save(binfile);
+    if (mspbwtB == 16)
+    {
+        msPBWT<uint16_t> msp(nindices);
+        msp.build(vcfpanel, samples, region, maf);
+        msp.save(binfile);
+    }
+    else if (mspbwtB == 32)
+    {
+        msPBWT<uint32_t> msp(nindices);
+        msp.build(vcfpanel, samples, region, maf);
+        msp.save(binfile);
+    }
+    else if (mspbwtB == 64)
+    {
+        msPBWT<uint64_t> msp(nindices);
+        msp.build(vcfpanel, samples, region, maf);
+        msp.save(binfile);
+    }
+    else if (mspbwtB == 128)
+    {
+        msPBWT<unsigned __int128> msp(nindices);
+        msp.build(vcfpanel, samples, region, maf);
+        msp.save(binfile);
+    }
+    else
+    {
+        throw invalid_argument("mspbwtB must be one of 16, 32, 64 or 128\n");
+    }
 }
 
 //' @export
 // [[Rcpp::export]]
-SEXP mspbwt_load(const std::string& binfile)
+SEXP mspbwt_load(const std::string& binfile, int mspbwtB = 64)
 {
-    /* creating a pointer to msPBWT */
-    msPBWT<uint64_t>* msp = new msPBWT<uint64_t>();
-    msp->load(binfile);
-
-    /* wrap the pointer as an external pointer */
-    /* this automatically protected the external pointer from R garbage
-     collection until xp goes out of scope. */
-    XPtr<msPBWT<uint64_t>> xp(msp, true);
-
-    /* return it back to R, since xp goes out of scope after the return
-     the external pointer is no more protected by xp, but it gets
-     protected by being on the R side */
-    return (xp);
+    if (mspbwtB == 16)
+    {
+        msPBWT<uint16_t>* msp = new msPBWT<uint16_t>();
+        msp->load(binfile);
+        Rcpp::XPtr<msPBWT<uint16_t>> xp(msp, true);
+        return (xp);
+    }
+    else if (mspbwtB == 32)
+    {
+        msPBWT<uint32_t>* msp = new msPBWT<uint32_t>();
+        msp->load(binfile);
+        Rcpp::XPtr<msPBWT<uint32_t>> xp(msp, true);
+        return (xp);
+    }
+    else if (mspbwtB == 64)
+    {
+        msPBWT<uint64_t>* msp = new msPBWT<uint64_t>();
+        msp->load(binfile);
+        Rcpp::XPtr<msPBWT<uint64_t>> xp(msp, true);
+        return (xp);
+    }
+    else if (mspbwtB == 128)
+    {
+        msPBWT<unsigned __int128>* msp = new msPBWT<unsigned __int128>();
+        msp->load(binfile);
+        Rcpp::XPtr<msPBWT<unsigned __int128>> xp(msp, true);
+        return (xp);
+    }
+    else
+    {
+        throw invalid_argument("mspbwtB must be one of 16, 32, 64 or 128\n");
+    }
 }
 
 
 //' @export
 // [[Rcpp::export]]
-List mspbwt_report(SEXP xp_, const IntegerVector& z, int pbwtL, int pbwtS)
+List mspbwt_report(SEXP xp_, const IntegerVector& z, int pbwtL, int mspbwtB = 64)
 {
     Timer tm;
     tm.clock();
 
-    Rcpp::XPtr<msPBWT<uint64_t>> xp(xp_);
     vector<int> zc = as<vector<int>>(z);
-    auto zg = xp->encodezg(zc);
-    IntMapU haplens, hapstarts;
-    xp->report_neighourings(haplens, hapstarts, zg, pbwtL, pbwtS);
+    IntMapU haplens, hapends, hapnindicies;
+    if (mspbwtB == 16)
+    {
+        Rcpp::XPtr<msPBWT<uint16_t>> xp(xp_);
+        auto zg = xp->encodezg(zc);
+        xp->report_neighourings(haplens, hapends, hapnindicies, zg, pbwtL);
+    }
+    else if (mspbwtB == 32)
+    {
+        Rcpp::XPtr<msPBWT<uint32_t>> xp(xp_);
+        auto zg = xp->encodezg(zc);
+        xp->report_neighourings(haplens, hapends, hapnindicies, zg, pbwtL);
+    }
+    else if (mspbwtB == 64)
+    {
+        Rcpp::XPtr<msPBWT<uint64_t>> xp(xp_);
+        auto zg = xp->encodezg(zc);
+        xp->report_neighourings(haplens, hapends, hapnindicies, zg, pbwtL);
+    }
+    else if (mspbwtB == 128)
+    {
+        Rcpp::XPtr<msPBWT<unsigned __int128>> xp(xp_);
+        auto zg = xp->encodezg(zc);
+        xp->report_neighourings(haplens, hapends, hapnindicies, zg, pbwtL);
+    }
+    else
+    {
+        throw invalid_argument("mspbwtB must be one of 16, 32, 64 or 128\n");
+    }
     int n = haplens.size();
-    vector<int> haps(n), lens(n), starts(n);
+    vector<int> haps(n), lens(n), ends(n), nindices(n);
     n = 0;
     for (auto const& h : haplens)
     {
-        haps[n] = h.first;
+        haps[n] = h.first + 1; // return 1-based to R
         lens[n] = h.second;
-        starts[n] = hapstarts[h.first];
+        ends[n] = hapends[h.first];
+        nindices[n] = hapnindicies[h.first];
         n++;
     }
 
     Rcout << "elapsed time of mspbwt insert: " << tm.abstime() << " milliseconds" << endl;
-    List out = List::create(Named("haps", haps), Named("lens", lens), Named("ends", starts));
+    List out = List::create(Named("haps", haps), Named("lens", lens), Named("ends", ends),
+                            Named("n", nindices));
 
     return out;
 }

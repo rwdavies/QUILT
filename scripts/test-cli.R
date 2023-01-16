@@ -37,7 +37,7 @@ STITCH::make_STITCH_cli(
     integer_vectors = c("small_ref_panel_block_gibbs_iterations"),
     character_vectors = c("RData_objects_to_save"),
     other_logical_params = c("make_plots", "verbose", "record_read_label_usage", "record_interim_dosages", "use_bx_tag", "addOptimalHapsToVCF", "estimate_bq_using_truth_read_labels", "make_plots_block_gibbs", "override_default_params_for_small_ref_panel", "hla_run", "make_fake_vcf_with_sites_list", "print_extra_timing_information", "plot_per_sample_likelihoods", "save_prepared_reference", "use_small_eHapsCurrent_tc", "output_gt_phased_genotypes", "zilong", "use_mspbwt", "use_splitreadgl",  "use_hapMatcherR"),
-    other_integer_params = c("nGibbsSamples", "n_seek_its", "n_burn_in_seek_its", "Ksubset", "Knew", "K_top_matches", "panel_size", "bxTagUpperLimit", "seed", "gamma_physically_closest_to", "nMaxDH", "minimum_number_of_sample_reads", "small_ref_panel_gibbs_iterations", "pbwtL", "pbwtS", "pbwtM", "mspbwt_nindices", "override_use_eMatDH_special_symbols"),
+    other_integer_params = c("nGibbsSamples", "n_seek_its", "n_burn_in_seek_its", "Ksubset", "Knew", "K_top_matches", "panel_size", "bxTagUpperLimit", "seed", "gamma_physically_closest_to", "nMaxDH", "minimum_number_of_sample_reads", "small_ref_panel_gibbs_iterations", "mspbwtL", "mspbwtM", "override_use_eMatDH_special_symbols"),
     other_double_params = c("heuristic_match_thin", "minGLValue"),
     function_name = "QUILT",
     library_name = "QUILT"
@@ -50,8 +50,8 @@ STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt-prepare-reference.R",
     cli_output_file = cli_output_file,
     other_character_params = c("output_file", "reference_exclude_samplelist_file", "output_sites_filename", "region_exclude_file", "reference_vcf_file"),
-    other_logical_params = c("make_fake_vcf_with_sites_list", "use_mspbwt", "use_pbwt_index",  "use_hapMatcherR"),
-    other_integer_params = c("nMaxDH", "mspbwt_nindices", "override_use_eMatDH_special_symbols"),
+    other_logical_params = c("make_fake_vcf_with_sites_list", "use_mspbwt", "use_zilong",  "use_hapMatcherR"),
+    other_integer_params = c("nMaxDH", "mspbwtB", "mspbwt_nindices", "override_use_eMatDH_special_symbols"),
     other_double_params = c("mspbwtMAF"),
     function_name = "QUILT_prepare_reference",
     library_name = "QUILT"

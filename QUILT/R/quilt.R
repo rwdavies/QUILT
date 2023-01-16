@@ -70,12 +70,10 @@
 #'
 #' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
 #' @param use_small_eHapsCurrent_tc For testing purposes only
-#' @param pbwtL How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected.
-#' @param pbwtS How many grids as one step
-#' @param pbwtM Minimun long grids matches
-#' @param zilong Using zilong's solution
+#' @param mspbwtL How many neighouring haplotypes to scan up and down at each grid.
+#' @param mspbwtM Minimun long grids matches
+#' @param zilong Using zilong's mspbwt solution
 #' @param use_mspbwt Use msPBWT to select new haplotypes
-#' @param mspbwt_nindices How many mspbwt indices to build
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
 #' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
 #' @param use_hapMatcherR Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use
@@ -152,12 +150,10 @@ QUILT <- function(
     small_ref_panel_gibbs_iterations = 20,
     plot_per_sample_likelihoods = FALSE,
     use_small_eHapsCurrent_tc = FALSE,
-    pbwtL = 32,
-    pbwtS = 1,
-    pbwtM = 4,
+    mspbwtL = 40,
+    mspbwtM = 1,
     zilong = FALSE,
     use_mspbwt = FALSE,
-    mspbwt_nindices = 4L,
     use_splitreadgl = FALSE,
     override_use_eMatDH_special_symbols = NA,
     use_hapMatcherR = TRUE
@@ -326,8 +322,7 @@ QUILT <- function(
                 maxRate = maxRate,
                 minRate = minRate,
                 use_mspbwt = use_mspbwt,
-                use_pbwt_index = zilong,
-                mspbwt_nindices =  mspbwt_nindices,
+                use_zilong = zilong,
                 reference_vcf_file = reference_vcf_file,
                 output_file = prepared_reference_filename,
                 override_use_eMatDH_special_symbols = override_use_eMatDH_special_symbols,
@@ -365,7 +360,7 @@ QUILT <- function(
     msp <- NULL
     if (zilong) {
         if (is.null(mspbwt_binfile)) {
-            stop("To use zilong mspbwt and QUILT, you must prepare the reference package using use_pbwt_index=TRUE")
+            stop("To use zilong mspbwt and QUILT, you must prepare the reference package using use_zilong=TRUE")
         } else {
             msp <- mspbwt_load(mspbwt_binfile)
         }
@@ -779,9 +774,8 @@ QUILT <- function(
                 plot_per_sample_likelihoods = plot_per_sample_likelihoods,
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
                 output_gt_phased_genotypes = output_gt_phased_genotypes,
-                pbwtL = pbwtL,
-                pbwtS = pbwtS,
-                pbwtM = pbwtM,
+                mspbwtL = mspbwtL,
+                mspbwtM = mspbwtM,
                 zilong = zilong,
                 msp =  msp,
                 use_mspbwt = use_mspbwt,

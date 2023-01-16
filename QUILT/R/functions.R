@@ -2,33 +2,36 @@
 ## @param msp is xptr to msPBWT object in C++
 select_new_haps_zilong_msp <- function(hapProbs_t,
                                        igibbs,
+                                       outputdir,
                                        Kfull,
                                        Knew,
                                        msp,
-                                       pbwtL,
-                                       pbwtS,
-                                       pbwtM = 2) {
+                                       mspbwtL,
+                                       mspbwtM) {
   res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
-    res <- mspbwt_report(msp, hap, pbwtL, pbwtS)
+    res <- as.data.frame(mspbwt_report(msp, hap, mspbwtL))
     res
   })
   ## print(head(res))
   res <- do.call(rbind.data.frame, res)
-  res <- res[res$lens > max(pbwtM - 1, 0), ]
+  ## saveRDS(res, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
+  res <- res[res$lens >= max(mspbwtM, 0), ]
+  print(paste("select", length(unique(res$haps)), " unique haps by mpbwt query before post-ordering"))
   if (nrow(res) > 0) {
-    # order by nindices then drop duplicated haps
-    res <- res[order(res$haps, -res$lens), ]
-    res <- res[!duplicated(res[, c("haps")]), ]
-    ## # order by lens drop duplicated keys
-    res$keys <- paste0(res$lens, "_", res$ends)
-    res <- res[order(-res$lens, res$keys),]
-    res <- res[!duplicated(res[,c('keys')]),]
-    unique_haps <- unique(res$haps) + 1 ## 1-based
+    # order by lens and nindices then drop duplicated haps
+    res <- res[order(res$haps, -res$lens, -res$n),]
+    res <- res[!duplicated(res[,c('haps')]),]
+    res <- res[order(-res$lens, -res$n),]
+    res <- res[!duplicated(res[,c('lens', 'ends')]),]
+    ## res$keys <- paste0(res$lens, "_", res$ends)
+    ## res <- res[!duplicated(res[,c('keys')]),]
+    ## res <- Reduce(rbind, by(res, res["keys"], head, n = 2))
+    unique_haps <- unique(res$haps)
   } else {
     unique_haps <- NULL
   }
-  print(paste("select", length(unique_haps), " unique haps by mpbwt query"))
+  print(paste("select", length(unique_haps), " unique haps by mpbwt query after ordering"))
 
   if (length(unique_haps) >= Knew) {
     ## order by freq and pick top Knew
@@ -134,9 +137,8 @@ get_and_impute_one_sample <- function(
     plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc,
     output_gt_phased_genotypes,
-    pbwtL,
-    pbwtS,
-    pbwtM,
+    mspbwtL,
+    mspbwtM,
     zilong,
     msp,
     use_mspbwt,
@@ -561,18 +563,19 @@ get_and_impute_one_sample <- function(
             # is equavaliant to hapProbs_t
             return_dosage <- (have_truth_haplotypes | record_interim_dosages | (i_it > n_burn_in_seek_its))
 
+            igibbs <- (i_gibbs_sample - 1) * n_seek_its + i_it ## 1-based
             if (zilong) {
-             igibbs <- (i_gibbs_sample - 1) * n_seek_its + i_it ## 1-based
-             Kfull <- nrow(hapMatcher)
-             which_haps_to_use <- select_new_haps_zilong_msp(gibbs_iterate$hapProbs_t,
-                                                             igibbs = igibbs,
-                                                             Kfull = Kfull,
-                                                             Knew = Knew,
-                                                             msp = msp,
-                                                             pbwtL = pbwtL,
-                                                             pbwtS = pbwtS,
-                                                             pbwtM = pbwtM
-                                                             )
+               Kfull <- nrow(hapMatcher)
+               which_haps_to_use <- select_new_haps_zilong_msp(gibbs_iterate$hapProbs_t,
+                                                               igibbs = igibbs,
+                                                               outputdir = outputdir,
+                                                               Kfull = Kfull,
+                                                               Knew = Knew,
+                                                               msp = msp,
+                                                               mspbwtL = mspbwtL,
+                                                               mspbwtM = mspbwtM
+                                                               )
+             ## saveRDS(which_haps_to_use, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
             } else if (use_mspbwt) {

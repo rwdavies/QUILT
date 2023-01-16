@@ -22,12 +22,13 @@
 #' @param expRate Expected recombination rate in cM/Mb
 #' @param maxRate Maximum recomb rate cM/Mb
 #' @param minRate Minimum recomb rate cM/Mb
-#' @param use_pbwt_index Build zilong pbwt indices to be used in imputation
+#' @param use_zilong Build zilong pbwt indices to be used in imputation
 #' @param use_mspbwt Build mspbwt indices to be used in imputation
 #' @param mspbwt_nindices How many mspbwt indices to build
 #' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
 #' @param use_hapMatcherR Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use
-#' @param mspbwtMAF MAF threadhold for building mspbwt
+#' @param mspbwtB How many SNPs will be encoded as one grid
+#' @param mspbwtMAF Building mspbwt indices for common and rare variants seperately
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -55,11 +56,12 @@ QUILT_prepare_reference <- function(
     expRate = 1,
     maxRate = 100,
     minRate = 0.1,
-    use_pbwt_index = FALSE,
+    use_zilong = FALSE,
     use_mspbwt = FALSE,
     mspbwt_nindices = 4L,
     override_use_eMatDH_special_symbols = NA,
     use_hapMatcherR = TRUE,
+    mspbwtB = 64L,
     mspbwtMAF = 0.0001
 ) {
 
@@ -415,7 +417,7 @@ QUILT_prepare_reference <- function(
     if (!is.na(override_use_eMatDH_special_symbols)) {
         use_eMatDH_special_symbols <- override_use_eMatDH_special_symbols
     } else {
-        if (use_pbwt_index | use_mspbwt) {
+        if (use_zilong | use_mspbwt) {
             use_eMatDH_special_symbols <- TRUE
         } else {
             use_eMatDH_special_symbols <- FALSE
@@ -425,7 +427,7 @@ QUILT_prepare_reference <- function(
     if (use_eMatDH_special_symbols) {
         eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
         eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
-        if (use_pbwt_index | use_mspbwt) {
+        if (use_zilong | use_mspbwt) {
             rhb_t <- matrix(as.integer(1), 1, 1) ## nuke!
         }
     } else {
@@ -449,7 +451,7 @@ QUILT_prepare_reference <- function(
         ms_indices <- NULL
     }
 
-    if (use_pbwt_index) {
+    if (use_zilong) {
         if(reference_vcf_file == "") stop("Zilong requires VCF file. Please feed vcf file!")
         print_message("Build zilong-pbwt indices")
         if (reference_sample_file == "") {
@@ -467,7 +469,7 @@ QUILT_prepare_reference <- function(
         ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
         mspbwt_binfile <- paste0(outputdir, "/" , regionName, ".mspbwt")
         ## zilong_indices <- mspbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike, nindices = mspbwt_nindices)
-        mspbwt_build(mspbwt_binfile, reference_vcf_file, subsamples, samtoolslike, mspbwtMAF)
+        mspbwt_build(mspbwt_binfile, reference_vcf_file, subsamples, samtoolslike, mspbwt_nindices, mspbwtB, mspbwtMAF)
         print_message("End building and dumping Zilong msPBWT indices")
     } else {
         mspbwt_binfile <- NULL
@@ -513,6 +515,7 @@ QUILT_prepare_reference <- function(
         chr,
         ms_indices,
         mspbwt_binfile,
+        mspbwtB,
         use_eMatDH_special_symbols,
         file = output_file,
         compress = FALSE

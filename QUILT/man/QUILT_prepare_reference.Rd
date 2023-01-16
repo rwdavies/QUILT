@@ -28,11 +28,12 @@ QUILT_prepare_reference(
   expRate = 1,
   maxRate = 100,
   minRate = 0.1,
-  use_pbwt_index = FALSE,
+  use_zilong = FALSE,
   use_mspbwt = FALSE,
   mspbwt_nindices = 4L,
   override_use_eMatDH_special_symbols = NA,
   use_hapMatcherR = TRUE,
+  mspbwtB = 64L,
   mspbwtMAF = 1e-04
 )
 }
@@ -83,7 +84,7 @@ QUILT_prepare_reference(
 
 \item{minRate}{Minimum recomb rate cM/Mb}
 
-\item{use_pbwt_index}{Build zilong pbwt indices to be used in imputation}
+\item{use_zilong}{Build zilong pbwt indices to be used in imputation}
 
 \item{use_mspbwt}{Build mspbwt indices to be used in imputation}
 
@@ -93,7 +94,9 @@ QUILT_prepare_reference(
 
 \item{use_hapMatcherR}{Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use}
 
-\item{mspbwtMAF}{MAF threadhold for building mspbwt}
+\item{mspbwtB}{How many SNPs will be encoded as one grid}
+
+\item{mspbwtMAF}{Building mspbwt indices for common and rare variants seperately}
 }
 \value{
 Results in properly formatted version

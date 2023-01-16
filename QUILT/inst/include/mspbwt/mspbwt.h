@@ -18,6 +18,9 @@ using namespace std;
 using namespace vcfpp;
 
 using IntMapU = unordered_map<int, int>;
+using IntVec = vector<int>;
+using IntVec2D = vector<IntVec>;
+using IntVec3D = vector<IntVec2D>;
 
 template <typename T>
 T reverseBits(T n, size_t B = sizeof(T) * 8)
@@ -29,6 +32,17 @@ T reverseBits(T n, size_t B = sizeof(T) * 8)
     return rv;
 }
 
+// 0-based
+vector<int> inline seq_by(int start, int end, int by)
+{
+    int n = (end - start + 1) % by == 0 ? (end - start + 1) / by : ((end - start + 1) / by + 1);
+    vector<int> seq(n);
+    int i{0}, x;
+    for (x = start; x <= end; x = x + by)
+        seq[i++] = x;
+    return seq;
+}
+
 // C++11 compatible
 template <typename T, typename = typename std::enable_if<std::is_unsigned<T>::value>::type>
 class msPBWT
@@ -36,25 +50,29 @@ class msPBWT
 private:
     using grid_t = T;
     using GridVec = vector<grid_t>;
-    // using GridSet = set<grid_t, less<grid_t>>;
+    using GridVec2D = vector<GridVec>;
+    using GridVec3D = vector<GridVec2D>;
     using GridSetU = unordered_set<grid_t>;
-    using GridMap = unordered_map<grid_t, int>;                  // {symbol : index}
-    using GridVecMap = unordered_map<grid_t, std::vector<int>>;  // {symbol : vec(index)}
+    using GridMapU = unordered_map<grid_t, int>;                 // {symbol : index}
+    using GridVecMapU = unordered_map<grid_t, std::vector<int>>; // {symbol : vec(index)}
     using SymbolIdxMap = map<int, int, less<int>>;               // {index: rank}
     using WgSymbolMap = map<grid_t, SymbolIdxMap, less<grid_t>>; // {symbol:{index:rank}}
 
-    int B{sizeof(T) * 8}, N{0}, M{0}, G{0}, G1{0}, G2{0}, ibreak_here{0};
+    int B{sizeof(T) * 8}, N{0}, M{0}, G{0}, G1{0}, G2{0}, nindices{4};
     bool is_save_X{1}, is_save_D{0};
-    vector<GridVec> X; //  (GridsCommon + GridsRare) x Haps
-    vector<GridVec> S; // Grids x Sorted and Unique symbols
-    vector<vector<vector<int>>> W;
-    vector<vector<int>> C;
-    vector<vector<int>> A; // nindices x Grids x Haps
-    vector<vector<int>> D; // nindices x Grids x Haps
-    vector<int> reorder;   // (M) reorder SNPs or just subset SNPs
+    GridVec2D X; //  Grids x Haps
+    GridVec2D S; // Grids x Sorted and Unique symbols
+    IntVec3D W;
+    IntVec2D C;
+    IntVec2D A;          // nindices x Grids x Haps
+    IntVec2D D;          // nindices x Grids x Haps
+    vector<int> reorder; // (M) reorder SNPs or just subset SNPs
 
 public:
-    msPBWT(){};
+    msPBWT(int nindices_ = 4) : nindices(nindices_)
+    {
+    }
+
     virtual ~msPBWT(){};
 
     bool verbose{1};
@@ -70,35 +88,6 @@ public:
             z[i] = dist(gen) > 95;
         }
         return z;
-    }
-
-    GridVec encodezg_v1(const vector<int>& z)
-    {
-        assert(z.size() == M);
-        int k{0}, m{0};
-        GridVec zg(G);
-        for (m = 0; m < G1 * B; m++)
-        {
-            zg[k] = (zg[k] << 1) | (z[reorder[m]] != 0);
-            if ((m + 1) % B == 0)
-            {
-                zg[k] = reverseBits(zg[k]);
-                k++;
-            }
-        }
-        assert(k == G1);
-        k = G1;
-        for (m = ibreak_here; m < ibreak_here + G2 * B; m++)
-        {
-            zg[k] = (zg[k] << 1) | (z[reorder[m]] != 0);
-            if ((m + 1 - ibreak_here) % B == 0)
-            {
-                zg[k] = reverseBits(zg[k]);
-                k++;
-            }
-        }
-        assert(k == G);
-        return zg;
     }
 
     GridVec encodezg(const vector<int>& z_)
@@ -126,7 +115,8 @@ public:
         }
         else if (G == k)
         {
-            cerr << "no need padding\n";
+            if (verbose)
+                cerr << "no need padding\n";
         }
         else
         {
@@ -141,10 +131,10 @@ public:
         return encodezg(z);
     }
 
-    GridMap build_C(const GridVec& y, const GridVec& s)
+    GridMapU build_C(const GridVec& y, const GridVec& s)
     {
         int c{0};
-        GridMap C;
+        GridMapU C;
         for (const auto& si : s)
         {
             c = 0;
@@ -214,12 +204,12 @@ public:
         return Occ;
     }
 
-    GridVecMap build_W(const GridVec& y, const GridVec& s)
+    GridVecMapU build_W(const GridVec& y, const GridVec& s)
     {
         int c{0};
         size_t i{0};
         auto C = build_C(y, s);
-        GridVecMap W;
+        GridVecMapU W;
         for (const auto& si : s)
         {
             W[si] = vector<int>(y.size());
@@ -235,59 +225,157 @@ public:
         return W;
     }
 
+    void build_indices_k(int ni, int ki, const GridVec& xk, GridVec& yk, GridVec& sk,
+                         vector<int>& ck, vector<vector<int>>& wk, vector<int>& Occ,
+                         vector<vector<int>>& kas, vector<vector<int>>& kds, vector<int>& sqp,
+                         vector<int>& a0, vector<int>& d0, GridSetU& symbols)
+    {
+        int s, n, c, e, i;
+        for (n = 0; n < N; n++)
+        {
+            yk[n] = xk[a0[n]];
+            symbols.insert(yk[n]);
+        }
+        sk = GridVec(symbols.begin(), symbols.end());
+        std::sort(sk.begin(), sk.end());
+        symbols.clear();
+        // C[k] = save_C(y1, S[k]);
+        // W[k] = save_Occ(y1, S[k]);
+        // auto Wg = build_W(y1, S[k]); // here Wg is S x N
+        // for (n = 0; n < N; n++)
+        //     A[k][Wg[y1[n]][n] - 1] = a0[n];
+        // next run
+        // a0 = A[k];
+
+        int sn = sk.size();
+        ck.resize(sn);
+        wk.resize(sn);
+        for (s = 0; s < sn; s++)
+        {
+            c = 0;
+            for (n = 0; n < N; n++)
+            {
+                if (yk[n] < sk[s])
+                    c++;
+                if (yk[n] == sk[s])
+                    Occ.push_back(n);
+            }
+            ck[s] = c;
+            wk[s] = Occ;
+            Occ.clear();
+        }
+
+        // save A and D
+        kas.resize(sn);
+        if (is_save_D)
+        {
+            kds.resize(sn);
+            sqp.resize(sn, ki + 1);
+        }
+        // iterate over all haplotyps in reverese prefix sorted order
+        for (n = 0; n < N; n++)
+        {
+            i = a0[n]; // index ihap at Y[k]
+            if (is_save_D)
+                e = d0[n];
+            for (s = 0; s < sn; s++)
+            {
+                if (is_save_D)
+                {
+                    if (e > sqp[s])
+                        sqp[s] = e;
+                }
+                if (xk[i] == sk[s])
+                {
+                    kas[s].push_back(i);
+                    if (is_save_D)
+                    {
+                        kds[s].push_back(sqp[s]);
+                        sqp[s] = 0;
+                    }
+                }
+            }
+        }
+        // make sure A[k], D[k] are empty
+        for (s = 0; s < sn; s++)
+        {
+            A[ni].insert(A[ni].end(), kas[s].begin(), kas[s].end());
+            if (is_save_D)
+                D[ni].insert(D[ni].end(), kds[s].begin(), kds[s].end());
+        }
+        kas.clear();
+        a0 = A[ni];
+        if (is_save_D)
+        {
+            kds.clear();
+            sqp.clear();
+            d0 = D[ni];
+        }
+    }
+
     void build(const std::string& vcfpanel, const std::string& samples, const std::string& region,
                double maf = 0.0002)
     {
         size_t i{0};
-        int k{0}, m{0}, n{0};
+        int k{0}, m{0};
         BcfReader vcf(vcfpanel, samples, region);
         BcfRecord var(vcf.header);
         N = vcf.nsamples * 2;
         M = 0;
         vector<bool> gt;
-        vector<vector<bool>> allgt, raregt;
-        vector<int> rareidx;
+        vector<vector<bool>> allgts, gt_rares, gt_commons;
+        vector<int> snp_rares, snp_commons;
         double af;
         while (vcf.getNextVariant(var))
         {
             var.getGenotypes(gt);
             if (!var.isNoneMissing() || !var.allPhased())
                 continue;
-            if (maf > 0)
+            // keep track of snp index with AF < minaf
+            af = 0;
+            for (auto g : gt)
+                af += g;
+            af /= N;
+            if (af < maf)
             {
-                // keep track of snp index with AF < minaf
-                af = 0;
-                for (auto g : gt)
-                    af += g;
-                af /= N;
-                if (af < maf)
-                {
-                    rareidx.push_back(M);
-                    raregt.push_back(gt);
-                }
-                else
-                {
-                    reorder.push_back(M);
-                    allgt.push_back(gt);
-                }
+                snp_rares.push_back(M);
+                gt_rares.push_back(gt);
             }
             else
             {
-                reorder.push_back(M);
-                allgt.push_back(gt);
+                snp_commons.push_back(M);
+                gt_commons.push_back(gt);
+            }
+            if ((M + 1) % B == 0)
+            {
+                reorder.insert(reorder.end(), snp_rares.begin(), snp_rares.end());
+                snp_rares.clear();
+                reorder.insert(reorder.end(), snp_commons.begin(), snp_commons.end());
+                snp_commons.clear();
+                allgts.insert(allgts.cend(), gt_rares.begin(), gt_rares.end());
+                gt_rares.clear();
+                allgts.insert(allgts.cend(), gt_commons.begin(), gt_commons.end());
+                gt_commons.clear();
             }
             M++;
         }
-        reorder.insert(reorder.end(), rareidx.begin(), rareidx.end());
-        allgt.insert(allgt.end(), raregt.begin(), raregt.end());
+        reorder.insert(reorder.end(), snp_rares.begin(), snp_rares.end());
+        snp_rares.clear();
+        reorder.insert(reorder.end(), snp_commons.begin(), snp_commons.end());
+        snp_commons.clear();
+        allgts.insert(allgts.cend(), gt_rares.begin(), gt_rares.end());
+        gt_rares.clear();
+        allgts.insert(allgts.cend(), gt_commons.begin(), gt_commons.end());
+        gt_commons.clear();
         G = (M + B - 1) / B;
-        cerr << "N: " << N << ",M: " << M << ",G: " << G << ",B: " << B << endl;
+        if (verbose)
+            cerr << "N: " << N << ",M: " << M << ",G: " << G << ",B: " << B << endl;
         X.resize(G, GridVec(N));
         k = 0;
         for (m = 0; m < M; m++)
         {
             for (i = 0; i < N; i++)
-                X[k][i] = (X[k][i] << 1) | (allgt[m][i] != 0);
+                X[k][i] = (X[k][i] << 1) | (allgts[m][i] != 0);
             if ((m + 1) % B == 0)
             {
                 for (i = 0; i < N; i++)
@@ -305,101 +393,46 @@ public:
         }
         else if (G == k)
         {
-            cerr << "no need padding\n";
+            if (verbose)
+                cerr << "no need padding\n";
         }
         else
         {
             throw std::runtime_error("something wrong\n");
         }
+
         // building A and save indices now
-        // A.resize(G, vector<int>(N));
         A.resize(G);
-        D.resize(G);
         S.resize(G);
-        W.resize(G);
         C.resize(G);
-        int e, s, c;
+        W.resize(G);
+        if (is_save_D)
+            D.resize(G);
         // create some intermediate varibales
         vector<int> Occ;
-        vector<vector<int>> kds; // for building D
         vector<vector<int>> kas; // for building A
+        vector<vector<int>> kds; // for building D
         vector<int> sqp;         // for building D
         GridSetU symbols;        // keep track of unique symbols at k
         GridVec y1(N);
-        vector<int> d0(N, 0);               // initilize d[k]
-        vector<int> a0(N);                  // initilize a[k]
-        std::iota(a0.begin(), a0.end(), 0); // a[-1] = 0,1,...,N-1
-        for (k = 0; k < G; k++)
+        vector<int> a0(N); // initilize a[k]
+        vector<int> d0;    // initilize d[k]
+        int Gi, ki, ni{-1};
+        for (i = 0; i < nindices; i++)
         {
-            for (n = 0; n < N; n++)
+            auto Gv = seq_by(i, G - 1, nindices);
+            Gi = Gv.size();
+            // initial a and d at ki=-1
+            std::iota(a0.begin(), a0.end(), 0);
+            if (is_save_D)
+                d0.resize(N, 0);
+            for (ki = 0; ki < Gi; ki++)
             {
-                y1[n] = X[k][a0[n]];
-                symbols.insert(y1[n]);
+                ni++;
+                k = Gv[ki];
+                build_indices_k(ni, ki, X[k], y1, S[ni], C[ni], W[ni], Occ, kas, kds, sqp, a0, d0,
+                                symbols);
             }
-            S[k] = GridVec(symbols.begin(), symbols.end());
-            std::sort(S[k].begin(), S[k].end());
-            symbols.clear();
-            // C[k] = save_C(y1, S[k]);
-            // W[k] = save_Occ(y1, S[k]);
-            // auto Wg = build_W(y1, S[k]); // here Wg is S x N
-            // for (n = 0; n < N; n++)
-            //     A[k][Wg[y1[n]][n] - 1] = a0[n];
-            // next run
-            // a0 = A[k];
-
-            // save C and W
-            auto sn = S[k].size();
-            C[k].resize(sn);
-            W[k].resize(sn);
-            for (s = 0; s < sn; s++)
-            {
-                c = 0;
-                for (n = 0; n < N; n++)
-                {
-                    if (y1[n] < S[k][s])
-                        c++;
-                    if (y1[n] == S[k][s])
-                        Occ.push_back(n);
-                }
-                C[k][s] = c;
-                W[k][s] = Occ;
-                Occ.clear();
-            }
-
-            // save A and D
-            kds.resize(sn);
-            kas.resize(sn);
-            sqp.resize(sn, k + 1);
-            // iterate over all haplotyps in reverese prefix sorted order
-            for (n = 0; n < N; n++)
-            {
-                i = a0[n]; // index ihap at Y[k]
-                e = d0[n];
-                // auto si = X[k][i]; // symbol of ihap at k
-                for (s = 0; s < sn; s++)
-                {
-                    if (e > sqp[s])
-                        sqp[s] = e;
-                    if (X[k][i] == S[k][s])
-                    {
-                        kas[s].push_back(i);
-                        kds[s].push_back(sqp[s]);
-                        sqp[s] = 0;
-                    }
-                }
-            }
-            sqp.clear();
-            // make sure A[k], D[k] are empty
-            for (s = 0; s < sn; s++)
-            {
-                A[k].insert(A[k].end(), kas[s].begin(), kas[s].end());
-                D[k].insert(D[k].end(), kds[s].begin(), kds[s].end());
-            }
-            kas.clear();
-            kds.clear();
-            // next run
-            a0 = A[k];
-            d0 = D[k];
         }
     }
 
@@ -412,6 +445,7 @@ public:
         out.write((char*)&M, sizeof(M));
         out.write((char*)&N, sizeof(N));
         out.write((char*)&G, sizeof(G));
+        out.write((char*)&nindices, sizeof(nindices));
         // write reorder (M)
         for (int m = 0; m < M; m++)
             out.write((char*)&reorder[m], sizeof(int));
@@ -486,7 +520,10 @@ public:
             return 2;
         if (!in.read((char*)&G, sizeof(G)))
             return 2;
-        cerr << "N: " << N << ",M: " << M << ",G: " << G << ",B: " << B << endl;
+        if (!in.read((char*)&nindices, sizeof(nindices)))
+            return 2;
+        cerr << "N: " << N << ",M: " << M << ",G: " << G << ",B: " << B << ",nindices " << nindices
+             << endl;
         // read reorder (M)
         reorder.resize(M);
         for (int m = 0; m < M; m++)
@@ -503,7 +540,8 @@ public:
                         return 2;
                 }
             }
-            cerr << "load X done" << endl;
+            if (verbose)
+                cerr << "load X done" << endl;
         }
         // read S
         S.resize(G);
@@ -519,7 +557,8 @@ public:
                     return 2;
             }
         }
-        cerr << "load S done" << endl;
+        if (verbose)
+            cerr << "load S done" << endl;
         // read A
         A.resize(G, vector<int>(N));
         for (int k = 0; k < G; k++)
@@ -530,7 +569,8 @@ public:
                     return 2;
             }
         }
-        cerr << "load A done" << endl;
+        if (verbose)
+            cerr << "load A done" << endl;
         if (is_save_D)
         {
             // read D
@@ -543,7 +583,8 @@ public:
                         return 2;
                 }
             }
-            cerr << "load D done" << endl;
+            if (verbose)
+                cerr << "load D done" << endl;
         }
         // read C
         C.resize(G);
@@ -559,7 +600,8 @@ public:
                     return 2;
             }
         }
-        cerr << "load C done" << endl;
+        if (verbose)
+            cerr << "load C done" << endl;
         // read W
         W.resize(G);
         for (int k = 0; k < G; k++)
@@ -581,7 +623,8 @@ public:
                 }
             }
         }
-        cerr << "load W done" << endl;
+        if (verbose)
+            cerr << "load W done" << endl;
 
         return 0;
     }
@@ -621,7 +664,8 @@ public:
         }
         else if (G == k)
         {
-            cerr << "no need padding\n";
+            if (verbose)
+                cerr << "no need padding\n";
         }
         else
         {
@@ -631,7 +675,7 @@ public:
         view_zg(Z[1], viewk);
     }
 
-    void report_v1(const GridVec& zg, IntMapU& haplens, IntMapU& hapstarts, int L = 5)
+    void report_v1(const GridVec& zg, IntMapU& haplens, IntMapU& hapends, int L = 5)
     {
         size_t i, s;
         int e{0}, f{0}, g{0}, n{0};
@@ -662,12 +706,12 @@ public:
                         if (haplens.count(n) == 0)
                         {
                             haplens[n] = k - e;
-                            hapstarts[n] = e;
+                            hapends[n] = e;
                         }
                         else if (haplens[n] > k - e)
                         {
                             haplens[n] = k - e;
-                            hapstarts[n] = e;
+                            hapends[n] = e;
                         }
                     }
                 }
@@ -712,7 +756,7 @@ public:
         }
     }
 
-    void report_setmaximal(IntMapU& haplens, IntMapU& hapstarts, const GridVec& zg, int L = 32,
+    void report_setmaximal(IntMapU& haplens, IntMapU& hapends, const GridVec& zg, int L = 32,
                            int Step = 2)
     {
         int k, s, n, i, e, f, g, e1, f1, g1;
@@ -747,12 +791,12 @@ public:
                             if (haplens.count(n) == 0)
                             {
                                 haplens[n] = k - e;
-                                hapstarts[n] = e;
+                                hapends[n] = e;
                             }
                             else if (k - e >= haplens[n])
                             {
                                 haplens[n] = k - e;
-                                hapstarts[n] = e;
+                                hapends[n] = e;
                             }
                         }
                     }
@@ -766,12 +810,12 @@ public:
                         if (haplens.count(n) == 0)
                         {
                             haplens[n] = k - e;
-                            hapstarts[n] = e;
+                            hapends[n] = e;
                         }
                         else if (k - e >= haplens[n])
                         {
                             haplens[n] = k - e;
-                            hapstarts[n] = e;
+                            hapends[n] = e;
                         }
                     }
                     // finding new e1, f1, g1
@@ -793,107 +837,135 @@ public:
         }
     }
 
-    void report_neighourings(IntMapU& haplens, IntMapU& hapstarts, const GridVec& zg,
-                                int L = 32, int Step = 2)
+    void report_neighourings(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies,
+                             const GridVec& zg, int L = 32)
     {
-        int k, s, klen, i, n, l, j;
-        int zak_prev, zak_curr, valid_grid_start;
-        bool first_valid_grid_start = true;
-        for (k = 0; k < G; k++)
+        int k, s, klen, i, j, n, l, Gi, ki, idi, ni{-1};
+        for (idi = 0; idi < nindices; idi++)
         {
-            auto kzs = std::lower_bound(S[k].begin(), S[k].end(), zg[k]);
-            s = std::fmin(std::distance(S[k].begin(), kzs), S[k].size() - 1);
-            if (zg[k] == S[k][s])
+            auto Gv = seq_by(idi, G - 1, nindices);
+            Gi = Gv.size();
+            int zak_prev, zak_curr, valid_grid_start = 0;
+            bool first_valid_grid_start = true;
+            for (ki = 0; ki < Gi; ki++)
             {
-                if (first_valid_grid_start)
-                    valid_grid_start = k;
-                first_valid_grid_start = false;
-                zak_curr = C[k][s];
-            }
-            else
-            {
-                if (verbose)
-                    cerr << "skip: " << k << endl;
-                // if zg[k] symbol not exists, skip this grid and start over.
-                first_valid_grid_start = true;
-                // hapi_curr = hapi_prev;
-                continue;
-            }
-            if (k > valid_grid_start)
-            {
-                if (zak_prev >= zak_curr)
+                k = Gv[ki];
+                ni++;
+                auto kzs = std::lower_bound(S[ni].begin(), S[ni].end(), zg[k]);
+                s = std::fmin(std::distance(S[ni].begin(), kzs), S[ni].size() - 1);
+                zak_curr = C[ni][s];
+
+                if (zg[k] == S[ni][s])
                 {
-                    auto kzi = std::lower_bound(W[k][s].begin(), W[k][s].end(), zak_prev);
-                    zak_curr += std::fmin(std::distance(W[k][s].begin(), kzi), W[k][s].size() - 1);
+                    if (first_valid_grid_start)
+                        valid_grid_start = ki;
+                    first_valid_grid_start = false;
+                }
+                else
+                {
+                    if (verbose)
+                        cerr << "skip: " << ki << endl;
+                    // if zg[k] symbol not exists, skip this grid and start over.
+                    first_valid_grid_start = true;
+                    continue;
                 }
 
-                // scan up L haps
-                for (l = 0; l < L; l++)
+                if (ki > valid_grid_start)
                 {
-                    n = A[k][std::fmax(zak_curr - l - 1, 0)];
-                    klen = 0;
-                    for (j = k; j > 0; j--)
+                    if (zak_prev >= zak_curr)
                     {
-                        if (X[j][n] == zg[j])
-                        {
-                            klen++;
-                        }
-                        else
-                        {
-                            if (haplens.count(n) == 0)
-                            {
-                                haplens[n] = klen;
-                                hapstarts[n] = k;
-                            }
-                            else if (klen >= haplens[n])
-                            {
-                                haplens[n] = klen;
-                                hapstarts[n] = k;
-                            }
-                            break;
-                        }
+                        auto kzi = std::lower_bound(W[ni][s].begin(), W[ni][s].end(), zak_prev);
+                        zak_curr +=
+                            std::fmin(std::distance(W[ni][s].begin(), kzi), W[ni][s].size() - 1);
                     }
-                    if (zak_curr - l - 1 == 0 )
-                        break;
-                }
 
-                // scan down L haps
-                for (l = 0; l < L; l++)
-                {
-                    n = A[k][std::fmin(zak_curr + l, N - 1)];
-                    klen = 0;
-                    for (j = k; j > 0; j--)
+                    // // // re-confirm new position with longest matches
+                    // i = 1;
+                    // while (ki >= i && X[Gv[ki - i + 1]][A[ni][zak_curr]] == zg[Gv[ki - i + 1]]
+                    // &&
+                    //        X[Gv[ki - i]][A[ni][zak_curr]] < zg[Gv[ki - i]])
+                    // {
+                    //     zak_curr++;
+                    //     if (X[Gv[ki - i]][A[ni][zak_curr]] == zg[Gv[ki - i]])
+                    //         i++;
+                    // }
+
+
+                    for (l = 0; l < L; l++)
                     {
-                        if (X[j][n] == zg[j])
-                        {
-                            klen++;
-                        }
-                        else
-                        {
-                            if (haplens.count(n) == 0)
-                            {
-                                haplens[n] = klen;
-                                hapstarts[n] = k;
-                            }
-                            else if (klen >= haplens[n])
-                            {
-                                haplens[n] = klen;
-                                hapstarts[n] = k;
-                            }
+                        n = A[ni][std::fmax(zak_curr - l - 1, 0)];
+                        if (X[Gv[ki]][n] != zg[Gv[ki]])
                             break;
+                        klen = 0;
+                        for (j = ki; j >= 0; j--)
+                        {
+                            if (X[Gv[j]][n] == zg[Gv[j]])
+                            {
+                                klen++;
+                            }
+                            else
+                            {
+                                if (haplens.count(n) == 0)
+                                {
+                                    haplens[n] = klen;
+                                    hapends[n] = ki;
+                                }
+                                else if (klen >= haplens[n])
+                                {
+                                    haplens[n] = klen;
+                                    hapends[n] = ki;
+                                }
+                                if (hapnindicies.count(n))
+                                    hapnindicies[n] =
+                                        idi >= hapnindicies[n] ? (idi + 1) : hapnindicies[n];
+                                break;
+                            }
                         }
+                        if (zak_curr - l - 1 == 0)
+                            break;
                     }
-                    if (zak_curr + l == N - 1)
-                        break;
-                }
 
+                    for (l = 0; l < L; l++)
+                    {
+                        n = A[ni][std::fmin(zak_curr + l, N - 1)];
+                        if (X[Gv[ki]][n] != zg[Gv[ki]])
+                            break;
+                        klen = 0;
+                        for (j = ki; j >= 0; j--)
+                        {
+                            if (X[Gv[j]][n] == zg[Gv[j]])
+                            {
+                                klen++;
+                            }
+                            else
+                            {
+                                if (haplens.count(n) == 0)
+                                {
+                                    haplens[n] = klen;
+                                    hapends[n] = ki;
+                                }
+                                else if (klen >= haplens[n])
+                                {
+                                    haplens[n] = klen;
+                                    hapends[n] = ki;
+                                }
+                                if (hapnindicies.count(n))
+                                    hapnindicies[n] =
+                                        idi >= hapnindicies[n] ? (idi + 1) : hapnindicies[n];
+                                break;
+                            }
+                        }
+                        if (zak_curr + l == N - 1)
+                            break;
+                    }
+                }
+                zak_prev = zak_curr;
             }
-            zak_prev = zak_curr;
         }
     }
 
-    void report_neighourings_v1(IntMapU& haplens, IntMapU& hapstarts, const GridVec& zg, int L = 32,
-                             int Step = 2)
+    void report_neighourings_v1(IntMapU& haplens, IntMapU& hapends, const GridVec& zg, int L = 32,
+                                int Step = 2)
     {
         int k, s, klen, klen_long, i, n, l, j;
         int zak_prev, zak_curr, valid_grid_start;
@@ -951,12 +1023,12 @@ public:
                             if (haplens.count(n) == 0)
                             {
                                 haplens[n] = klen;
-                                hapstarts[n] = k;
+                                hapends[n] = k;
                             }
                             else if (klen >= haplens[n])
                             {
                                 haplens[n] = klen;
-                                hapstarts[n] = k;
+                                hapends[n] = k;
                             }
                             break;
                         }
@@ -983,12 +1055,12 @@ public:
                             if (haplens.count(n) == 0)
                             {
                                 haplens[n] = klen;
-                                hapstarts[n] = k;
+                                hapends[n] = k;
                             }
                             else if (klen >= haplens[n])
                             {
                                 haplens[n] = klen;
-                                hapstarts[n] = k;
+                                hapends[n] = k;
                             }
                             break;
                         }
@@ -1009,8 +1081,8 @@ public:
         }
     }
 
-    void report_neighourings_v2(IntMapU& haplens, IntMapU& hapstarts, const GridVec& zg, int L = 32,
-                             int Step = 2)
+    void report_neighourings_v2(IntMapU& haplens, IntMapU& hapends, const GridVec& zg, int L = 32,
+                                int Step = 2)
     {
         int k, s, klen, i, n, l, j;
         int zak_prev, zak_curr, valid_grid_start;
@@ -1069,17 +1141,17 @@ public:
                             if (haplens.count(n) == 0)
                             {
                                 haplens[n] = klen;
-                                hapstarts[n] = k;
+                                hapends[n] = k;
                             }
                             else if (klen >= haplens[n])
                             {
                                 haplens[n] = klen;
-                                hapstarts[n] = k;
+                                hapends[n] = k;
                             }
                             break;
                         }
                     }
-                    if (zak_curr - l - 1 == 0 )
+                    if (zak_curr - l - 1 == 0)
                         break;
                 }
 
@@ -1099,12 +1171,12 @@ public:
                             if (haplens.count(n) == 0)
                             {
                                 haplens[n] = klen;
-                                hapstarts[n] = k;
+                                hapends[n] = k;
                             }
                             else if (klen >= haplens[n])
                             {
                                 haplens[n] = klen;
-                                hapstarts[n] = k;
+                                hapends[n] = k;
                             }
                             break;
                         }
@@ -1112,7 +1184,6 @@ public:
                     if (zak_curr + l == N - 1)
                         break;
                 }
-
             }
             zak_prev = zak_curr;
         }

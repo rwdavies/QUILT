@@ -74,12 +74,10 @@ QUILT(
   small_ref_panel_gibbs_iterations = 20,
   plot_per_sample_likelihoods = FALSE,
   use_small_eHapsCurrent_tc = FALSE,
-  pbwtL = 32,
-  pbwtS = 1,
-  pbwtM = 4,
+  mspbwtL = 40,
+  mspbwtM = 1,
   zilong = FALSE,
   use_mspbwt = FALSE,
-  mspbwt_nindices = 4L,
   use_splitreadgl = FALSE,
   override_use_eMatDH_special_symbols = NA,
   use_hapMatcherR = TRUE
@@ -224,17 +222,13 @@ QUILT(
 
 \item{use_small_eHapsCurrent_tc}{For testing purposes only}
 
-\item{pbwtL}{How many neighouring haplotypes to select forward and backwards at each grid. Automatically detected.}
+\item{mspbwtL}{How many neighouring haplotypes to scan up and down at each grid.}
 
-\item{pbwtS}{How many grids as one step}
+\item{mspbwtM}{Minimun long grids matches}
 
-\item{pbwtM}{Minimun long grids matches}
-
-\item{zilong}{Using zilong's solution}
+\item{zilong}{Using zilong's mspbwt solution}
 
 \item{use_mspbwt}{Use msPBWT to select new haplotypes}
-
-\item{mspbwt_nindices}{How many mspbwt indices to build}
 
 \item{use_splitreadgl}{Use split real GL in hap selection and imputation}
 
