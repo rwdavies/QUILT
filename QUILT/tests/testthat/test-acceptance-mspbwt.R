@@ -120,6 +120,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
     regionEnd <- 200 - 10
     buffer <- 5
     i_method <- 2
+    use_hapMatcherR <- TRUE
 
     for(i_method in 1:3) {
 
@@ -144,14 +145,13 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                 regionStart = regionStart,
                 regionEnd = regionEnd,
                 buffer = buffer,
-                posfile = data_package$posfile,
                 reference_vcf_file = refpack$reference_vcf_file,
                 reference_haplotype_file = refpack$reference_haplotype_file,
                 reference_legend_file = refpack$reference_legend_file,
                 genetic_map_file = refpack$reference_genetic_map_file,
                 nGen = 100,
                 use_mspbwt = use_mspbwt,
-                zilong = zilong,
+                use_pbwt_index = zilong,
                 use_hapMatcherR = use_hapMatcherR
             )
             
@@ -164,6 +164,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                 bamlist = data_package$bamlist,
                 posfile = data_package$posfile,
                 genfile = data_package$genfile,
+                reference_vcf_file = refpack$reference_vcf_file,                
                 phasefile = data_package$phasefile,
                 nGibbsSamples = 5,
                 n_seek_its = 3,

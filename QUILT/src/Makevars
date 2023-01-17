@@ -1,5 +1,5 @@
 
-CXX_STD      = CXX17
+## CXX_STD      = CXX17
 PKG_CPPFLAGS = -I../inst/include/
 PKG_LIBS = -lhts -lz -lm -lbz2 -llzma
 
