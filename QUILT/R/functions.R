@@ -6,11 +6,12 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
                                        Kfull,
                                        Knew,
                                        msp,
+                                       mspbwtB,
                                        mspbwtL,
                                        mspbwtM) {
   res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
-    res <- as.data.frame(mspbwt_report(msp, hap, mspbwtL))
+    res <- as.data.frame(mspbwt_report(msp, hap, mspbwtL, mspbwtB))
     res
   })
   ## print(head(res))
@@ -137,6 +138,7 @@ get_and_impute_one_sample <- function(
     plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc,
     output_gt_phased_genotypes,
+    mspbwtB,
     mspbwtL,
     mspbwtM,
     zilong,
@@ -572,6 +574,7 @@ get_and_impute_one_sample <- function(
                                                                Kfull = Kfull,
                                                                Knew = Knew,
                                                                msp = msp,
+                                                               mspbwtB = mspbwtB,
                                                                mspbwtL = mspbwtL,
                                                                mspbwtM = mspbwtM
                                                                )

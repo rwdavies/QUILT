@@ -362,7 +362,7 @@ QUILT <- function(
         if (is.null(mspbwt_binfile)) {
             stop("To use zilong mspbwt and QUILT, you must prepare the reference package using use_zilong=TRUE")
         } else {
-            msp <- mspbwt_load(mspbwt_binfile)
+            msp <- mspbwt_load(mspbwt_binfile, mspbwtB)
         }
     }
 
@@ -774,6 +774,7 @@ QUILT <- function(
                 plot_per_sample_likelihoods = plot_per_sample_likelihoods,
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
                 output_gt_phased_genotypes = output_gt_phased_genotypes,
+                mspbwtB = mspbwtB,
                 mspbwtL = mspbwtL,
                 mspbwtM = mspbwtM,
                 zilong = zilong,

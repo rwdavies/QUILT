@@ -8,8 +8,8 @@ using namespace std;
 //' @export
 // [[Rcpp::export]]
 void mspbwt_build(const std::string& binfile, const std::string& vcfpanel,
-                  const std::string& samples, const std::string& region, int nindices = 4,
-                  int mspbwtB = 64, double maf = 0)
+                  const std::string& samples, const std::string& region, int nindices,
+                  int mspbwtB, double maf)
 {
     if (mspbwtB == 16)
     {
@@ -43,7 +43,7 @@ void mspbwt_build(const std::string& binfile, const std::string& vcfpanel,
 
 //' @export
 // [[Rcpp::export]]
-SEXP mspbwt_load(const std::string& binfile, int mspbwtB = 64)
+SEXP mspbwt_load(const std::string& binfile, int mspbwtB)
 {
     if (mspbwtB == 16)
     {
@@ -82,7 +82,7 @@ SEXP mspbwt_load(const std::string& binfile, int mspbwtB = 64)
 
 //' @export
 // [[Rcpp::export]]
-List mspbwt_report(SEXP xp_, const IntegerVector& z, int pbwtL, int mspbwtB = 64)
+List mspbwt_report(SEXP xp_, const IntegerVector& z, int pbwtL, int mspbwtB)
 {
     Timer tm;
     tm.clock();
