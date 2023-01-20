@@ -18,35 +18,37 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
   res <- do.call(rbind.data.frame, res)
   ## saveRDS(res, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
   res <- res[res$lens >= max(mspbwtM, 0), ]
-  print(paste("select", length(unique(res$haps)), " unique haps by mpbwt query before post-ordering"))
-  if (nrow(res) > 0) {
-    # order by lens and nindices then drop duplicated haps
-    res <- res[order(res$haps, -res$lens, -res$n),]
-    res <- res[!duplicated(res[,c('haps')]),]
-    res <- res[order(-res$lens, -res$n),]
-    res <- res[!duplicated(res[,c('lens', 'ends')]),]
-    ## res$keys <- paste0(res$lens, "_", res$ends)
-    ## res <- res[!duplicated(res[,c('keys')]),]
-    ## res <- Reduce(rbind, by(res, res["keys"], head, n = 2))
-    unique_haps <- unique(res$haps)
-  } else {
-    unique_haps <- NULL
-  }
-  print(paste("select", length(unique_haps), " unique haps by mpbwt query after ordering"))
-
-  if (length(unique_haps) >= Knew) {
-    ## order by freq and pick top Knew
-    new_haps <- unique_haps[1:Knew]
+  print(paste("select", length(unique(res$haps)), " unique haps by mpbwt query before post-selection"))
+  ## order by lens then nindicies then ends
+  res <- res[order(-res$lens, -res$n, res$ends),]
+  unique_haps <- unique(res$haps)
+  ## return(unique_haps[1:Knew])
+  if (length(unique_haps) == 0) {
+    new_haps <- sample(1:Kfull, Knew)
     return(new_haps)
-  } else {
+  } else if (length(unique_haps) <= Knew) {
     ## cannot take a sample larger than the population when 'replace = FALSE'
     new_haps <- unique(c(
       unique_haps,
       sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
     ))[1:Knew]
+    print(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
     return(new_haps)
+  } else {
+    res$keys <- paste0(res$lens, "_", res$ends)
+    unique_keys <- unique(res$keys)
+    unique_haps_at_unique_keys <- unique(res[match(unique_keys, res[, "keys"]), "haps"])
+    print(paste("select", length(unique(unique_haps_at_unique_keys)), " unique haps after post-selection 2"))
+    if (length(unique_haps_at_unique_keys) >= Knew) {
+      return(unique_haps_at_unique_keys[1:Knew])
+    } else {
+      new_haps <- c(setdiff(unique_haps, unique_haps_at_unique_keys), unique_haps_at_unique_keys)[1:Knew]
+      print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
+      return(new_haps)
+    }
   }
 }
+
 
 get_and_impute_one_sample <- function(
     rhb_t,
