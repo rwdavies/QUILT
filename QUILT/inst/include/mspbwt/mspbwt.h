@@ -869,7 +869,7 @@ public:
         }
     }
 
-    void report_neighourings(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, const GridVec& zg,
+    void report_neighourings(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, GridVec& zg,
                              int L = 32)
     {
         int k, s, klen, j, n, l, Gi, ki, iind, ni{-1};
@@ -887,31 +887,36 @@ public:
                 s = std::fmin(std::distance(S[ni].begin(), kzs), S[ni].size() - 1);
                 zak_curr = C[ni][s];
 
-                if (zg[k] == S[ni][s])
-                {
-                    if (first_valid_grid_start)
-                        valid_grid_start = ki;
-                    first_valid_grid_start = false;
-                }
-                else
-                {
-                    if (verbose)
-                        cerr << "skip: " << ki << endl;
-                    // if zg[k] symbol not exists, skip this grid and start over.
-                    first_valid_grid_start = true;
-                    continue;
-                }
+                // if (zg[k] != S[ni][s])
+                //     zg[k] = S[ni][s];
+
+                // if (zg[k] == S[ni][s])
+                // {
+                //     if (first_valid_grid_start)
+                //         valid_grid_start = ki;
+                //     first_valid_grid_start = false;
+                // }
+                // else
+                // {
+                //     if (verbose)
+                //         cerr << "skip: " << ki << endl;
+                //     // if zg[k] symbol not exists, skip this grid and start over.
+                //     first_valid_grid_start = true;
+                //     continue;
+                // }
 
                 if (ki > valid_grid_start)
                 {
                     if (zak_prev >= zak_curr)
                     {
-                        auto kzi = std::lower_bound(W[ni][s].begin(), W[ni][s].end(), zak_prev);
-                        zak_curr += std::fmin(std::distance(W[ni][s].begin(), kzi), W[ni][s].size() - 1);
+                        auto kzi = std::upper_bound(W[ni][s].begin(), W[ni][s].end(), zak_prev);
+                        kzi = kzi == W[ni][s].begin() ?  W[ni][s].begin() : std::prev(kzi);
+                        zak_curr += std::distance(W[ni][s].begin(), kzi);
                     }
 
-                    // // // re-confirm new position with longest matches
-                    // i = 1;
+                    // // re-confirm new position with longest matches
+                    // // should work with missing symbol at certain grid ?
+                    // int i = 1;
                     // while (ki >= i && X[Gv[ki - i + 1]][A[ni][zak_curr]] == zg[Gv[ki - i + 1]]
                     // &&
                     //        X[Gv[ki - i]][A[ni][zak_curr]] < zg[Gv[ki - i]])
@@ -921,12 +926,9 @@ public:
                     //         i++;
                     // }
 
-
                     for (l = 0; l < L; l++)
                     {
                         n = A[ni][std::fmax(zak_curr - l - 1, 0)];
-                        if (X[Gv[ki]][n] != zg[Gv[ki]])
-                            break;
                         klen = 0;
                         for (j = ki; j >= 0; j--)
                         {
@@ -940,6 +942,7 @@ public:
                                 {
                                     haplens[n] = klen;
                                     hapends[n] = ki;
+                                    hapnindicies[n] = 1;
                                 }
                                 else if (klen >= haplens[n])
                                 {
@@ -958,8 +961,6 @@ public:
                     for (l = 0; l < L; l++)
                     {
                         n = A[ni][std::fmin(zak_curr + l, N - 1)];
-                        if (X[Gv[ki]][n] != zg[Gv[ki]])
-                            break;
                         klen = 0;
                         for (j = ki; j >= 0; j--)
                         {
@@ -973,6 +974,7 @@ public:
                                 {
                                     haplens[n] = klen;
                                     hapends[n] = ki;
+                                    hapnindicies[n] = 1;
                                 }
                                 else if (klen >= haplens[n])
                                 {
