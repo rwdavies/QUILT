@@ -879,31 +879,34 @@ public:
             Gi = Gv.size();
             int zak_prev, zak_curr, valid_grid_start = 0;
             bool first_valid_grid_start = true;
+            IntMapU skip;
             for (ki = 0; ki < Gi; ki++)
             {
                 k = Gv[ki];
                 ni++;
-                auto kzs = std::lower_bound(S[ni].begin(), S[ni].end(), zg[k]);
-                s = std::fmin(std::distance(S[ni].begin(), kzs), S[ni].size() - 1);
+                auto kzs = std::upper_bound(S[ni].begin(), S[ni].end(), zg[k]);
+                kzs = kzs == S[ni].begin() ?  S[ni].begin() : std::prev(kzs);
+                s = std::distance(S[ni].begin(), kzs);
                 zak_curr = C[ni][s];
 
                 // if (zg[k] != S[ni][s])
                 //     zg[k] = S[ni][s];
 
-                // if (zg[k] == S[ni][s])
-                // {
-                //     if (first_valid_grid_start)
-                //         valid_grid_start = ki;
-                //     first_valid_grid_start = false;
-                // }
-                // else
-                // {
-                //     if (verbose)
-                //         cerr << "skip: " << ki << endl;
-                //     // if zg[k] symbol not exists, skip this grid and start over.
-                //     first_valid_grid_start = true;
-                //     continue;
-                // }
+                if (zg[k] == S[ni][s])
+                {
+                    if (first_valid_grid_start)
+                        valid_grid_start = ki;
+                    first_valid_grid_start = false;
+                }
+                else
+                {
+                    skip[ki] = ki;
+                    if (verbose)
+                        cerr << "skip: " << ki << endl;
+                    // if zg[k] symbol not exists, skip this grid and start over.
+                   first_valid_grid_start = true;
+                   continue;
+                }
 
                 if (ki > valid_grid_start)
                 {
@@ -914,16 +917,20 @@ public:
                         zak_curr += std::distance(W[ni][s].begin(), kzi);
                     }
 
-                    // // re-confirm new position with longest matches
-                    // // should work with missing symbol at certain grid ?
-                    // int i = 1;
-                    // while (ki >= i && X[Gv[ki - i + 1]][A[ni][zak_curr]] == zg[Gv[ki - i + 1]]
-                    // &&
-                    //        X[Gv[ki - i]][A[ni][zak_curr]] < zg[Gv[ki - i]])
-                    // {
-                    //     zak_curr++;
-                    //     if (X[Gv[ki - i]][A[ni][zak_curr]] == zg[Gv[ki - i]])
-                    //         i++;
+                    // if ( zg[k] != S[ni][s] ) {
+                    //     // re-confirm new position with longest matches if symbol missing
+                    //     // should work with missing symbol at certain grid backwards?
+                    //     skip[ki] = ki;
+                    //     int i = 2;
+                    //     while (ki >= i && X[Gv[ki - i + 1]][A[ni][zak_curr]] == zg[Gv[ki - i + 1]] &&
+                    //            X[Gv[ki - i]][A[ni][zak_curr]] < zg[Gv[ki - i]])
+                    //     {
+                    //         zak_curr++;
+                    //         if (X[Gv[ki - i]][A[ni][zak_curr]] == zg[Gv[ki - i]])
+                    //             i++;
+                    //         if (zak_curr == N)
+                    //             break;
+                    //     }
                     // }
 
                     for (l = 0; l < L; l++)
@@ -932,6 +939,8 @@ public:
                         klen = 0;
                         for (j = ki; j >= 0; j--)
                         {
+                            if (skip.count(j))
+                                continue;
                             if (X[Gv[j]][n] == zg[Gv[j]])
                             {
                                 klen++;
@@ -964,6 +973,8 @@ public:
                         klen = 0;
                         for (j = ki; j >= 0; j--)
                         {
+                            if (skip.count(j))
+                                continue;
                             if (X[Gv[j]][n] == zg[Gv[j]])
                             {
                                 klen++;
