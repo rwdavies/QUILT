@@ -43,7 +43,7 @@ T reverseBits(T n, size_t B = sizeof(T) * 8)
 }
 
 // 0-based
-vector<int> inline seq_by(int start, int end, int by)
+inline vector<int> seq_by(int start, int end, int by)
 {
     int n = (end - start + 1) % by == 0 ? (end - start + 1) / by : ((end - start + 1) / by + 1);
     vector<int> seq(n);
@@ -69,7 +69,7 @@ private:
     using WgSymbolMap = map<grid_t, SymbolIdxMap, less<grid_t>>; // {symbol:{index:rank}}
 
     int B{sizeof(T) * 8}, N{0}, M{0}, G{0}, G1{0}, G2{0}, nindices{4};
-    bool is_save_X{1}, is_save_D{0};
+    bool is_save_X{1}, is_save_D{1};
     GridVec2D X; //  Grids x Haps
     GridVec2D S; // Grids x Sorted and Unique symbols
     IntVec3D W;
@@ -86,6 +86,7 @@ public:
     virtual ~msPBWT(){};
 
     bool verbose{1};
+    bool debug{0};
 
     vector<int> randhapz()
     {
@@ -324,10 +325,9 @@ public:
     }
 
     void build(const std::string& vcfpanel, const std::string& samples, const std::string& region,
-               double maf = 0.0002)
+               double maf = 0)
     {
-        size_t i{0};
-        int k{0}, m{0};
+        int k{0}, m{0}, i{0};
         BcfReader vcf(vcfpanel, samples, region);
         BcfRecord var(vcf.header);
         N = vcf.nsamples * 2;
@@ -691,38 +691,31 @@ public:
         report_setmaximal(haplens, hapends, hapnindicies, Z[1]);
     }
 
-    void find_setmaximal(int iind, IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies,
-                         const GridVec& zg, const IntVec& gv, int step)
+    void find_setmaximal(int iind, IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, GridVec& zg,
+                         const IntVec& gv, int step)
     {
-        int ks, k, s, n, i, e, f, g, e1, f1, g1;
+        int klen, ks, k, s, n, i, e, f, g, e1, f1, g1, valid_grid_start{0};
         bool matches_lower, matches_upper;
-        int valid_grid_start = 0;
-        bool first_valid_grid_start = true;
-        bool view_matches = false;
+        // bool first_valid_grid_start = true;
         for (k = 0; k < gv.size(); k++)
         {
             ks = k + step;
             auto kzs = std::lower_bound(S[ks].begin(), S[ks].end(), zg[gv[k]]);
             s = std::fmin(std::distance(S[ks].begin(), kzs), S[ks].size() - 1);
-            if (S[ks][s] == zg[gv[k]])
+            if (S[ks][s] != zg[gv[k]])
             {
-                if (first_valid_grid_start)
-                    valid_grid_start = k;
-                first_valid_grid_start = false;
-            }
-            else
-            {
-                if (verbose)
-                    cerr << "skip: " << k << endl;
-                // if zg[k] symbol not exists, skip this grid and start over.
-                first_valid_grid_start = true;
-                continue;
+                cerr << "mismatch symbol k: " << k << endl;
+                // what to do if having mismatch symbols
+                // if (kzs == S[ks].end() || s == 0)
+                //     zg[gv[k]] = S[ks][s]; // already lower bound!
+                // else
+                //     zg[gv[k]] = S[ks][s - 1]; // corce to be lower bound!
             }
 
             if (k == valid_grid_start)
             {
                 f1 = C[ks][s];
-                g1 = C[ks][s] + W[ks][s].size() - 1;
+                g1 = C[ks][s] + W[ks][s].size();
                 e1 = valid_grid_start;
             }
             else if (k > valid_grid_start)
@@ -731,40 +724,82 @@ public:
                 // g1 >= f1 >= C[ks][s] if g >= f
                 auto fzk = std::lower_bound(W[ks][s].begin(), W[ks][s].end(), f);
                 auto gzk = std::lower_bound(W[ks][s].begin(), W[ks][s].end(), g);
-                f1 = C[ks][s] + std::fmin(std::distance(W[ks][s].begin(), fzk), W[ks][s].size() - 1);
-                g1 = C[ks][s] + std::fmin(std::distance(W[ks][s].begin(), gzk), W[ks][s].size() - 1);
+                f1 = C[ks][s] + std::fmin(std::distance(W[ks][s].begin(), fzk), W[ks][s].size());
+                g1 = C[ks][s] + std::fmin(std::distance(W[ks][s].begin(), gzk), W[ks][s].size());
                 if (f1 == g1)
                 {
-                    // report matches from e to k for [f, g]
-                    cerr << k << "," << e << "," << f << "," << g << endl;
+
+                    // cerr << k << "," << e << "," << f << "," << g << endl;
+                    // if (view_matches && ++cc < 8)
+                    // {
+                    //     // view_matches = false;
+                    //     for (i = 0; i < N; i++)
+                    //     {
+                    //         if (i == f)
+                    //         {
+                    //             cout << f << " is here [f]" << endl;
+                    //             for (int j = 0; j < k; j++)
+                    //             {
+                    //                 cout << (zg[gv[j]]) << " ";
+                    //             }
+                    //             cout << endl;
+                    //         }
+                    //         for (int j = 0; j < k; j++)
+                    //         {
+                    //             // auto rb = reverseBits(X[j][A[k - 1][i]]);
+                    //             cout << X[j][A[k - 1][i]] << " ";
+                    //         }
+                    //         cout << endl;
+                    //         if (i == g - 1)
+                    //         {
+                    //             for (int j = 0; j < k; j++)
+                    //             {
+                    //                 cout << (zg[gv[j]]) << " ";
+                    //             }
+                    //             cout << endl;
+                    //             cout << g << " is here [g-1]" << endl;
+                    //         }
+                    //     }
+                    // }
+
+                    // report matches from e to k for [f, g)
                     for (i = f; i < g; i++)
                     {
-                        n = A[ks][i];
+                        n = A[ks - 1][i];
+                        klen = k - e;
+                        // check if all equals
+                        if (debug)
+                        {
+                            int j = 0, count = 0;
+                            while (k >= ++j && X[gv[k - j]][n] == zg[gv[k - j]])
+                                count++;
+                            cout << k << "," << klen << "," << count << endl;
+                        }
                         if (haplens.count(n) == 0)
                         {
-                            haplens[n] = k - e;
-                            hapends[n] = k;
+                            haplens[n] = klen;
+                            hapends[n] = k - 1;
+                            hapnindicies[n] = 1;
                         }
-                        else if (k - e >= haplens[n])
+                        else if (klen > haplens[n])
                         {
-                            haplens[n] = k - e;
-                            hapends[n] = k;
+                            haplens[n] = klen;
+                            hapends[n] = k - 1;
                         }
                         if (hapnindicies.count(n))
                             hapnindicies[n] = iind >= hapnindicies[n] ? (iind + 1) : hapnindicies[n];
                     }
                     // finding new e1, f1, g1
-                    e1 = D[ks][f1] - 1; // y[f1] and y[f1-1] diverge here, so upper bound for e
-                    e1 = e1 < valid_grid_start ? valid_grid_start : e1;
-                    // if (e1 == k && f1 == N - 1)
-                    //     e1--;
+                    f1 = f1 == N ? N - 1 : f1; // take care f1=N
+                    e1 = D[ks][f1] - 1;        // y[f1] and y[f1-1] diverge here, so upper bound for e
+
                     // cerr << X[gv[e1]][A[ks][f1]] << "," << X[gv[e1]][A[ks][f1 - 1]] << endl;
                     // cerr << std::bitset<sizeof(T) * 8>(reverseBits(X[gv[e1]][A[ks][f1 - 1]])) << ","
                     //      << std::bitset<sizeof(T) * 8>(reverseBits(X[gv[e1]][A[ks][f1]])) << endl;
 
                     matches_lower = false;
                     matches_upper = false;
-                    while ((!matches_lower) && (!matches_upper))
+                    while ((e1 < k) && (!matches_lower) && (!matches_upper))
                     {
                         if (f1 > 0)
                             matches_upper = (zg[gv[e1]] == X[gv[e1]][A[ks][f1 - 1]]);
@@ -773,34 +808,34 @@ public:
                         if (f1 < N)
                             matches_lower = (zg[gv[e1]] == X[gv[e1]][A[ks][f1]]);
                         else
-                            cerr << "shouldn't happen\n";
+                            matches_lower = false;
 
-                        if ((!matches_lower) && (!matches_upper) && view_matches && verbose)
-                        {
-                            cerr << k << "," << e1 << "," << f1 << "," << g1 << endl;
-                            cerr << X[gv[e1]][A[ks][f1]] << "," << X[gv[e1]][A[ks][f1 - 1]] << endl;
-                            // cerr << std::bitset<sizeof(T) * 8>(reverseBits(zg[gv[e1]])) << ","
-                            //      << std::bitset<sizeof(T) * 8>(reverseBits(X[gv[e1]][A[ks][f1]])) << endl;
-                            cerr << zg[gv[e1]] << "," << X[gv[e1]][A[ks][f1 - 1]] << endl;
-                            for (i = 0; i < N; i++)
-                            {
-                                for (int j = 0; j < k + 2; j++)
-                                {
-                                    auto rb = reverseBits(X[j][A[k][i]]);
-                                    cout << std::bitset<sizeof(T) * 8>(rb) << " ";
-                                }
-                                cout << endl;
-                                if (i == f1)
-                                {
-                                    cout << f1 << " is here [f1]" << endl;
-                                    for (int j = 0; j < k + 2; j++)
-                                    {
-                                        cout << std::bitset<sizeof(T) * 8>(reverseBits(zg[gv[j]])) << " ";
-                                    }
-                                    cout << endl;
-                                }
-                            }
-                        }
+                        // int cc{0};
+                        // bool view_matches{0};
+                        // if ((!matches_lower) && (!matches_upper) && view_matches && +cc < 3)
+                        // {
+                        //     cerr << k << "," << e1 << "," << f1 << "," << g1 << endl;
+                        //     cerr << zg[gv[e1]] << "\t" << X[gv[e1]][A[ks][f1]] << "\t"
+                        //          << X[gv[e1]][A[ks][f1 - 1]] << endl;
+                        //     for (i = 0; i < N; i++)
+                        //     {
+                        //         for (int j = 0; j < k + 2; j++)
+                        //         {
+                        //             auto rb = reverseBits(X[j][A[k][i]]);
+                        //             cout << std::bitset<sizeof(T) * 8>(rb) << " ";
+                        //         }
+                        //         cout << endl;
+                        //         if (i == f1)
+                        //         {
+                        //             cout << f1 << " is here [f1]" << endl;
+                        //             for (int j = 0; j < k + 2; j++)
+                        //             {
+                        //                 cout << std::bitset<sizeof(T) * 8>(reverseBits(zg[gv[j]])) << " ";
+                        //             }
+                        //             cout << endl;
+                        //         }
+                        //     }
+                        // }
 
                         // if matches neither y[f1] or y[f1-1], eg. symbol missing or just happens, then e1++
                         if ((!matches_lower) && (!matches_upper))
@@ -839,18 +874,28 @@ public:
             e = e1;
         }
 
-        // final report matches from e to k for [f, g]
+        // final report matches from e to k for [f, g)
+        assert(ks == gv.size() - 1 + step);
+        klen = k - e;
         for (i = f; i < g; i++)
         {
             n = A[ks][i];
+            if (debug)
+            {
+                int j = 0, count = 0;
+                while (k >= ++j && X[gv[k - j]][n] == zg[gv[k - j]])
+                    count++;
+                cout << k << "," << klen << "," << count << endl;
+            }
             if (haplens.count(n) == 0)
             {
-                haplens[n] = k - e;
+                haplens[n] = klen;
                 hapends[n] = k;
+                hapnindicies[n] = 1;
             }
-            else if (k - e >= haplens[n])
+            else if (klen > haplens[n])
             {
-                haplens[n] = k - e;
+                haplens[n] = klen;
                 hapends[n] = k;
             }
             if (hapnindicies.count(n))
@@ -858,7 +903,7 @@ public:
         }
     }
 
-    void report_setmaximal(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, const GridVec& zg)
+    void report_setmaximal(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, GridVec& zg)
     {
         int iind, step{0};
         for (iind = 0; iind < nindices; iind++)
@@ -869,10 +914,11 @@ public:
         }
     }
 
-    void report_neighourings(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, GridVec& zg,
+    void report_neighourings(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, const GridVec& zg,
                              int L = 32)
     {
         int k, s, klen, j, n, l, Gi, ki, iind, ni{-1};
+        IntMapU skip;
         for (iind = 0; iind < nindices; iind++)
         {
             auto Gv = seq_by(iind, G - 1, nindices);
@@ -884,12 +930,9 @@ public:
                 k = Gv[ki];
                 ni++;
                 auto kzs = std::upper_bound(S[ni].begin(), S[ni].end(), zg[k]);
-                kzs = kzs == S[ni].begin() ?  S[ni].begin() : std::prev(kzs);
+                kzs = kzs == S[ni].begin() ? S[ni].begin() : std::prev(kzs);
                 s = std::distance(S[ni].begin(), kzs);
                 zak_curr = C[ni][s];
-
-                // if (zg[k] != S[ni][s])
-                //     zg[k] = S[ni][s];
 
                 if (zg[k] == S[ni][s])
                 {
@@ -899,11 +942,12 @@ public:
                 }
                 else
                 {
+                    skip[ki] = ki;
                     if (verbose)
                         cerr << "skip: " << ki << endl;
                     // if zg[k] symbol not exists, skip this grid and start over.
-                   first_valid_grid_start = true;
-                   continue;
+                    first_valid_grid_start = true;
+                    continue;
                 }
 
                 if (ki > valid_grid_start)
@@ -911,25 +955,21 @@ public:
                     if (zak_prev >= zak_curr)
                     {
                         auto kzi = std::upper_bound(W[ni][s].begin(), W[ni][s].end(), zak_prev);
-                        kzi = kzi == W[ni][s].begin() ?  W[ni][s].begin() : std::prev(kzi);
+                        kzi = kzi == W[ni][s].begin() ? W[ni][s].begin() : std::prev(kzi);
                         zak_curr += std::distance(W[ni][s].begin(), kzi);
                     }
 
-                    // if ( zg[k] != S[ni][s] ) {
-                    //     // re-confirm new position with longest matches if symbol missing
-                    //     // should work with missing symbol at certain grid backwards?
-                    //     skip[ki] = ki;
-                    //     int i = 2;
-                    //     while (ki >= i && X[Gv[ki - i + 1]][A[ni][zak_curr]] == zg[Gv[ki - i + 1]] &&
-                    //            X[Gv[ki - i]][A[ni][zak_curr]] < zg[Gv[ki - i]])
-                    //     {
-                    //         zak_curr++;
-                    //         if (X[Gv[ki - i]][A[ni][zak_curr]] == zg[Gv[ki - i]])
-                    //             i++;
-                    //         if (zak_curr == N)
-                    //             break;
-                    //     }
+                    // // // re-confirm new position with longest matches
+                    // i = 1;
+                    // while (ki >= i && X[Gv[ki - i + 1]][A[ni][zak_curr]] == zg[Gv[ki - i + 1]]
+                    // &&
+                    //        X[Gv[ki - i]][A[ni][zak_curr]] < zg[Gv[ki - i]])
+                    // {
+                    //     zak_curr++;
+                    //     if (X[Gv[ki - i]][A[ni][zak_curr]] == zg[Gv[ki - i]])
+                    //         i++;
                     // }
+
 
                     for (l = 0; l < L; l++)
                     {
@@ -937,6 +977,8 @@ public:
                         klen = 0;
                         for (j = ki; j >= 0; j--)
                         {
+                            if (skip.count(j) && B < 64)
+                                continue;
                             if (X[Gv[j]][n] == zg[Gv[j]])
                             {
                                 klen++;
@@ -969,6 +1011,8 @@ public:
                         klen = 0;
                         for (j = ki; j >= 0; j--)
                         {
+                            if (skip.count(j) && B < 64)
+                                continue;
                             if (X[Gv[j]][n] == zg[Gv[j]])
                             {
                                 klen++;
