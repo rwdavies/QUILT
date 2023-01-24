@@ -879,7 +879,6 @@ public:
             Gi = Gv.size();
             int zak_prev, zak_curr, valid_grid_start = 0;
             bool first_valid_grid_start = true;
-            IntMapU skip;
             for (ki = 0; ki < Gi; ki++)
             {
                 k = Gv[ki];
@@ -900,7 +899,6 @@ public:
                 }
                 else
                 {
-                    skip[ki] = ki;
                     if (verbose)
                         cerr << "skip: " << ki << endl;
                     // if zg[k] symbol not exists, skip this grid and start over.
@@ -939,8 +937,6 @@ public:
                         klen = 0;
                         for (j = ki; j >= 0; j--)
                         {
-                            if (skip.count(j))
-                                continue;
                             if (X[Gv[j]][n] == zg[Gv[j]])
                             {
                                 klen++;
@@ -973,8 +969,6 @@ public:
                         klen = 0;
                         for (j = ki; j >= 0; j--)
                         {
-                            if (skip.count(j))
-                                continue;
                             if (X[Gv[j]][n] == zg[Gv[j]])
                             {
                                 klen++;
