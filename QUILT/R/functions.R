@@ -22,10 +22,10 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
   res <- res[res$lens >= max(mspbwtM, 0), ]
   ## order by lens then nindicies then ends
   res <- res[order(-res$lens, -res$n, res$ends),]
-  res <- res[!duplicated(res[,c('haps')]),]
-  ## unique_haps <- unique(c(interhaps, res$haps))
+  ## res <- res[!duplicated(res[,c('haps')]),]
   unique_haps <- unique(res$haps)
-  print(paste("select", length(unique(res$haps)), " unique haps by mpbwt query before post-selection"))
+  unique_haps <- unique(c(interhaps, res$haps))
+  print(paste("select", length(unique(res$haps)), " unique haps by mpbwt report_setmaximal"))
 
   ## return(unique_haps[1:Knew])
   if (length(unique_haps) == 0) {
