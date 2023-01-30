@@ -717,10 +717,10 @@ public:
                 ghost[k] = k;
                 cerr << "ghost symbol at k: " << k << endl;
                 // // what to do if having ghost symbols
-                // if (kzs == S[ks].end() || s == 0)
-                //     zg[gv[k]] = S[ks][s]; // already lower bound!
-                // else
-                //     zg[gv[k]] = S[ks][s - 1]; // corce to be lower bound!
+                if (kzs == S[ks].end() || s == 0)
+                    zg[gv[k]] = S[ks][s]; // already lower bound!
+                else
+                    zg[gv[k]] = S[ks][s - 1]; // corce to be lower bound!
             }
 
             if (k == valid_grid_start)

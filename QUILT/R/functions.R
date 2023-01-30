@@ -13,7 +13,7 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
     hap <- round(hapProbs_t[x, ])
     res <- as.data.frame(mspbwt_report(msp, hap, mspbwtL, mspbwtB))
     res <- res[res$lens >= max(mspbwtM, 0), ]
-    res$keys <- (res$ends - res$lens) * 1e4 + res$ends
+    res$keys <- (res$ends - res$lens + 1) * 1e4 + res$ends
     res
   })
   ## print(head(res))
@@ -24,8 +24,7 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
   ## order by lens then nindicies then ends
   ## res$lens <- res$lens * res$n
   res <- res[order(-res$lens, -res$n, res$keys),]
-  # unique_haps <- unique(res$haps)
-  ## res <- res[!duplicated(res[,c('haps')]),]
+  res <- res[!duplicated(res[,c('haps')]),]
   unique_haps <- unique(res$haps)
   ## return(unique_haps[1:Knew])
   if (length(unique_haps) == 0) {
