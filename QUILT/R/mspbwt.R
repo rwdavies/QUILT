@@ -157,6 +157,7 @@ select_new_haps_mspbwt_v2 <- function(
     ## order everything
     mtm <- mtm[order(-mtm[, "length"], mtm[, "key"]), , drop = FALSE]
     unique_haps <- unique(mtm[, "indexB0"])
+    print(paste("select", length(unique_haps), " unique haps by mpbwt before post-selection"))
     if (length(unique_haps) == 0) {
         ## special fluke case
         ## likely driven by very small regions we are trying to impute, with few / no matches above the min length above
@@ -174,6 +175,7 @@ select_new_haps_mspbwt_v2 <- function(
             unique_haps,
             sample(Kfull, length(unique_haps) + Knew, replace = FALSE)
         ))[1:Knew]
+        print(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
         return(new_haps)
     } else {
         ## so this doesn't do anything about region specificity
@@ -182,11 +184,15 @@ select_new_haps_mspbwt_v2 <- function(
         ## if it exhausts that, it will take other unique long hones
         unique_keys <- unique(mtm[, "key"])
         unique_haps_at_unique_keys <- unique(mtm[match(unique_keys, mtm[, "key"]), "indexB0"])
+        print(paste("select", length(unique(unique_haps_at_unique_keys)), " unique haps after post-selection 2"))
         if (length(unique_haps_at_unique_keys) > Knew) {
             return(unique_haps_at_unique_keys[1:Knew])
         } else {
+            new_haps <- c(setdiff(unique_haps, unique_haps_at_unique_keys), unique_haps_at_unique_keys)[1:Knew]
+            print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
+      return(new_haps)
             ## otherwise, take unique ones, then next best ones, from length down
-            return(c(unique_haps_at_unique_keys, setdiff(unique_haps, unique_haps_at_unique_keys))[1:Knew])
+            ## return(c(unique_haps_at_unique_keys, setdiff(unique_haps, unique_haps_at_unique_keys))[1:Knew])
         }
     }
 }
