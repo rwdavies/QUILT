@@ -12,8 +12,8 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
   res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     res <- as.data.frame(mspbwt_report(msp, hap, mspbwtL, mspbwtB))
+    res$lens <- res$lens * res$n
     res <- res[res$lens >= max(mspbwtM, 0), ]
-    res$keys <- (res$ends - res$lens + 1) * 1e4 + res$ends
     res
   })
   ## print(head(res))
@@ -22,9 +22,7 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
   ## saveRDS(res, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
   print(paste("select", length(unique(res$haps)), " unique haps by mpbwt query before post-selection"))
   ## order by lens then nindicies then ends
-  ## res$lens <- res$lens * res$n
-  res <- res[order(-res$lens, -res$n, res$keys),]
-  res <- res[!duplicated(res[,c('haps')]),]
+  res <- res[order(-res$lens, -res$n),]
   unique_haps <- unique(res$haps)
   if (length(unique_haps) == 0) {
     new_haps <- sample(1:Kfull, Knew)
@@ -39,16 +37,6 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
     return(new_haps)
   } else {
     return(unique_haps[1:Knew])
-    unique_keys <- unique(res$keys)
-    unique_haps_at_unique_keys <- unique(res[match(unique_keys, res[, "keys"]), "haps"])
-    print(paste("select", length(unique(unique_haps_at_unique_keys)), " unique haps after post-selection 2"))
-    if (length(unique_haps_at_unique_keys) >= Knew) {
-      return(unique_haps_at_unique_keys[1:Knew])
-    } else {
-      new_haps <- c(setdiff(unique_haps, unique_haps_at_unique_keys), unique_haps_at_unique_keys)[1:Knew]
-      print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
-      return(new_haps)
-    }
   }
 }
 
