@@ -703,9 +703,9 @@ public:
     void find_setmaximal(int iind, IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, GridVec& zg,
                          const IntVec1D& gv, int step, int viewk = -1)
     {
-        int klen, ks, k, s, n, i, e, f, g, e1, f1, g1, valid_grid_start{0};
-        bool matches_lower, matches_upper;
-        IntMapU ghost;
+        int klen, ks, k, s, n, i, j, count, e, f, g, e1, f1, g1, valid_grid_start{0};
+        bool matches_lower, matches_upper, re_count{0};
+        IntVec1D ghost;
         // bool first_valid_grid_start = true;
         for (k = 0; k < gv.size(); k++)
         {
@@ -714,8 +714,9 @@ public:
             s = std::fmin(std::distance(S[ks].begin(), kzs), S[ks].size() - 1);
             if (S[ks][s] != zg[gv[k]])
             {
-                ghost[k] = k;
-                cerr << "ghost symbol at k: " << k << endl;
+                ghost.push_back(k);
+                if (verbose)
+                    cerr << "ghost symbol at k: " << k << endl;
                 // // what to do if having ghost symbols
                 // if (kzs == S[ks].end() || s == 0)
                 //     zg[gv[k]] = S[ks][s]; // already lower bound!
@@ -778,11 +779,29 @@ public:
                     for (i = f; i < g; i++)
                     {
                         n = A[ks - 1][i];
-                        klen = k - e;
+                        klen = k - e; // k-1-e+1
+                        // okay if ghost symbols in [e, k)
+                        re_count = false;
+                        for (auto it = ghost.rbegin(); it != ghost.rend(); ++it)
+                        {
+                            if (*it < e)
+                                break;
+                            if (*it >= e && *it < k)
+                            {
+                                re_count = true;
+                                break;
+                            }
+                        }
+                        if (re_count)
+                        {
+                            j = 0, klen = 0;
+                            while (k >= ++j && X[gv[k - j]][n] == zg[gv[k - j]])
+                                klen++;
+                        }
                         // check if all equals
                         if (debug)
                         {
-                            int j = 0, count = 0;
+                            j = 0, count = 0;
                             while (k >= ++j && X[gv[k - j]][n] == zg[gv[k - j]])
                                 count++;
                             cerr << k << "," << i << "," << klen << "," << count << "," << n << endl;
@@ -810,27 +829,27 @@ public:
                     // cerr << std::bitset<sizeof(T) * 8>(reverseBits(X[gv[e1]][A[ks][f1 - 1]])) << ","
                     //      << std::bitset<sizeof(T) * 8>(reverseBits(X[gv[e1]][A[ks][f1]])) << endl;
 
-                    // matches_lower = false;
-                    // matches_upper = false;
-                    // // if there is a ghost symbol in zg, e1++ will continue forever so add e1 < k
-                    // while ((e1 < k) && (!matches_lower) && (!matches_upper))
-                    // {
-                    //     if (f1 > 0)
-                    //         matches_upper = (zg[gv[e1]] == X[gv[e1]][A[ks][f1 - 1]]);
-                    //     else
-                    //         matches_upper = false;
-                    //     if (f1 < N)
-                    //         matches_lower = (zg[gv[e1]] == X[gv[e1]][A[ks][f1]]);
-                    //     else
-                    //         matches_lower = false;
-                    //     // if matches neither y[f1] or y[f1-1], eg. symbol missing or just happens, e1++
-                    //     if ((!matches_lower) && (!matches_upper))
-                    //         ++e1;
-                    // }
+                    matches_lower = false;
+                    matches_upper = false;
+                    // if there is a ghost symbol in zg, e1++ will continue forever so add e1 < k
+                    while ((e1 < k) && (!matches_lower) && (!matches_upper))
+                    {
+                        if (f1 > 0)
+                            matches_upper = (zg[gv[e1]] == X[gv[e1]][A[ks][f1 - 1]]);
+                        else
+                            matches_upper = false;
+                        if (f1 < N)
+                            matches_lower = (zg[gv[e1]] == X[gv[e1]][A[ks][f1]]);
+                        else
+                            matches_lower = false;
+                        // if matches neither y[f1] or y[f1-1], eg. symbol missing or just happens, e1++
+                        if ((!matches_lower) && (!matches_upper))
+                            ++e1;
+                    }
 
                     // if ghost symbols exists and loop --e1 stops as it is
                     // this will shorten the potential longest matches
-                    if (zg[gv[e1]] <= X[gv[e1]][A[ks][f1 - 1]] && f1 > 0)
+                    if (matches_upper)
                     {
                         --f1;
                         // make sure e1 > 0
@@ -840,7 +859,7 @@ public:
                         while (f1 > 0 && D[ks][f1] <= e1)
                             --f1;
                     }
-                    else
+                    if (matches_lower)
                     {
                         ++g1;
                         // make sure e1 > 0
@@ -900,13 +919,31 @@ public:
 
         // final report matches from e to k for [f, g)
         assert(ks == gv.size() - 1 + step);
-        klen = k - e;
         for (i = f; i < g; i++)
         {
             n = A[ks][i];
+            klen = k - e;
+            // okay if ghost symbols in [e, k]
+            re_count = false;
+            for (auto it = ghost.rbegin(); it != ghost.rend(); ++it)
+            {
+                if (*it < e)
+                    break;
+                if (*it >= e && *it < k)
+                {
+                    re_count = true;
+                    break;
+                }
+            }
+            if (re_count)
+            {
+                j = 0, klen = 0;
+                while (k >= ++j && X[gv[k - j]][n] == zg[gv[k - j]])
+                    klen++;
+            }
             if (debug)
             {
-                int j = 0, count = 0;
+                j = 0, count = 0;
                 while (k >= ++j && X[gv[k - j]][n] == zg[gv[k - j]])
                     count++;
                 cerr << k << "," << i << "," << klen << "," << count << "," << n << endl;
