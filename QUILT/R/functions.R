@@ -26,7 +26,6 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
   res <- res[order(-res$lens, -res$n, res$keys),]
   res <- res[!duplicated(res[,c('haps')]),]
   unique_haps <- unique(res$haps)
-  ## return(unique_haps[1:Knew])
   if (length(unique_haps) == 0) {
     new_haps <- sample(1:Kfull, Knew)
     return(new_haps)
@@ -39,6 +38,7 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
     print(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
     return(new_haps)
   } else {
+    return(unique_haps[1:Knew])
     unique_keys <- unique(res$keys)
     unique_haps_at_unique_keys <- unique(res[match(unique_keys, res[, "keys"]), "haps"])
     print(paste("select", length(unique(unique_haps_at_unique_keys)), " unique haps after post-selection 2"))

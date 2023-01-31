@@ -717,10 +717,10 @@ public:
                 ghost[k] = k;
                 cerr << "ghost symbol at k: " << k << endl;
                 // // what to do if having ghost symbols
-                if (kzs == S[ks].end() || s == 0)
-                    zg[gv[k]] = S[ks][s]; // already lower bound!
-                else
-                    zg[gv[k]] = S[ks][s - 1]; // corce to be lower bound!
+                // if (kzs == S[ks].end() || s == 0)
+                //     zg[gv[k]] = S[ks][s]; // already lower bound!
+                // else
+                //     zg[gv[k]] = S[ks][s - 1]; // corce to be lower bound!
             }
 
             if (k == valid_grid_start)
@@ -810,27 +810,27 @@ public:
                     // cerr << std::bitset<sizeof(T) * 8>(reverseBits(X[gv[e1]][A[ks][f1 - 1]])) << ","
                     //      << std::bitset<sizeof(T) * 8>(reverseBits(X[gv[e1]][A[ks][f1]])) << endl;
 
-                    matches_lower = false;
-                    matches_upper = false;
-                    // if there is a ghost symbol in zg, e1++ will continue forever so add e1 < k
-                    while ((e1 < k) && (!matches_lower) && (!matches_upper))
-                    {
-                        if (f1 > 0)
-                            matches_upper = (zg[gv[e1]] == X[gv[e1]][A[ks][f1 - 1]]);
-                        else
-                            matches_upper = false;
-                        if (f1 < N)
-                            matches_lower = (zg[gv[e1]] == X[gv[e1]][A[ks][f1]]);
-                        else
-                            matches_lower = false;
-                        // if matches neither y[f1] or y[f1-1], eg. symbol missing or just happens, e1++
-                        if ((!matches_lower) && (!matches_upper))
-                            ++e1;
-                    }
+                    // matches_lower = false;
+                    // matches_upper = false;
+                    // // if there is a ghost symbol in zg, e1++ will continue forever so add e1 < k
+                    // while ((e1 < k) && (!matches_lower) && (!matches_upper))
+                    // {
+                    //     if (f1 > 0)
+                    //         matches_upper = (zg[gv[e1]] == X[gv[e1]][A[ks][f1 - 1]]);
+                    //     else
+                    //         matches_upper = false;
+                    //     if (f1 < N)
+                    //         matches_lower = (zg[gv[e1]] == X[gv[e1]][A[ks][f1]]);
+                    //     else
+                    //         matches_lower = false;
+                    //     // if matches neither y[f1] or y[f1-1], eg. symbol missing or just happens, e1++
+                    //     if ((!matches_lower) && (!matches_upper))
+                    //         ++e1;
+                    // }
 
                     // if ghost symbols exists and loop --e1 stops as it is
                     // this will shorten the potential longest matches
-                    if (matches_upper)
+                    if (zg[gv[e1]] <= X[gv[e1]][A[ks][f1 - 1]] && f1 > 0)
                     {
                         --f1;
                         // make sure e1 > 0
@@ -840,7 +840,7 @@ public:
                         while (f1 > 0 && D[ks][f1] <= e1)
                             --f1;
                     }
-                    if (matches_lower)
+                    else
                     {
                         ++g1;
                         // make sure e1 > 0
@@ -927,7 +927,8 @@ public:
         }
     }
 
-    void report_setmaximal(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, GridVec& zg, int viewk = -1)
+    void report_setmaximal(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, GridVec& zg,
+                           int viewk = -1)
     {
         int iind, step{0};
         for (iind = 0; iind < nindices; iind++)
@@ -957,20 +958,20 @@ public:
                 s = std::distance(S[ni].begin(), kzs);
                 zak_curr = C[ni][s];
 
-                if (zg[k] == S[ni][s])
-                {
-                    if (first_valid_grid_start)
-                        valid_grid_start = ki;
-                    first_valid_grid_start = false;
-                }
-                else
-                {
-                    if (verbose)
-                        cerr << "skip: " << ki << endl;
-                    // if zg[k] symbol not exists, skip this grid and start over.
-                    first_valid_grid_start = true;
-                    continue;
-                }
+                // if (zg[k] == S[ni][s])
+                // {
+                //     if (first_valid_grid_start)
+                //         valid_grid_start = ki;
+                //     first_valid_grid_start = false;
+                // }
+                // else
+                // {
+                //     if (verbose)
+                //         cerr << "skip: " << ki << endl;
+                //     // if zg[k] symbol not exists, skip this grid and start over.
+                //     first_valid_grid_start = true;
+                //     continue;
+                // }
 
                 if (ki > valid_grid_start)
                 {
@@ -981,15 +982,19 @@ public:
                         zak_curr += std::distance(W[ni][s].begin(), kzi);
                     }
 
-                    // // // re-confirm new position with longest matches
-                    // i = 1;
-                    // while (ki >= i && X[Gv[ki - i + 1]][A[ni][zak_curr]] == zg[Gv[ki - i + 1]]
-                    // &&
-                    //        X[Gv[ki - i]][A[ni][zak_curr]] < zg[Gv[ki - i]])
-                    // {
-                    //     zak_curr++;
-                    //     if (X[Gv[ki - i]][A[ni][zak_curr]] == zg[Gv[ki - i]])
-                    //         i++;
+                    // if ( zg[k] != S[ni][s] ) {
+                    //     // re-confirm new position with longest matches if symbol mis-match
+                    //     // should work with mis-match symbol at certain grid backwards?
+                    //     int i = 2;
+                    //     while (ki >= i && X[Gv[ki - i + 1]][A[ni][zak_curr]] == zg[Gv[ki - i + 1]] &&
+                    //            X[Gv[ki - i]][A[ni][zak_curr]] < zg[Gv[ki - i]])
+                    //     {
+                    //         zak_curr++;
+                    //         if (X[Gv[ki - i]][A[ni][zak_curr]] == zg[Gv[ki - i]])
+                    //             i++;
+                    //         if (zak_curr == N)
+                    //             break;
+                    //     }
                     // }
 
 
