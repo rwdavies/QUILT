@@ -12,19 +12,20 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
   res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     res <- as.data.frame(mspbwt_report(msp, hap, mspbwtL, mspbwtB))
-    res$ihap <- x
+    res <- res[res$lens >= max(mspbwtM, 0), ]
+    res$keys <- (res$ends - res$lens + 1) * 1e4 + res$ends
     res
   })
   ## print(head(res))
   res <- do.call(rbind.data.frame, res)
-  interhaps <- intersect(res[res$ihap == 1, "haps"], res[res$ihap == 2, "haps"])
+  ## interhaps <- intersect(res[res$ihap == 1, "haps"], res[res$ihap == 2, "haps"])
   ## saveRDS(res, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
-  res <- res[res$lens >= max(mspbwtM, 0), ]
   print(paste("select", length(unique(res$haps)), " unique haps by mpbwt query before post-selection"))
   ## order by lens then nindicies then ends
-  res <- res[order(-res$lens, res$ends, -res$n),]
+  ## res$lens <- res$lens * res$n
+  res <- res[order(-res$lens, -res$n, res$keys),]
   res <- res[!duplicated(res[,c('haps')]),]
-  unique_haps <- unique(c(interhaps, res$haps))
+  unique_haps <- unique(res$haps)
   ## return(unique_haps[1:Knew])
   if (length(unique_haps) == 0) {
     new_haps <- sample(1:Kfull, Knew)
@@ -38,10 +39,8 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
     print(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
     return(new_haps)
   } else {
-    res$keys <- paste0(res$lens, "_", res$ends)
     unique_keys <- unique(res$keys)
     unique_haps_at_unique_keys <- unique(res[match(unique_keys, res[, "keys"]), "haps"])
-    unique_haps_at_unique_keys <- c(unique_haps_at_unique_keys[unique_haps_at_unique_keys %in% interhaps], unique_haps_at_unique_keys[!unique_haps_at_unique_keys %in% interhaps])
     print(paste("select", length(unique(unique_haps_at_unique_keys)), " unique haps after post-selection 2"))
     if (length(unique_haps_at_unique_keys) >= Knew) {
       return(unique_haps_at_unique_keys[1:Knew])
@@ -52,7 +51,6 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
     }
   }
 }
-
 
 get_and_impute_one_sample <- function(
     rhb_t,
