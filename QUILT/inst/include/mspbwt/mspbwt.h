@@ -700,7 +700,7 @@ public:
         report_setmaximal(haplens, hapends, hapnindicies, Z[1], viewk);
     }
 
-    void find_setmaximal(int iind, IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, GridVec& zg,
+    void real_setmaximal(int iind, IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, GridVec& zg,
                          const IntVec1D& gv, int step, int viewk = -1)
     {
         int klen, ks, k, s, n, i, j, count, e, f, g, e1, f1, g1, valid_grid_start{0};
@@ -923,7 +923,7 @@ public:
         {
             n = A[ks][i];
             klen = k - e;
-            // okay if ghost symbols in [e, k]
+            // okay if ghost symbols in [e, k)
             re_count = false;
             for (auto it = ghost.rbegin(); it != ghost.rend(); ++it)
             {
@@ -951,13 +951,166 @@ public:
             if (haplens.count(n) == 0)
             {
                 haplens[n] = klen;
-                hapends[n] = k;
+                hapends[n] = k - 1;
                 hapnindicies[n] = 1;
             }
             else if (klen > haplens[n])
             {
                 haplens[n] = klen;
-                hapends[n] = k;
+                hapends[n] = k - 1;
+            }
+            if (hapnindicies.count(n))
+                hapnindicies[n] = iind >= hapnindicies[n] ? (iind + 1) : hapnindicies[n];
+        }
+    }
+
+    void impute_setmaximal(int iind, IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, GridVec& zg,
+                         const IntVec1D& gv, int step)
+    {
+        int klen, ks, k, s, n, i, j, e, f, g, e1, f1, g1, valid_grid_start{0};
+        bool re_count;
+        IntVec1D ghost;
+        for (k = 0; k < gv.size(); k++)
+        {
+            ks = k + step;
+            auto kzs = std::lower_bound(S[ks].begin(), S[ks].end(), zg[gv[k]]);
+            s = std::fmin(std::distance(S[ks].begin(), kzs), S[ks].size() - 1);
+            if (S[ks][s] != zg[gv[k]])
+            {
+                ghost.push_back(k);
+                if (verbose)
+                    cerr << "ghost symbol at k: " << k << endl;
+            }
+
+            if (k == valid_grid_start)
+            {
+                f1 = C[ks][s];
+                g1 = C[ks][s] + W[ks][s].size(); // could be N
+                e1 = valid_grid_start;
+            }
+            else if (k > valid_grid_start)
+            {
+                // assume symbol exists
+                // g1 >= f1 >= C[ks][s] if g >= f
+                auto fzk = std::lower_bound(W[ks][s].begin(), W[ks][s].end(), f);
+                auto gzk = std::lower_bound(W[ks][s].begin(), W[ks][s].end(), g);
+                f1 = C[ks][s] + std::fmin(std::distance(W[ks][s].begin(), fzk), W[ks][s].size());
+                g1 = C[ks][s] + std::fmin(std::distance(W[ks][s].begin(), gzk), W[ks][s].size());
+                if (f1 == g1)
+                {
+                    // report matches from e to k for [f, g)
+                    for (i = f; i < g; i++)
+                    {
+                        n = A[ks - 1][i];
+                        klen = k - e; // k-1-e+1
+                        // okay if ghost symbols in [e, k)
+                        re_count = false;
+                        for (auto it = ghost.rbegin(); it != ghost.rend(); ++it)
+                        {
+                            if (*it < e)
+                                break;
+                            if (*it >= e && *it < k)
+                            {
+                                re_count = true;
+                                break;
+                            }
+                        }
+                        if (re_count)
+                        {
+                            j = 0, klen = 0;
+                            while (k >= ++j && X[gv[k - j]][n] == zg[gv[k - j]])
+                                klen++;
+                        }
+                        if (haplens.count(n) == 0)
+                        {
+                            haplens[n] = klen;
+                            hapends[n] = k - 1;
+                            hapnindicies[n] = 1;
+                        }
+                        else if (klen > haplens[n])
+                        {
+                            haplens[n] = klen;
+                            hapends[n] = k - 1;
+                        }
+                        if (hapnindicies.count(n))
+                            hapnindicies[n] = iind >= hapnindicies[n] ? (iind + 1) : hapnindicies[n];
+                    }
+                    // finding new e1, f1, g1
+                    e1 = D[ks][f1] - 1;     // y[f1] and y[f1-1] diverge here, so upper bound for e
+                    if (f1 == N && e1 == k) // recall sentinels d0[N] = k + 1;
+                        e1 = k - 1;
+
+                    // if ghost symbols exists and loop --e1 stops as it is
+                    // this will shorten the potential longest matches
+                    // follow standard process as Durbin
+                    if (zg[gv[e1]] <= X[gv[e1]][A[ks][f1 - 1]] && f1 > 0)
+                    {
+                        --f1;
+                        // make sure e1 > 0
+                        while (e1 > valid_grid_start && zg[gv[e1 - 1]] == X[gv[e1 - 1]][A[ks][f1]])
+                            --e1;
+                        // we can't skip missing symbols otherwise here is not true
+                        while (f1 > 0 && D[ks][f1] <= e1)
+                            --f1;
+                    }
+                    else
+                    {
+                        ++g1;
+                        // make sure e1 > 0
+                        while (e1 > valid_grid_start && zg[gv[e1 - 1]] == X[gv[e1 - 1]][A[ks][f1]])
+                            --e1;
+                        while (g1 < N && D[ks][g1] <= e1)
+                            ++g1;
+                    }
+
+                }
+                else
+                {
+                    assert(f1 < g1);
+                    // nothing to do
+                    e1 = e;
+                }
+            }
+            // update for ext run
+            f = f1;
+            g = g1;
+            e = e1;
+        }
+
+        // final report matches from e to k for [f, g)
+        assert(ks == gv.size() - 1 + step);
+        for (i = f; i < g; i++)
+        {
+            n = A[ks][i];
+            klen = k - e;
+            // okay if ghost symbols in [e, k)
+            re_count = false;
+            for (auto it = ghost.rbegin(); it != ghost.rend(); ++it)
+            {
+                if (*it < e)
+                    break;
+                if (*it >= e && *it < k)
+                {
+                    re_count = true;
+                    break;
+                }
+            }
+            if (re_count)
+            {
+                j = 0, klen = 0;
+                while (k >= ++j && X[gv[k - j]][n] == zg[gv[k - j]])
+                    klen++;
+            }
+            if (haplens.count(n) == 0)
+            {
+                haplens[n] = klen;
+                hapends[n] = k - 1;
+                hapnindicies[n] = 1;
+            }
+            else if (klen > haplens[n])
+            {
+                haplens[n] = klen;
+                hapends[n] = k - 1;
             }
             if (hapnindicies.count(n))
                 hapnindicies[n] = iind >= hapnindicies[n] ? (iind + 1) : hapnindicies[n];
@@ -971,7 +1124,7 @@ public:
         for (iind = 0; iind < nindices; iind++)
         {
             auto gv = seq_by(iind, G - 1, nindices);
-            find_setmaximal(iind, haplens, hapends, hapnindicies, zg, gv, step, viewk);
+            impute_setmaximal(iind, haplens, hapends, hapnindicies, zg, gv, step);
             step += gv.size();
         }
     }
