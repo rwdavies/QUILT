@@ -450,7 +450,7 @@ make_rhb_t_equality <- function(
     ## now, if we're inferring this, choose appropriate re-value downwards
     ##
     if (infer_nMaxDH) {
-        running_count <- cumsum(rowSums(temp_counter) / (nrow(rhb_t) * nGrids))
+        running_count <- cumsum(as.numeric(rowSums(temp_counter)) / (as.numeric(nrow(rhb_t)) * as.numeric(nGrids)))
         ## really need to tune this better
         ## basically, larger K, important to set large
         if (K > 50000) {
