@@ -241,21 +241,33 @@ QUILT_prepare_reference <- function(
     ##
     ## extract haplotypes from reference
     ##
-    out <- get_haplotypes_from_reference(
-        reference_haplotype_file = reference_haplotype_file,
-        reference_legend_file = reference_legend_file,
-        reference_sample_file = reference_sample_file,
-        reference_populations = reference_populations,
-        pos = pos_to_use,
-        tempdir = tempdir,
-        regionName = regionName,
-        regionStart = regionStart,
-        regionEnd = regionEnd,
-        buffer = buffer,
-        chr = chr,
-        niterations = 2,
-        extraction_method = "hap_v3" ## to do - make both, then only the one I want
-    )
+    if(reference_vcf_file != "") {
+      out <- get_haplotypes_from_vcf(chr = chr,
+                                     pos =  pos_to_use,
+                                     regionStart = regionStart,
+                                     regionEnd = regionEnd,
+                                     buffer = buffer,
+                                     niterations = 2,
+                                     reference_vcf_file = reference_vcf_file,
+                                     reference_sample_file =  reference_sample_file,
+                                     reference_exclude_samplelist_file =  reference_exclude_samplelist_file)
+    } else {
+        out <- get_haplotypes_from_reference(
+            reference_haplotype_file = reference_haplotype_file,
+            reference_legend_file = reference_legend_file,
+            reference_sample_file = reference_sample_file,
+            reference_populations = reference_populations,
+            pos = pos_to_use,
+            tempdir = tempdir,
+            regionName = regionName,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer,
+            chr = chr,
+            niterations = 2,
+            extraction_method = "hap_v3" ## to do - make both, then only the one I want
+        )
+    }
 
     ##outORI <- out ## in case
     ref_alleleCount <- out[["ref_alleleCount3"]] ## defined at all SNPs
