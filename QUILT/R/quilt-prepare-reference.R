@@ -270,7 +270,7 @@ QUILT_prepare_reference <- function(
     }
 
     ##outORI <- out ## in case
-    ref_alleleCount <- out[["ref_alleleCount3"]] ## defined at all SNPs
+    ref_alleleCount <- out[["ref_alleleCount"]] ## defined at all SNPs
     gc(reset =TRUE); gc(reset =TRUE); gc(reset =TRUE)
 
 
@@ -360,9 +360,9 @@ QUILT_prepare_reference <- function(
     ## stuff to do with the panel and possibly removing people
     ##
     ##     out <- outORI
-    rhb <- out[["rhb3"]]
+    rhb <- out[["rhb"]]
     rh_in_L <- out[["rh_in_L"]]
-    ref_alleleCount <- out[["ref_alleleCount3"]] ## defined at all SNPs
+    ref_alleleCount <- out[["ref_alleleCount"]] ## defined at all SNPs
     ##ref_samples <- reference_samples
     rhb_t <- t(rhb)
 
