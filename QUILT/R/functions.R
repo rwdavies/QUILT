@@ -103,6 +103,7 @@ get_and_impute_one_sample <- function(
     heuristic_match_thin,
     record_interim_dosages,
     have_truth_haplotypes,
+    have_truth_genotypes, 
     bqFilter,
     record_read_label_usage,
     sampleNames,
@@ -155,6 +156,7 @@ get_and_impute_one_sample <- function(
     small_ref_panel_skip_equally_likely_reads,
     small_ref_panel_equally_likely_reads_update_iterations
 ) {
+
 
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
@@ -251,6 +253,15 @@ get_and_impute_one_sample <- function(
     } else {
         truth_haps <- NULL
     }
+
+    if (have_truth_genotypes) {
+        s <- sampleNames[iSample]
+        if (!(s %in% colnames(gen))) {
+            stop("Something went wrong with gen naming")
+        }
+        truth_gen <- gen[, s, drop = FALSE]
+    }
+    
 
     if (hla_run) {
         ## print_message("SPECIAL HLA CODE SIMON")
@@ -352,7 +363,9 @@ get_and_impute_one_sample <- function(
                 make_plots = make_plots,
                 outplotprefix = outplotprefix,
                 have_truth_haplotypes = have_truth_haplotypes,
+                have_truth_genotypes = have_truth_genotypes,
                 truth_haps = truth_haps,
+                truth_gen = truth_gen,
                 truth_labels = truth_labels,
                 uncertain_truth_labels = uncertain_truth_labels,
                 L_grid = L_grid,
@@ -497,6 +510,8 @@ get_and_impute_one_sample <- function(
                 outplotprefix = outplotprefix,
                 have_truth_haplotypes = have_truth_haplotypes,
                 truth_haps = truth_haps,
+                have_truth_genotypes = have_truth_genotypes,
+                truth_gen = truth_gen,
                 truth_labels = truth_labels,
                 uncertain_truth_labels = uncertain_truth_labels,
                 verbose = FALSE,
@@ -697,7 +712,9 @@ get_and_impute_one_sample <- function(
                     make_plots = FALSE, ## these plots are pretty useless? as plots?
                     outplotprefix = outplotprefix,
                     have_truth_haplotypes = have_truth_haplotypes,
+                    have_truth_genotypes = have_truth_genotypes,
                     truth_haps = truth_haps,
+                    truth_gen = truth_gen,
                     truth_labels = truth_labels,
                     uncertain_truth_labels = uncertain_truth_labels,
                     L_grid = L_grid,
@@ -1349,7 +1366,9 @@ impute_using_everything <- function(
     make_plots,
     outplotprefix,
     have_truth_haplotypes,
+    have_truth_genotypes,
     truth_haps,
+    truth_gen,
     truth_labels,
     uncertain_truth_labels,
     L_grid,
@@ -1507,8 +1526,10 @@ impute_using_everything <- function(
             outname = paste0(outplotprefix, plot_description, ".png"),
             method = "gibbs-nipt",
             haps = truth_haps,
+            truth_gen = truth_gen,
             truth_labels = truth_labels,
             have_truth_haplotypes = have_truth_haplotypes,
+            have_truth_genotypes = have_truth_genotypes,
             uncertain_truth_labels = uncertain_truth_labels,
             sample_name = sample_name,
             smooth_cm = smooth_cm,
@@ -1730,6 +1751,8 @@ impute_one_sample <- function(
     cM_grid,
     have_truth_haplotypes,
     truth_haps,
+    have_truth_genotypes,
+    truth_gen,
     truth_labels,
     sample_name,
     regionStart,
@@ -1928,6 +1951,8 @@ impute_one_sample <- function(
             haps = truth_haps,
             truth_labels = truth_labels,
             have_truth_haplotypes = have_truth_haplotypes,
+            have_truth_genotypes = have_truth_genotypes,
+            truth_gen = truth_gen,
             uncertain_truth_labels = uncertain_truth_labels,
             sample_name = sample_name,
             smooth_cm = smooth_cm,
@@ -1948,15 +1973,8 @@ impute_one_sample <- function(
                 nGrids = nGrids,
                 block_gibbs_iterations = small_ref_panel_block_gibbs_iterations,
                 outname = outname,
-                break_thresh = break_thresh,
-                considers = considers,
-                grid_distances = grid_distances,
                 L_grid = L_grid,
-                gibbs_block_output_list = gibbs_block_output_list,
-                smoothed_rate = smoothed_rate,
                 L = L,
-                block_results = block_results,
-                shard_block_results = shard_block_results,
                 uncertain_truth_labels = uncertain_truth_labels,
                 truth_labels = truth_labels,
                 have_truth_haplotypes = have_truth_haplotypes,

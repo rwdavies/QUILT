@@ -536,6 +536,11 @@ QUILT <- function(
     } else {
         have_truth_haplotypes <- FALSE
     }
+    if (length(highCovInLow) > 0) {
+        have_truth_genotypes <- TRUE
+    } else {
+        have_truth_genotypes <- FALSE
+    }
 
 
     ##
@@ -735,6 +740,7 @@ QUILT <- function(
                 heuristic_match_thin = heuristic_match_thin,
                 record_interim_dosages = record_interim_dosages,
                 have_truth_haplotypes = have_truth_haplotypes,
+                have_truth_genotypes = have_truth_genotypes,
                 bqFilter = bqFilter,
                 record_read_label_usage = record_read_label_usage,
                 sampleNames = sampleNames,

@@ -353,6 +353,8 @@ QUILT_prepare_reference <- function(
     ref_alleleCount <- out[["ref_alleleCount3"]] ## defined at all SNPs
     ##ref_samples <- reference_samples
     rhb_t <- t(rhb)
+    rm(rhb)
+    gc(reset = TRUE); gc(reset = TRUE); gc(reset = TRUE); 
 
     ##
     ## try to grab NA12878 for convenience

@@ -124,7 +124,8 @@ Rcpp::List Rcpp_define_blocked_snps_using_gamma_on_the_fly(
     int s,
     const double block_gibbs_quantile_prob = 0.9,
     const bool verbose = false,
-    const bool use_smooth_cm_in_block_gibbs = false
+    const bool use_smooth_cm_in_block_gibbs = false,
+    double ff = 0
 ) {
     //
     //
@@ -150,9 +151,11 @@ Rcpp::List Rcpp_define_blocked_snps_using_gamma_on_the_fly(
         d = transMatRate_tc_H(0, iGrid, s);
         rate2(iGrid) += 1 - d * sum(alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid + 1) % eMatGrid_t2.col(iGrid + 1));
     }
-    for(iGrid = 0; iGrid < (nGrids - 2); iGrid++) {
-        d = transMatRate_tc_H(0, iGrid, s);
-        rate2(iGrid) += 1 - d * sum(alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid + 1) % eMatGrid_t3.col(iGrid + 1));
+    if (ff > 0) {
+        for(iGrid = 0; iGrid < (nGrids - 2); iGrid++) {
+            d = transMatRate_tc_H(0, iGrid, s);
+            rate2(iGrid) += 1 - d * sum(alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid + 1) % eMatGrid_t3.col(iGrid + 1));
+        }
     }
     //
     if (verbose) {
@@ -215,7 +218,6 @@ Rcpp::List Rcpp_define_blocked_snps_using_gamma_on_the_fly(
     }
     // I hope
     arma::uvec best2 = arma::sort_index( as<arma::vec>(smoothed_rate) , "descend");
-    //
     double nAvailable = sum(available);
     Rcpp::IntegerVector best(nAvailable);
     for(int i = 0; i < nAvailable; i++) {
@@ -232,7 +234,8 @@ Rcpp::List Rcpp_define_blocked_snps_using_gamma_on_the_fly(
         if (available(best(iBest))) {
             int snp_best = best(iBest); // 0-based
             a = std::max(snp_best - 1, 0);
-            b = std::min(snp_best + 1, nGrids - 1 - 1); // nGrids - 1 is size, another - 1 for 0-based indexing
+            b = std::min(snp_best + 1, nGrids - 1); // nGrids - 1 is size, another - 1 for 0-based indexing
+            //std::cout << "snp_best = " << snp_best << ", a = " << a << ", b = " << b << std::endl;
             d = 0;
             for(j = a; j <= b; j++) {
                 if (available(j)) {
@@ -245,12 +248,13 @@ Rcpp::List Rcpp_define_blocked_snps_using_gamma_on_the_fly(
                 for(j = snp_left; j <= snp_right; j++) {
                     available(j) = false;
                 }
+                //std::cout << "snp_left = " << snp_left << ", snp_right = " << snp_right << std::endl;
             } else {
                 for(j = a; j <= b; j++) {                
                     available(j) = false;
                 }
             }
-            to_keep.push_back(snp_best);
+            to_keep.push_back(snp_best + 1); // store this with a +1, matches R code
         }
     }
     if (verbose) {
@@ -1384,6 +1388,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     int block_approach = 4
 ) {
     //
+            
     //
     next_section="block gibbs - begin";
     prev=print_times(prev, suppressOutput, prev_section, next_section);
@@ -1391,6 +1396,8 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     Rcpp::List to_return;
     Rcpp::List all_packages;
     const Rcpp::LogicalVector read_is_uninformative(1);
+    //
+    //
     //
     const int K = alphaMatCurrent_tc.n_rows;
     // const int nSNPs = grid.length();
@@ -1448,7 +1455,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     Rcpp::NumericMatrix block_results;
     Rcpp::CharacterVector block_results_columns;
     block_results_columns = CharacterVector::create("iBlock", "total", "p1", "p2", "p3", "p4", "p5", "p6", "ir_chosen", "p_O1_given_H1_L", "p_O2_given_H2_L", "p_O3_given_H3_L", "p_O_given_H_L", "p_H_given_L", "p_H_given_O_L_up_to_C");
-    block_results = Rcpp::NumericMatrix(n_blocks * 2, block_results_columns.length());
+    block_results = Rcpp::NumericMatrix(2 * n_blocks, block_results_columns.length());
     block_results.fill(0);
     colnames(block_results) = block_results_columns; // neat
     //

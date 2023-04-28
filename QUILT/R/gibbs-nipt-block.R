@@ -22,27 +22,31 @@ helper_block_gibbs_resampler <- function(
     block_approach = 1,
     block_gibbs_quantile_prob = 0.9,
     class_sum_cutoff = 0.06,
-    use_smooth_cm_in_block_gibbs = FALSE
+    use_smooth_cm_in_block_gibbs = FALSE,
+    eMatRead_t = NULL
 ) {
 
-    eMatRead_t <- array(1, c(dim(eHapsCurrent_tc)[1], length(sampleReads)))
-    rcpp_make_eMatRead_t(
-        eMatRead_t = eMatRead_t,
-        sampleReads = sampleReads,
-        eHapsCurrent_tc = eHapsCurrent_tc,
-        s = s - 1,
-        maxDifferenceBetweenReads = maxDifferenceBetweenReads,
-        Jmax = Jmax,
-        eMatHapOri_t = array(0, c(1, 1)),
-        pRgivenH1 = array(0),
-        pRgivenH2 = array(0),
-        prev = 0,
-        suppressOutput = 1,
-        prev_section = "",
-        next_section = "",
-        run_pseudo_haploid = FALSE,
-        rescale_eMatRead_t = FALSE
-    )
+    if (is.null(eMatRead_t)) {
+        eMatRead_t <- array(1, c(dim(eHapsCurrent_tc)[1], length(sampleReads)))
+        rcpp_make_eMatRead_t(
+            eMatRead_t = eMatRead_t,
+            sampleReads = sampleReads,
+            eHapsCurrent_tc = eHapsCurrent_tc,
+            s = s - 1,
+            maxDifferenceBetweenReads = maxDifferenceBetweenReads,
+            Jmax = Jmax,
+            eMatHapOri_t = array(0, c(1, 1)),
+            pRgivenH1 = array(0),
+            pRgivenH2 = array(0),
+            prev = 0,
+            suppressOutput = 1,
+            prev_section = "",
+            next_section = "",
+            run_pseudo_haploid = FALSE,
+            rescale_eMatRead_t = FALSE
+        )
+    }
+    
     ##
     fpp_stuff <- list(
         transMatRate_tc_H = transMatRate_tc_H,
@@ -942,7 +946,8 @@ R_define_blocked_snps_using_gamma_on_the_fly <- function(
     use_smooth_cm_in_block_gibbs,
     smooth_cm,
     block_gibbs_quantile_prob = 0.9,
-    verbose = FALSE
+    verbose = FALSE,
+    ff = 0
 ) {
     nSNPs <- length(grid)
     nGrids <- length(c1)
@@ -976,12 +981,14 @@ R_define_blocked_snps_using_gamma_on_the_fly <- function(
             alphaHat_t2[, iGrid + 1] *
             betaHat_t2[, iGrid + 1 + 1] *
             eMatGrid_t2[, iGrid + 1 + 1]
-        ))
-        diff2[3, iGrid + 1] <- 1 - sum(transMatRate_tc_H[1, iGrid + 1, s] * (
-            alphaHat_t3[, iGrid + 1] *
-            betaHat_t3[, iGrid + 1 + 1] *
-            eMatGrid_t3[, iGrid + 1 + 1]
-        ))
+            ))
+        if (ff != 0) {
+            diff2[3, iGrid + 1] <- 1 - sum(transMatRate_tc_H[1, iGrid + 1, s] * (
+                alphaHat_t3[, iGrid + 1] *
+                betaHat_t3[, iGrid + 1 + 1] *
+                eMatGrid_t3[, iGrid + 1 + 1]
+            ))
+        }
     }
     rate2 <- colSums(diff2)
     ## how does jUpate work? probably better?
@@ -1028,12 +1035,14 @@ R_define_blocked_snps_using_gamma_on_the_fly <- function(
             ## now, consider where peak ends
             a <- max(snp_best - 1, 1)
             b <- min(snp_best + 1, nGrids)
+            ##print(paste0("snp_best = ", snp_best, ", a = ", a, ", b = ", b))
             if (sum(available[a:b]) == 3) {
                 ## no matter what, one further away
                 ## return 1-based as well
                 snp_left <- R_determine_where_to_stop(smoothed_rate, available, snp_best, break_thresh, nGrids, TRUE)
                 snp_right <- R_determine_where_to_stop(smoothed_rate, available, snp_best, break_thresh, nGrids, FALSE)
                 available[snp_left:snp_right] <- FALSE
+                ## print(paste0("snp_left = ", snp_left, ", snp_right = ", snp_right))
             } else {
                 available[a:b] <- FALSE
             }
@@ -1082,12 +1091,14 @@ R_define_blocked_snps_using_gamma_on_the_fly <- function(
         list(
             blocked_snps = blocked_snps,
             break_thresh = break_thresh,
-            smoothed_rate = smoothed_rate
+            smoothed_rate = smoothed_rate,
+            diff2 = diff2,
+            blocked_grid = blocked_grid
         )
     )
 }
 
-for_testing_get_full_package_probabilities <- function(localH, fpp_stuff) {
+for_testing_get_full_package_probabilities <- function(localH, fpp_stuff, maxEmissionMatrixDifference) {
     ## argh - setup
     transMatRate_tc_H <- fpp_stuff[["transMatRate_tc_H"]]
     alphaMatCurrent_tc <- fpp_stuff[["alphaMatCurrent_tc"]]
@@ -1104,11 +1115,15 @@ for_testing_get_full_package_probabilities <- function(localH, fpp_stuff) {
         ## now, for first region specifically, introduce the options
         ##
         eMatGrid_t <- array(1, c(K, nGrids))
-        rcpp_make_eMatGrid_t(eMatGrid_t = eMatGrid_t, eMatRead_t = eMatRead_t, H = localH, sampleReads = sampleReads, hap = hap, nGrids = nGrids, prev = 0, suppressOutput = 1, prev_section = "text", next_section = "", run_fb_grid_offset = 0, use_all_reads = FALSE, bound = FALSE, maxEmissionMatrixDifference =  1000, rescale = FALSE)
+        rcpp_make_eMatGrid_t(eMatGrid_t = eMatGrid_t, eMatRead_t = eMatRead_t, H = localH, sampleReads = sampleReads, hap = hap, nGrids = nGrids, prev = 0, suppressOutput = 1, prev_section = "text", next_section = "", run_fb_grid_offset = 0, use_all_reads = FALSE, bound = FALSE, maxEmissionMatrixDifference =  maxEmissionMatrixDifference, rescale = FALSE)
         ## initialize
-        out <- initialize_gibbs_forward_backward(H = localH, hap = hap, s = s, sampleReads = sampleReads, priorCurrent_m = priorCurrent_m, alphaMatCurrent_tc = alphaMatCurrent_tc, transMatRate_tc_H = transMatRate_tc_H, eMatRead_t = eMatRead_t, eMatGrid_t = eMatGrid_t)
+        out <- initialize_gibbs_forward_backward(H = localH, hap = hap, s = s, sampleReads = sampleReads, priorCurrent_m = priorCurrent_m, alphaMatCurrent_tc = alphaMatCurrent_tc, transMatRate_tc_H = transMatRate_tc_H, eMatRead_t = eMatRead_t, eMatGrid_t = eMatGrid_t, maxEmissionMatrixDifference = maxEmissionMatrixDifference)
+        gamma_t <- out[["alphaHat_t"]] * out[["betaHat_t"]]
+        for(iGrid in 1:nGrids) {
+            gamma_t[, iGrid] <- gamma_t[, iGrid] / out$c[iGrid]
+        }
         ## 
-        return(append(out, list(eMatGrid_t = eMatGrid_t)))
+        return(append(out, list(eMatGrid_t = eMatGrid_t, gamma_t = gamma_t)))
     })
     log_p <- -sum(log(package[[1]][["c"]]) + log(package[[2]][["c"]]) + log(package[[3]][["c"]]))
     package <- append(package, list(log_p = log_p))
@@ -1170,6 +1185,7 @@ R_consider_block_relabelling <- function(
     eMatGrid_t3
 ) {
     ## 
+
     betaHatLocal[, 1] <- betaHat_t1[, iGrid]
     betaHatLocal[, 2] <- betaHat_t2[, iGrid]
     betaHatLocal[, 3] <- betaHat_t3[, iGrid]
@@ -1195,6 +1211,7 @@ R_consider_block_relabelling <- function(
             choice_log_probs_P[ir] <- choice_log_probs_P[ir] + choice_log_probs_Pm[ir, i]
         }
     }
+    
     ## do check
     if (do_checks & (block_approach == 1)) {
         log_package_probs <- sapply(all_packages, function(x) x[["log_p"]])
@@ -1733,15 +1750,8 @@ plot_attempt_to_reblock_snps <- function(
     nGrids,
     block_gibbs_iterations,
     outname,
-    break_thresh,
-    considers,
-    grid_distances,
     L_grid,
-    gibbs_block_output_list,
-    smoothed_rate,
     L,
-    block_results,
-    shard_block_results,
     uncertain_truth_labels,
     truth_labels,
     have_truth_haplotypes,
@@ -1776,6 +1786,8 @@ plot_attempt_to_reblock_snps <- function(
     xlim <- range(L_grid)
     consider_snp_start_0_based <- considers[["consider_snp_start_0_based"]]
     consider_snp_end_0_based <- considers[["consider_snp_end_0_based"]]
+    consider_grid_start_0_based <- considers[["consider_grid_start_0_based"]]
+    consider_grid_end_0_based <- considers[["consider_grid_end_0_based"]]
     consider_reads_start_0_based <- considers[["consider_reads_start_0_based"]]
     consider_reads_end_0_based <- considers[["consider_reads_end_0_based"]]
     ##
@@ -1786,14 +1798,14 @@ plot_attempt_to_reblock_snps <- function(
     after_shard_gamma1_t <- gibbs_block_output_list[["after_shard_gamma1_t"]]
     after_shard_gamma2_t <- gibbs_block_output_list[["after_shard_gamma2_t"]]
     ## 
-    before_read_labels <- gibbs_block_output_list[["before_read_labels"]]        
+    before_read_labels <- gibbs_block_output_list[["before_read_labels"]] 
     after_read_labels <- gibbs_block_output_list[["after_read_labels"]]
     after_shard_read_labels <- gibbs_block_output_list[["after_shard_read_labels"]]
     ##
     ##
     ## 
     ## width <- min(max(20, (L_grid[length(L_grid)] - L_grid[1]) / 1e6 * 36), 200)
-    png(outname, height = 15, width = 20, res = 100, units = "in")
+    png(outname, height = 15, width = 20, res = 300, units = "in")
     par(mfrow = c(11, 1))
     par(oma = c(0, 0, 5, 0))    
     grid_distances <- diff(L_grid)
@@ -1805,30 +1817,55 @@ plot_attempt_to_reblock_snps <- function(
     xleft2 <- c(L_grid[1], midpoints)
     xright2 <- c(midpoints, L_grid[length(L_grid)])
     ##
+    ## define (for gamma), xleft and xright as follows
+    ## L_grid will be the middle of the two
+    ## x_left and x_right will average to L_grid
+    ## with a first x_right and the next x_left adding up
+    ## 
+    x <- L_grid
+    a <- (x[-1] + x[-length(x)]) / 2
+    xleft <- c(x[1] - (x[2] - x[1]) / 2, a)
+    xright <- c(a, x[length(x)] + (x[length(x)] - x[length(x) - 1]) / 2)
+    ##
     ## 1) find peaks to check
     ##
     for(i_block_type in 1:2) {
-        ylim <- c(0, max(break_thresh, max(smoothed_rate, na.rm = TRUE)))
-        ylim <- c(0, max(break_thresh, quantile(smoothed_rate, probs = c(0.99))))
+        if (!is.null(smoothed_rate)) {
+            ylim <- c(0, max(break_thresh, max(smoothed_rate, na.rm = TRUE)))
+            ylim <- c(0, max(break_thresh, quantile(smoothed_rate, probs = c(0.99))))
+            y <- smoothed_rate
+            y[y > ylim[2]] <- ylim[2]
+        } else {
+            ylim <- c(0, 1)
+            y <- rep(0.5, length(x))
+        }
         par(mar = c(0, 0, 3, 0))
         main <- c("Location of shuffles to check (block)", "Location of shuffles to check (shard)")[i_block_type]
         plot(x = 0, y = 0, xlab = "Physical position", ylab = "Rate", main = main, ylim = ylim, xlim = xlim)
         add_grey_background(L_grid)
-        y <- smoothed_rate
-        y[y > ylim[2]] <- ylim[2]
-        lines(x = x, y = y, lwd = 2)
-        if (i_block_type == 1) {
-            n <- length(consider_snp_start_0_based) - 1
-        } else {
-            n <- length(consider_snp_start_0_based) - 1
+        lines(x = xright[-length(xright)], y = y, lwd = 2)
+        n <- length(consider_grid_start_0_based) - 1
+        ## for(i in 1:length(L_grid)) {
+        ##     abline(v = L_grid[i], col = "grey", lwd = 0.5)
+        ##     if (((i - 1) %% 10) == 0) {
+        ##         abline(v = L_grid[i], col = "purple", lwd = 0.5)
+        ##     }
+        ## }
+        ## add in the start and end poitns
+        for(i in 1:length(consider_grid_start_0_based)) {
+                abline(v = xleft[consider_grid_start_0_based[i] + 1], col = "green", lwd = 2)
+                abline(v = xright[consider_grid_end_0_based[i] + 1], col = "red", lwd = 2)
         }
         for(iBlock in 0:n) {
-            ## 
-            l <- L[consider_snp_start_0_based[iBlock + 1] + 1]
-            r <- L[consider_snp_end_0_based[iBlock + 1] + 1]
+            ##
+            ## plot start and end of block, in the middle
+            ##
+            l <- xleft[consider_grid_start_0_based[iBlock + 1] + 1]
+            r <- xright[consider_grid_end_0_based[iBlock + 1] + 1]
             abline(v = l, col = "red")
             abline(v = r, col = "red")
             text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.1, labels = iBlock)
+            ##
             if (i_block_type == 1) {
                 text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.25, labels = round(block_results[iBlock + 1, "p1"], 2))
                 text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.4, labels = round(block_results[iBlock + 1, "p3"], 2))
@@ -1895,15 +1932,16 @@ plot_attempt_to_reblock_snps <- function(
         ## 
         ##
         uu <- sapply(sampleReads, function(x) range(x[[4]])) + 1
+        nReads <- length(sampleReads)
         if (have_truth_haplotypes) {
             col <- c("black", "blue", "red")[truth + 1]
         } else {
-            col <- rep("black", length(truth))
+            col <- rep("black", nReads)
         }
-        if (only_plot_confident_reads) {
+        if (only_plot_confident_reads & have_truth_haplotypes) {
             w <- truth != 0
         } else {
-            w <- rep(TRUE, length(truth))
+            w <- rep(TRUE, nReads)
         }
         segments(x0 = L[uu[1, w]], x1 = L[uu[2, w]], y0 = y[w], y1 = y[w], col = col[w], lwd = lwd)
         ## 
@@ -1929,8 +1967,12 @@ plot_attempt_to_reblock_snps <- function(
             ##
             plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, main = main)
             x <- L_grid ## c(L_grid[1], L_grid) ## , L_grid[length(L_grid):1])
-            xleft <- c(x[1] - (x[2] - x[1]) / 2, x[-length(x)])
-            xright <- c(x[-1], x[length(x)] + (x[length(x)] - x[(length(x) - 1)]) / 2)
+            ##xleft <- c(x[1] - (x[2] - x[1]) / 2, x[-length(x)])
+            ##xright <- c(x[-1], x[length(x)] + (x[length(x)] - x[(length(x) - 1)]) / 2)
+            a <- (x[-1] + x[-length(x)]) / 2
+            xleft <- c(x[1] - (x[2] - x[1]) / 2, a)
+            xright <- c(a, x[length(x)] + (x[length(x)] - x[length(x) - 1]) / 2)
+            ## 
             m <- array(0, c(nGrids, K + 1))
             ## is this slow...
             for(i in 1:K) {
@@ -2355,7 +2397,7 @@ R_make_gibbs_considers <- function(
         }
         if (record) {
             consider_snp_start_0_based[iBlock] <- start
-            consider_snp_end_0_based[iBlock] <- iSNP - 1                        
+            consider_snp_end_0_based[iBlock] <- iSNP - 1
             start <- iSNP - 1 + 1
             iBlock <- iBlock + 1
         }

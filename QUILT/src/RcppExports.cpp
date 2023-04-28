@@ -178,8 +178,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // Rcpp_define_blocked_snps_using_gamma_on_the_fly
-Rcpp::List Rcpp_define_blocked_snps_using_gamma_on_the_fly(arma::mat& alphaHat_t1, arma::mat& alphaHat_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t1, arma::mat& betaHat_t2, arma::mat& betaHat_t3, arma::rowvec& c1, arma::rowvec& c2, arma::rowvec& c3, arma::mat& eMatGrid_t1, arma::mat& eMatGrid_t2, arma::mat& eMatGrid_t3, Rcpp::NumericVector& smooth_cm, const arma::cube& transMatRate_tc_H, const int shuffle_bin_radius, const Rcpp::IntegerVector& L_grid, const Rcpp::IntegerVector& grid, int s, const double block_gibbs_quantile_prob, const bool verbose, const bool use_smooth_cm_in_block_gibbs);
-RcppExport SEXP _QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly(SEXP alphaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t1SEXP, SEXP betaHat_t2SEXP, SEXP betaHat_t3SEXP, SEXP c1SEXP, SEXP c2SEXP, SEXP c3SEXP, SEXP eMatGrid_t1SEXP, SEXP eMatGrid_t2SEXP, SEXP eMatGrid_t3SEXP, SEXP smooth_cmSEXP, SEXP transMatRate_tc_HSEXP, SEXP shuffle_bin_radiusSEXP, SEXP L_gridSEXP, SEXP gridSEXP, SEXP sSEXP, SEXP block_gibbs_quantile_probSEXP, SEXP verboseSEXP, SEXP use_smooth_cm_in_block_gibbsSEXP) {
+Rcpp::List Rcpp_define_blocked_snps_using_gamma_on_the_fly(arma::mat& alphaHat_t1, arma::mat& alphaHat_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t1, arma::mat& betaHat_t2, arma::mat& betaHat_t3, arma::rowvec& c1, arma::rowvec& c2, arma::rowvec& c3, arma::mat& eMatGrid_t1, arma::mat& eMatGrid_t2, arma::mat& eMatGrid_t3, Rcpp::NumericVector& smooth_cm, const arma::cube& transMatRate_tc_H, const int shuffle_bin_radius, const Rcpp::IntegerVector& L_grid, const Rcpp::IntegerVector& grid, int s, const double block_gibbs_quantile_prob, const bool verbose, const bool use_smooth_cm_in_block_gibbs, double ff);
+RcppExport SEXP _QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly(SEXP alphaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t1SEXP, SEXP betaHat_t2SEXP, SEXP betaHat_t3SEXP, SEXP c1SEXP, SEXP c2SEXP, SEXP c3SEXP, SEXP eMatGrid_t1SEXP, SEXP eMatGrid_t2SEXP, SEXP eMatGrid_t3SEXP, SEXP smooth_cmSEXP, SEXP transMatRate_tc_HSEXP, SEXP shuffle_bin_radiusSEXP, SEXP L_gridSEXP, SEXP gridSEXP, SEXP sSEXP, SEXP block_gibbs_quantile_probSEXP, SEXP verboseSEXP, SEXP use_smooth_cm_in_block_gibbsSEXP, SEXP ffSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -204,7 +204,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type block_gibbs_quantile_prob(block_gibbs_quantile_probSEXP);
     Rcpp::traits::input_parameter< const bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< const bool >::type use_smooth_cm_in_block_gibbs(use_smooth_cm_in_block_gibbsSEXP);
-    rcpp_result_gen = Rcpp::wrap(Rcpp_define_blocked_snps_using_gamma_on_the_fly(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob, verbose, use_smooth_cm_in_block_gibbs));
+    Rcpp::traits::input_parameter< double >::type ff(ffSEXP);
+    rcpp_result_gen = Rcpp::wrap(Rcpp_define_blocked_snps_using_gamma_on_the_fly(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob, verbose, use_smooth_cm_in_block_gibbs, ff));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1377,7 +1378,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_determine_where_to_stop", (DL_FUNC) &_QUILT_rcpp_determine_where_to_stop, 6},
     {"_QUILT_increment2N", (DL_FUNC) &_QUILT_increment2N, 4},
     {"_QUILT_rcpp_simple_quantile", (DL_FUNC) &_QUILT_rcpp_simple_quantile, 2},
-    {"_QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly", (DL_FUNC) &_QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly, 21},
+    {"_QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly", (DL_FUNC) &_QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly, 22},
     {"_QUILT_Rcpp_consider_block_relabelling", (DL_FUNC) &_QUILT_Rcpp_consider_block_relabelling, 48},
     {"_QUILT_Rcpp_consider_total_relabelling", (DL_FUNC) &_QUILT_Rcpp_consider_total_relabelling, 26},
     {"_QUILT_Rcpp_gibbs_block_forward_one", (DL_FUNC) &_QUILT_Rcpp_gibbs_block_forward_one, 24},

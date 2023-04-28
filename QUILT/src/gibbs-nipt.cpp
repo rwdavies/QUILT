@@ -173,7 +173,8 @@ Rcpp::List Rcpp_define_blocked_snps_using_gamma_on_the_fly(
     int s,
     const double block_gibbs_quantile_prob = 0.9,
     const bool verbose = false,
-    const bool use_smooth_cm_in_block_gibbs = false
+    const bool use_smooth_cm_in_block_gibbs = false,
+    double ff = 0
 );
                             
 
@@ -2641,7 +2642,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         next_section="Block gibbs - define sites";
                         prev=print_times(prev, suppressOutput, prev_section, next_section);
                         prev_section=next_section;
-                        Rcpp::List out = Rcpp_define_blocked_snps_using_gamma_on_the_fly(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob, verbose, use_smooth_cm_in_block_gibbs); // fix me verbose
+                        Rcpp::List out = Rcpp_define_blocked_snps_using_gamma_on_the_fly(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob, verbose, use_smooth_cm_in_block_gibbs, ff); // fix me verbose
                         Rcpp::IntegerVector blocked_snps = as<Rcpp::IntegerVector>(out["blocked_snps"]);
                         int n_blocks = blocked_snps(nSNPsLocal - 1) + 1;
                         //

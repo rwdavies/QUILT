@@ -52,8 +52,8 @@ rcpp_simple_quantile <- function(x, q) {
 }
 
 #' @export
-Rcpp_define_blocked_snps_using_gamma_on_the_fly <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob = 0.9, verbose = FALSE, use_smooth_cm_in_block_gibbs = FALSE) {
-    .Call('_QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob, verbose, use_smooth_cm_in_block_gibbs)
+Rcpp_define_blocked_snps_using_gamma_on_the_fly <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob = 0.9, verbose = FALSE, use_smooth_cm_in_block_gibbs = FALSE, ff = 0) {
+    .Call('_QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob, verbose, use_smooth_cm_in_block_gibbs, ff)
 }
 
 #' @export
