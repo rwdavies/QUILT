@@ -1660,33 +1660,45 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
     bool do_checks = false,
     Rcpp::List initial_package = R_NilValue,
     bool verbose = false,
-    Rcpp::List fpp_stuff = R_NilValue
+    Rcpp::List fpp_stuff = R_NilValue,
+    bool ff0_shard_check_every_pair = false
 ) {
 
     const int K = alphaMatCurrent_tc.n_rows;
     const int nGrids = alphaMatCurrent_tc.n_cols + 1;
     const int nReads = H.length();
     Rcpp::List to_return;
-    if (verbose) {
-        std::cout << "make considers" << std::endl;
+    Rcpp::IntegerVector consider_reads_start_0_based;
+    Rcpp::IntegerVector consider_reads_end_0_based;
+    Rcpp::IntegerVector consider_grid_start_0_based;
+    Rcpp::IntegerVector consider_grid_end_0_based;
+    Rcpp::IntegerVector consider_snp_start_0_based;
+    Rcpp::IntegerVector consider_snp_end_0_based;
+    Rcpp::IntegerVector consider_grid_where_0_based;
+    int n_blocks;
+    if (!ff0_shard_check_every_pair) {
+        if (verbose) {
+            std::cout << "make considers" << std::endl;
+        }
+        //
+        Rcpp::List out = Rcpp_make_gibbs_considers(
+            blocked_snps,
+            grid,
+            wif0,
+            nGrids
+        );
+        // unset
+        consider_reads_start_0_based = as<Rcpp::IntegerVector>(out["consider_reads_start_0_based"]);
+        consider_reads_end_0_based = as<Rcpp::IntegerVector>(out["consider_reads_end_0_based"]);
+        consider_grid_start_0_based = as<Rcpp::IntegerVector>(out["consider_grid_start_0_based"]);
+        consider_grid_end_0_based = as<Rcpp::IntegerVector>(out["consider_grid_end_0_based"]);
+        consider_snp_start_0_based = as<Rcpp::IntegerVector>(out["consider_snp_start_0_based"]);
+        consider_snp_end_0_based = as<Rcpp::IntegerVector>(out["consider_snp_end_0_based"]);
+        consider_grid_where_0_based = as<Rcpp::IntegerVector>(out["consider_grid_where_0_based"]);
+        n_blocks = as<int>(out["n_blocks"]);
+    } else {
+        n_blocks = nGrids;
     }
-    //
-    Rcpp::List out = Rcpp_make_gibbs_considers(
-        blocked_snps,
-        grid,
-        wif0,
-        nGrids
-    );
-    // unset
-    Rcpp::IntegerVector consider_reads_start_0_based = as<Rcpp::IntegerVector>(out["consider_reads_start_0_based"]);
-    Rcpp::IntegerVector consider_reads_end_0_based = as<Rcpp::IntegerVector>(out["consider_reads_end_0_based"]);
-    Rcpp::IntegerVector consider_grid_start_0_based = as<Rcpp::IntegerVector>(out["consider_grid_start_0_based"]);
-    Rcpp::IntegerVector consider_grid_end_0_based = as<Rcpp::IntegerVector>(out["consider_grid_end_0_based"]);
-    Rcpp::IntegerVector consider_snp_start_0_based = as<Rcpp::IntegerVector>(out["consider_snp_start_0_based"]);
-    Rcpp::IntegerVector consider_snp_end_0_based = as<Rcpp::IntegerVector>(out["consider_snp_end_0_based"]);
-    Rcpp::IntegerVector consider_grid_where_0_based = as<Rcpp::IntegerVector>(out["consider_grid_where_0_based"]);
-    const int n_blocks = as<int>(out["n_blocks"]);
-
     //
     // make output container
     //
@@ -1711,7 +1723,8 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
     
     bool in_flip_mode = false;
     int iRead = 0;
-    int iGrid, iGridConsider, split_grid, k;
+    int iGrid, iGridConsider, k;
+    int split_grid = -1;
     arma::colvec emat_temp_col;
     bool done_reads = false;
     double calculated_difference, probs1, probs2, probs_sum, x1, x2;
@@ -1723,7 +1736,7 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
     for(int iGrid = 0; iGrid < nGrids; iGrid++) {
         if (verbose) {
             std::cout << "iGrid = " << iGrid << ", nGrids = " << nGrids << std::endl;
-            std::cout << "normal forwardd one" << std::endl;
+            std::cout << "normal forward one" << std::endl;
         }
         //
         original_c1_this_grid = c1(iGrid);
@@ -1780,13 +1793,31 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
         //
         // now do this bit
         //
-        iGridConsider = consider_grid_where_0_based(iGrid);
+        if (verbose) {
+            std::cout << "decide if to go in" << std::endl;
+        }
+        bool check = false;
+        if (!ff0_shard_check_every_pair) {
+            // the standard one
+            iGridConsider = consider_grid_where_0_based(iGrid);
+            if ((-1 < iGridConsider) & (iGridConsider < (n_blocks - 1))) {
+                check = true;
+            }
+        } else {
+            //do all but the last one
+            if (iGrid < (nGrids - 1)) {
+                check = true;
+            }
+            iGridConsider = iGrid;
+        }
         // do not do last one
-        if ((-1 < iGridConsider) & (iGridConsider < (n_blocks - 1))) {
-            split_grid = consider_grid_end_0_based(iGridConsider);
+        if (check) {
+            if (!ff0_shard_check_every_pair) {            
+                split_grid = consider_grid_end_0_based(iGridConsider);
+            } 
             if (verbose) {
                 std::cout << "Considering split_grid = " << split_grid << std::endl;
-                std::cout << "iGridConsider = " << iGridConsider << std::endl;
+                std::cout << "iGridConsider = " << iGridConsider << std::endl;                
             }
             //
             // on the fly version

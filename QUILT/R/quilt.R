@@ -77,6 +77,7 @@
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
 #' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
 #' @param use_hapMatcherR Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use
+#' @param ff0_shard_check_every_pair When using shard gibbs sampler, whether to check every pair of SNPs, or not
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -156,7 +157,8 @@ QUILT <- function(
     use_mspbwt = FALSE,
     use_splitreadgl = FALSE,
     override_use_eMatDH_special_symbols = NA,
-    use_hapMatcherR = TRUE
+    use_hapMatcherR = TRUE,
+    ff0_shard_check_every_pair = FALSE
 ) {
 
     x <- as.list(environment())
@@ -791,7 +793,8 @@ QUILT <- function(
                 use_sample_is_diploid = use_sample_is_diploid,
                 plot_p1 = plot_p1,
                 small_ref_panel_skip_equally_likely_reads = small_ref_panel_skip_equally_likely_reads,
-                small_ref_panel_equally_likely_reads_update_iterations = small_ref_panel_equally_likely_reads_update_iterations
+                small_ref_panel_equally_likely_reads_update_iterations = small_ref_panel_equally_likely_reads_update_iterations,
+                ff0_shard_check_every_pair = ff0_shard_check_every_pair
             )
 
             if (out[["sample_was_imputed"]]) {

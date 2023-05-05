@@ -80,7 +80,8 @@ QUILT(
   use_mspbwt = FALSE,
   use_splitreadgl = FALSE,
   override_use_eMatDH_special_symbols = NA,
-  use_hapMatcherR = TRUE
+  use_hapMatcherR = TRUE,
+  ff0_shard_check_every_pair = FALSE
 )
 }
 \arguments{
@@ -235,6 +236,8 @@ QUILT(
 \item{override_use_eMatDH_special_symbols}{Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.}
 
 \item{use_hapMatcherR}{Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use}
+
+\item{ff0_shard_check_every_pair}{When using shard gibbs sampler, whether to check every pair of SNPs, or not}
 }
 \value{
 Results in properly formatted version

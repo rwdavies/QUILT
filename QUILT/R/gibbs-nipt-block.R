@@ -1098,7 +1098,7 @@ R_define_blocked_snps_using_gamma_on_the_fly <- function(
     )
 }
 
-for_testing_get_full_package_probabilities <- function(localH, fpp_stuff, maxEmissionMatrixDifference) {
+for_testing_get_full_package_probabilities <- function(localH, fpp_stuff, maxEmissionMatrixDifference = 1e6) {
     ## argh - setup
     transMatRate_tc_H <- fpp_stuff[["transMatRate_tc_H"]]
     alphaMatCurrent_tc <- fpp_stuff[["alphaMatCurrent_tc"]]
@@ -2598,9 +2598,9 @@ R_ff0_shard_block_gibbs_resampler <- function(
     do_checks = FALSE,
     initial_package = NULL,
     verbose = FALSE,
-    fpp_stuff = NULL
+    fpp_stuff = NULL,
+    ff0_shard_check_every_pair = FALSE
 ) {
-
     ##
     ##
     K <- dim(alphaMatCurrent_tc)[1]
@@ -2611,20 +2611,32 @@ R_ff0_shard_block_gibbs_resampler <- function(
     ##
     ## compare arbitrary splits
     ##
-    considers <- Rcpp_make_gibbs_considers(
-        blocked_snps = blocked_snps,
-        grid = grid,
-        wif0 = wif0,
-        nGrids = nGrids
-    )
-    ## yes, take out from both
-    consider_reads_start_0_based <- considers[["consider_reads_start_0_based"]]
-    consider_reads_end_0_based  <- considers[["consider_reads_end_0_based"]]
-    consider_grid_start_0_based <- considers[["consider_grid_start_0_based"]]
-    consider_grid_end_0_based <- considers[["consider_grid_end_0_based"]]
-    consider_snp_start_0_based <- considers[["consider_snp_start_0_based"]]
-    consider_snp_end_0_based <- considers[["consider_snp_end_0_based"]]
-    consider_grid_where_0_based <- considers[["consider_grid_where_0_based"]]
+    if (!ff0_shard_check_every_pair) {
+        considers <- Rcpp_make_gibbs_considers(
+            blocked_snps = blocked_snps,
+            grid = grid,
+            wif0 = wif0,
+            nGrids = nGrids
+        )
+        ## yes, take out from both
+        consider_reads_start_0_based <- considers[["consider_reads_start_0_based"]]
+        consider_reads_end_0_based  <- considers[["consider_reads_end_0_based"]]
+        consider_grid_start_0_based <- considers[["consider_grid_start_0_based"]]
+        consider_grid_end_0_based <- considers[["consider_grid_end_0_based"]]
+        consider_snp_start_0_based <- considers[["consider_snp_start_0_based"]]
+        consider_snp_end_0_based <- considers[["consider_snp_end_0_based"]]
+        consider_grid_where_0_based <- considers[["consider_grid_where_0_based"]]
+        n_blocks <- considers[["n_blocks"]]
+    }  else {
+        n_blocks <- nGrids
+        consider_reads_start_0_based <- NULL
+        consider_reads_end_0_based  <- NULL
+        consider_grid_start_0_based <- NULL
+        consider_grid_end_0_based <- NULL
+        consider_snp_start_0_based <- NULL
+        consider_snp_end_0_based <- NULL
+        consider_grid_where_0_based <- NULL
+    }
     iGridConsider <- 0
     ##
     ##
@@ -2632,7 +2644,7 @@ R_ff0_shard_block_gibbs_resampler <- function(
     f_get_alt_prob_from_truth <- function(H, split_grid, wif0, fpp_stuff) {
         H_temp <- H
         H_temp[wif0 <= split_grid] <- 3 - H_temp[wif0 <= split_grid]
-        alt_package <- for_testing_get_full_package_probabilities(H_temp, fpp_stuff)
+        alt_package <- for_testing_get_full_package_probabilities(H_temp, fpp_stuff, )
         return(c(-sum(log(alt_package[[1]][["c"]])), -sum(log(alt_package[[2]][["c"]]))))
     }
     shard_block_columns <- c(
@@ -2642,7 +2654,7 @@ R_ff0_shard_block_gibbs_resampler <- function(
         "flip_mode",
         "p_O_stay", "p_O_flip"
     )
-    shard_block_results <- matrix(0.0, nrow = length(consider_grid_end_0_based) - 1, ncol = length(shard_block_columns))
+    shard_block_results <- matrix(0.0, nrow = n_blocks - 1, ncol = length(shard_block_columns))
     colnames(shard_block_results) <- shard_block_columns
     ## 
     ##
@@ -2722,11 +2734,26 @@ R_ff0_shard_block_gibbs_resampler <- function(
         ##
         ## now do this bit
         ##
-        if (consider_grid_where_0_based[iGrid + 1] > (- 1) && (iGrid < (nGrids - 1))) {
-            iGridConsider <- consider_grid_where_0_based[iGrid + 1] ## still 0-based
-            split_grid <- consider_grid_end_0_based[iGridConsider + 1]
-            if (verbose) {
-                print(paste0("Considering split_grid = ", split_grid))
+        check <- FALSE
+        if (!ff0_shard_check_every_pair) {
+            iGridConsider <- consider_grid_where_0_based[iGrid + 1]
+            if ((-1 < iGridConsider) && (iGridConsider < (n_blocks - 1))) {
+                check <- TRUE
+            }
+        } else {
+            if (iGrid < (nGrids - 1)) {
+                check <- TRUE
+            }
+        }
+        if (check) {
+            if (!ff0_shard_check_every_pair) {
+                split_grid <- consider_grid_end_0_based[iGridConsider + 1]
+                if (verbose) {
+                    print(paste0("Considering split_grid = ", split_grid))
+                }
+            } else {
+                split_grid <- iGrid
+                iGridConsider <- iGrid
             }
             w1 <- 1:(split_grid + 1)
             w2 <- (split_grid + 1):nGrids

@@ -250,7 +250,8 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
     bool do_checks = false,
     Rcpp::List initial_package = R_NilValue,
     bool verbose = false,
-    Rcpp::List fpp_stuff = R_NilValue
+    Rcpp::List fpp_stuff = R_NilValue,
+    bool ff0_shard_check_every_pair = false    
 );
 
 
@@ -2167,7 +2168,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const Rcpp::IntegerVector block_gibbs_iterations = Rcpp::IntegerVector::create(0),
     const bool rescale_eMatRead_t = true,
     const double block_gibbs_quantile_prob = 0.9,
-    const bool use_eMatDH_special_symbols = true
+    const bool use_eMatDH_special_symbols = true,
+    bool ff0_shard_check_every_pair = false    
 ) {
     //
     //
@@ -2678,7 +2680,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             next_section="Block gibbs - ff0 shard resampler";
                             prev=print_times(prev, suppressOutput, prev_section, next_section);
                             prev_section=next_section;
-                            out3 = Rcpp_ff0_shard_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H);
+                            out3 = Rcpp_ff0_shard_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, false, R_NilValue, false, R_NilValue, ff0_shard_check_every_pair);
                         }
                         //
                         //

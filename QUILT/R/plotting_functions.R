@@ -190,22 +190,21 @@ plot_single_gamma_dosage <- function(
     ## text(x = mean(xlim), y = (1 - frac_reads) + frac_reads / 2, labels = "Read assignments", cex = 1.5, font = 2)
     text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (5 / 6), labels = "Hap1", srt = 90, cex = 1.5, font = 2)
     text(x = xlim[1], y = (1 - frac_reads) + frac_reads * (1 / 6), labels = "Hap2", srt = 90, cex = 1.5, font = 2)
-    for(iRead in 1:length(sampleReads)) {
-        u <- range(sampleReads[[iRead]][[4]])
-        ## level depending on what I say
-        ## colour dpeending on truth
-        if (have_truth_haplotypes) {
-            col <- c("black", "blue", "red")[truth[iRead] + 1]
-            text(x = Ls[1], y = (1 - frac_reads) + frac_reads / 2, labels = "Blue = truth hap 1, Red = truth hap 2", pos = 4, cex = 1.25)
-        } else {
-            col <- "black"
-        }
-        lwd <- 1
-        ## if (unhappy_reads[iRead]) {
-        ##     col <- "purple"
-        ##     lwd <- 5
-        ## }
-        segments(x0 = L[u[1] + 1], x1 = L[u[2] + 1], y0 = y[iRead], y1 = y[iRead], col = col, lwd = lwd)
+    ##
+    ## plot the reads
+    ##
+    text(x = Ls[1], y = (1 - frac_reads) + frac_reads / 2, labels = "Blue = truth hap 1, Red = truth hap 2", pos = 4, cex = 1.25)
+    us <- sapply(sampleReads, function(x) range(x[[4]]))
+    if (have_truth_haplotypes) {
+        ## hmm, just plot useful ones
+        cols <- c("black", "blue", "red")[truth + 1]
+        w <- cols == "black"
+        segments(x0 = L[us[1,] + 1][w], x1 = L[us[2,] + 1][w], y0 = y[w], y1 = y[w], col = cols[w], lwd = 0.34)
+        w <- cols != "black"
+        segments(x0 = L[us[1,] + 1][w], x1 = L[us[2,] + 1][w], y0 = y[w], y1 = y[w], col = cols[w], lwd = 2)        
+    } else {
+        cols <- rep("black", length(sampleReads))
+        segments(x0 = L[us[1,] + 1], x1 = L[us[2,] + 1], y0 = y, y1 = y, col = cols, lwd = 1)        
     }
     ##
     ## abline(h = (1 - frac_reads))

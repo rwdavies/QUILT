@@ -154,7 +154,8 @@ get_and_impute_one_sample <- function(
     use_sample_is_diploid,
     plot_p1,
     small_ref_panel_skip_equally_likely_reads,
-    small_ref_panel_equally_likely_reads_update_iterations
+    small_ref_panel_equally_likely_reads_update_iterations,
+    ff0_shard_check_every_pair
 ) {
 
 
@@ -538,7 +539,10 @@ get_and_impute_one_sample <- function(
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
                 use_sample_is_diploid = use_sample_is_diploid,
                 small_ref_panel_skip_equally_likely_reads = small_ref_panel_skip_equally_likely_reads,
-                small_ref_panel_equally_likely_reads_update_iterations = small_ref_panel_equally_likely_reads_update_iterations
+                small_ref_panel_equally_likely_reads_update_iterations = small_ref_panel_equally_likely_reads_update_iterations,
+                i_it = i_it,
+                i_gibbs_sample = i_gibbs_sample,
+                ff0_shard_check_every_pair = ff0_shard_check_every_pair
             )
 
             if (plot_p1) {
@@ -1780,8 +1784,12 @@ impute_one_sample <- function(
     block_gibbs_quantile_prob = 0.95,
     make_plots_block_gibbs = FALSE,
     use_small_eHapsCurrent_tc = TRUE,
-    use_sample_is_diploid = FALSE
+    use_sample_is_diploid = FALSE,
+    i_it = NA,
+    i_gibbs_sample = NA,
+    ff0_shard_check_every_pair = FALSE
 ) {
+
     ##
     K <- length(which_haps_to_use)
     S <- 1
@@ -1917,7 +1925,8 @@ impute_one_sample <- function(
             smooth_cm = smooth_cm,
             param_list = param_list,
             block_gibbs_quantile_prob = block_gibbs_quantile_prob,
-            artificial_relabel = -1
+            artificial_relabel = -1,
+            ff0_shard_check_every_pair = ff0_shard_check_every_pair
         )
         if (out[["underflow_problem"]]) {
             new_maxDifferenceBetweenReads <- max(1, maxDifferenceBetweenReads / 10)
