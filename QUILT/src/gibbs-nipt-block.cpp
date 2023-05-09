@@ -231,11 +231,19 @@ Rcpp::List Rcpp_define_blocked_snps_using_gamma_on_the_fly(
     }
     int a, b, j, snp_left, snp_right;
     for(int iBest = 0; iBest < nAvailable; iBest++) {
+        if (verbose) {
+            std::cout << "iBest = " << iBest << std::endl;
+        }
         if (available(best(iBest))) {
+            if (verbose) {
+                std::cout << "insides" << std::endl;
+            }
             int snp_best = best(iBest); // 0-based
             a = std::max(snp_best - 1, 0);
-            b = std::min(snp_best + 1, nGrids - 1); // nGrids - 1 is size, another - 1 for 0-based indexing
-            //std::cout << "snp_best = " << snp_best << ", a = " << a << ", b = " << b << std::endl;
+            b = std::min(snp_best + 1, nGrids - 1 - 1); // nGrids - 1 is size, another - 1 as below sum is inclusive
+            if (verbose) {
+                std::cout << "snp_best = " << snp_best << ", a = " << a << ", b = " << b << std::endl;
+            }
             d = 0;
             for(j = a; j <= b; j++) {
                 if (available(j)) {
@@ -243,10 +251,19 @@ Rcpp::List Rcpp_define_blocked_snps_using_gamma_on_the_fly(
                 }
             }
             if (d == 3) {
+                if (verbose) {
+                    std::cout << "left" << std::endl;
+                }
                 snp_left = rcpp_determine_where_to_stop(smoothed_rate, available, snp_best, break_thresh, nGrids, true);
+                if (verbose) {
+                    std::cout << "right" << std::endl;
+                }
                 snp_right = rcpp_determine_where_to_stop(smoothed_rate, available, snp_best, break_thresh, nGrids, false);
                 for(j = snp_left; j <= snp_right; j++) {
                     available(j) = false;
+                }
+                if (verbose) {
+                    std::cout << "ends" << std::endl;
                 }
                 //std::cout << "snp_left = " << snp_left << ", snp_right = " << snp_right << std::endl;
             } else {

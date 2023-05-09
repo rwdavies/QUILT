@@ -1789,7 +1789,6 @@ impute_one_sample <- function(
     i_gibbs_sample = NA,
     ff0_shard_check_every_pair = FALSE
 ) {
-
     ##
     K <- length(which_haps_to_use)
     S <- 1

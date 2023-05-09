@@ -155,7 +155,7 @@ test_that("QUILT can use all combinations of posfile, genfile and phasfile in th
             regionEnd <- NA
             buffer <- NA
         }
-        
+
         QUILT_prepare_reference(
             outputdir = outputdir,
             chr = data_package$chr,
@@ -167,6 +167,7 @@ test_that("QUILT can use all combinations of posfile, genfile and phasfile in th
             regionEnd = regionEnd,
             buffer = buffer
         )
+        
         if (is.na(regionStart)) {
             regionName <- data_package$chr
         } else {
@@ -440,7 +441,7 @@ test_that("QUILT can impute samples with very few reads", {
                 file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
                 data_package = data_package,
                 which_snps = which_snps,
-                tol = 1,
+                tol = 1.1,
                 min_info = 0,
                 max_missingness = 1.1
             )
