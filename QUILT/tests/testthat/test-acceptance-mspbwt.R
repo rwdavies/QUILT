@@ -149,7 +149,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
             genetic_map_file = refpack$reference_genetic_map_file,
             nGen = 100,
             use_mspbwt = use_mspbwt,
-            use_pbwt_index = zilong
+            use_zilong = use_zilong
         )
         
         QUILT(

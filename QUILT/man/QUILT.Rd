@@ -81,7 +81,7 @@ QUILT(
   use_splitreadgl = FALSE,
   override_use_eMatDH_special_symbols = NA,
   use_hapMatcherR = TRUE,
-  ff0_shard_check_every_pair = FALSE
+  ff0_shard_check_every_pair = TRUE
 )
 }
 \arguments{
