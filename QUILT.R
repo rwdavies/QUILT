@@ -457,6 +457,12 @@ option_list <- list(
         type = "logical",
         help = "Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use [default TRUE] ",
         default = TRUE
+    ), 
+    make_option(
+        "--ff0_shard_check_every_pair",
+        type = "logical",
+        help = "When using shard gibbs sampler, whether to check every pair of SNPs, or not [default TRUE] ",
+        default = TRUE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -538,5 +544,6 @@ QUILT(
     use_mspbwt = opt$use_mspbwt,
     use_splitreadgl = opt$use_splitreadgl,
     override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
-    use_hapMatcherR = opt$use_hapMatcherR
+    use_hapMatcherR = opt$use_hapMatcherR,
+    ff0_shard_check_every_pair = opt$ff0_shard_check_every_pair
 )
