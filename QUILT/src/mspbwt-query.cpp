@@ -88,45 +88,34 @@ List mspbwt_report(SEXP xp_, const IntegerVector& z, int pbwtL, int mspbwtB)
     tm.clock();
 
     vector<int> zc = as<vector<int>>(z);
-    IntMapU haplens, hapends, hapnindicies;
+    vector<int> haps, lens, ends, nindices;
     if (mspbwtB == 16)
     {
         Rcpp::XPtr<msPBWT<uint16_t>> xp(xp_);
         auto zg = xp->encodezg(zc);
-        xp->report_neighourings(haplens, hapends, hapnindicies, zg, pbwtL);
+        xp->report_neighourings(haps, ends, lens, nindices, zg, pbwtL);
     }
     else if (mspbwtB == 32)
     {
         Rcpp::XPtr<msPBWT<uint32_t>> xp(xp_);
         auto zg = xp->encodezg(zc);
-        xp->report_neighourings(haplens, hapends, hapnindicies, zg, pbwtL);
+        xp->report_neighourings(haps, ends, lens, nindices, zg, pbwtL);
     }
     else if (mspbwtB == 64)
     {
         Rcpp::XPtr<msPBWT<uint64_t>> xp(xp_);
         auto zg = xp->encodezg(zc);
-        xp->report_neighourings(haplens, hapends, hapnindicies, zg, pbwtL);
+        xp->report_neighourings(haps, ends, lens, nindices, zg, pbwtL);
     }
     else if (mspbwtB == 128)
     {
         Rcpp::XPtr<msPBWT<unsigned __int128>> xp(xp_);
         auto zg = xp->encodezg(zc);
-        xp->report_neighourings(haplens, hapends, hapnindicies, zg, pbwtL);
+        xp->report_neighourings(haps, ends, lens, nindices, zg, pbwtL);
     }
     else
     {
         throw invalid_argument("mspbwtB must be one of 16, 32, 64 or 128\n");
-    }
-    int n = haplens.size();
-    vector<int> haps(n), lens(n), ends(n), nindices(n);
-    n = 0;
-    for (auto const& h : haplens)
-    {
-        haps[n] = h.first + 1; // return 1-based to R
-        lens[n] = h.second;
-        ends[n] = hapends[h.first];
-        nindices[n] = hapnindicies[h.first];
-        n++;
     }
 
     Rcout << "elapsed time of mspbwt insert: " << tm.abstime() << " milliseconds" << endl;

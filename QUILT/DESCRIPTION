@@ -15,7 +15,7 @@ Depends: parallel, data.table, rrbgen (>= 0.0.4), STITCH (>= 1.6.6)
 Imports: Rcpp
 LinkingTo: Rcpp, RcppArmadillo
 Packaged: 2020-07-24 12:00:00 UTC; rdavies
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 License: GPL | file LICENSE
 SystemRequirements: C++11
 NeedsCompilation: yes

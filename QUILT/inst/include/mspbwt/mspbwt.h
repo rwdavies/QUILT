@@ -27,6 +27,7 @@ using namespace std;
 using namespace vcfpp;
 
 using IntMapU = unordered_map<int, int>;
+using Int1D = vector<int>;
 using IntVec1D = vector<int>;
 using IntVec2D = vector<IntVec1D>;
 using IntVec3D = vector<IntVec2D>;
@@ -938,8 +939,7 @@ public:
         }
     }
 
-    void report_neighourings(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, const GridVec& zg,
-                             int L = 32)
+    void report_neighourings(Int1D& haps, Int1D& ends, Int1D& lens, Int1D& indices, const GridVec& zg, int L = 32)
     {
         int k, s, klen, j, n, l, Gi, ki, iind, ni{-1};
         for (iind = 0; iind < nindices; iind++)
@@ -1009,20 +1009,10 @@ public:
                             }
                             else
                             {
-                                // TODO : update this with combining all nindicies
-                                if (haplens.count(n) == 0)
-                                {
-                                    haplens[n] = klen;
-                                    hapends[n] = ki;
-                                    hapnindicies[n] = 1;
-                                }
-                                else if (klen >= haplens[n])
-                                {
-                                    haplens[n] = klen;
-                                    hapends[n] = ki;
-                                }
-                                if (hapnindicies.count(n))
-                                    hapnindicies[n] = iind >= hapnindicies[n] ? (iind + 1) : hapnindicies[n];
+                                haps.push_back(n);
+                                lens.push_back(klen);
+                                ends.push_back(ki);
+                                indices.push_back(iind);
                                 break;
                             }
                         }
@@ -1042,19 +1032,10 @@ public:
                             }
                             else
                             {
-                                if (haplens.count(n) == 0)
-                                {
-                                    haplens[n] = klen;
-                                    hapends[n] = ki;
-                                    hapnindicies[n] = 1;
-                                }
-                                else if (klen >= haplens[n])
-                                {
-                                    haplens[n] = klen;
-                                    hapends[n] = ki;
-                                }
-                                if (hapnindicies.count(n))
-                                    hapnindicies[n] = iind >= hapnindicies[n] ? (iind + 1) : hapnindicies[n];
+                                haps.push_back(n);
+                                lens.push_back(klen);
+                                ends.push_back(ki);
+                                indices.push_back(iind);
                                 break;
                             }
                         }
