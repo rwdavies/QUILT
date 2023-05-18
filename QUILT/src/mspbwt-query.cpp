@@ -1,4 +1,5 @@
 #include "mspbwt/mspbwt.h"
+#include "PBWT.h"
 #include "utils/timer.h"
 #include <Rcpp.h>
 
@@ -11,10 +12,10 @@ void mspbwt_build(const std::string& binfile, const std::string& vcfpanel,
                   const std::string& samples, const std::string& region, int nindices,
                   int mspbwtB, double maf)
 {
-    if (mspbwtB == 16)
+    if (mspbwtB == 1)
     {
-        msPBWT<uint16_t> msp(nindices);
-        msp.build(vcfpanel, samples, region, maf);
+        PBWT msp;
+        msp.build(vcfpanel, samples, region);
         msp.save(binfile);
     }
     else if (mspbwtB == 32)
@@ -37,7 +38,7 @@ void mspbwt_build(const std::string& binfile, const std::string& vcfpanel,
     }
     else
     {
-        throw invalid_argument("mspbwtB must be one of 16, 32, 64 or 128\n");
+        throw invalid_argument("mspbwtB must be one of 1, 32, 64 or 128\n");
     }
 }
 
@@ -45,11 +46,11 @@ void mspbwt_build(const std::string& binfile, const std::string& vcfpanel,
 // [[Rcpp::export]]
 SEXP mspbwt_load(const std::string& binfile, int mspbwtB)
 {
-    if (mspbwtB == 16)
+    if (mspbwtB == 1)
     {
-        msPBWT<uint16_t>* msp = new msPBWT<uint16_t>();
+        PBWT* msp = new PBWT();
         msp->load(binfile);
-        Rcpp::XPtr<msPBWT<uint16_t>> xp(msp, true);
+        Rcpp::XPtr<PBWT> xp(msp, true);
         return (xp);
     }
     else if (mspbwtB == 32)
@@ -75,7 +76,7 @@ SEXP mspbwt_load(const std::string& binfile, int mspbwtB)
     }
     else
     {
-        throw invalid_argument("mspbwtB must be one of 16, 32, 64 or 128\n");
+        throw invalid_argument("mspbwtB must be one of 1, 32, 64 or 128\n");
     }
 }
 
@@ -89,11 +90,12 @@ List mspbwt_report(SEXP xp_, const IntegerVector& z, int pbwtL, int mspbwtB)
 
     vector<int> zc = as<vector<int>>(z);
     vector<int> haps, lens, ends, nindices;
-    if (mspbwtB == 16)
+    if (mspbwtB == 1)
     {
-        Rcpp::XPtr<msPBWT<uint16_t>> xp(xp_);
+        Rcpp::XPtr<PBWT> xp(xp_);
         auto zg = xp->encodezg(zc);
-        xp->report_neighourings(haps, ends, lens, nindices, zg, pbwtL);
+        xp->report_setmaximal(zg, haps, ends, lens);
+        nindices.resize(haps.size(), 1);
     }
     else if (mspbwtB == 32)
     {
