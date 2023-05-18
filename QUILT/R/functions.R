@@ -1,19 +1,23 @@
 ## zilong mspbwt32.cpp
 ## @param msp is xptr to msPBWT object in C++
-select_new_haps_zilong_msp <- function(hapProbs_t,
-                                       igibbs,
-                                       outputdir,
-                                       Kfull,
-                                       Knew,
-                                       msp,
-                                       mspbwtB,
-                                       mspbwtL,
-                                       mspbwtM) {
+select_new_haps_zilong_msp <- function(
+    hapProbs_t,
+    igibbs,
+    outputdir,
+    Kfull,
+    Knew,
+    msp,
+    mspbwtB,
+    mspbwtL,
+    mspbwtM,
+    nGrids
+) {
+  ##
   res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     res <- as.data.frame(mspbwt_report(msp, hap, mspbwtL, mspbwtB))
     res <- res[res$lens >= max(mspbwtM, 0), ]
-    res$keys <- (res$ends - res$lens + 1) * 1e4 + res$ends
+    res$keys <- (res$ends - res$lens + 1) * nGrids + res$ends
     res
   })
   ## print(head(res))
@@ -51,6 +55,102 @@ select_new_haps_zilong_msp <- function(hapProbs_t,
     }
   }
 }
+
+
+
+
+
+
+
+
+
+## zilong mspbwt32.cpp
+## @param msp is xptr to msPBWT object in C++
+select_new_haps_zilong_msp_robbie_version <- function(
+    hapProbs_t,
+    igibbs,
+    outputdir,
+    Kfull,
+    Knew,
+    msp,
+    mspbwtB,
+    mspbwtL,
+    mspbwtM,
+    nGrids
+) {
+    res <- lapply(1:2, function(x) {
+        hap <- round(hapProbs_t[x, ])
+        res <- mspbwt_report(msp, hap, mspbwtL, mspbwtB)
+        return(res)
+    })
+    ## merge, filter, order
+    ends <- c(res[[1]][["ends"]], res[[2]][["ends"]])
+    lens <- c(res[[1]][["lens"]], res[[2]][["lens"]])
+    res <- cbind(
+        haps = c(res[[1]][["haps"]], res[[2]][["haps"]]) + 1, ## make 1-based
+        starts = ends - lens + 1,
+        ends = ends,
+        lens = lens,
+        n = c(res[[1]][["n"]], res[[2]][["n"]])
+    )
+    res <- res[res[, "lens"] >= max(mspbwtM, 0), , drop = FALSE]
+    res <- cbind(res, keys = res[, "starts"] * nGrids + res[, "ends"])
+    ## remove those that are the same thing (effectively)
+    res <- res[!duplicated((res[, "n"] + 1) * (res[, "starts"] + 1) + nGrids * (res[, "haps"])), ]
+    ## remove those that are the same key
+    res <- res[!duplicated(res[, "keys"]), ]
+    ## can make this linear rather than an order
+    ## I'm too lazy to do it now, see if it comes back with a profile
+    ## print("make me linear")
+    res <- res[order(-res[, "lens"]), ]
+    ## 
+    unique_haps <- unique(res[, "haps"])
+    ## 
+    if (length(unique_haps) == 0) {
+        new_haps <- sample(1:Kfull, Knew)
+        return(new_haps)
+    } else if (length(unique_haps) <= Knew) {
+        ## cannot take a sample larger than the population when 'replace = FALSE'
+        new_haps <- unique(c(
+            unique_haps,
+            sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
+        ))[1:Knew]
+        print(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
+        return(new_haps)
+    } else {
+        ##
+        ## heuristically, prioritize based on length and new-ness
+        ## 
+        m <- max(res[, "ends"])
+        weight <- numeric(m)
+        cur_sum <- numeric(m)
+        cur_sum[] <- 1
+        for(i in 1:nrow(res)) {
+            s <- res[i, "starts"]
+            e <- res[i, "ends"]
+            weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
+            cur_sum[s:e] <- cur_sum[s:e] + 1
+        }
+        ##
+        unique_ordered_haps <- unique(res[order(weight), "haps"])
+        print(paste("select", length(unique_ordered_haps), " unique haps after post-selection 2"))
+        ## 
+        if (length(unique_ordered_haps) >= Knew) {
+            return(unique_ordered_haps[1:Knew])
+        } else {
+            ## add in some other (potentially) duplicated haps
+            new_haps <- c(setdiff(unique_ordered_haps, unique_haps), unique_haps)[1:Knew]
+            print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
+            return(new_haps)
+        }
+  }
+}
+
+
+
+
+
+    
 
 get_and_impute_one_sample <- function(
     rhb_t,
@@ -542,7 +642,8 @@ get_and_impute_one_sample <- function(
                 small_ref_panel_equally_likely_reads_update_iterations = small_ref_panel_equally_likely_reads_update_iterations,
                 i_it = i_it,
                 i_gibbs_sample = i_gibbs_sample,
-                ff0_shard_check_every_pair = ff0_shard_check_every_pair
+                ff0_shard_check_every_pair = ff0_shard_check_every_pair,
+                zilong = zilong
             )
 
             if (plot_p1) {
@@ -591,16 +692,18 @@ get_and_impute_one_sample <- function(
             igibbs <- (i_gibbs_sample - 1) * n_seek_its + i_it ## 1-based
             if (zilong) {
                Kfull <- nrow(hapMatcher)
-               which_haps_to_use <- select_new_haps_zilong_msp(gibbs_iterate$hapProbs_t,
-                                                               igibbs = igibbs,
-                                                               outputdir = outputdir,
-                                                               Kfull = Kfull,
-                                                               Knew = Knew,
-                                                               msp = msp,
-                                                               mspbwtB = mspbwtB,
-                                                               mspbwtL = mspbwtL,
-                                                               mspbwtM = mspbwtM
-                                                               )
+               which_haps_to_use <- select_new_haps_zilong_msp_robbie_version(
+                   gibbs_iterate$hapProbs_t,
+                   igibbs = igibbs,
+                   outputdir = outputdir,
+                   Kfull = Kfull,
+                   Knew = Knew,
+                   msp = msp,
+                   mspbwtB = mspbwtB,
+                   mspbwtL = mspbwtL,
+                   mspbwtM = mspbwtM,
+                   nGrids = nGrids
+               )
              ## saveRDS(which_haps_to_use, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
@@ -747,7 +850,6 @@ get_and_impute_one_sample <- function(
                 hap2 <- impute_all[["dosage2"]]
             }
 
-
             if (record_interim_dosages) {
                 dosage_matrix[, paste0("gibbs", i_it)] <- get_dosages_from_fbsoL(gibbs_iterate)
                 dosage_matrix[, paste0("all", i_it)] <- hap1 + hap2
@@ -837,7 +939,7 @@ get_and_impute_one_sample <- function(
             if (is.na(gamma_physically_closest_to)) {
                 iGrid <- round(nGrids / 2)
             } else {
-                iGrid <- grid[which.min(abs(L - gamma_physically_closest_to))] + 1
+
             }
             gamma1 <- gamma1[, iGrid]
             gamma2 <- gamma2[, iGrid]
@@ -1787,7 +1889,8 @@ impute_one_sample <- function(
     use_sample_is_diploid = FALSE,
     i_it = NA,
     i_gibbs_sample = NA,
-    ff0_shard_check_every_pair = FALSE
+    ff0_shard_check_every_pair = FALSE,
+    zilong = FALSE
 ) {
     ##
     K <- length(which_haps_to_use)
