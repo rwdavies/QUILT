@@ -27,7 +27,6 @@ using namespace std;
 using namespace vcfpp;
 
 using IntMapU = unordered_map<int, int>;
-using Int1D = vector<int>;
 using IntVec1D = vector<int>;
 using IntVec2D = vector<IntVec1D>;
 using IntVec3D = vector<IntVec2D>;
@@ -77,7 +76,7 @@ private:
     IntVec2D C;
     IntVec2D A;          // nindices x Grids x Haps
     IntVec2D D;          // nindices x Grids x Haps
-    vector<int> reorder; // (M) reorder SNPs or just subset SNPs
+    vector<int> keep;
 
 public:
     msPBWT(int nindices_ = 4) : nindices(nindices_)
@@ -102,18 +101,13 @@ public:
         return z;
     }
 
-    GridVec encodezg(const vector<int>& z_)
+    GridVec encodezg(const vector<int>& z)
     {
-        assert(z_.size() == M);
-        int k{0};
+        int k{0}, m{0};
         GridVec zg(G);
-        vector<bool> z(M);
-        for (k = 0; k < M; k++)
-            z[k] = z_[reorder[k]] != 0;
-        k = 0;
-        for (size_t m = 0; m < z.size(); m++)
+        for (m = 0; m < M; m++)
         {
-            zg[k] = (zg[k] << 1) | (z[m] != 0);
+            zg[k] = (zg[k] << 1) | (z[keep[m]] != 0);
             if ((m + 1) % B == 0)
             {
                 zg[k] = reverseBits(zg[k]);
@@ -245,8 +239,7 @@ public:
         N = vcf.nsamples * 2;
         M = 0;
         vector<bool> gt;
-        vector<vector<bool>> allgts, gt_rares, gt_commons;
-        vector<int> snp_rares, snp_commons;
+        vector<vector<bool>> allgts;
         double af;
         while (vcf.getNextVariant(var))
         {
@@ -258,37 +251,14 @@ public:
             for (auto g : gt)
                 af += g;
             af /= N;
-            if (af < maf)
+            if (af >= maf)
             {
-                snp_rares.push_back(M);
-                gt_rares.push_back(gt);
-            }
-            else
-            {
-                snp_commons.push_back(M);
-                gt_commons.push_back(gt);
-            }
-            if ((M + 1) % B == 0)
-            {
-                reorder.insert(reorder.end(), snp_rares.begin(), snp_rares.end());
-                snp_rares.clear();
-                reorder.insert(reorder.end(), snp_commons.begin(), snp_commons.end());
-                snp_commons.clear();
-                allgts.insert(allgts.cend(), gt_rares.begin(), gt_rares.end());
-                gt_rares.clear();
-                allgts.insert(allgts.cend(), gt_commons.begin(), gt_commons.end());
-                gt_commons.clear();
+                keep.push_back(M);
+                allgts.push_back(gt);
             }
             M++;
         }
-        reorder.insert(reorder.end(), snp_rares.begin(), snp_rares.end());
-        snp_rares.clear();
-        reorder.insert(reorder.end(), snp_commons.begin(), snp_commons.end());
-        snp_commons.clear();
-        allgts.insert(allgts.cend(), gt_rares.begin(), gt_rares.end());
-        gt_rares.clear();
-        allgts.insert(allgts.cend(), gt_commons.begin(), gt_commons.end());
-        gt_commons.clear();
+        M = keep.size();
         G = (M + B - 1) / B;
         if (verbose)
             cerr << "N:" << N << ",M:" << M << ",G:" << G << ",B:" << B << ",nindices:" << nindices << endl;
@@ -464,7 +434,7 @@ public:
         // write reorder (M)
         int n, k, m;
         for (m = 0; m < M; m++)
-            out.write((char*)&reorder[m], sizeof(int));
+            out.write((char*)&keep[m], sizeof(int));
         if (is_save_X)
         {
             // write X
@@ -539,11 +509,10 @@ public:
         if (!in.read((char*)&nindices, sizeof(nindices)))
             return 2;
         cerr << "N: " << N << ",M: " << M << ",G: " << G << ",B: " << B << ",nindices " << nindices << endl;
-        // read reorder (M)
-        reorder.resize(M);
+        keep.resize(M);
         int n, m, k;
         for (m = 0; m < M; m++)
-            in.read((char*)&reorder[m], sizeof(int));
+            in.read((char*)&keep[m], sizeof(int));
         if (is_save_X)
         {
             // read X
@@ -939,7 +908,8 @@ public:
         }
     }
 
-    void report_neighourings(Int1D& haps, Int1D& ends, Int1D& lens, Int1D& indices, const GridVec& zg, int L = 32)
+    void report_neighourings(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, const GridVec& zg,
+                             int L = 32)
     {
         int k, s, klen, j, n, l, Gi, ki, iind, ni{-1};
         for (iind = 0; iind < nindices; iind++)
@@ -1009,10 +979,20 @@ public:
                             }
                             else
                             {
-                                haps.push_back(n);
-                                lens.push_back(klen);
-                                ends.push_back(ki);
-                                indices.push_back(iind);
+                                // TODO : update this with combining all nindicies
+                                if (haplens.count(n) == 0)
+                                {
+                                    haplens[n] = klen;
+                                    hapends[n] = ki;
+                                    hapnindicies[n] = 1;
+                                }
+                                else if (klen >= haplens[n])
+                                {
+                                    haplens[n] = klen;
+                                    hapends[n] = ki;
+                                }
+                                if (hapnindicies.count(n))
+                                    hapnindicies[n] = iind >= hapnindicies[n] ? (iind + 1) : hapnindicies[n];
                                 break;
                             }
                         }
@@ -1032,10 +1012,19 @@ public:
                             }
                             else
                             {
-                                haps.push_back(n);
-                                lens.push_back(klen);
-                                ends.push_back(ki);
-                                indices.push_back(iind);
+                                if (haplens.count(n) == 0)
+                                {
+                                    haplens[n] = klen;
+                                    hapends[n] = ki;
+                                    hapnindicies[n] = 1;
+                                }
+                                else if (klen >= haplens[n])
+                                {
+                                    haplens[n] = klen;
+                                    hapends[n] = ki;
+                                }
+                                if (hapnindicies.count(n))
+                                    hapnindicies[n] = iind >= hapnindicies[n] ? (iind + 1) : hapnindicies[n];
                                 break;
                             }
                         }

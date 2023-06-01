@@ -27,7 +27,7 @@ select_new_haps_zilong_msp <- function(
   print(paste("select", length(unique(res$haps)), " unique haps by mpbwt query before post-selection"))
   ## order by lens then nindicies then ends
   ## res$lens <- res$lens * res$n
-  res <- res[order(-res$lens, res$keys),]
+  res <- res[order(-res$lens, -res$n, res$keys),]
   res <- res[!duplicated(res[,c('haps')]),]
   unique_haps <- unique(res$haps)
   ## return(unique_haps[1:Knew])
@@ -55,13 +55,6 @@ select_new_haps_zilong_msp <- function(
     }
   }
 }
-
-
-
-
-
-
-
 
 
 ## zilong mspbwt32.cpp
@@ -692,7 +685,7 @@ get_and_impute_one_sample <- function(
             igibbs <- (i_gibbs_sample - 1) * n_seek_its + i_it ## 1-based
             if (zilong) {
                Kfull <- nrow(hapMatcher)
-               which_haps_to_use <- select_new_haps_zilong_msp_robbie_version(
+               which_haps_to_use <- select_new_haps_zilong_msp(
                    gibbs_iterate$hapProbs_t,
                    igibbs = igibbs,
                    outputdir = outputdir,

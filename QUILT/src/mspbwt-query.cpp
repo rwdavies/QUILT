@@ -1,5 +1,4 @@
 #include "mspbwt/mspbwt.h"
-#include "PBWT.h"
 #include "utils/timer.h"
 #include <Rcpp.h>
 
@@ -12,10 +11,10 @@ void mspbwt_build(const std::string& binfile, const std::string& vcfpanel,
                   const std::string& samples, const std::string& region, int nindices,
                   int mspbwtB, double maf)
 {
-    if (mspbwtB == 1)
+    if (mspbwtB == 16)
     {
-        PBWT msp;
-        msp.build(vcfpanel, samples, region);
+        msPBWT<uint16_t> msp(nindices);
+        msp.build(vcfpanel, samples, region, maf);
         msp.save(binfile);
     }
     else if (mspbwtB == 32)
@@ -46,11 +45,11 @@ void mspbwt_build(const std::string& binfile, const std::string& vcfpanel,
 // [[Rcpp::export]]
 SEXP mspbwt_load(const std::string& binfile, int mspbwtB)
 {
-    if (mspbwtB == 1)
+    if (mspbwtB == 16)
     {
-        PBWT* msp = new PBWT();
+        msPBWT<uint16_t>* msp = new msPBWT<uint16_t>();
         msp->load(binfile);
-        Rcpp::XPtr<PBWT> xp(msp, true);
+        Rcpp::XPtr<msPBWT<uint16_t>> xp(msp, true);
         return (xp);
     }
     else if (mspbwtB == 32)
@@ -80,7 +79,6 @@ SEXP mspbwt_load(const std::string& binfile, int mspbwtB)
     }
 }
 
-
 //' @export
 // [[Rcpp::export]]
 List mspbwt_report(SEXP xp_, const IntegerVector& z, int pbwtL, int mspbwtB)
@@ -89,35 +87,45 @@ List mspbwt_report(SEXP xp_, const IntegerVector& z, int pbwtL, int mspbwtB)
     tm.clock();
 
     vector<int> zc = as<vector<int>>(z);
-    vector<int> haps, lens, ends, nindices;
-    if (mspbwtB == 1)
+    IntMapU haplens, hapends, hapnindicies;
+    if (mspbwtB == 16)
     {
-        Rcpp::XPtr<PBWT> xp(xp_);
+        Rcpp::XPtr<msPBWT<uint16_t>> xp(xp_);
         auto zg = xp->encodezg(zc);
-        xp->report_setmaximal(zg, haps, ends, lens);
-        nindices.resize(haps.size(), 1);
+        xp->report_neighourings(haplens, hapends, hapnindicies, zg, pbwtL);
     }
     else if (mspbwtB == 32)
     {
         Rcpp::XPtr<msPBWT<uint32_t>> xp(xp_);
         auto zg = xp->encodezg(zc);
-        xp->report_neighourings(haps, ends, lens, nindices, zg, pbwtL);
+        xp->report_neighourings(haplens, hapends, hapnindicies, zg, pbwtL);
     }
     else if (mspbwtB == 64)
     {
         Rcpp::XPtr<msPBWT<uint64_t>> xp(xp_);
         auto zg = xp->encodezg(zc);
-        xp->report_neighourings(haps, ends, lens, nindices, zg, pbwtL);
+        xp->report_neighourings(haplens, hapends, hapnindicies, zg, pbwtL);
     }
     else if (mspbwtB == 128)
     {
         Rcpp::XPtr<msPBWT<unsigned __int128>> xp(xp_);
         auto zg = xp->encodezg(zc);
-        xp->report_neighourings(haps, ends, lens, nindices, zg, pbwtL);
+        xp->report_neighourings(haplens, hapends, hapnindicies, zg, pbwtL);
     }
     else
     {
         throw invalid_argument("mspbwtB must be one of 16, 32, 64 or 128\n");
+    }
+    int n = haplens.size();
+    vector<int> haps(n), lens(n), ends(n), nindices(n);
+    n = 0;
+    for (auto const& h : haplens)
+    {
+        haps[n] = h.first + 1; // return 1-based to R
+        lens[n] = h.second;
+        ends[n] = hapends[h.first];
+        nindices[n] = hapnindicies[h.first];
+        n++;
     }
 
     Rcout << "elapsed time of mspbwt insert: " << tm.abstime() << " milliseconds" << endl;
