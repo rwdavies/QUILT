@@ -248,7 +248,8 @@ get_and_impute_one_sample <- function(
     plot_p1,
     small_ref_panel_skip_equally_likely_reads,
     small_ref_panel_equally_likely_reads_update_iterations,
-    ff0_shard_check_every_pair
+    ff0_shard_check_every_pair,
+    use_eigen
 ) {
 
 
@@ -478,7 +479,8 @@ get_and_impute_one_sample <- function(
                 regionEnd = regionEnd,
                 buffer = buffer,
                 minGLValue = minGLValue,
-                suppressOutput = suppressOutput
+                suppressOutput = suppressOutput,
+                use_eigen = use_eigen
             )
 
         } else {
@@ -836,7 +838,8 @@ get_and_impute_one_sample <- function(
                     regionEnd = regionEnd,
                     buffer = buffer,
                     minGLValue = minGLValue,
-                    suppressOutput = suppressOutput
+                    suppressOutput = suppressOutput,
+                    use_eigen = use_eigen
                 )
                 which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
                 hap1 <- impute_all[["dosage1"]]
@@ -1490,8 +1493,10 @@ impute_using_everything <- function(
     return_gamma_t = FALSE,
     K_top_matches = 5,
     heuristic_match_thin = 0.01,
-    suppressOutput = 1
+    suppressOutput = 1,
+    use_eigen = FALSE
 ) {
+
     ##
     K <- nrow(rhb_t)
     dosage <- numeric(nSNPs)
@@ -1530,9 +1535,17 @@ impute_using_everything <- function(
         gl <- make_gl_from_u_bq(u, bq, nSNPs, minGLValue = minGLValue)
         use_eMatDH <- TRUE
         c <-  array(1, c(nGrids))  ## more useful for debugging
+        if (use_eigen) {
+            arma_alphaHat_t <- array(0, c(1, 1))
+            eigen_alphaHat_t <- full_alphaHat_t
+        } else {
+            arma_alphaHat_t <- full_alphaHat_t
+            eigen_alphaHat_t <- array(0, c(1, 1))
+        }
         Rcpp_haploid_dosage_versus_refs(
             gl = gl,
-            alphaHat_t = full_alphaHat_t,
+            arma_alphaHat_t = arma_alphaHat_t,
+            eigen_alphaHat_t = eigen_alphaHat_t,
             betaHat_t = full_betaHat_t,
             c = c,
             gamma_t = full_gamma_t,
@@ -1562,8 +1575,9 @@ impute_using_everything <- function(
             best_haps_stuff_list = best_haps_stuff_list,
             K_top_matches = K_top_matches,
             always_normalize = FALSE,
-            is_version_2 = TRUE,
-            normalize_emissions = TRUE
+            is_version_2 = !use_eigen, 
+            normalize_emissions = TRUE,
+            use_eigen = use_eigen
         )
         ## do some checks here
         if ((min(dosage) < -1e-5) | (1 + 1e-5) < max(dosage)) {

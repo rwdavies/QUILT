@@ -463,6 +463,12 @@ option_list <- list(
         type = "logical",
         help = "When using shard gibbs sampler, whether to check every pair of SNPs, or not [default TRUE] ",
         default = TRUE
+    ), 
+    make_option(
+        "--use_eigen",
+        type = "logical",
+        help = "Use eigen library for per haploid full li and stephens pass of full haplotype reference panel [default TRUE] ",
+        default = TRUE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -545,5 +551,6 @@ QUILT(
     use_splitreadgl = opt$use_splitreadgl,
     override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
     use_hapMatcherR = opt$use_hapMatcherR,
-    ff0_shard_check_every_pair = opt$ff0_shard_check_every_pair
+    ff0_shard_check_every_pair = opt$ff0_shard_check_every_pair,
+    use_eigen = opt$use_eigen
 )

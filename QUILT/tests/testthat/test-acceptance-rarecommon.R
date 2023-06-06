@@ -70,6 +70,7 @@ test_that("can parse and use input hap VCF only, and use rare vs common idea", {
     nMaxDH <- NA ## automatically inferred
     ref_error <- 0.001
 
+
     
     ##
     ## write data parser

@@ -380,7 +380,6 @@ test_that("can fast eMat", {
 
 test_that("can avoid normalizing alphaHat and betaHat throughout forward algorithm, but recover correct gamma when asked, as well as dosages", {
 
-
     ##
     ## setup
     ##
@@ -447,7 +446,15 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
     ##
     ## run normal version in R, or Rcpp, and make sure the same
     ##
-    master_f <- function(always_normalize, language, is_version_2, normalize_emissions  = FALSE, use_eMatDH_special_symbols = FALSE, use_hapMatcherR = FALSE) {
+    master_f <- function(
+                         always_normalize,
+                         language,
+                         is_version_2,
+                         normalize_emissions  = FALSE,
+                         use_eMatDH_special_symbols = FALSE,
+                         use_hapMatcherR = FALSE,
+                         use_eigen = FALSE
+                         ) {
 
         if (language == "R") {
             f <- R_haploid_dosage_versus_refs
@@ -463,12 +470,23 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
                     "language = ", language, ", ",
                     "always_normalize = ", always_normalize, " ",
                     "is_version_2 = ", is_version_2, " ",
-                    "normalize_emissions = ", normalize_emissions
+                    "normalize_emissions = ", normalize_emissions, " ",
+                    "use_eigen = ", use_eigen
                 )
             )
         }
         ##
-        alphaHat_t <- array(0, c(K, nGrids))
+
+        stopifnot(!(use_eigen && is_version_2))
+        if (use_eigen) {
+            arma_alphaHat_t <- array(0, c(1, 1))
+            eigen_alphaHat_t <- array(0, c(K, nGrids))
+        } else  {
+            arma_alphaHat_t <- array(0, c(K, nGrids))
+            eigen_alphaHat_t <- array(0, c(1, 1))
+        } 
+
+
         betaHat_t <- array(0, c(K, nGrids))
         c <-  array(1, c(nGrids))
         gamma_t <- array(0, c(K, nGrids))
@@ -483,7 +501,8 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
         ##
         out <- f(
             gl = gl,
-            alphaHat_t = alphaHat_t,
+            arma_alphaHat_t = arma_alphaHat_t,
+            eigen_alphaHat_t = eigen_alphaHat_t,
             betaHat_t = betaHat_t,
             c = c,
             gamma_t = gamma_t,
@@ -513,10 +532,12 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
             best_haps_stuff_list = best_haps_stuff_list,
             eMatDH_special_values_list = eMatDH_special_values_list,
             eMatDH_special_grid_which = eMatDH_special_grid_which,
-            is_version_2 = is_version_2,
             suppressOutput = suppressOutput,
-            normalize_emissions = normalize_emissions
+            normalize_emissions = normalize_emissions,
+            use_eigen = use_eigen,
+            is_version_2 = is_version_2
         )
+        ## 
         if (language == "R") {
             alphaHat_t <- out[["alphaHat_t"]]
             c <- out[["c"]]
@@ -525,28 +546,35 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
             betaHat_t <- out[["betaHat_t"]]
         }
 
-        return(
-            list(
-                alphaHat_t = alphaHat_t,
-                betaHat_t = betaHat_t,
-                c = c,
-                gammaSmall_t = gammaSmall_t,
-                dosage = dosage
-            )
+        to_return <- list(
+            betaHat_t = betaHat_t,
+            c = c,
+            gammaSmall_t = gammaSmall_t,
+            dosage = dosage
         )
+
+        if (use_eigen) {
+            to_return <- append(to_return, list(alphaHat_t = eigen_alphaHat_t))
+        } else {
+            to_return <- append(to_return, list(alphaHat_t = arma_alphaHat_t))
+        }
+        to_return
     }
 
-    out_R_always_normalize <- master_f(TRUE, "R", NA)
+    ## note - is_version_2 rendered obsolete here, so will always use the single available version!
+    out_R_always_normalize <- master_f(TRUE, "R", TRUE)
     out_Rcpp_always_normalize <- master_f(TRUE, "Rcpp", FALSE)
     out_Rcpp2_always_normalize <- master_f(TRUE, "Rcpp", TRUE)
     out_Rcpp3_always_normalize <- master_f(TRUE, "Rcpp", TRUE, use_eMatDH_special_symbols = TRUE)
     out_Rcpp4_always_normalize <- master_f(TRUE, "Rcpp", TRUE, use_eMatDH_special_symbols = TRUE, use_hapMatcherR = TRUE)
-
-    out_R_seldom_normalize <- master_f(FALSE, "R", NA)
+    out_Rcpp5_always_normalize <- master_f(TRUE, "Rcpp", is_version_2 = FALSE, use_eMatDH_special_symbols = TRUE, use_hapMatcherR = TRUE, use_eigen = TRUE)
+    
+    out_R_seldom_normalize <- master_f(FALSE, "R", TRUE)
     out_Rcpp_seldom_normalize <- master_f(FALSE, "Rcpp", FALSE)
     out_Rcpp2_seldom_normalize <- master_f(FALSE, "Rcpp", TRUE)
     out_Rcpp3_seldom_normalize <- master_f(FALSE, "Rcpp", TRUE, use_eMatDH_special_symbols = TRUE)
     out_Rcpp4_seldom_normalize <- master_f(FALSE, "Rcpp", TRUE, use_eMatDH_special_symbols = TRUE, use_hapMatcherR = TRUE)
+    out_Rcpp5_seldom_normalize <- master_f(FALSE, "Rcpp", is_version_2 = FALSE, use_eMatDH_special_symbols = TRUE, use_hapMatcherR = TRUE, use_eigen = TRUE)    
 
 
     ##
@@ -592,6 +620,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
         expect_equal(sum(log(out_R_always_normalize[["c"]])), sum(log(out_Rcpp2_seldom_normalize[["c"]])))
         expect_equal(sum(log(out_R_always_normalize[["c"]])), sum(log(out_Rcpp3_seldom_normalize[["c"]])))
         expect_equal(sum(log(out_R_always_normalize[["c"]])), sum(log(out_Rcpp4_seldom_normalize[["c"]])))
+        expect_equal(sum(log(out_R_always_normalize[["c"]])), sum(log(out_Rcpp5_seldom_normalize[["c"]])))        
         ##
         ## dosages
         ##
@@ -600,6 +629,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
         expect_equal(out_Rcpp_always_normalize[["dosage"]], out_Rcpp2_always_normalize[["dosage"]], tolerance = 1e-5)
         expect_equal(out_Rcpp_always_normalize[["dosage"]], out_Rcpp3_always_normalize[["dosage"]], tolerance = 1e-5)
         expect_equal(out_Rcpp_always_normalize[["dosage"]], out_Rcpp4_always_normalize[["dosage"]], tolerance = 1e-5)
+        expect_equal(out_Rcpp_always_normalize[["dosage"]], out_Rcpp5_always_normalize[["dosage"]], tolerance = 1e-5)        
         ##
         ## gammas
         ##
@@ -608,6 +638,7 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
         expect_equal(out_Rcpp_always_normalize[["gammaSmall_t"]], out_Rcpp2_always_normalize[["gammaSmall_t"]])
         expect_equal(out_Rcpp_always_normalize[["gammaSmall_t"]], out_Rcpp3_always_normalize[["gammaSmall_t"]])
         expect_equal(out_Rcpp_always_normalize[["gammaSmall_t"]], out_Rcpp4_always_normalize[["gammaSmall_t"]])
+        expect_equal(out_Rcpp_always_normalize[["gammaSmall_t"]], out_Rcpp5_always_normalize[["gammaSmall_t"]])        
     }
 
 
@@ -618,8 +649,10 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
 
         out_Rcpp_baseline <- master_f(always_normalize = TRUE, language = "Rcpp", is_version_2 = FALSE, normalize_emissions = FALSE)
         for(always_normalize in c(FALSE, TRUE)) {
-            for(is_version_2 in c(FALSE, TRUE)) {
-                for(normalize_emissions in c(FALSE, TRUE)) {
+            for(normalize_emissions in c(FALSE, TRUE)) {
+                for(i_version_eigen in 1:3) {
+                    is_version_2 <- c(FALSE, TRUE, FALSE)[i_version_eigen]
+                    use_eigen <- c(FALSE, FALSE, TRUE)[i_version_eigen]
                     ## print(
                     ##     paste0(
                     ##         "-------",
@@ -629,13 +662,12 @@ test_that("can avoid normalizing alphaHat and betaHat throughout forward algorit
                     ##         "normalize_emissions = ", normalize_emissions
                     ##     )
                     ## )
-                    out_Rcpp_comparison <- master_f(always_normalize = always_normalize, language = "Rcpp", is_version_2 = is_version_2, normalize_emissions = normalize_emissions)
+                    out_Rcpp_comparison <- master_f(always_normalize = always_normalize, language = "Rcpp", is_version_2 = is_version_2, normalize_emissions = normalize_emissions, use_eigen = use_eigen)
                     expect_equal(out_Rcpp_baseline[["gammaSmall_t"]], out_Rcpp_comparison[["gammaSmall_t"]], tolerance = 1e-3) ## yuck, scary? but checked on larger data?
                     expect_equal(out_Rcpp_baseline[["dosage"]],       out_Rcpp_comparison[["dosage"]], tolerance = 1e-3)
                 }
             }
         }
-
     }
 
 
@@ -871,7 +903,7 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                     a <- system.time(
                         outR <- R_haploid_dosage_versus_refs(
                             gl = gl,
-                            alphaHat_t = alphaHat_t,
+                            arma_alphaHat_t = alphaHat_t,
                             betaHat_t = betaHat_t,
                             c = c,
                             gamma_t = gamma_t,
@@ -913,7 +945,8 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                 a <- system.time(
                     Rcpp_haploid_dosage_versus_refs(
                         gl = gl,
-                        alphaHat_t = alphaHat_t,
+                        arma_alphaHat_t = alphaHat_t,
+                        eigen_alphaHat_t = array(0, c(1, 1)),
                         betaHat_t = betaHat_t,
                         c = c,
                         gamma_t = gamma_t,
@@ -943,7 +976,8 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                         return_gamma_t = return_gamma_t,
                         return_gammaSmall_t = return_gammaSmall_t,
                         normalize_emissions = FALSE,
-                        always_normalize = always_normalize
+                        always_normalize = always_normalize,
+                        use_eigen = FALSE
                     )
                 )
                 if (!suppressOutput) {

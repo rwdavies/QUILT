@@ -78,6 +78,7 @@
 #' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
 #' @param use_hapMatcherR Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use
 #' @param ff0_shard_check_every_pair When using shard gibbs sampler, whether to check every pair of SNPs, or not
+#' @param use_eigen Use eigen library for per haploid full li and stephens pass of full haplotype reference panel
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -158,7 +159,8 @@ QUILT <- function(
     use_splitreadgl = FALSE,
     override_use_eMatDH_special_symbols = NA,
     use_hapMatcherR = TRUE,
-    ff0_shard_check_every_pair = TRUE
+    ff0_shard_check_every_pair = TRUE,
+    use_eigen = TRUE
 ) {
 
     x <- as.list(environment())
@@ -642,18 +644,26 @@ QUILT <- function(
 
         K <- nrow(hapMatcher)
 
+        
         if ((zilong | use_mspbwt) && (phasefile == "") && (genfile == "" )) {
             full_alphaHat_t <- array(0, c(1, 1))
         } else {
-            full_alphaHat_t <- array(0, c(K, nGrids))
+            if (use_eigen) {
+                full_alphaHat_t <- matrix(0, nrow = K, ncol = nGrids)                
+            } else {
+                full_alphaHat_t <- array(0, c(K, nGrids))  
+            }
         }
         ## full_betaHat_t <- array(0, c(K, nGrids))
         full_betaHat_t <- array(0, c(1, 1))
         if (make_plots) {
-            full_gamma_t <- array(0, c(K, nGrids))
+            ## could also change this one
+            full_gamma_t <- array(0, c(K, nGrids))            
         } else {
             full_gamma_t <- array(0, c(1, 1))
         }
+
+        
         iSample <- 1
         ww <- seq(1, nGrids, length.out = max(1, round(heuristic_match_thin * nGrids)))
         full_gammaSmall_cols_to_get <- array(-1, nGrids)
@@ -794,7 +804,8 @@ QUILT <- function(
                 plot_p1 = plot_p1,
                 small_ref_panel_skip_equally_likely_reads = small_ref_panel_skip_equally_likely_reads,
                 small_ref_panel_equally_likely_reads_update_iterations = small_ref_panel_equally_likely_reads_update_iterations,
-                ff0_shard_check_every_pair = ff0_shard_check_every_pair
+                ff0_shard_check_every_pair = ff0_shard_check_every_pair,
+                use_eigen = use_eigen
             )
 
             if (out[["sample_was_imputed"]]) {

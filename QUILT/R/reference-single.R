@@ -92,7 +92,7 @@ get_prob_for_k <- function(rhb_t, k, iGrid, nSNPsLocal, ref_error, ref_one_minus
 
 R_haploid_dosage_versus_refs <- function(
     gl,
-    alphaHat_t,
+    arma_alphaHat_t,
     betaHat_t,
     c,
     c_prob,
@@ -126,12 +126,16 @@ R_haploid_dosage_versus_refs <- function(
     is_version_2 = FALSE,
     suppressOutput = 1,
     make_c_exact = TRUE,
-    normalize_emissions = FALSE
+    normalize_emissions = FALSE,
+    use_eigen = NA,
+    eigen_alphaHat_t = NA
 ) {
     if ( use_hapMatcherR) {
         stop("use_hapMatcherR functionality not in R version")
     }
     ## run one sample haplotype against potentially very many other haplotypes
+    alphaHat_t <- arma_alphaHat_t
+    rm(arma_alphaHat_t, eigen_alphaHat_t) ## nuke
     K <- nrow(alphaHat_t)
     nGrids <- ncol(alphaHat_t)
     nSNPs <- ncol(gl)
