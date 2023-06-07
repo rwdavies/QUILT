@@ -71,65 +71,16 @@ test_that("can parse and use input hap VCF only, and use rare vs common idea", {
     ref_error <- 0.001
 
 
-    
-    ##
-    ## write data parser
-    ## input: phased vcf, maf threshold
-    ## output:
-    ##  - at common sites: zilong indices, robbie things (e.g. hapMatcher)
-    ##  - at rare sites: an object that somehow can be used to rebuild
-
-    ##
-    ## this stuff probably in C++, streaming, efficient, etc
-    ## question: can we incorporate skipping of variants we don't like e.g. if multi-allelic, if position seen before, if not SNPs, etc
-    ## this would be very desirable
-
-    
-    ## todo: convert this to nice streamable vcf parsing somehow?
-    haps <- read.table(refpack$reference_vcf_file, stringsAsFactors = FALSE)
-    LAll <- haps[, 2]
-    h <- haps[, -(1:9)]
-    h <- as.matrix(h)
-    K <- ncol(h) * 2
-    nSNPsAll <- nrow(h)
-    rhi <- array(as.integer(NA), c(nSNPsAll, K)) ## reference haplotype integers
-    rhi[, seq(1, K, 2)] <- matrix(as.integer(substr(h, 1, 1)), nrow = nSNPsAll)
-    rhi[, seq(2, K, 2)] <- matrix(as.integer(substr(h, 3, 3)), nrow = nSNPsAll)
-    ## filtering 
-    ref_alleleCount <- cbind(rowSums(rhi), K, rowSums(rhi) / K)
-    snp_is_common <- !(ref_alleleCount[, 3] < af_cutoff)
-    L <- LAll[snp_is_common]
-    nSNPs <- sum(snp_is_common)
-    nGrids <- ceiling(nSNPs / 32)
-    grid <- as.integer(floor((1:nSNPs) / 32))
-
-    ## not sure of the right way to do this on the fly? with rhb or rhb_t?
-    rhb <- matrix(0L, nrow = nGrids, ncol = K)
-    for(iGrid in 1:nGrids) {
-        s <- min(32 * (iGrid - 1) + 1, nSNPs)
-        e <- min(32 * iGrid, nSNPs)
-        for(k in 1:K) {
-            rhb[iGrid, k] <- rcpp_int_contract(rhi[s:e, k])
-        }
-    }
-    ## transpose (do after? during? probably can just work with rhb_t during)
-    rhb_t <- t(rhb)
-
-
-
-
-
-    
-    ##
-    ## ????? how to store rare stuff ?????
-    ## ? how to make properly RAM efficient?
-    rare_per_hap_info <- sapply(1:K, function(k) {
-        which(rhi[!snp_is_common, k] == 1)
-    })
-
+    outRcpp <- Rcpp_get_hap_info_from_vcf(
+        vcffile = vcffile,
+        af_cutoff = af_cutoff,
+        region = region
+    )
     
 
 
+
+    ## 
     ## define mapping of all SNPs into grid
     ## grid is defined for common SNPs
     ## 
@@ -202,7 +153,14 @@ test_that("can parse and use input hap VCF only, and use rare vs common idea", {
 
 
 
-    
+
+    ##
+    ## approach1: fill in the blanks
+    ##
+    ## approach2: re-do on larger region, using combined data
+    ##   - 
+    ## approach2 
+    ##
 
 
     ##
@@ -231,7 +189,8 @@ test_that("can parse and use input hap VCF only, and use rare vs common idea", {
     for(k in 1:Ksubset) {
         rhi_t_common[k, rare_per_hap_info[[which_haps_to_use[k]]]] <- 1L
     }
-    
+
+
     for(iGrid in 1:nGrids) {
         g1 <- gamma1[, iGrid]
         g2 <- gamma2[, iGrid]

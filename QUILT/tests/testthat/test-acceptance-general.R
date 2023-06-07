@@ -465,24 +465,23 @@ test_that("QUILT can use or not use eigen to impute", {
     regionEnd <- 40
     buffer <- 5
 
+    QUILT_prepare_reference(
+        outputdir = outputdir,
+        chr = data_package$chr,
+        nGen = 100,
+        reference_haplotype_file = refpack$reference_haplotype_file,
+        reference_legend_file = refpack$reference_legend_file,
+        reference_sample_file = refpack$reference_sample_file,
+        genetic_map_file = genetic_map_file,
+        regionStart = regionStart,
+        regionEnd = regionEnd,
+        buffer = buffer,
+        expRate = 0.5
+    )
+    regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
+    expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
+
     for(use_eigen in c(FALSE, TRUE)) {
-        
-        QUILT_prepare_reference(
-            outputdir = outputdir,
-            chr = data_package$chr,
-            nGen = 100,
-            reference_haplotype_file = refpack$reference_haplotype_file,
-            reference_legend_file = refpack$reference_legend_file,
-            reference_sample_file = refpack$reference_sample_file,
-            genetic_map_file = genetic_map_file,
-            regionStart = regionStart,
-            regionEnd = regionEnd,
-            buffer = buffer,
-            expRate = 0.5,
-            use_eigen = use_eigen
-        )
-        regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
-        expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
         
         QUILT(
             outputdir = outputdir,
@@ -491,7 +490,8 @@ test_that("QUILT can use or not use eigen to impute", {
             regionEnd = regionEnd,
             buffer = buffer,
             bamlist = data_package$bamlist,
-            posfile = data_package$posfile
+            posfile = data_package$posfile,
+            use_eigen = use_eigen
         )
         
         which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
