@@ -74,8 +74,8 @@ private:
     GridVec2D S;          // Grids x Sorted and Unique symbols
     IntVec3D W;
     IntVec2D C;
-    IntVec2D A;          // nindices x Grids x Haps
-    IntVec2D D;          // nindices x Grids x Haps
+    IntVec2D A; // nindices x Grids x Haps
+    IntVec2D D; // nindices x Grids x Haps
     vector<int> keep;
 
 public:
@@ -332,7 +332,7 @@ public:
     }
 
 
-    void build_indices_k(int ni, int ki, const GridVec& xk, GridVec& yk, GridVec& sk, vector<int>& ck,
+    void build_indices_k(int ni, int ki, GridVec& xk, GridVec& yk, GridVec& sk, vector<int>& ck,
                          vector<vector<int>>& wk, vector<int>& Occ, vector<vector<int>>& kas,
                          vector<vector<int>>& kds, vector<int>& sqp, vector<int>& a0, vector<int>& d0,
                          GridSetU& symbols)
@@ -346,14 +346,16 @@ public:
         sk = GridVec(symbols.begin(), symbols.end());
         symbols.clear();
         std::sort(sk.begin(), sk.end());
+        int sn = sk.size();
 
         if (sk.size() > 256) // keep only maximum 256 symbols
         {
             sk.erase(sk.end() - (sk.size() - 256), sk.end());
+            sn = sk.size();
             for (n = 0; n < N; n++)
             {
-                if (xk[a0[n]] > sk[sk.size() - 1])
-                    yk[n] = sk[sk.size() - 1];
+                if (xk[a0[n]] > sk[sn - 1])
+                    yk[n] = sk[sn - 1];
             }
         }
 
@@ -365,7 +367,6 @@ public:
         // next run
         // a0 = A[k];
 
-        int sn = sk.size();
         ck.resize(sn);
         wk.resize(sn);
         for (s = 0; s < sn; s++)
@@ -403,8 +404,7 @@ public:
                     if (e > sqp[s])
                         sqp[s] = e;
                 }
-                // allow xk > sk is useful when we want the number of symbols to be capped
-                if (xk[i] >= sk[s])
+                if (xk[i] == sk[s])
                 {
                     kas[s].push_back(i);
                     if (is_save_D)
@@ -412,6 +412,17 @@ public:
                         kds[s].push_back(sqp[s]);
                         sqp[s] = 0;
                     }
+                }
+            }
+            // allow xk > sk[sn-1] is useful when we want the number of symbols to be capped
+            s = sn - 1;
+            if (xk[i] > sk[s])
+            {
+                kas[s].push_back(i);
+                if (is_save_D)
+                {
+                    kds[s].push_back(sqp[s]);
+                    sqp[s] = 0;
                 }
             }
         }
@@ -909,7 +920,8 @@ public:
         }
     }
 
-    void report_setmaximal(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, GridVec& zg, int viewk = -1)
+    void report_setmaximal(IntMapU& haplens, IntMapU& hapends, IntMapU& hapnindicies, GridVec& zg,
+                           int viewk = -1)
     {
         int iind, step{0};
         for (iind = 0; iind < nindices; iind++)
