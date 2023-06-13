@@ -1467,20 +1467,6 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// get_rhb_from_vcf
-List get_rhb_from_vcf(std::string vcffile, std::string region, std::string samples, bool is_check);
-RcppExport SEXP _QUILT_get_rhb_from_vcf(SEXP vcffileSEXP, SEXP regionSEXP, SEXP samplesSEXP, SEXP is_checkSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type vcffile(vcffileSEXP);
-    Rcpp::traits::input_parameter< std::string >::type region(regionSEXP);
-    Rcpp::traits::input_parameter< std::string >::type samples(samplesSEXP);
-    Rcpp::traits::input_parameter< bool >::type is_check(is_checkSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_rhb_from_vcf(vcffile, region, samples, is_check));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_make_eMatRead_t", (DL_FUNC) &_QUILT_rcpp_make_eMatRead_t, 15},
@@ -1544,7 +1530,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_Rcpp_haploid_reference_single_backward_version2", (DL_FUNC) &_QUILT_Rcpp_haploid_reference_single_backward_version2, 35},
     {"_QUILT_Rcpp_haploid_reference_single_backward_version3", (DL_FUNC) &_QUILT_Rcpp_haploid_reference_single_backward_version3, 35},
     {"_QUILT_Rcpp_haploid_dosage_versus_refs", (DL_FUNC) &_QUILT_Rcpp_haploid_dosage_versus_refs, 38},
-    {"_QUILT_get_rhb_from_vcf", (DL_FUNC) &_QUILT_get_rhb_from_vcf, 4},
     {NULL, NULL, 0}
 };
 

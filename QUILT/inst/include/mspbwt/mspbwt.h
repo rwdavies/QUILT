@@ -344,8 +344,19 @@ public:
             symbols.insert(yk[n]);
         }
         sk = GridVec(symbols.begin(), symbols.end());
-        std::sort(sk.begin(), sk.end());
         symbols.clear();
+        std::sort(sk.begin(), sk.end());
+
+        if (sk.size() > 256) // keep only maximum 256 symbols
+        {
+            sk.erase(sk.end() - (sk.size() - 256), sk.end());
+            for (n = 0; n < N; n++)
+            {
+                if (xk[a0[n]] > sk[sk.size() - 1])
+                    yk[n] = sk[sk.size() - 1];
+            }
+        }
+
         // C[k] = save_C(y1, S[k]);
         // W[k] = save_Occ(y1, S[k]);
         // auto Wg = build_W(y1, S[k]); // here Wg is S x N
@@ -392,7 +403,8 @@ public:
                     if (e > sqp[s])
                         sqp[s] = e;
                 }
-                if (xk[i] == sk[s])
+                // allow xk > sk is useful when we want the number of symbols to be capped
+                if (xk[i] >= sk[s])
                 {
                     kas[s].push_back(i);
                     if (is_save_D)

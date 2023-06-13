@@ -306,8 +306,3 @@ Rcpp_haploid_dosage_versus_refs <- function(gl, arma_alphaHat_t, eigen_alphaHat_
     invisible(.Call('_QUILT_Rcpp_haploid_dosage_versus_refs', PACKAGE = 'QUILT', gl, arma_alphaHat_t, eigen_alphaHat_t, betaHat_t, c, gamma_t, gammaSmall_t, best_haps_stuff_list, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, hapMatcher, hapMatcherR, use_hapMatcherR, gammaSmall_cols_to_get, eMatDH_special_grid_which, eMatDH_special_values_list, K_top_matches, suppressOutput, min_emission_prob_normalization_threshold, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, is_version_2, is_version_3, return_extra, always_normalize, use_eigen, normalize_emissions))
 }
 
-#' @export
-get_rhb_from_vcf <- function(vcffile, region, samples = "-", is_check = FALSE) {
-    .Call('_QUILT_get_rhb_from_vcf', PACKAGE = 'QUILT', vcffile, region, samples, is_check)
-}
-
