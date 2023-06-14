@@ -997,7 +997,7 @@ public:
                         klen = 0;
                         for (j = ki; j >= 0; j--)
                         {
-                            if (X[Gv[j]][n] == zg[Gv[j]])
+                            if (X[Gv[j]][n] == zg[Gv[j]] || ( zg[Gv[j]] > S[ni].back() && X[Gv[j]][n] > S[ni].back()))
                             {
                                 klen++;
                             }
@@ -1030,7 +1030,7 @@ public:
                         klen = 0;
                         for (j = ki; j >= 0; j--)
                         {
-                            if (X[Gv[j]][n] == zg[Gv[j]])
+                            if (X[Gv[j]][n] == zg[Gv[j]] || ( zg[Gv[j]] > S[ni].back() && X[Gv[j]][n] > S[ni].back()))
                             {
                                 klen++;
                             }
