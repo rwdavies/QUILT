@@ -75,7 +75,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
     for(impute_rare_common in c(TRUE, FALSE)) {
 
         ## this is the different methods: zilong, mspbwt, none, etc
-        for(i_method in 2:2) {
+        for(i_method in 4:4) {
 
             if (i_method == 1) {
                 zilong <- FALSE
@@ -96,7 +96,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
             }
 
             ## this is whether to do in one go (i_approach = 1), or do prepare reference first (i_approach = 2)
-            for(i_approach in 1:1) {
+            for(i_approach in 1:2) {
 
                 print("FIX THIS - make second one work")
 
@@ -166,6 +166,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         nGibbsSamples = 5,
                         n_seek_its = 3,
                         nCores = 1,
+                        use_hapMatcherR = use_hapMatcherR,                        
                         use_mspbwt = use_mspbwt,
                         zilong = zilong,
                         impute_rare_common = impute_rare_common                        

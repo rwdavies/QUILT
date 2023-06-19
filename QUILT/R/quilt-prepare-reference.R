@@ -502,6 +502,7 @@ QUILT_prepare_reference <- function(
         ms_indices,
         mspbwt_binfile,
         mspbwtB,
+        nGen,
         use_eMatDH_special_symbols,
         rare_per_hap_info,
         snp_is_common,

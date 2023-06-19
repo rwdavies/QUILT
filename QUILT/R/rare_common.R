@@ -1,5 +1,7 @@
 make_eHapsCurrent_tc_using_rare_and_common_stuff <- function(
+    hapMatcher,
     hapMatcherR,
+    use_hapMatcherR,
     distinctHapsIE,
     eMatDH_special_matrix_helper,
     eMatDH_special_matrix,
@@ -24,7 +26,11 @@ make_eHapsCurrent_tc_using_rare_and_common_stuff <- function(
         w <- snp_is_common_1_based[s:e]
         for(i_k in 1:Ksubset) {
             k <- which_haps_to_use[i_k]
-            i <- as.integer(hapMatcherR[k, iGrid])
+            if (use_hapMatcherR) {
+                i <- as.integer(hapMatcherR[k, iGrid])
+            } else {
+                i <- as.integer(hapMatcher[k, iGrid])
+            }
             if (i > 0) {
                 ## note, could make distinctHapsB pretty easily if needed for RAM
                 eHapsCurrent_tc[i_k, w, 1] <- distinctHapsIE[i, s:e]
@@ -93,7 +99,9 @@ impute_final_gibbs_with_rare_common <- function(
     hap2,
     pos_all,
     maxDifferenceBetweenReads,
+    hapMatcher,
     hapMatcherR,
+    use_hapMatcherR,
     distinctHapsIE,
     eMatDH_special_matrix_helper,
     eMatDH_special_matrix,
@@ -141,7 +149,9 @@ impute_final_gibbs_with_rare_common <- function(
 
     snp_is_common_1_based <- which(snp_is_common)
     small_eHapsCurrent_tc <- make_eHapsCurrent_tc_using_rare_and_common_stuff(
+        hapMatcher = hapMatcher,        
         hapMatcherR = hapMatcherR,
+        use_hapMatcherR = use_hapMatcherR,
         distinctHapsIE = distinctHapsIE,
         eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
         eMatDH_special_matrix = eMatDH_special_matrix,

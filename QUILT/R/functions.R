@@ -31,7 +31,7 @@ select_new_haps_zilong_msp <- function(
   res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     res <- as.data.frame(mspbwt_report(msp, hap, mspbwtL, mspbwtB))
-    ## hap with same length and start has same key
+    res <- res[res$lens >= max(mspbwtM, 0), ]
     res$keys <- (res$ends - res$lens + 1) * nGrids + res$ends
     res
   })
@@ -60,16 +60,13 @@ select_new_haps_zilong_msp <- function(
     print(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
     return(new_haps)
   } else {
-    ## ideally we will have Knew number of unique keys
-    ## we also want the unique keys with long length
-    res <- res[res$lens >= max(mspbwtM, 0), ]
     unique_keys <- unique(res$keys)
     unique_haps_at_unique_keys <- unique(res[match(unique_keys, res[, "keys"]), "haps"])
     print(paste("select", length(unique(unique_haps_at_unique_keys)), " unique haps after post-selection 2"))
     if (length(unique_haps_at_unique_keys) >= Knew) {
       return(unique_haps_at_unique_keys[1:Knew])
     } else {
-      new_haps <- c(unique_haps_at_unique_keys,setdiff(unique_haps, unique_haps_at_unique_keys))[1:Knew]
+      new_haps <- c(setdiff(unique_haps, unique_haps_at_unique_keys), unique_haps_at_unique_keys)[1:Knew]
       print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
       return(new_haps)
     }
@@ -998,8 +995,10 @@ get_and_impute_one_sample <- function(
                 hap1 = hap1,
                 hap2 = hap2,
                 pos_all = pos_all,
-                maxDifferenceBetweenReads = maxDifferenceBetweenReads,
+                maxDifferenceBetweenReads = maxDifferenceBetweenRead,
+                hapMatcher = hapMatcher,                
                 hapMatcherR = hapMatcherR,
+                use_hapMatcherR = use_hapMatcherR,
                 distinctHapsIE = distinctHapsIE,
                 eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
                 eMatDH_special_matrix = eMatDH_special_matrix,
