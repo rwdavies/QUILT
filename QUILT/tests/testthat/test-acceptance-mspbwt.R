@@ -75,7 +75,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
     for(impute_rare_common in c(TRUE, FALSE)) {
 
         ## this is the different methods: zilong, mspbwt, none, etc
-        for(i_method in 1:1) {
+        for(i_method in 2:2) {
 
             if (i_method == 1) {
                 zilong <- FALSE
