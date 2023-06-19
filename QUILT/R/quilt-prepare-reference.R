@@ -63,7 +63,6 @@ QUILT_prepare_reference <- function(
     override_use_eMatDH_special_symbols = NA,
     use_hapMatcherR = TRUE,
     mspbwtB = 64L,
-    mspbwtMAF = 0.0001,
     impute_rare_common = FALSE,
     rare_af_threshold = 0.01
 ) {
@@ -77,6 +76,7 @@ QUILT_prepare_reference <- function(
     print_message(paste0("Running ", command_line))
 
 
+    ## mspbwtMAF = 0.0001,
     ##         @param mspbwtMAF Building mspbwt indices for common and rare variants seperately
     
     

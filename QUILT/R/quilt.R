@@ -351,7 +351,6 @@ QUILT <- function(
 
 
 
-
     ## always check regionStart, regionEnd and buffer, just in case
     ## require them to be the same to prevent problems
     new_regionStart <- regionStart
@@ -370,8 +369,6 @@ QUILT <- function(
         stop("Please select only one of zilong or use_mspbwt")
     }
 
-    ## now build PBWT using nSNPs, nrow(rhb_t) loaded from last step
-    if(zilong && reference_vcf_file == "") stop("Zilong requires VCF file. Please feed vcf file!")
 
     msp <- NULL
     if (zilong) {

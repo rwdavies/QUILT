@@ -12,22 +12,7 @@ select_new_haps_zilong_msp <- function(
     mspbwtM,
     nGrids
 ) {
-
-    save(
-    hapProbs_t,
-    igibbs,
-    outputdir,
-    Kfull,
-    Knew,
-    msp,
-    mspbwtB,
-    mspbwtL,
-    mspbwtM,
-    nGrids,
-    file = "~/temp.RData")
-    print("innnnnn woo")
-
-    ##
+  ##
   res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     res <- as.data.frame(mspbwt_report(msp, hap, mspbwtL, mspbwtB))
@@ -35,8 +20,6 @@ select_new_haps_zilong_msp <- function(
     res$keys <- (res$ends - res$lens + 1) * nGrids + res$ends
     res
   })
-
-    
   ## print(head(res))
   res <- do.call(rbind.data.frame, res)
   ## interhaps <- intersect(res[res$ihap == 1, "haps"], res[res$ihap == 2, "haps"])
@@ -995,7 +978,7 @@ get_and_impute_one_sample <- function(
                 hap1 = hap1,
                 hap2 = hap2,
                 pos_all = pos_all,
-                maxDifferenceBetweenReads = maxDifferenceBetweenRead,
+                maxDifferenceBetweenReads = maxDifferenceBetweenReads,
                 hapMatcher = hapMatcher,                
                 hapMatcherR = hapMatcherR,
                 use_hapMatcherR = use_hapMatcherR,
