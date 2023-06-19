@@ -176,9 +176,9 @@ option_list <- list(
         default = 64L
     ), 
     make_option(
-        "--mspbwtMAF",
+        "--rare_af_threshold",
         type = "double",
-        help = "Building mspbwt indices for common and rare variants seperately [default 0.0001] ",
+        help = "Working on common and rare variants seperately [default 0.0001] ",
         default = 0.0001
     )
 )
@@ -215,5 +215,5 @@ QUILT_prepare_reference(
     override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
     use_hapMatcherR = opt$use_hapMatcherR,
     mspbwtB = opt$mspbwtB,
-    mspbwtMAF = opt$mspbwtMAF
+    rare_af_threshold = opt$rare_af_threshold
 )

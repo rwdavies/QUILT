@@ -52,7 +52,7 @@ STITCH::make_STITCH_cli(
     other_character_params = c("output_file", "reference_exclude_samplelist_file", "output_sites_filename", "region_exclude_file", "reference_vcf_file"),
     other_logical_params = c("make_fake_vcf_with_sites_list", "use_mspbwt", "use_zilong",  "use_hapMatcherR"),
     other_integer_params = c("nMaxDH", "mspbwtB", "mspbwt_nindices", "override_use_eMatDH_special_symbols"),
-    other_double_params = c("mspbwtMAF"),
+    other_double_params = c("rare_af_threshold"),
     function_name = "QUILT_prepare_reference",
     library_name = "QUILT"
 )

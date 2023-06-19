@@ -34,7 +34,6 @@ QUILT_prepare_reference(
   override_use_eMatDH_special_symbols = NA,
   use_hapMatcherR = TRUE,
   mspbwtB = 64L,
-  mspbwtMAF = 1e-04,
   impute_rare_common = FALSE,
   rare_af_threshold = 0.01
 )

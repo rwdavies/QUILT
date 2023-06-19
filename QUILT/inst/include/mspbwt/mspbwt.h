@@ -104,16 +104,16 @@ public:
     GridVec encodezg(const vector<int>& z)
     {
         bool is_z_commom;
-        if(z.size() == M)
+        if (z.size() == M)
             is_z_commom = true;
-        else if(z.size() > M)
+        else if (z.size() > M)
             is_z_commom = false;
 
         int k{0}, m{0};
         GridVec zg(G);
         for (m = 0; m < M; m++)
         {
-            if(is_z_commom)
+            if (is_z_commom)
                 zg[k] = (zg[k] << 1) | (z[m] != 0);
             else
                 zg[k] = (zg[k] << 1) | (z[keep[m]] != 0);
@@ -247,74 +247,72 @@ public:
         BcfRecord var(vcf.header);
         N = vcf.nsamples * 2;
         M = 0;
-        vector<bool> gt;
-        vector<vector<bool>> allgts;
-        double af;
-	int prev_pos = -1;	
-        while (vcf.getNextVariant(var))
         {
-            var.getGenotypes(gt);
-            if (!var.isNoneMissing() || !var.allPhased())
-                continue;
-	    // only keep if meets conditions
-	    //  - bi-allelic
-	    //  - snp
-	    //  - position increased from previous site
-	    if (!(
-		  (var.REF().length() == 1) &
-		  (var.ALT().length() == 1) &
-		  ((var.POS() - prev_pos) > 0)
-		  )) {
-	      continue;
-	    }
-	    
-            // keep track of snp index with AF < minaf
-            af = 0;
-            for (auto g : gt)
-                af += g;
-            af /= N;
-            if (af >= maf)
+            vector<char> gt;
+            vector<vector<char>> allgts;
+            double af;
+            int prev_pos = -1;
+            while (vcf.getNextVariant(var))
             {
-                keep.push_back(M);
-                allgts.push_back(gt);
+                var.getGenotypes(gt);
+                if (!var.isSNP() || !var.isNoneMissing() || !var.allPhased())
+                    continue;
+                // only keep if meets conditions
+                //  - bi-allelic
+                //  - snp
+                //  - position increased from previous site
+                if (!((var.POS() - prev_pos) > 0))
+                    continue;
+
+                // keep track of snp index with AF < minaf
+                af = 0;
+                for (auto g : gt)
+                    af += g;
+                af /= N;
+                if (af >= maf)
+                {
+                    keep.push_back(M);
+                    allgts.push_back(gt);
+                }
+                M++;
+                prev_pos = var.POS();
             }
-            M++;
-	    prev_pos=var.POS();	    
-        }
-	
-        M = keep.size();
-        G = (M + B - 1) / B;
-        if (verbose)
-            cerr << "N:" << N << ",M:" << M << ",G:" << G << ",B:" << B << ",nindices:" << nindices << endl;
-        X.resize(G, GridVec(N));
-        k = 0;
-        for (m = 0; m < M; m++)
-        {
-            for (i = 0; i < N; i++)
-                X[k][i] = (X[k][i] << 1) | (allgts[m][i] != 0);
-            if ((m + 1) % B == 0)
+
+            M = keep.size();
+            G = (M + B - 1) / B;
+            if (verbose)
+                cerr << "N:" << N << ",M:" << M << ",G:" << G << ",B:" << B << ",nindices:" << nindices
+                     << endl;
+            X.resize(G, GridVec(N));
+            k = 0;
+            for (m = 0; m < M; m++)
             {
                 for (i = 0; i < N; i++)
-                    X[k][i] = reverseBits(X[k][i]); // reverset bits
-                k++;                                // update next grid
+                    X[k][i] = (X[k][i] << 1) | (allgts[m][i] != 0);
+                if ((m + 1) % B == 0)
+                {
+                    for (i = 0; i < N; i++)
+                        X[k][i] = reverseBits(X[k][i]); // reverse bits
+                    k++;                                // update next grid
+                }
             }
-        }
-        if (G == k + 1)
-        {
-            for (i = 0; i < N; i++)
+            if (G == k + 1)
             {
-                X[k][i] <<= G * B - M;
-                X[k][i] = reverseBits(X[k][i]); // reverset bits
+                for (i = 0; i < N; i++)
+                {
+                    X[k][i] <<= G * B - M;
+                    X[k][i] = reverseBits(X[k][i]); // reverset bits
+                }
             }
-        }
-        else if (G == k)
-        {
-            if (verbose)
-                cerr << "no need padding\n";
-        }
-        else
-        {
-            throw std::runtime_error("something wrong\n");
+            else if (G == k)
+            {
+                if (verbose)
+                    cerr << "no need padding\n";
+            }
+            else
+            {
+                throw std::runtime_error("something wrong\n");
+            }
         }
 
         // building A and save indices now
@@ -1021,7 +1019,8 @@ public:
                         klen = 0;
                         for (j = ki; j >= 0; j--)
                         {
-                            if (X[Gv[j]][n] == zg[Gv[j]] || ( zg[Gv[j]] > S[ni].back() && X[Gv[j]][n] > S[ni].back()))
+                            if (X[Gv[j]][n] == zg[Gv[j]] ||
+                                (zg[Gv[j]] > S[ni].back() && X[Gv[j]][n] > S[ni].back()))
                             {
                                 klen++;
                             }
@@ -1054,7 +1053,8 @@ public:
                         klen = 0;
                         for (j = ki; j >= 0; j--)
                         {
-                            if (X[Gv[j]][n] == zg[Gv[j]] || ( zg[Gv[j]] > S[ni].back() && X[Gv[j]][n] > S[ni].back()))
+                            if (X[Gv[j]][n] == zg[Gv[j]] ||
+                                (zg[Gv[j]] > S[ni].back() && X[Gv[j]][n] > S[ni].back()))
                             {
                                 klen++;
                             }
