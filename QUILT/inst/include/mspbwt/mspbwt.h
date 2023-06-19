@@ -241,11 +241,24 @@ public:
         vector<bool> gt;
         vector<vector<bool>> allgts;
         double af;
+	int prev_pos = -1;	
         while (vcf.getNextVariant(var))
         {
             var.getGenotypes(gt);
             if (!var.isNoneMissing() || !var.allPhased())
                 continue;
+	    // only keep if meets conditions
+	    //  - bi-allelic
+	    //  - snp
+	    //  - position increased from previous site
+	    if (!(
+		  (var.REF().length() == 1) &
+		  (var.ALT().length() == 1) &
+		  ((var.POS() - prev_pos) > 0)
+		  )) {
+	      continue;
+	    }
+	    
             // keep track of snp index with AF < minaf
             af = 0;
             for (auto g : gt)
@@ -257,7 +270,9 @@ public:
                 allgts.push_back(gt);
             }
             M++;
+	    prev_pos=var.POS();	    
         }
+	
         M = keep.size();
         G = (M + B - 1) / B;
         if (verbose)

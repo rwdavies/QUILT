@@ -34,6 +34,8 @@ check_quilt_output <- function(
         expect_true((sum(sample_results[ , "GP"] == "./.") / nSNPs) <= max_missingness)
         ## check genotypes that exist
         gt <- c(NA, NA, 0, 1, 1, 2)[match(sample_results[, "GT"], c("./.", ".|.", "0|0", "0|1", "1|0", "1|1"))]
+        ##print(length(gt))
+        ##print(length(sample_truth_gen))
         x <- gt != sample_truth_gen
         ## can't all be 0
         if (sum(!is.na(x)) > 0) {

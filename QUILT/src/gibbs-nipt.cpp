@@ -2222,7 +2222,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool use_small_eHapsCurrent_tc = as<bool>(param_list["use_small_eHapsCurrent_tc"]);
     const bool sample_is_diploid = as<bool>(param_list["sample_is_diploid"]);        
     const bool update_in_place = as<bool>(param_list["update_in_place"]);
-    const bool do_shard_ff0_block_gibbs = as<bool>(param_list["do_shard_ff0_block_gibbs"]);        
+    const bool do_shard_ff0_block_gibbs = as<bool>(param_list["do_shard_ff0_block_gibbs"]);
+    //const bool use_provided_small_eHapsCurrent_tc = as<bool>(param_list["use_provided_small_eHapsCurrent_tc"]);
     //
     //
     // initialize variables 

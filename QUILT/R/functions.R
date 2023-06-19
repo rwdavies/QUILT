@@ -12,7 +12,22 @@ select_new_haps_zilong_msp <- function(
     mspbwtM,
     nGrids
 ) {
-  ##
+
+    save(
+    hapProbs_t,
+    igibbs,
+    outputdir,
+    Kfull,
+    Knew,
+    msp,
+    mspbwtB,
+    mspbwtL,
+    mspbwtM,
+    nGrids,
+    file = "~/temp.RData")
+    print("innnnnn woo")
+
+    ##
   res <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
     res <- as.data.frame(mspbwt_report(msp, hap, mspbwtL, mspbwtB))
@@ -20,6 +35,8 @@ select_new_haps_zilong_msp <- function(
     res$keys <- (res$ends - res$lens + 1) * nGrids + res$ends
     res
   })
+
+    
   ## print(head(res))
   res <- do.call(rbind.data.frame, res)
   ## interhaps <- intersect(res[res$ihap == 1, "haps"], res[res$ihap == 2, "haps"])
@@ -57,6 +74,7 @@ select_new_haps_zilong_msp <- function(
       return(new_haps)
     }
   }
+    print("outtttttttttttttt woo")    
 }
 
 
@@ -187,6 +205,8 @@ get_and_impute_one_sample <- function(
     buffer,
     gen,
     phase,
+    gen_all,
+    phase_all,
     iSample,
     grid,
     ancAlleleFreqAll,
@@ -252,7 +272,11 @@ get_and_impute_one_sample <- function(
     small_ref_panel_skip_equally_likely_reads,
     small_ref_panel_equally_likely_reads_update_iterations,
     ff0_shard_check_every_pair,
-    use_eigen
+    use_eigen,
+    pos_all,
+    special_rare_common_objects,
+    special_rare_common_objects_per_core,    
+    impute_rare_common
 ) {
 
 
@@ -262,6 +286,86 @@ get_and_impute_one_sample <- function(
     K <- nrow(hapMatcher)
     suppressOutput <- !print_extra_timing_information
 
+
+
+    if (impute_rare_common) {
+        
+        loadBamAndConvert(
+            iBam = iSample,
+            L = pos_all[, 2],
+            pos = pos_all,
+            nSNPs = nrow(pos_all),
+            bam_files = bam_files,
+            iSizeUpperLimit = iSizeUpperLimit,
+            bqFilter = bqFilter,
+            chr = chr,
+            N = length(sampleNames),
+            downsampleToCov = downsampleToCov,
+            sampleNames = sampleNames,
+            inputdir = tempdir,
+            regionName = regionName,
+            tempdir = tempdir,
+            chrStart = chrStart,
+            chrEnd = chrEnd,
+            chrLength = NA,
+            save_sampleReadsInfo = TRUE,
+            use_bx_tag = use_bx_tag,
+            bxTagUpperLimit = bxTagUpperLimit,
+            default_sample_no_read_behaviour = "return_null"
+        )
+
+        load(file_sampleReads(tempdir, iSample, regionName))
+        load(file_sampleReadsInfo(tempdir, iSample, regionName))
+        allSNP_sampleReads <- sampleReads
+        allSNP_sampleReadsInfo <- sampleReadsInfo
+        rm(sampleReads, sampleReadsInfo)
+
+        allSNP_sampleReads <- snap_sampleReads_to_grid(
+            sampleReads = allSNP_sampleReads,
+            grid = special_rare_common_objects[["grid"]]
+        )
+
+        allSNP_wif0 <- as.integer(sapply(allSNP_sampleReads, function(x) x[[2]]))
+        allSNP_grid_has_read <- rep(FALSE, nGrids)
+        allSNP_grid_has_read[allSNP_wif0 + 1] <- TRUE
+
+        if (have_truth_haplotypes) {
+            s <- sampleNames[iSample]
+            if (!(s %in% dimnames(phase_all)[[2]])) {
+                stop("Something went wrong with phase naming")
+            }
+            truth_haps_all <- cbind(phase_all[, s, 1], phase_all[, s, 2])
+        } else {
+            truth_haps_all <- NULL
+        }
+
+        if (have_truth_genotypes) {
+            s <- sampleNames[iSample]
+            if (!(s %in% colnames(gen))) {
+                stop("Something went wrong with gen naming")
+            }
+            truth_gen_all <- gen_all[, s, drop = FALSE]
+        } else {
+            truth_gen_all <- NULL
+        }
+
+        truth_label_set <- determine_a_set_of_truth_labels(
+            sampleReads = allSNP_sampleReads,
+            truth_hap1 = truth_haps_all[, 1],
+            truth_hap2 = truth_haps_all[, 2],
+            maxDifferenceBetweenReads = maxDifferenceBetweenReads
+        )
+        truth_labels_all <- truth_label_set[["truth_labels"]]
+        uncertain_truth_labels_all <- truth_label_set[["uncertain_truth_labels"]]
+        rm(truth_label_set)
+
+        nSNPs_all <- nrow(pos_all)        
+        dosage_all <- numeric(nSNPs_all)
+        gp_t_all <- array(0, c(3, nSNPs_all))
+
+        
+    }
+    
     ##
     ## sample read stuff - work off bam file!
     ##
@@ -868,7 +972,7 @@ get_and_impute_one_sample <- function(
 
                 if (have_truth_haplotypes) {
                     w <- i_it + n_seek_its * (i_gibbs_sample - 1)
-                    x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose)
+                    x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose, impute_rare_common = impute_rare_common, all_snps = FALSE)
                     pse_mat[w, ] <- c(i_gibbs_sample, i_it, as.integer(phasing_it), x)
                 } else if (have_truth_genotypes) {
                     r2 <-  round(cor((dosage / nDosage)[inRegion2] - 2 * af[inRegion2], gen[inRegion2, sampleNames[iSample]] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
@@ -877,6 +981,81 @@ get_and_impute_one_sample <- function(
 
             }
 
+
+        }
+
+
+        if (impute_rare_common) {
+
+            if (verbose) {
+                print_message(paste0("i_gibbs=", i_gibbs_sample, ", i_it = ", i_it, " small gibbs (all SNPs)"))
+            }
+            
+            out_rare_common <- impute_final_gibbs_with_rare_common(
+                special_rare_common_objects = special_rare_common_objects,
+                special_rare_common_objects_per_core = special_rare_common_objects_per_core,
+                allSNP_sampleReads = allSNP_sampleReads,
+                hap1 = hap1,
+                hap2 = hap2,
+                pos_all = pos_all,
+                maxDifferenceBetweenReads = maxDifferenceBetweenReads,
+                hapMatcherR = hapMatcherR,
+                distinctHapsIE = distinctHapsIE,
+                eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                eMatDH_special_matrix = eMatDH_special_matrix,
+                Ksubset = Ksubset,
+                ref_error = ref_error,
+                which_haps_to_use = which_haps_to_use,
+                small_ref_panel_gibbs_iterations = small_ref_panel_gibbs_iterations,
+                small_ref_panel_block_gibbs_iterations = small_ref_panel_block_gibbs_iterations,
+                allSNP_wif0 = allSNP_wif0,
+                allSNP_grid_has_read = allSNP_grid_has_read,
+                make_plots = make_plots,
+                outplotprefix = outplotprefix,
+                have_truth_haplotypes = have_truth_haplotypes,
+                truth_haps_all = truth_haps_all,
+                have_truth_genotypes = have_truth_genotypes,
+                truth_gen_all = truth_gen_all,
+                truth_labels = truth_labels,
+                uncertain_truth_labels = uncertain_truth_labels,
+                shuffle_bin_radius = shuffle_bin_radius,
+                make_plots_block_gibbs = make_plots_block_gibbs,
+                sample_name = sample_name,
+                regionStart = regionStart,
+                regionEnd = regionEnd,
+                buffer = buffer,
+                i_it = i_it,
+                i_gibbs_sample = i_gibbs_sample,
+                ff0_shard_check_every_pair = ff0_shard_check_every_pair,
+                sampleNames = sampleNames,
+                iSample = iSample,
+                phase_all = phase_all
+            )
+
+            hap1_all <- out_rare_common[["hap1"]]
+            hap2_all <- out_rare_common[["hap2"]]
+
+            if (!phasing_it && (i_it > n_burn_in_seek_its)) {
+
+                dosage_all <- dosage_all + hap1_all + hap2_all
+                gp_t_all <- gp_t_all + rbind((1 - hap1_all) * (1 - hap2_all), (1 - hap1_all) * hap2_all + hap1_all * (1 - hap2_all), hap1_all * hap2_all)
+                ## nDosage <- nDosage + 1
+
+                calculate_pse_and_r2_rare_common(                
+                    hap1_all = hap1_all,
+                    hap2_all = hap2_all,
+                    have_truth_haplotypes = have_truth_haplotypes,
+                    truth_haps_all = truth_haps_all,
+                    have_truth_genotypes = have_truth_genotypes,
+                    truth_gen_all = truth_gen_all,
+                    special_rare_common_objects = special_rare_common_objects,
+                    verbose = verbose
+                )
+                
+
+
+            }
+            
 
         }
 
@@ -920,16 +1099,25 @@ get_and_impute_one_sample <- function(
         }
 
         if (phasing_it) {
-            ## just save relevant stuff here
-            out <- recast_haps(hd1 = hap1, hd2 = hap2, gp = t(gp_t))
-            ## over-write here
-            hap1 <- out$hd1
-            hap2 <- out$hd2
-            ## 
-            phasing_haps <- cbind(hap1, hap2)
-            ## 
-            phasing_dosage <- hap1 + hap2
-            phasing_read_labels <- read_labels
+            if (!impute_rare_common) {
+                ## just save relevant stuff here
+                out <- recast_haps(hd1 = hap1, hd2 = hap2, gp = t(gp_t))
+                ## over-write here
+                hap1 <- out$hd1
+                hap2 <- out$hd2
+                ## 
+                phasing_haps <- cbind(hap1, hap2)
+                ## 
+                phasing_dosage <- hap1 + hap2
+                phasing_read_labels <- read_labels
+            } else {
+                ## just save relevant stuff here
+                out <- recast_haps(hd1 = hap1_all, hd2 = hap2_all, gp = t(gp_t_all))
+                ## over-write here
+                hap1_all <- out$hd1
+                hap2_all <- out$hd2
+                phasing_haps_all <- cbind(hap1_all, hap2_all)
+            }
         }
 
         if (hla_run) {
@@ -970,22 +1158,34 @@ get_and_impute_one_sample <- function(
     dosage <- dosage / nDosage
     gp_t <- gp_t / nDosage
 
+    if (impute_rare_common) {
+        dosage_all <- dosage_all / nDosage
+        gp_t_all <- gp_t_all / nDosage
+    }
+
+    
     ##
     ## print final accuracies
     ##
-
-    if (have_truth_haplotypes) {
-        w <- (inRegion2)
-        g <- truth_haps[inRegion2, 1] + truth_haps[inRegion2, 2]
-        r2 <-  round(cor((dosage)[inRegion2] - 2 * af[inRegion2], g - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
-        ##
-        x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = phasing_haps[, 1], hap2 = phasing_haps[, 2], truth_haps = truth_haps, af = af, verbose = FALSE)
-        print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
-        print_message(paste0("Final phasing accuracy for sample ", sample_name, ", pse:", x["pse"], ", disc(%):", x["disc"], "%"))
-    } else if (have_truth_genotypes) {
-        r2 <-  round(cor((dosage)[inRegion2] - 2 * af[inRegion2], gen[inRegion2, sampleNames[iSample]] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
-        print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
+    if (impute_rare_common) {
+        final_phasing_accuracy_calculation_rare_common(
+            have_truth_haplotypes = have_truth_haplotypes,
+            have_truth_genotypes = have_truth_genotypes,
+            truth_haps_all = truth_haps_all,
+            dosage_all = dosage_all,
+            hap1_all = hap1_all,
+            hap2_all = hap2_all,
+            gen_all = gen_all,
+            sampleNames = sampleNames,
+            iSample = iSample,
+            special_rare_common_objects = special_rare_common_objects,
+            sample_name = sample_name
+        )     
+    } else {    
+        final_phasing_accuracy_calculation(have_truth_haplotypes = have_truth_haplotypes, have_truth_genotypes = have_truth_genotypes, truth_haps = truth_haps, inRegion2 = inRegion2, dosage = dosage, af = af, phasing_haps = phasing_haps, gen = gen, sample_name = sample_name)
     }
+
+
 
     ## optionally plot here
     if (plot_per_sample_likelihoods) {
@@ -1004,10 +1204,21 @@ get_and_impute_one_sample <- function(
     }
 
 
-    ##
-    ##
-    ##
+    ## perform switch over here
+    if (impute_rare_common) {
 
+        ##save(sampleReads, pos, pos_all, allSNP_sampleReads, file = "~/temp.RData")
+        ##stop("WER")
+             
+        gp_t <- gp_t_all
+        phasing_haps <- phasing_haps_all
+        sampleReads <- allSNP_sampleReads
+        nSNPs <- ncol(gp_t)
+
+
+    }
+
+    
     eij <- round(gp_t[2, ] + 2 * gp_t[3, ], 3) ## prevent weird rounding issues
     fij <- round(gp_t[2, ] + 4 * gp_t[3, ], 3) ##
 
@@ -1033,6 +1244,7 @@ get_and_impute_one_sample <- function(
         xT = as.integer(nSNPs - 1)
     )
     per_sample_alleleCount <- cbind(c2, c1 + c2)
+
 
     ## make vcf character thing - NOTE - this is a HACK of previous one - but works OK here!
 
@@ -1206,7 +1418,7 @@ modified_calculate_pse <- function(
 }
 
 
-calculate_pse_and_r2_during_gibbs <- function(inRegion2, hap1, hap2, truth_haps, af, verbose = FALSE) {
+calculate_pse_and_r2_during_gibbs <- function(inRegion2, hap1, hap2, truth_haps, af, verbose = FALSE, impute_rare_common = FALSE, all_snps = FALSE) {
     ## wow, confident
     w <- (inRegion2)
     g <- truth_haps[inRegion2, 1] + truth_haps[inRegion2, 2]
@@ -1218,8 +1430,16 @@ calculate_pse_and_r2_during_gibbs <- function(inRegion2, hap1, hap2, truth_haps,
     pse <- values["phase_errors_def1"] / values["phase_sites_def1"]
     pse <- round(100 * pse, 1)
     disc <- round(100 * values["disc_errors"] / values["dist_n"], 1)
-    if (verbose) {
-        print_message(paste0("r2:", r2, ", PSE:", pse, "%, disc:", disc, "%"))
+    if (impute_rare_common) {
+        if (all_snps && verbose) {
+            print_message(paste0("r2:", r2, ", PSE:", pse, "%, disc:", disc, "% (all SNPs)"))
+        } else {
+            print_message(paste0("r2:", r2, ", PSE:", pse, "%, disc:", disc, "% (common SNPs only)"))
+        }
+    } else {
+        if (verbose) {
+            print_message(paste0("r2:", r2, ", PSE:", pse, "%, disc:", disc, "%"))
+        }
     }
     return(c(r2 = r2, pse = as.numeric(pse), disc = as.numeric(disc)))
 }
@@ -1815,16 +2035,16 @@ everything_select_good_haps <- function(
 
 
 impute_one_sample <- function(
-    eMatDH_special_matrix_helper,
-    eMatDH_special_matrix,
-    use_eMatDH_special_symbols,
-    distinctHapsB,
-    distinctHapsIE,
-    hapMatcher,
-    hapMatcherR,
-    use_hapMatcherR,
-    rhb_t,
-    ref_error,
+    eMatDH_special_matrix_helper = array(0, c(1, 1)),
+    eMatDH_special_matrix = array(0,c(1, 1)),
+    use_eMatDH_special_symbols = FALSE,
+    distinctHapsB = array(0L, c(1, 1)),
+    distinctHapsIE = array(0, c(1, 1)),
+    hapMatcher = array(0L, c(1, 1)),
+    hapMatcherR = array(as.raw(0), c(1, 1)),
+    use_hapMatcherR = FALSE,
+    rhb_t = array(0L, c(1, 1)),
+    ref_error = 0.001,
     nSNPs,
     sampleReads,
     small_eHapsCurrent_tc,
@@ -1845,17 +2065,17 @@ impute_one_sample <- function(
     small_priorCurrent_m,
     smooth_cm,
     which_haps_to_use,
-    n_gibbs_starts,
+    n_gibbs_starts = 1,
     small_ref_panel_gibbs_iterations,
-    n_gibbs_sample_its,
+    n_gibbs_sample_its = 1,
     double_list_of_starting_read_labels,
     small_ref_panel_block_gibbs_iterations,
-    perform_block_gibbs,
+    perform_block_gibbs = TRUE,
     make_plots,
     maxDifferenceBetweenReads,
     wif0,
     grid_has_read,
-    verbose,
+    verbose = FALSE,
     shuffle_bin_radius,
     outplotprefix,
     plot_description,
@@ -1875,8 +2095,8 @@ impute_one_sample <- function(
     regionEnd,
     buffer,
     uncertain_truth_labels,
-    small_ref_panel_skip_equally_likely_reads,
-    small_ref_panel_equally_likely_reads_update_iterations,
+    small_ref_panel_skip_equally_likely_reads = FALSE,
+    small_ref_panel_equally_likely_reads_update_iterations = c(1,2,3,6,9,15),
     return_p_store = FALSE,
     return_p1 = FALSE,
     return_extra = FALSE,
@@ -1896,6 +2116,7 @@ impute_one_sample <- function(
     block_gibbs_quantile_prob = 0.95,
     make_plots_block_gibbs = FALSE,
     use_small_eHapsCurrent_tc = TRUE,
+    use_provided_small_eHapsCurrent_tc = FALSE,
     use_sample_is_diploid = FALSE,
     i_it = NA,
     i_gibbs_sample = NA,
@@ -1906,7 +2127,7 @@ impute_one_sample <- function(
     K <- length(which_haps_to_use)
     S <- 1
     ## print(paste0("start = ", Sys.time()))
-    if (use_small_eHapsCurrent_tc) {
+    if (use_small_eHapsCurrent_tc & !use_provided_small_eHapsCurrent_tc) {
         inflate_fhb_t_in_place(
             rhb_t,
             small_eHapsCurrent_tc,
@@ -1962,6 +2183,7 @@ impute_one_sample <- function(
         update_in_place = FALSE,
         do_shard_ff0_block_gibbs = TRUE
     )
+    ## use_provided_small_eHapsCurrent_tc = use_provided_small_eHapsCurrent_tc
     ## this should catch hopefully rare underflow problems and re-run the samples
     done_imputing <- FALSE
     n_imputing <- 0
@@ -2530,4 +2752,31 @@ recast_haps <- function(hd1, hd2, gp) {
     hd1[to_change][gt3[to_change] == 1][a1 <= a2] <- 0
     hd2[to_change][gt3[to_change] == 1][a1 <= a2] <- 1
     return(list(hd1 = hd1, hd2 = hd2))
+}
+
+
+
+final_phasing_accuracy_calculation <- function(
+    have_truth_haplotypes,
+    have_truth_genotypes,
+    truth_haps,
+    inRegion2,
+    dosage,
+    af,
+    phasing_haps,
+    gen,
+    sample_name
+) {
+    if (have_truth_haplotypes) {    
+        w <- (inRegion2)
+        g <- truth_haps[inRegion2, 1] + truth_haps[inRegion2, 2]
+        r2 <-  round(cor((dosage)[inRegion2] - 2 * af[inRegion2], g - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
+        ##
+        x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = phasing_haps[, 1], hap2 = phasing_haps[, 2], truth_haps = truth_haps, af = af, verbose = FALSE)
+        print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
+        print_message(paste0("Final phasing accuracy for sample ", sample_name, ", pse:", x["pse"], ", disc(%):", x["disc"], "%"))
+    } else if (have_truth_genotypes) {
+        r2 <-  round(cor((dosage)[inRegion2] - 2 * af[inRegion2], gen[inRegion2, sample_name] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
+        print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
+    }
 }

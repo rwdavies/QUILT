@@ -34,7 +34,9 @@ QUILT_prepare_reference(
   override_use_eMatDH_special_symbols = NA,
   use_hapMatcherR = TRUE,
   mspbwtB = 64L,
-  mspbwtMAF = 1e-04
+  mspbwtMAF = 1e-04,
+  impute_rare_common = FALSE,
+  rare_af_threshold = 0.01
 )
 }
 \arguments{
@@ -96,7 +98,9 @@ QUILT_prepare_reference(
 
 \item{mspbwtB}{How many SNPs will be encoded as one grid}
 
-\item{mspbwtMAF}{Building mspbwt indices for common and rare variants seperately}
+\item{impute_rare_common}{Whether to use common SNPs first for imputation, followed by a round of rare imputation}
+
+\item{rare_af_threshold}{Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common}
 }
 \value{
 Results in properly formatted version

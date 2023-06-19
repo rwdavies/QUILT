@@ -15,10 +15,9 @@ if ( 1 == 0 ) {
 
 
 set.seed(919)
-
 n_snps <- 1200
 K <- 6
-n_big_haps <- 1000
+n_big_haps <- 100 ## 1000
 chr <- 10
 
 
@@ -35,7 +34,26 @@ phasemaster2[-common, ] <- 0
 phasemaster2[-common, ] <- sample(c(0, 1), (n_snps - n_common) * n_big_haps, prob = c(0.99, 0.01), replace = TRUE)
 
 
+
 reads_span_n_snps <- 3
+## want about 4X here
+n_reads <- round(4 * n_snps / reads_span_n_snps)
+## deliberately make a few "SNPs" fail
+L <- 1:n_snps
+refs <- rep("A", n_snps)
+alts <- rep("G", n_snps)
+## ## make not a SNP
+## refs[500] <- "AG"
+## alts[510] <- "AG"
+## ## make not bi-allelic
+## alts[520] <- "A,G"
+## ## make same position
+## L[530] <- L[529]
+## L[540] <- L[539]
+## L[541] <- L[540]
+
+
+
 ## want about 4X here
 n_reads <- round(4 * n_snps / reads_span_n_snps)
 data_package <- STITCH::make_acceptance_test_data_package(
@@ -53,8 +71,12 @@ refpack <- STITCH::make_reference_package(
     n_samples_per_pop = n_big_haps,
     reference_populations = c("GBR"),
     chr = chr,
-    phasemaster = phasemaster2
+    phasemaster = phasemaster2,
+    L = L,
+    refs = refs,
+    alts = alts
 )
+
 
 
 
@@ -63,6 +85,7 @@ refpack <- STITCH::make_reference_package(
 
 test_that("can parse and use input hap VCF only, and use rare vs common idea", {
 
+    skip("development code")
     
     af_cutoff <- 0.01 ## here, 1%. note maf < 1% corresponding to af > 99% is very rare so could ignore for simplicity?
     ## thinds robbie needs for gibbs

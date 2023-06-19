@@ -484,7 +484,7 @@ make_rhb_t_equality <- function(
         if (verbose) {
             print_message(paste0("Using nMaxDH = ", nMaxDH))
         }
-        distinctHapsB <- distinctHapsB[1:nMaxDH, ]
+        distinctHapsB <- distinctHapsB[1:nMaxDH, , drop = FALSE]
         if (!use_hapMatcherR) {
             hapMatcher[hapMatcher > (nMaxDH)] <- 0L
         } else {

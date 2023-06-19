@@ -74,15 +74,19 @@ QUILT(
   small_ref_panel_gibbs_iterations = 20,
   plot_per_sample_likelihoods = FALSE,
   use_small_eHapsCurrent_tc = FALSE,
+  mspbwtB = 64L,
   mspbwtL = 40,
   mspbwtM = 1,
   zilong = FALSE,
   use_mspbwt = FALSE,
+  mspbwt_nindices = 4L,
   use_splitreadgl = FALSE,
   override_use_eMatDH_special_symbols = NA,
   use_hapMatcherR = TRUE,
   ff0_shard_check_every_pair = TRUE,
-  use_eigen = TRUE
+  use_eigen = TRUE,
+  impute_rare_common = FALSE,
+  rare_af_threshold = 0.01
 )
 }
 \arguments{
@@ -224,6 +228,8 @@ QUILT(
 
 \item{use_small_eHapsCurrent_tc}{For testing purposes only}
 
+\item{mspbwtB}{How many SNPs will be encoded as one grid}
+
 \item{mspbwtL}{How many neighouring haplotypes to scan up and down at each grid.}
 
 \item{mspbwtM}{Minimun long grids matches}
@@ -231,6 +237,8 @@ QUILT(
 \item{zilong}{Using zilong's mspbwt solution}
 
 \item{use_mspbwt}{Use msPBWT to select new haplotypes}
+
+\item{mspbwt_nindices}{How many mspbwt indices to build}
 
 \item{use_splitreadgl}{Use split real GL in hap selection and imputation}
 
@@ -241,6 +249,10 @@ QUILT(
 \item{ff0_shard_check_every_pair}{When using shard gibbs sampler, whether to check every pair of SNPs, or not}
 
 \item{use_eigen}{Use eigen library for per haploid full li and stephens pass of full haplotype reference panel}
+
+\item{impute_rare_common}{Whether to use common SNPs first for imputation, followed by a round of rare imputation}
+
+\item{rare_af_threshold}{Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common}
 }
 \value{
 Results in properly formatted version

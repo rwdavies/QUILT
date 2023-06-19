@@ -70,15 +70,19 @@
 #'
 #' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
 #' @param use_small_eHapsCurrent_tc For testing purposes only
+#' @param mspbwtB How many SNPs will be encoded as one grid
 #' @param mspbwtL How many neighouring haplotypes to scan up and down at each grid.
 #' @param mspbwtM Minimun long grids matches
 #' @param zilong Using zilong's mspbwt solution
 #' @param use_mspbwt Use msPBWT to select new haplotypes
+#' @param mspbwt_nindices How many mspbwt indices to build
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
 #' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
 #' @param use_hapMatcherR Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use
 #' @param ff0_shard_check_every_pair When using shard gibbs sampler, whether to check every pair of SNPs, or not
 #' @param use_eigen Use eigen library for per haploid full li and stephens pass of full haplotype reference panel
+#' @param impute_rare_common Whether to use common SNPs first for imputation, followed by a round of rare imputation
+#' @param rare_af_threshold Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -152,15 +156,19 @@ QUILT <- function(
     small_ref_panel_gibbs_iterations = 20,
     plot_per_sample_likelihoods = FALSE,
     use_small_eHapsCurrent_tc = FALSE,
+    mspbwtB = 64L,
     mspbwtL = 40,
     mspbwtM = 1,
     zilong = FALSE,
     use_mspbwt = FALSE,
+    mspbwt_nindices = 4L,
     use_splitreadgl = FALSE,
     override_use_eMatDH_special_symbols = NA,
     use_hapMatcherR = TRUE,
     ff0_shard_check_every_pair = TRUE,
-    use_eigen = TRUE
+    use_eigen = TRUE,
+    impute_rare_common = FALSE,
+    rare_af_threshold = 0.01    
 ) {
 
     x <- as.list(environment())
@@ -330,7 +338,11 @@ QUILT <- function(
                 reference_vcf_file = reference_vcf_file,
                 output_file = prepared_reference_filename,
                 override_use_eMatDH_special_symbols = override_use_eMatDH_special_symbols,
-                use_hapMatcherR = use_hapMatcherR
+                use_hapMatcherR = use_hapMatcherR,
+                impute_rare_common = impute_rare_common,
+                rare_af_threshold = rare_af_threshold,
+                mspbwt_nindices = mspbwt_nindices,
+                mspbwtB = mspbwtB
             )
         } else {
             stop(paste0("Cannot find prepared haplotype reference file, expecting:", prepared_reference_filename))
@@ -461,15 +473,26 @@ QUILT <- function(
         posX <- out$pos
         gen <- out$gen
         phase <- out$phase
-        key1 <- paste0(pos[, 1], pos[, 2], pos[, 3], pos[, 4])
+        key1 <- paste0(pos_all[, 1], pos_all[, 2], pos_all[, 3], pos_all[, 4])
         key2 <- paste0(posX[, 1], posX[, 2], posX[, 3], posX[, 4])
         err <- paste0("There was an error lining up the reference data from the reference legend file with the posfile. Please double check that posfile and genfile/phasefile are defined as exactly the same SNPs in the region to be imputed as the reference legend file")
         if (length(key1) != length(key2)) {
+            print(length(key1))
+            print(length(key2))
+            print(setdiff(key2, key1))
+            print(setdiff(key1, key2))
+            save(key1, key2, file = "~/temp.RData")
             stop(err)
         }
         if (sum(key1 != key2) > 0) {
+            print(sum(key1 != key2))
             stop(err)
         }
+        ## get all as well
+        gen_all <- gen
+        phase_all <- phase
+        gen <- gen[snp_is_common, drop = FALSE]
+        phase <- phase[snp_is_common, , , drop = FALSE]
     } else {
         gen <- NULL
         phase <- NULL
@@ -550,64 +573,20 @@ QUILT <- function(
     ##
     ## work on various recombination rates
     ##
-    print_message(paste0("There are ", nrow(pos), " SNPs in this region"))
-    small_transMatRate_tc_H <- get_transMatRate_m("pseudoHaploid", sigmaCurrent_m)
-    X <- get_transMatRate_m("pseudoHaploid", sigmaCurrent_m)
-    full_transMatRate_t_H <- array(NA, c(dim(X)[1], dim(X)[2]))
-    ## ARGH R dropping dimensions
-    full_transMatRate_t_H[, ] <- X[, , 1]
-    rate2 <- -log(small_transMatRate_tc_H[1, , 1]) * 100
-    smooth_cm <- rcpp_make_smoothed_rate(rate2, L_grid, shuffle_bin_radius, verbose = FALSE);
-    smooth_cm <- smooth_cm / max(smooth_cm)
-
-
-    ##
-    ## work with truth haplotypes for Optimal output
-    ##
-    ## if (have_truth_haplotypes) {
-    ##     ## I also here want to record everything basically
-    ##     ## for gibbs and seek checks
-    ##     record_read_label_usage <- TRUE
-    ##     haps <- fread(cmd = paste0("gunzip -c genotypes/phase.", scenario, ".", chr, ".", regionStart, ".", regionEnd, ".phased.vcf.gz | grep -v '##'"), data.table = FALSE)
-    ##     ## is basically a VCF
-    ##     truth_haps_all <- haps[match(L, haps[, 2]), ]
-    ##     if (scenario == "NA12878") {
-    ##         truth_gen <- cbind(truth_gen, NA12878ONT = truth_gen[, "NA12878"])
-    ##         truth_haps_all <- cbind(truth_haps_all, NA12878ONT = truth_haps_all[, "NA12878"])
-    ##     }
-    ## }
-
-    ## sampleNames <- get_sample_names_from_bam_or_cram_files(
-    ##     bam_files,
-    ##     nCores = 1,
-    ##     file_type = "BAM",
-    ##     verbose = FALSE
-    ## )
-
-    ## if (scenario == "ont") {
-    ##     ## fuck it, hack this for now
-    ##     for(sampleName in sampleNames[-grep("10X", sampleNames)]) {
-    ##         truth_gen <- cbind(truth_gen[, sampleName], truth_gen)
-    ##         colnames(truth_gen)[1] <- paste0(sampleName, "10X")
-    ##         truth_haps_all <- cbind(truth_haps_all[, sampleName], truth_haps_all)
-    ##         colnames(truth_haps_all)[1] <- paste0(sampleName, "10X")
-    ##     }
-    ## }
-
-
-    ## ##
-    ## ## check all are OK
-    ## ##
-    ## if (have_truth_haplotypes) {
-    ##     x <- match(sampleNames, colnames(truth_haps_all))
-    ##     if (sum(is.na(x)) > 0) {
-    ##         print(x)
-    ##         print(sampleNames)
-    ##         print(colnames(truth_haps_all))
-    ##         stop("cannot match all sampleNames to truth phasing columns")
-    ##     }
-    ## }
-
+    if (!impute_rare_common) {
+        print_message(paste0("There are ", nrow(pos), " SNPs in this region"))
+    } else {
+        n1 <- nrow(pos)
+        n2 <- nrow(pos_all)
+        print_message(paste0("There are ", n1, " common SNPs and ", n2, " SNPs overall in this region"))
+    }
+    
+    out <- get_transMatRate_tc_H_and_smooth_cm(
+        sigmaCurrent_m = sigmaCurrent_m,
+        L_grid = L_grid,
+        shuffle_bin_radius = shuffle_bin_radius
+    )
+    
 
     ##
     ## here initialize where to start and stop getting reads from
@@ -626,6 +605,40 @@ QUILT <- function(
     }
 
 
+    ##
+    ## defined for all SNPs here
+    ## 
+    out <- get_transMatRate_tc_H_and_smooth_cm(sigmaCurrent_m, L_grid, shuffle_bin_radius)
+    smooth_cm <- out[["smooth_cm"]]
+    small_transMatRate_tc_H <- out[["small_transMatRate_tc_H"]]
+    full_transMatRate_t_H <- out[["full_transMatRate_t_H"]]
+
+    
+    ##
+    ## special objects on all SNPs
+    ##
+    if (impute_rare_common) {
+        special_rare_common_objects <- prepare_full_objects_for_rare_common(
+            pos_all = pos_all,
+            expRate = expRate,
+            minRate = minRate,
+            maxRate = maxRate,
+            nGen = nGen,
+            shuffle_bin_radius = shuffle_bin_radius,
+            genetic_map = genetic_map,
+            rare_per_hap_info = rare_per_hap_info,
+            snp_is_common = snp_is_common,
+            ref_alleleCount_all = ref_alleleCount_all,
+            Ksubset = Ksubset,
+            regionStart = regionStart,
+            regionEnd = regionEnd
+        )
+        nSNPs_all <- nrow(pos_all)
+    } else {
+        special_rare_common_objects <- list()
+        nSNPs_all <- nrow(pos)
+    }
+    
 
     ##
     ## mclapply the runs!
@@ -637,22 +650,17 @@ QUILT <- function(
         sampleRange <- sampleRanges[[iCore]]
 
         ## for output
-        hweCount <- array(0, c(nSNPs, 3))
-        infoCount <- array(0, c(nSNPs, 2))
-        afCount <- array(0, nSNPs)
-        alleleCount <- array(0, c(nSNPs, 2))
+        hweCount <- array(0, c(nSNPs_all, 3))
+        infoCount <- array(0, c(nSNPs_all, 2))
+        afCount <- array(0, nSNPs_all)
+        alleleCount <- array(0, c(nSNPs_all, 2))
 
         K <- nrow(hapMatcher)
-
         
         if ((zilong | use_mspbwt) && (phasefile == "") && (genfile == "" )) {
             full_alphaHat_t <- array(0, c(1, 1))
         } else {
-            if (use_eigen) {
-                full_alphaHat_t <- matrix(0, nrow = K, ncol = nGrids)                
-            } else {
-                full_alphaHat_t <- array(0, c(K, nGrids))  
-            }
+            full_alphaHat_t <- array(0, c(K, nGrids))
         }
         ## full_betaHat_t <- array(0, c(K, nGrids))
         full_betaHat_t <- array(0, c(1, 1))
@@ -694,6 +702,35 @@ QUILT <- function(
         }
 
 
+        if (impute_rare_common) {
+
+            K <- nrow(hapMatcher)
+            nFullGrids <- ceiling(nrow(pos_all) / 32)
+            nFullSNPs <- nrow(pos_all)
+                
+            if (make_plots) {
+                complete_full_gamma_t <- array(0, c(K, nFullGrids))
+            } else {
+                complete_full_gamma_t <- array(0, c(1, 1))
+            }
+
+            special_rare_common_objects_per_core <- list(
+                alphaHat_t1 = array(0, c(Ksubset, nFullGrids)),
+                betaHat_t1 = array(0, c(Ksubset, nFullGrids)),
+                eMatGrid_t1 = array(0, c(Ksubset, nFullGrids)),
+                alphaHat_t2 = array(0, c(Ksubset, nFullGrids)),
+                betaHat_t2 = array(0, c(Ksubset, nFullGrids)),
+                eMatGrid_t2 = array(0, c(Ksubset, nFullGrids)),
+                alphaHat_t3 = array(0, c(Ksubset, nFullGrids)),
+                betaHat_t3 = array(0, c(Ksubset, nFullGrids)),
+                eMatGrid_t3 = array(0, c(Ksubset, nFullGrids)),
+                gammaMT_t_local = array(0, c(Ksubset, nFullGrids)),
+                gammaMU_t_local = array(0, c(Ksubset, nFullGrids)),
+                gammaP_t_local = array(0, c(Ksubset, nFullGrids))
+            )
+        } else {
+            special_rare_common_objects_per_core <- list()
+        }
 
 
         results_across_samples <- as.list(sampleRange[2] - sampleRange[1] + 1)
@@ -741,6 +778,8 @@ QUILT <- function(
                 verbose = verbose,
                 gen = gen,
                 phase = phase,
+                gen_all = gen_all,
+                phase_all = phase_all,
                 iSample = iSample,
                 grid = grid,
                 ancAlleleFreqAll = ancAlleleFreqAll,
@@ -805,7 +844,11 @@ QUILT <- function(
                 small_ref_panel_skip_equally_likely_reads = small_ref_panel_skip_equally_likely_reads,
                 small_ref_panel_equally_likely_reads_update_iterations = small_ref_panel_equally_likely_reads_update_iterations,
                 ff0_shard_check_every_pair = ff0_shard_check_every_pair,
-                use_eigen = use_eigen
+                use_eigen = use_eigen,
+                pos_all = pos_all,
+                special_rare_common_objects = special_rare_common_objects,
+                special_rare_common_objects_per_core = special_rare_common_objects_per_core,                
+                impute_rare_common = impute_rare_common
             )
 
             if (out[["sample_was_imputed"]]) {
@@ -827,7 +870,7 @@ QUILT <- function(
             rm(out)
 
             ## optionally, do some gc here, if longer running job
-            if (as.numeric(K) * as.numeric(nSNPs) > (1e6)) {
+            if (as.numeric(K) * as.numeric(nSNPs_all) > (1e6)) {
                 ## print("temporary")
                 ## print(head(sort( sapply(ls(),function(x){object.size(get(x))}), decreasing = TRUE)))
                 ## print(object.size(results_across_samples))
@@ -853,6 +896,16 @@ QUILT <- function(
 
     check_mclapply_OK(complete_set_of_results)
 
+    ##
+    ## swap over here
+    ##
+    if (impute_rare_common) {
+        nSNPs <- nSNPs_all
+        inRegion2 <- special_rare_common_objects[["inRegion2"]]
+        pos <- pos_all
+    }
+
+    
     ##
     ## make and write output file
     ##
