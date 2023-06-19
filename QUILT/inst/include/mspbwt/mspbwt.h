@@ -103,11 +103,20 @@ public:
 
     GridVec encodezg(const vector<int>& z)
     {
+        bool is_z_commom;
+        if(z.size() == M)
+            is_z_commom = true;
+        else if(z.size() > M)
+            is_z_commom = false;
+
         int k{0}, m{0};
         GridVec zg(G);
         for (m = 0; m < M; m++)
         {
-            zg[k] = (zg[k] << 1) | (z[keep[m]] != 0);
+            if(is_z_commom)
+                zg[k] = (zg[k] << 1) | (z[m] != 0);
+            else
+                zg[k] = (zg[k] << 1) | (z[keep[m]] != 0);
             if ((m + 1) % B == 0)
             {
                 zg[k] = reverseBits(zg[k]);
