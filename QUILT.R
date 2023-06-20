@@ -471,6 +471,12 @@ option_list <- list(
         default = TRUE
     ),
     make_option(
+        "--rare_af_threshold",
+        type = "double",
+        help = "Working on common and rare variants seperately [default 0.0001] ",
+        default = 0.0001
+    ),
+    make_option(
         "--impute_rare_common",
         type = "logical",
         help = "Whether to use common SNPs first for imputation, followed by a round of rare imputation [default FALSE] ",
@@ -559,5 +565,6 @@ QUILT(
     use_hapMatcherR = opt$use_hapMatcherR,
     ff0_shard_check_every_pair = opt$ff0_shard_check_every_pair,
     use_eigen = opt$use_eigen,
+    rare_af_threshold = opt$rare_af_threshold,
     impute_rare_common = opt$impute_rare_common
 )

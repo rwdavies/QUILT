@@ -168,7 +168,7 @@ QUILT <- function(
     ff0_shard_check_every_pair = TRUE,
     use_eigen = TRUE,
     impute_rare_common = FALSE,
-    rare_af_threshold = 0.01    
+    rare_af_threshold = 0.0001
 ) {
 
     x <- as.list(environment())

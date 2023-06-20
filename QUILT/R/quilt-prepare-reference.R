@@ -64,7 +64,7 @@ QUILT_prepare_reference <- function(
     use_hapMatcherR = TRUE,
     mspbwtB = 64L,
     impute_rare_common = FALSE,
-    rare_af_threshold = 0.01
+    rare_af_threshold = 0.0001
 ) {
 
     x <- as.list(environment())

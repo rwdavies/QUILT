@@ -35,7 +35,7 @@ QUILT_prepare_reference(
   use_hapMatcherR = TRUE,
   mspbwtB = 64L,
   impute_rare_common = FALSE,
-  rare_af_threshold = 0.01
+  rare_af_threshold = 1e-04
 )
 }
 \arguments{

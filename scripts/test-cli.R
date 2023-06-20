@@ -38,7 +38,7 @@ STITCH::make_STITCH_cli(
     character_vectors = c("RData_objects_to_save"),
     other_logical_params = c("make_plots", "verbose", "record_read_label_usage", "record_interim_dosages", "use_bx_tag", "addOptimalHapsToVCF", "estimate_bq_using_truth_read_labels", "make_plots_block_gibbs", "override_default_params_for_small_ref_panel", "hla_run", "make_fake_vcf_with_sites_list", "print_extra_timing_information", "plot_per_sample_likelihoods", "save_prepared_reference", "use_small_eHapsCurrent_tc", "output_gt_phased_genotypes", "zilong", "use_mspbwt", "use_splitreadgl",  "use_hapMatcherR", "ff0_shard_check_every_pair", "use_eigen", "impute_rare_common"),
     other_integer_params = c("nGibbsSamples", "n_seek_its", "n_burn_in_seek_its", "Ksubset", "Knew", "K_top_matches", "panel_size", "bxTagUpperLimit", "seed", "gamma_physically_closest_to", "nMaxDH", "minimum_number_of_sample_reads", "small_ref_panel_gibbs_iterations", "mspbwtL", "mspbwtM", "override_use_eMatDH_special_symbols"),
-    other_double_params = c("heuristic_match_thin", "minGLValue"),
+    other_double_params = c("heuristic_match_thin", "minGLValue", "rare_af_threshold"),
     function_name = "QUILT",
     library_name = "QUILT"
 )
