@@ -257,7 +257,7 @@ QUILT_prepare_reference <- function(
             reference_haplotype_file = reference_haplotype_file,
             reference_legend_file = reference_legend_file,
             reference_sample_file = reference_sample_file,
-            reference_populations = reference_populations,
+            reference_populations = reference_populations, ## this is done below, to synchronize
             pos = pos_to_use,
             tempdir = tempdir,
             regionName = regionName,
@@ -355,12 +355,26 @@ QUILT_prepare_reference <- function(
     ##
     if (reference_sample_file != "") {
         reference_samples <- fread(reference_sample_file, header = TRUE, data.table = FALSE)
-        if (!is.na(reference_populations[1])) {
-            keep_samples <- as.character(reference_samples[, "POP"]) %in% reference_populations
-            reference_samples <- reference_samples[keep_samples, ]
+        if (use_reference_vcf && !is.na(reference_populations[1])) {
+            if (nrow(rhb_t) != (2 * nrow(reference_samples))) {
+                stop(paste0("The number of haplotypes from the reference haplotype file (N = ", nrow(rhb_t), ") does not match the inferred number of entries from the reference samples file (Nrows = ", nrow(reference_samples), ", N = ", 2 * nrow(reference_samples), ")"))
+            }
+            w <- reference_samples[, 2] %in% reference_populations
+            if (sum(w) == 0) {
+                stop("None of the reference samples have populations (column 2 in the reference_sample_file) that match the supplied reference_populations")
+            }
+            reference_samples <- reference_samples[w, ]
+            w2 <- rep(w, each = 2)
+            rhb_t <- rhb_t[w2, ]
         }
-        if (nrow(rhb_t) != (2 * nrow(reference_samples))) {
-            stop(paste0("The number of haplotypes from the reference haplotype file (N = ", nrow(rhb_t), ") does not match the inferred number of entries from the reference samples file (Nrows = ", nrow(reference_samples), ", N = ", 2 * nrow(reference_samples)))
+        if (!use_reference_vcf) {
+            if (!is.na(reference_populations[1])) {
+                keep_samples <- as.character(reference_samples[, "POP"]) %in% reference_populations
+                reference_samples <- reference_samples[keep_samples, ]
+            }
+            if (nrow(rhb_t) != (2 * nrow(reference_samples))) {
+                stop(paste0("The number of haplotypes from the reference haplotype file (N = ", nrow(rhb_t), ") does not match the inferred number of entries from the reference samples file (Nrows = ", nrow(reference_samples), ", N = ", 2 * nrow(reference_samples), ")"))
+            }
         }
     } else {
         reference_samples <- NULL
