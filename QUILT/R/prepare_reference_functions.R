@@ -126,7 +126,6 @@ rare_common_validate_region_to_impute_when_using_regionStart <- function(
         } else if (i == 2) {
             w1 <- (regionStart <= L) & (L <= regionEnd)
             x <- paste0(regionStart, " <= position <= ", regionEnd)
-            nCentralSNPs <- s1 + s2
         } else if (i == 3) {
             w1 <- (regionEnd < L) & (L <= (regionEnd + buffer))
             x <- paste0(regionEnd, " < position <= ", regionEnd + buffer)
@@ -136,12 +135,15 @@ rare_common_validate_region_to_impute_when_using_regionStart <- function(
         print_message(paste0("There are ", s1, " common and ", s2, " rare (", s1 + s2, " total) variants in the ", 
             c("left buffer", "central", "right buffer")[i], " region ", 
             x))
+        if (i == 2) {
+            nCentralSNPs <- s1 + s2
+        }
     }
     if (length(L) < 2) {
         stop("There are fewer than 2 SNPs to impute, i.e. there is 1 SNP to impute. In this case, imputation is really just genotyping. STITCH could support genotyping but does not, and note that this kind of defeats the point of imputation. Please use your favourite genotyper e.g. GATK to genotype these SNPs. If you strongly disagree please file a bug report and this can be re-examined")
     }
     if (nCentralSNPs < 1) {
-        stop("There are no SNPs to impute")
+        stop("There are insufficient SNPs to impute in the central region")
     }
     return(NULL)
 }

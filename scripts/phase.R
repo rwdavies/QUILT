@@ -22,6 +22,24 @@ options(scipen = 999)
 
 
 
+##
+## IMPORTANT
+## 
+## the code below calls prepare_for_phase2.R
+## which needs the following to work
+## . ~/.conda_activate && conda activate shapeit4 && shapeit4
+## so either modify prepare_for_phase2.R
+## or put conda activate code (from miniconda) into ~/.conda_activate
+## and run code like the following
+##
+## . ~/.conda_activate
+## conda create --name shapeit4
+## conda install shapeit4=4.0 -c bioconda
+
+
+
+
+
 ## set parameters here
 outputdir <- "/data/smew1/rdavies/ukbb_gel_2023_01_26/phasing_test"
 chr <- "chr20"
@@ -36,6 +54,7 @@ rebuild <- FALSE ## turn on to force re-building everything
 genetic_map_file <- "/data/smew1/rdavies/ukbb_gel_2023_01_26/CEU/CEU-chr20-final.b38.txt.gz"
 refpanel <- "/data/smew1/rdavies/hrc/hg38_liftover_clean_chr20.vcf.gz" ## for trio triple het phasing
 
+    
 
 
 
@@ -144,6 +163,8 @@ if (rebuild | !file.exists(specific_genfile)) {
     
     write.table(pos, file = specific_posfile, row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE)
     write.table(G, file = specific_genfile, row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+    gen2 <- G
+    pos2 <- pos
     
 }
 
