@@ -130,11 +130,11 @@ out <- mclapply(1:length(samples_needed_for_phasing), mc.cores = nCores, functio
 
 
 ## check for errors
-te <- (sapply(out, class) == "try-error") | sapply(out, is.null)
-if (sum(te) > 0) {
-    print_message(out[[which(te)[1]]]) # print first error
-    stop("Something went wrong")
-}
+##te <- (sapply(out, class) == "try-error") | sapply(out, is.null)
+##if (sum(te) > 0) {
+##    print_message(out[[which(te)[1]]]) # print first error
+##    stop("Something went wrong")
+##}
 
 
 
@@ -275,8 +275,8 @@ if (rebuild | !file.exists(specific_phasefile)) {
         phase2[t1, samp, 1] <- h1
         phase2[t1, samp, 2] <- h2
         ## fill in missing using scaffold
-        phase2[t2, samp, 1] <- as.integer(substr(scaffold[t2, samp], 1, 1))
-        phase2[t2, samp, 2] <- as.integer(substr(scaffold[t2, samp], 3, 3))
+        suppressWarnings(phase2[t2, samp, 1] <- as.integer(substr(scaffold[t2, samp], 1, 1)))
+        suppressWarnings(phase2[t2, samp, 2] <- as.integer(substr(scaffold[t2, samp], 3, 3)))
     }
     
     print(paste0("Missing data proportion for phase:", sum(is.na(phase2)) / prod(dim(phase2)) * 100))
@@ -287,7 +287,7 @@ if (rebuild | !file.exists(specific_phasefile)) {
     }
     
     clean_region <- paste0("20.", regionStartMinusBuffer, ".", regionEndPlusBuffer)    
-    specific_phasefile <- file.path(output_date, paste0("phasefile.HC.", clean_region, ".txt"))
+    ## specific_phasefile <- file.path(output_date, paste0("phasefile.HC.", clean_region, ".txt"))
     write.table(phase2B, file = specific_phasefile, row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
     
 }
