@@ -469,6 +469,12 @@ option_list <- list(
         type = "logical",
         help = "Use eigen library for per haploid full li and stephens pass of full haplotype reference panel [default TRUE] ",
         default = TRUE
+    ),
+    make_option(
+        "--impute_rare_common",
+        type = "logical",
+        help = "Whether to use common SNPs first for imputation, followed by a round of rare imputation [default FALSE] ",
+        default = FALSE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -552,5 +558,6 @@ QUILT(
     override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
     use_hapMatcherR = opt$use_hapMatcherR,
     ff0_shard_check_every_pair = opt$ff0_shard_check_every_pair,
-    use_eigen = opt$use_eigen
+    use_eigen = opt$use_eigen,
+    impute_rare_common = opt$impute_rare_common
 )
