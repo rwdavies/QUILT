@@ -202,12 +202,12 @@ QUILT_prepare_reference <- function(
             print_message(paste0("Using strategy of first imputing using common SNPs and then using all SNPs, with allele frequency threshold:", rare_af_threshold))
         }
         
-        region <- paste0(chr, ":", regionStart - buffer, "-", regionEnd + buffer)
+        ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
         print_message("Begin get sites and haplotypes from reference vcf")        
         out <- STITCH::Rcpp_get_hap_info_from_vcf(
             vcffile = reference_vcf_file,
             af_cutoff = rare_af_threshold,
-            region = region
+            region = samtoolslike
         )
         print_message("End get sites and haplotypes from reference vcf")
 
