@@ -248,8 +248,8 @@ public:
         N = vcf.nsamples * 2;
         M = 0;
         {
-            vector<char> gt;
-            vector<vector<char>> allgts;
+            vector<bool> gt;
+            vector<vector<bool>> allgts;
             double af;
             int prev_pos = -1;
             while (vcf.getNextVariant(var))
