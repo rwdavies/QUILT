@@ -180,6 +180,12 @@ option_list <- list(
         type = "double",
         help = "Working on common and rare variants seperately [default 0.0001] ",
         default = 0.0001
+    ),
+    make_option(
+        "--impute_rare_common",
+        type = "logical",
+        help = "Whether to use common SNPs first for imputation, followed by a round of rare imputation [default FALSE] ",
+        default = FALSE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -215,5 +221,6 @@ QUILT_prepare_reference(
     override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
     use_hapMatcherR = opt$use_hapMatcherR,
     mspbwtB = opt$mspbwtB,
-    rare_af_threshold = opt$rare_af_threshold
+    rare_af_threshold = opt$rare_af_threshold,
+    impute_rare_common = opt$impute_rare_common
 )
