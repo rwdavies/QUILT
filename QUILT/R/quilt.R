@@ -316,6 +316,7 @@ QUILT <- function(
         if (!save_prepared_reference) {
             prepared_reference_filename <- tempfile(fileext = ".RData")
         }
+        print_message("Processing reference information")
         QUILT_prepare_reference(
             outputdir = outputdir,
             chr = chr,
@@ -349,8 +350,7 @@ QUILT <- function(
             mspbwt_nindices = mspbwt_nindices,
             mspbwtB = mspbwtB
         )
-    } else {
-        stop(paste0("Cannot find prepared haplotype reference file, expecting:", prepared_reference_filename))
+        print_message("Done processing reference information")        
     }
 
 
