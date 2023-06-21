@@ -265,10 +265,8 @@ get_and_impute_one_sample <- function(
     K <- nrow(hapMatcher)
     suppressOutput <- !print_extra_timing_information
 
-
-
     if (impute_rare_common) {
-        
+
         loadBamAndConvert(
             iBam = iSample,
             L = pos_all[, 2],
@@ -329,23 +327,28 @@ get_and_impute_one_sample <- function(
             truth_gen_all <- NULL
         }
 
-        truth_label_set <- determine_a_set_of_truth_labels(
-            sampleReads = allSNP_sampleReads,
-            truth_hap1 = truth_haps_all[, 1],
-            truth_hap2 = truth_haps_all[, 2],
-            maxDifferenceBetweenReads = maxDifferenceBetweenReads
-        )
-        truth_labels_all <- truth_label_set[["truth_labels"]]
-        uncertain_truth_labels_all <- truth_label_set[["uncertain_truth_labels"]]
-        rm(truth_label_set)
-
+        if (!is.null(truth_haps_all)) {
+            truth_label_set <- determine_a_set_of_truth_labels(
+                sampleReads = allSNP_sampleReads,
+                truth_hap1 = truth_haps_all[, 1],
+                truth_hap2 = truth_haps_all[, 2],
+                maxDifferenceBetweenReads = maxDifferenceBetweenReads
+            )
+            truth_labels_all <- truth_label_set[["truth_labels"]]
+            uncertain_truth_labels_all <- truth_label_set[["uncertain_truth_labels"]]
+            rm(truth_label_set)
+        } else {
+            truth_labels_all <- NULL
+            uncertain_truth_labels_all <- NULL
+        }
+        
         nSNPs_all <- nrow(pos_all)        
         dosage_all <- numeric(nSNPs_all)
         gp_t_all <- array(0, c(3, nSNPs_all))
 
-        
+
     }
-    
+
     ##
     ## sample read stuff - work off bam file!
     ##
