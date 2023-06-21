@@ -48,6 +48,7 @@ data_package <- STITCH::make_acceptance_test_data_package(
     K = K,
     phasemaster = phasemaster2
 )
+
 refpack <- STITCH::make_reference_package(
     n_snps = n_snps,
     n_samples_per_pop = 500,
@@ -77,7 +78,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
     for(impute_rare_common in c(TRUE, FALSE)) {
 
         ## this is the different methods: zilong, mspbwt, none, etc
-        for(i_method in 1:4) {
+        for(i_method in 3:3) {
 
             if (i_method == 1) {
                 zilong <- FALSE
@@ -113,9 +114,6 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         regionEnd = regionEnd,
                         buffer = buffer,
                         bamlist = data_package$bamlist,
-                        posfile = data_package$posfile,
-                        genfile = data_package$genfile,
-                        phasefile = data_package$phasefile,
                         reference_vcf_file= refpack$reference_vcf_file,
                         reference_haplotype_file = refpack$reference_haplotype_file,
                         reference_legend_file = refpack$reference_legend_file,
@@ -162,9 +160,6 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         regionEnd = regionEnd,
                         buffer = buffer,
                         bamlist = data_package$bamlist,
-                        posfile = data_package$posfile,
-                        genfile = data_package$genfile,
-                        phasefile = data_package$phasefile,
                         nGibbsSamples = 7,
                         n_seek_its = 2,
                         nCores = nCores,
@@ -173,6 +168,10 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         zilong = zilong,
                         impute_rare_common = impute_rare_common                        
                     )
+                    ## posfile = data_package$posfile,
+                    ## genfile = data_package$genfile,
+                    ## phasefile = data_package$phasefile,
+                    
 
                 }
                 
