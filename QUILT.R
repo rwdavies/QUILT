@@ -417,6 +417,12 @@ option_list <- list(
         default = FALSE
     ), 
     make_option(
+        "--mspbwtB",
+        type = "integer",
+        help = "How many SNPs will be encoded as one grid [default 64L] ",
+        default = 64L
+    ), 
+    make_option(
         "--mspbwtL",
         type = "integer",
         help = "How many neighouring haplotypes to scan up and down at each grid. [default 40] ",
@@ -439,6 +445,12 @@ option_list <- list(
         type = "logical",
         help = "Use msPBWT to select new haplotypes [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--mspbwt_nindices",
+        type = "integer",
+        help = "How many mspbwt indices to build [default 4L] ",
+        default = 4L
     ), 
     make_option(
         "--use_splitreadgl",
@@ -469,18 +481,18 @@ option_list <- list(
         type = "logical",
         help = "Use eigen library for per haploid full li and stephens pass of full haplotype reference panel [default TRUE] ",
         default = TRUE
-    ),
-    make_option(
-        "--rare_af_threshold",
-        type = "double",
-        help = "Working on common and rare variants seperately [default 0.0001] ",
-        default = 0.0001
-    ),
+    ), 
     make_option(
         "--impute_rare_common",
         type = "logical",
         help = "Whether to use common SNPs first for imputation, followed by a round of rare imputation [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--rare_af_threshold",
+        type = "double",
+        help = "Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common [default 0.0001] ",
+        default = 0.0001
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -556,15 +568,17 @@ QUILT(
     small_ref_panel_gibbs_iterations = opt$small_ref_panel_gibbs_iterations,
     plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
+    mspbwtB = opt$mspbwtB,
     mspbwtL = opt$mspbwtL,
     mspbwtM = opt$mspbwtM,
     zilong = opt$zilong,
     use_mspbwt = opt$use_mspbwt,
+    mspbwt_nindices = opt$mspbwt_nindices,
     use_splitreadgl = opt$use_splitreadgl,
     override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
     use_hapMatcherR = opt$use_hapMatcherR,
     ff0_shard_check_every_pair = opt$ff0_shard_check_every_pair,
     use_eigen = opt$use_eigen,
-    rare_af_threshold = opt$rare_af_threshold,
-    impute_rare_common = opt$impute_rare_common
+    impute_rare_common = opt$impute_rare_common,
+    rare_af_threshold = opt$rare_af_threshold
 )
