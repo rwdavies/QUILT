@@ -187,7 +187,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                     data_package = data_package,
                     which_snps = which_snps,
                     tol = 0.1,
-                    min_info = 0.001,
+                    min_info = 0.9,
                     check_info_only = TRUE
                 )
                 ## surprisingly low info for some of these, occurs naturally, for some less confident ones, given low sample size

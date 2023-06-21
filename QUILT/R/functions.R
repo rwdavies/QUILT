@@ -304,9 +304,10 @@ get_and_impute_one_sample <- function(
             grid = special_rare_common_objects[["grid"]]
         )
 
+        nGrids_all <- length(special_rare_common_objects$L_grid)
         allSNP_wif0 <- as.integer(sapply(allSNP_sampleReads, function(x) x[[2]]))
-        allSNP_grid_has_read <- rep(FALSE, nGrids)
-        allSNP_grid_has_read[allSNP_wif0 + 1] <- TRUE
+        allSNP_grid_has_read <- rep(FALSE, nGrids_all)
+        allSNP_grid_has_read[unique(allSNP_wif0) + 1] <- TRUE
 
         if (have_truth_haplotypes) {
             s <- sampleNames[iSample]
@@ -969,7 +970,7 @@ get_and_impute_one_sample <- function(
             if (verbose) {
                 print_message(paste0("i_gibbs=", i_gibbs_sample, ", i_it = ", i_it, " small gibbs (all SNPs)"))
             }
-            
+
             out_rare_common <- impute_final_gibbs_with_rare_common(
                 special_rare_common_objects = special_rare_common_objects,
                 special_rare_common_objects_per_core = special_rare_common_objects_per_core,

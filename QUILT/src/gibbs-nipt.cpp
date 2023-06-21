@@ -560,7 +560,7 @@ void rcpp_alpha_forward_one_QUILT_faster(
     const double one_over_K = 1 / double(alphaHat_t.n_rows);
     //double alphaConst = transMatRate_tc_H(1, iGrid_minus_1, s);
     // not sure - do I need this?
-    double alphaConst = transMatRate_tc_H(1, iGrid_minus_1, s) * sum(alphaHat_t.col(iGrid_minus_1));    
+    double alphaConst = transMatRate_tc_H(1, iGrid_minus_1, s) * sum(alphaHat_t.col(iGrid_minus_1));
     double a;
     double x = transMatRate_tc_H(0, iGrid_minus_1, s);
     double c2 = c(iGrid);
@@ -1608,8 +1608,14 @@ void rcpp_gibbs_nipt_iterate(
         //
         if (iGrid > 0) {
             // move and normalize
+	    if (verbose) {
+                std::cout << "move alpha forward one" << std::endl;
+	    }
             rcpp_alpha_forward_one_QUILT_faster(s, iGrid, K, alphaHat_t1, transMatRate_tc_H, eMatGrid_t1, c1, minus_log_c1_sum, grid_has_read, true);
             rcpp_alpha_forward_one_QUILT_faster(s, iGrid, K, alphaHat_t2, transMatRate_tc_H, eMatGrid_t2, c2, minus_log_c2_sum, grid_has_read, true);
+	    if (verbose) {
+                std::cout << "done moving alpha forward one" << std::endl;
+	    }
             if (!sample_is_diploid) {
                 rcpp_alpha_forward_one_QUILT_faster(s, iGrid, K, alphaHat_t3, transMatRate_tc_H, eMatGrid_t3, c3, minus_log_c3_sum, grid_has_read, true);
             }

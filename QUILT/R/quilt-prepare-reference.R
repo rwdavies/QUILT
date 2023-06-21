@@ -434,7 +434,7 @@ QUILT_prepare_reference <- function(
     if (!is.na(override_use_eMatDH_special_symbols)) {
         use_eMatDH_special_symbols <- override_use_eMatDH_special_symbols
     } else {
-        if (use_zilong | use_mspbwt) {
+        if (use_zilong | use_mspbwt | impute_rare_common) {
             use_eMatDH_special_symbols <- TRUE
         } else {
             use_eMatDH_special_symbols <- FALSE

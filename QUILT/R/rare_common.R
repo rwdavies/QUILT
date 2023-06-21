@@ -46,6 +46,7 @@ make_eHapsCurrent_tc_using_rare_and_common_stuff <- function(
             }
         }
     }
+    
     ## now to rare ones
     for(i_k in 1:length(which_haps_to_use)) {
         k <- which_haps_to_use[i_k]
@@ -134,6 +135,8 @@ impute_final_gibbs_with_rare_common <- function(
     phase_all
 ) {
 
+
+    
     snp_is_common <- special_rare_common_objects[["snp_is_common"]]
     rare_per_hap_info <- special_rare_common_objects[["rare_per_hap_info"]]
     nSNPs <- nrow(pos_all)
@@ -259,7 +262,8 @@ impute_final_gibbs_with_rare_common <- function(
         i_it = i_it,
         i_gibbs_sample = i_gibbs_sample,
         ff0_shard_check_every_pair = ff0_shard_check_every_pair,
-        suppressOutput = 1
+        suppressOutput = 1,
+        verbose = FALSE
     )
     
     ## AM HERE

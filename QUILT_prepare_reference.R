@@ -176,16 +176,16 @@ option_list <- list(
         default = 64L
     ), 
     make_option(
-        "--rare_af_threshold",
-        type = "double",
-        help = "Working on common and rare variants seperately [default 0.0001] ",
-        default = 0.0001
-    ),
-    make_option(
         "--impute_rare_common",
         type = "logical",
         help = "Whether to use common SNPs first for imputation, followed by a round of rare imputation [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--rare_af_threshold",
+        type = "double",
+        help = "Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common [default 0.0001] ",
+        default = 0.0001
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -221,6 +221,6 @@ QUILT_prepare_reference(
     override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
     use_hapMatcherR = opt$use_hapMatcherR,
     mspbwtB = opt$mspbwtB,
-    rare_af_threshold = opt$rare_af_threshold,
-    impute_rare_common = opt$impute_rare_common
+    impute_rare_common = opt$impute_rare_common,
+    rare_af_threshold = opt$rare_af_threshold
 )
