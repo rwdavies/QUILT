@@ -453,8 +453,9 @@ QUILT_prepare_reference <- function(
         eMatDH_special_matrix <- matrix(as.integer(1), 1, 1) ## nuke!
     }
 
-    if (mspbwt_nindices < nGrids) {
-        print_message(paste0("There are ", nGrids, " grids, so re-setting mspbwt_nindices to ", mspbwt_nindices))
+    if (nGrids < mspbwt_nindices) {
+        print_message(paste0("There are ", nGrids, " grids, so re-setting mspbwt_nindices to ", 1))
+        mspbwt_nindices <- 1L
     }
 
     if (use_mspbwt) {
@@ -489,7 +490,6 @@ QUILT_prepare_reference <- function(
         ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
         mspbwt_binfile <- paste0(outputdir, "/" , regionName, ".mspbwt")
         ## zilong_indices <- mspbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike, nindices = mspbwt_nindices)
-        
         mspbwt_build(mspbwt_binfile, reference_vcf_file, subsamples, samtoolslike, mspbwt_nindices, mspbwtB, rare_af_threshold)
         
         print_message("End building and dumping Zilong msPBWT indices")

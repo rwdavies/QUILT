@@ -498,6 +498,18 @@ option_list <- list(
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
 suppressPackageStartupMessages(library(QUILT))
 Sys.setenv(PATH = paste0(Sys.getenv("PATH"), ":", getwd()))
+## aaa <- getwd()
+##     library("testthat")
+##     library("QUILT")
+##     dir <- "~/proj/QUILT/"
+##     setwd(paste0(dir, "/QUILT/R"))
+##     a <- dir(pattern = "*.R")
+##     b <- grep("~", a)
+##     if (length(b) > 0) {
+##         a <- a[-b]
+##     }
+## o <- sapply(a, source)
+## setwd(aaa)
 QUILT(
     outputdir = opt$outputdir,
     chr = opt$chr,

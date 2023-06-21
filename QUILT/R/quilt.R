@@ -307,46 +307,50 @@ QUILT <- function(
         prepared_reference_filename <- file_quilt_prepared_reference(outputdir, regionName)
     }
     if (!file.exists(prepared_reference_filename)) {
-        if (!reference_haplotype_file == "") {
-            if (!save_prepared_reference) {
-                prepared_reference_filename <- tempfile(fileext = ".RData")
-            }
-            QUILT_prepare_reference(
-                outputdir = outputdir,
-                chr = chr,
-                nGen = nGen,
-                regionStart = regionStart,
-                regionEnd = regionEnd,
-                buffer = buffer,
-                reference_haplotype_file = reference_haplotype_file,
-                reference_legend_file = reference_legend_file,
-                reference_sample_file = reference_sample_file,
-                reference_populations = reference_populations,
-                reference_phred = reference_phred,
-                reference_exclude_samplelist_file = reference_exclude_samplelist_file,
-                region_exclude_file = region_exclude_file,
-                genetic_map_file = genetic_map_file,
-                nMaxDH = nMaxDH,
-                tempdir = tempdir,
-                make_fake_vcf_with_sites_list = make_fake_vcf_with_sites_list,
-                output_sites_filename = output_sites_filename,
-                expRate = expRate,
-                maxRate = maxRate,
-                minRate = minRate,
-                use_mspbwt = use_mspbwt,
-                use_zilong = zilong,
-                reference_vcf_file = reference_vcf_file,
-                output_file = prepared_reference_filename,
-                override_use_eMatDH_special_symbols = override_use_eMatDH_special_symbols,
-                use_hapMatcherR = use_hapMatcherR,
-                impute_rare_common = impute_rare_common,
-                rare_af_threshold = rare_af_threshold,
-                mspbwt_nindices = mspbwt_nindices,
-                mspbwtB = mspbwtB
-            )
-        } else {
-            stop(paste0("Cannot find prepared haplotype reference file, expecting:", prepared_reference_filename))
+        ## if (
+        ## (reference_vcf_file != "") ||
+        ## (
+        ##     reference_haplotype_file != "" && reference_legend_file != ""
+        ## )
+        ## ) {
+        if (!save_prepared_reference) {
+            prepared_reference_filename <- tempfile(fileext = ".RData")
         }
+        QUILT_prepare_reference(
+            outputdir = outputdir,
+            chr = chr,
+            nGen = nGen,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer,
+            reference_haplotype_file = reference_haplotype_file,
+            reference_legend_file = reference_legend_file,
+            reference_sample_file = reference_sample_file,
+            reference_populations = reference_populations,
+            reference_phred = reference_phred,
+            reference_exclude_samplelist_file = reference_exclude_samplelist_file,
+            region_exclude_file = region_exclude_file,
+            genetic_map_file = genetic_map_file,
+            nMaxDH = nMaxDH,
+            tempdir = tempdir,
+            make_fake_vcf_with_sites_list = make_fake_vcf_with_sites_list,
+            output_sites_filename = output_sites_filename,
+            expRate = expRate,
+            maxRate = maxRate,
+            minRate = minRate,
+            use_mspbwt = use_mspbwt,
+            use_zilong = zilong,
+            reference_vcf_file = reference_vcf_file,
+            output_file = prepared_reference_filename,
+            override_use_eMatDH_special_symbols = override_use_eMatDH_special_symbols,
+            use_hapMatcherR = use_hapMatcherR,
+            impute_rare_common = impute_rare_common,
+            rare_af_threshold = rare_af_threshold,
+            mspbwt_nindices = mspbwt_nindices,
+            mspbwtB = mspbwtB
+        )
+    } else {
+        stop(paste0("Cannot find prepared haplotype reference file, expecting:", prepared_reference_filename))
     }
 
 

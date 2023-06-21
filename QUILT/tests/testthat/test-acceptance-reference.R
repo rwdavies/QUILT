@@ -64,7 +64,9 @@ refpack_dirty <- STITCH::make_reference_package(
     reference_populations = c("CEU", "GBR"),
     chr = chr,
     phasemaster = phasemaster,
-    L = L
+    L = L,
+    refs = refs,
+    alts = alts
 )
 
 refpack <- refpack_clean
@@ -117,7 +119,7 @@ test_that("QUILT can remove samples from the reference", {
             
             for(selection_method in c("sample", "pop")) {
 
-                print(paste0("use_reference_vcf = ", use_reference_vcf, ", use_zilong = ", use_zilong, ", selection_method = ", selection_method))
+                ## print(paste0("use_reference_vcf = ", use_reference_vcf, ", use_zilong = ", use_zilong, ", selection_method = ", selection_method))
                 
                 if (selection_method == "sample") {
                     reference_exclude_samplelist_file <- refpack$reference_exclude_samplelist_file
@@ -164,5 +166,45 @@ test_that("QUILT can remove samples from the reference", {
         }
     }
 
+})
+
+
+
+test_that("QUILT can use reference vcf that is dirty with impute_rare_common and use_zilong", {
+
+    set.seed(0105)
+
+    regionStart <- 11
+    regionEnd <- 80
+    buffer <- 5
+    regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
+
+    outputdir <- STITCH::make_unique_tempdir()
+    
+    QUILT(
+        outputdir = outputdir,
+        chr = data_package$chr,
+        regionStart = regionStart,
+        regionEnd = regionEnd,
+        buffer = buffer,
+        reference_vcf_file = refpack_dirty$reference_vcf_file,
+        nGen = 100,
+        zilong = TRUE,
+        impute_rare_common = TRUE,
+        bamlist = data_package$bamlist        
+    )
+
+    regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
+    which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
+    
+    check_quilt_output(
+        file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+        data_package = data_package,
+        which_snps = which_snps,
+        tol = 0.1,
+        min_info = 0.01,
+        check_info_only = TRUE
+    )
+    
 })
 
