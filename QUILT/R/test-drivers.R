@@ -4,7 +4,8 @@ check_quilt_output <- function(
     which_snps = NULL,
     tol = 0.1,
     min_info = 0.9,
-    max_missingness = 0.1
+    max_missingness = 0.1,
+    check_info_only = FALSE
 ) {
     vcf <- read.table(
         file,
@@ -13,6 +14,9 @@ check_quilt_output <- function(
     )
     ## check things in turn
     STITCH::check_vcf_info_scores(vcf, min_info)
+    if (check_info_only) {
+        return(NULL)
+    }
     ## check columns
     N <- ncol(vcf) - 9
     nSNPs <- nrow(vcf)

@@ -24,7 +24,7 @@ select_new_haps_zilong_msp <- function(
   res <- do.call(rbind.data.frame, res)
   ## interhaps <- intersect(res[res$ihap == 1, "haps"], res[res$ihap == 2, "haps"])
   ## saveRDS(res, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
-  print(paste("select", length(unique(res$haps)), " unique haps by mpbwt query before post-selection"))
+    print_message(paste("select", length(unique(res$haps)), " unique haps by mpbwt query before post-selection"))
   ## order by lens then nindicies then ends
   ## res$lens <- res$lens * res$n
   res <- res[order(-res$lens, -res$n, res$keys),]
@@ -40,21 +40,20 @@ select_new_haps_zilong_msp <- function(
       unique_haps,
       sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
     ))[1:Knew]
-    print(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
+    print_message(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
     return(new_haps)
   } else {
     unique_keys <- unique(res$keys)
     unique_haps_at_unique_keys <- unique(res[match(unique_keys, res[, "keys"]), "haps"])
-    print(paste("select", length(unique(unique_haps_at_unique_keys)), " unique haps after post-selection 2"))
+    print_message(paste("select", length(unique(unique_haps_at_unique_keys)), " unique haps after post-selection 2"))
     if (length(unique_haps_at_unique_keys) >= Knew) {
       return(unique_haps_at_unique_keys[1:Knew])
     } else {
       new_haps <- c(setdiff(unique_haps, unique_haps_at_unique_keys), unique_haps_at_unique_keys)[1:Knew]
-      print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
+      print_message(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
       return(new_haps)
     }
   }
-    print("outtttttttttttttt woo")    
 }
 
 
@@ -1020,7 +1019,11 @@ get_and_impute_one_sample <- function(
             if (!phasing_it && (i_it > n_burn_in_seek_its)) {
 
                 dosage_all <- dosage_all + hap1_all + hap2_all
-                gp_t_all <- gp_t_all + rbind((1 - hap1_all) * (1 - hap2_all), (1 - hap1_all) * hap2_all + hap1_all * (1 - hap2_all), hap1_all * hap2_all)
+                gp_t_all <- gp_t_all + rbind(
+                    (1 - hap1_all) * (1 - hap2_all),
+                    (1 - hap1_all) * hap2_all + hap1_all * (1 - hap2_all),
+                    hap1_all * hap2_all
+                )
                 ## nDosage <- nDosage + 1
 
                 calculate_pse_and_r2_rare_common(                
@@ -1191,7 +1194,6 @@ get_and_impute_one_sample <- function(
 
         ##save(sampleReads, pos, pos_all, allSNP_sampleReads, file = "~/temp.RData")
         ##stop("WER")
-             
         gp_t <- gp_t_all
         phasing_haps <- phasing_haps_all
         sampleReads <- allSNP_sampleReads
