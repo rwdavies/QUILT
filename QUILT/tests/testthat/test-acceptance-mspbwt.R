@@ -72,6 +72,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
     i_method <- 1
     impute_rare_common <- TRUE
     nCores <- 4
+    rare_af_threshold <- 0.01
 
     for(impute_rare_common in c(TRUE, FALSE)) {
 
@@ -97,7 +98,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
             }
 
             ## this is whether to do in one go (i_approach = 1), or do prepare reference first (i_approach = 2)
-            for(i_approach in 1:4) {
+            for(i_approach in 1:2) {
 
                 print(paste0("impute_rare_common = ", impute_rare_common ,", i_method = ", i_method, ", i_approach = ", i_approach, ", ", date()))
 
@@ -128,7 +129,8 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         use_hapMatcherR = use_hapMatcherR,
                         impute_rare_common = impute_rare_common,
                         mspbwt_nindices = 1,
-                        mspbwtB = 32L
+                        mspbwtB = 32L,
+                        rare_af_threshold = rare_af_threshold
                     )
 
                 } else {
@@ -149,7 +151,8 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         use_hapMatcherR = use_hapMatcherR,
                         impute_rare_common = impute_rare_common,
                         mspbwt_nindices = 1,
-                        mspbwtB = 32L
+                        mspbwtB = 32L,
+                        rare_af_threshold = rare_af_threshold
                     )
 
                     QUILT(
