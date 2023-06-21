@@ -203,11 +203,43 @@ QUILT_prepare_reference <- function(
         }
         
         ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
-        print_message("Begin get sites and haplotypes from reference vcf")        
+        print_message("Begin get sites and haplotypes from reference vcf")
+
+
+        if (reference_sample_file == "") {
+            reference_samples <- NULL
+            subsamples <- "-" ## all samples            
+            if (!is.na(reference_populations[1])) {
+                stop("You have selected reference populations to include, but have not included reference_sample_file with reference sample information")
+            }
+            if (reference_exclude_samplelist_file != "") {
+                stop("You have included reference_exclude_samplelist_file but have not included reference_sample_file with reference sample information")
+            }
+        } else {
+            reference_samples <- fread(reference_sample_file, header = TRUE, data.table = FALSE)
+            if (reference_exclude_samplelist_file != "") {
+                s <- read.table(reference_exclude_samplelist_file, h = FALSE)[,1]
+                w <- (!reference_samples[, 1] %in% s)
+                if (sum(w) == 0) {
+                    stop("All of the reference samples would be excluded with this choice of reference_exclude_samplelist_file")
+                }
+                reference_samples <- reference_samples[w, ]
+            }
+            if (!is.na(reference_populations[1])) {
+                w <- reference_samples[, 2] %in% reference_populations
+                if (sum(w) == 0) {
+                    stop("None of the retained reference samples have populations (column 2 in the reference_sample_file) that match the supplied reference_populations")
+                }
+                reference_samples <- reference_samples[w, ]
+            }
+            subsamples <- paste0(reference_samples[, 1], collapse = ",")
+        }
+    
         out <- STITCH::Rcpp_get_hap_info_from_vcf(
             vcffile = reference_vcf_file,
             af_cutoff = rare_af_threshold,
-            region = samtoolslike
+            region = samtoolslike,
+            samples = subsamples
         )
         print_message("End get sites and haplotypes from reference vcf")
 
@@ -285,6 +317,35 @@ QUILT_prepare_reference <- function(
         n_skipped <- NULL
         pos_all <- pos
         ref_alleleCount_all <- ref_alleleCount
+
+
+        ##
+        ## possibly exclude samples, note, does not fix ref_alleleCount!
+        ##
+        if (reference_sample_file != "") {
+            reference_samples <- fread(reference_sample_file, header = TRUE, data.table = FALSE)
+            if (!use_reference_vcf) {
+                if (!is.na(reference_populations[1])) {
+                    keep_samples <- as.character(reference_samples[, "POP"]) %in% reference_populations
+                    reference_samples <- reference_samples[keep_samples, ]
+                }
+                if (nrow(rhb_t) != (2 * nrow(reference_samples))) {
+                    stop(paste0("The number of haplotypes from the reference haplotype file (N = ", nrow(rhb_t), ") does not match the inferred number of entries from the reference samples file (Nrows = ", nrow(reference_samples), ", N = ", 2 * nrow(reference_samples), ")"))
+                }
+            }
+        } else {
+            reference_samples <- NULL
+        }
+        if (reference_exclude_samplelist_file != "") {
+            ## validated above
+            if (is.null(reference_samples)) {
+                stop(paste0("You have requested to exclude reference samples with reference_exclude_samplelist_file but you have not supplied reference_sample_file"))
+            }
+            exclude_samples <- read.table(reference_exclude_samplelist_file, stringsAsFactors = FALSE)[, 1]
+            t1 <- which(rep(reference_samples[, 1], each = 2) %in% exclude_samples)
+            rhb_t <- rhb_t[-t1, ]
+            reference_samples <- reference_samples[-which(reference_samples[, 1] %in% exclude_samples), ]
+        }
         
     }
         
@@ -350,45 +411,6 @@ QUILT_prepare_reference <- function(
     
 
 
-    ##
-    ## possibly exclude samples
-    ##
-    if (reference_sample_file != "") {
-        reference_samples <- fread(reference_sample_file, header = TRUE, data.table = FALSE)
-        if (use_reference_vcf && !is.na(reference_populations[1])) {
-            if (nrow(rhb_t) != (2 * nrow(reference_samples))) {
-                stop(paste0("The number of haplotypes from the reference haplotype file (N = ", nrow(rhb_t), ") does not match the inferred number of entries from the reference samples file (Nrows = ", nrow(reference_samples), ", N = ", 2 * nrow(reference_samples), ")"))
-            }
-            w <- reference_samples[, 2] %in% reference_populations
-            if (sum(w) == 0) {
-                stop("None of the reference samples have populations (column 2 in the reference_sample_file) that match the supplied reference_populations")
-            }
-            reference_samples <- reference_samples[w, ]
-            w2 <- rep(w, each = 2)
-            rhb_t <- rhb_t[w2, ]
-        }
-        if (!use_reference_vcf) {
-            if (!is.na(reference_populations[1])) {
-                keep_samples <- as.character(reference_samples[, "POP"]) %in% reference_populations
-                reference_samples <- reference_samples[keep_samples, ]
-            }
-            if (nrow(rhb_t) != (2 * nrow(reference_samples))) {
-                stop(paste0("The number of haplotypes from the reference haplotype file (N = ", nrow(rhb_t), ") does not match the inferred number of entries from the reference samples file (Nrows = ", nrow(reference_samples), ", N = ", 2 * nrow(reference_samples), ")"))
-            }
-        }
-    } else {
-        reference_samples <- NULL
-    }
-    if (reference_exclude_samplelist_file != "") {
-        ## validated above
-        if (is.null(reference_samples)) {
-            stop(paste0("You have requested to exclude reference samples with reference_exclude_samplelist_file but you have not supplied reference_sample_file"))
-        }
-        exclude_samples <- read.table(reference_exclude_samplelist_file, stringsAsFactors = FALSE)[, 1]
-        t1 <- which(rep(reference_samples[, 1], each = 2) %in% exclude_samples)
-        rhb_t <- rhb_t[-t1, ]
-        reference_samples <- reference_samples[-which(reference_samples[, 1] %in% exclude_samples), ]
-    }
 
 
     ##

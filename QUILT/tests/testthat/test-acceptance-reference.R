@@ -66,6 +66,8 @@ test_that("QUILT can remove samples from the reference", {
     buffer <- 5
     regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
     i <- 1
+    use_reference_vcf <- TRUE
+    selection_method <- "sample"
 
     for(use_reference_vcf in c(FALSE, TRUE)) {
 
