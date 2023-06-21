@@ -37,25 +37,38 @@ options(scipen = 999)
 ## conda install shapeit4=4.0 -c bioconda
 
 
+    ## ## set parameters here
+    ## outputdir <- "/data/smew1/rdavies/ukbb_gel_2023_01_26/phasing_test"
+    ## chr <- "chr20"
+    ## regionStartMinusBuffer <- 20000000
+    ## regionEndPlusBuffer <- 21000000
+    ## REF_FA <- "/data/smew1/rdavies/ukbb_gel_2023_01_26/ref/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+    ## pop <- "CEU" ## what population to get
+    ## n <- 10 ## how many samples to get
+    ## invcf <- "/data/smew1/rdavies/ukbb_gel_2023_01_26/2023_06_19A/beagle.20.20000000.21000000.clean.cols.1.10.vcf.gz"
+    ## nCores <- 16
+    ## rebuild <- FALSE ## turn on to force re-building everything
+    ## genetic_map_file <- "/data/smew1/rdavies/ukbb_gel_2023_01_26/CEU/CEU-chr20-final.b38.txt.gz"
+    ## refpanel <- "/data/smew1/rdavies/hrc/hg38_liftover_clean_chr20.vcf.gz" ## for trio triple het phasing
+
+args <- commandArgs(trailingOnly = TRUE)
+
+print(args)
+
+outputdir <- args[1]
+regionStartMinusBuffer <- as.integer(args[2])
+regionEndPlusBuffer <- as.integer(args[3])
+pop <- args[4]
+n <- as.integer(args[5])
+invcf <- args[6]
+rebuild <- as.logical(args[7])
 
 
-
-## set parameters here
-outputdir <- "/data/smew1/rdavies/ukbb_gel_2023_01_26/phasing_test"
 chr <- "chr20"
-regionStartMinusBuffer <- 20000000
-regionEndPlusBuffer <- 21000000
-REF_FA <- "/data/smew1/rdavies/ukbb_gel_2023_01_26/ref/GRCh38_full_analysis_set_plus_decoy_hla.fa"
-pop <- "CEU" ## what population to get
-n <- 10 ## how many samples to get
-invcf <- "/data/smew1/rdavies/ukbb_gel_2023_01_26/2023_06_19A/beagle.20.20000000.21000000.clean.cols.1.10.vcf.gz"
 nCores <- 16
-rebuild <- FALSE ## turn on to force re-building everything
 genetic_map_file <- "/data/smew1/rdavies/ukbb_gel_2023_01_26/CEU/CEU-chr20-final.b38.txt.gz"
 refpanel <- "/data/smew1/rdavies/hrc/hg38_liftover_clean_chr20.vcf.gz" ## for trio triple het phasing
-
-    
-
+REF_FA <- "/data/smew1/rdavies/ukbb_gel_2023_01_26/ref/GRCh38_full_analysis_set_plus_decoy_hla.fa"
 
 
 
@@ -85,6 +98,7 @@ system(paste0("bcftools query -f'chr20\t%POS\t%REF,%ALT\n' ", invcf, " > ", tsv)
 clean_region <- paste0(gsub("chr", "", chr), ".", regionStartMinusBuffer, ".", regionEndPlusBuffer)
 
 
+print(paste0("In directory:", getwd()))
 ##
 ## download the high coverage bams and call genotypes
 ## 
