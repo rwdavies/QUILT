@@ -1,14 +1,14 @@
 
 ## CXX_STD      = CXX17
-PKG_CPPFLAGS = -I../inst/include/
-PKG_LIBS = -lhts -lz -lm -lbz2 -llzma
+# PKG_CPPFLAGS = -I../inst/include/
+# PKG_LIBS = -lhts -lz -lm -lbz2 -llzma
 
 CC=$(shell "R CMD config CC")
 CXX=$(shell "R CMD config CXX")
 CPPFLAGS=$(shell "R CMD config CPPFLAGS")
 LDFLAGS=$(shell "R CMD config LDFLAGS")
 
-PKG_CXXFLAGS = -g -O3
+PKG_CXXFLAGS = -O3
 
 .PHONY: all clean
 
