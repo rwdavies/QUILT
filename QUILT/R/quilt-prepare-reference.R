@@ -233,6 +233,7 @@ QUILT_prepare_reference <- function(
                 reference_samples <- reference_samples[w, ]
             }
             subsamples <- paste0(reference_samples[, 1], collapse = ",")
+            subsamples_robbie <- subsamples
         }
     
         out <- STITCH::Rcpp_get_hap_info_from_vcf(
@@ -475,18 +476,18 @@ QUILT_prepare_reference <- function(
 
     if (use_zilong) {
         print_message("Build zilong-pbwt indices")
-        if (reference_sample_file == "") {
-            subsamples <- "-" ## all samples
-        }
-        else if (reference_exclude_samplelist_file == "") {
-            s1 <- read.table(reference_sample_file, h = T)[,1]
-            subsamples <- paste(s1, collapse = ",")
-        }
-        else {
-            s1 <- read.table(reference_sample_file, h = T)[,1]
-            s2 <- read.table(reference_exclude_samplelist_file, h = F)[,1]
-            subsamples <- paste(s1[-which(s2%in%s1)], collapse = ",")
-        }
+        ## if (reference_sample_file == "") {
+        ##     subsamples <- "-" ## all samples
+        ## }
+        ## else if (reference_exclude_samplelist_file == "") {
+        ##     s1 <- read.table(reference_sample_file, h = T)[,1]
+        ##     subsamples <- paste(s1, collapse = ",")
+        ## }
+        ## else {
+        ##     s1 <- read.table(reference_sample_file, h = T)[,1]
+        ##     s2 <- read.table(reference_exclude_samplelist_file, h = F)[,1]
+        ##     subsamples <- paste(s1[-which(s2%in%s1)], collapse = ",")
+        ## }
         ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
         mspbwt_binfile <- paste0(outputdir, "/" , regionName, ".mspbwt")
         ## zilong_indices <- mspbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike, nindices = mspbwt_nindices)
