@@ -75,8 +75,10 @@ test_that("can make old eHapsCurrent_tc using rare common idea", {
     snp_is_common_1_based <- which(snp_is_common)
 
     new_eHapsCurrent_tc <- make_eHapsCurrent_tc_using_rare_and_common_stuff(
+        hapMatcher = array(0, c(1, 1)),
         hapMatcherR = hapMatcherR,
         distinctHapsIE = distinctHapsIE,
+        use_hapMatcherR = TRUE,
         eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
         eMatDH_special_matrix = eMatDH_special_matrix,
         rare_per_hap_info = rare_per_hap_info,
