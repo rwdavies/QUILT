@@ -1013,48 +1013,6 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// mspbwt_build
-void mspbwt_build(const std::string& binfile, const std::string& vcfpanel, const std::string& samples, const std::string& region, int nindices, int mspbwtB, double maf);
-RcppExport SEXP _QUILT_mspbwt_build(SEXP binfileSEXP, SEXP vcfpanelSEXP, SEXP samplesSEXP, SEXP regionSEXP, SEXP nindicesSEXP, SEXP mspbwtBSEXP, SEXP mafSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type binfile(binfileSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type vcfpanel(vcfpanelSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type samples(samplesSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type region(regionSEXP);
-    Rcpp::traits::input_parameter< int >::type nindices(nindicesSEXP);
-    Rcpp::traits::input_parameter< int >::type mspbwtB(mspbwtBSEXP);
-    Rcpp::traits::input_parameter< double >::type maf(mafSEXP);
-    mspbwt_build(binfile, vcfpanel, samples, region, nindices, mspbwtB, maf);
-    return R_NilValue;
-END_RCPP
-}
-// mspbwt_load
-SEXP mspbwt_load(const std::string& binfile, int mspbwtB);
-RcppExport SEXP _QUILT_mspbwt_load(SEXP binfileSEXP, SEXP mspbwtBSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type binfile(binfileSEXP);
-    Rcpp::traits::input_parameter< int >::type mspbwtB(mspbwtBSEXP);
-    rcpp_result_gen = Rcpp::wrap(mspbwt_load(binfile, mspbwtB));
-    return rcpp_result_gen;
-END_RCPP
-}
-// mspbwt_report
-List mspbwt_report(SEXP xp_, const IntegerVector& z, int pbwtL, int mspbwtB);
-RcppExport SEXP _QUILT_mspbwt_report(SEXP xp_SEXP, SEXP zSEXP, SEXP pbwtLSEXP, SEXP mspbwtBSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type xp_(xp_SEXP);
-    Rcpp::traits::input_parameter< const IntegerVector& >::type z(zSEXP);
-    Rcpp::traits::input_parameter< int >::type pbwtL(pbwtLSEXP);
-    Rcpp::traits::input_parameter< int >::type mspbwtB(mspbwtBSEXP);
-    rcpp_result_gen = Rcpp::wrap(mspbwt_report(xp_, z, pbwtL, mspbwtB));
-    return rcpp_result_gen;
-END_RCPP
-}
 // Rcpp_quilt_test_doubler
 double Rcpp_quilt_test_doubler(double a);
 RcppExport SEXP _QUILT_Rcpp_quilt_test_doubler(SEXP aSEXP) {
@@ -1510,9 +1468,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_simple_binary_matrix_search", (DL_FUNC) &_QUILT_rcpp_simple_binary_matrix_search, 4},
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 16},
     {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 17},
-    {"_QUILT_mspbwt_build", (DL_FUNC) &_QUILT_mspbwt_build, 7},
-    {"_QUILT_mspbwt_load", (DL_FUNC) &_QUILT_mspbwt_load, 2},
-    {"_QUILT_mspbwt_report", (DL_FUNC) &_QUILT_mspbwt_report, 4},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
     {"_QUILT_Rcpp_raw_test", (DL_FUNC) &_QUILT_Rcpp_raw_test, 2},
     {"_QUILT_Rcpp_raw_test_int", (DL_FUNC) &_QUILT_Rcpp_raw_test_int, 2},
