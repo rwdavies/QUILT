@@ -191,6 +191,7 @@ QUILT_prepare_reference <- function(
 
 
 
+    mspbwt_binfile <- NULL ## needed by mspbwt
 
     
     if (use_reference_vcf) {
@@ -235,13 +236,20 @@ QUILT_prepare_reference <- function(
             subsamples <- paste0(reference_samples[, 1], collapse = ",")
             subsamples_robbie <- subsamples
         }
-    
-        out <- STITCH::Rcpp_get_hap_info_from_vcf(
-            vcffile = reference_vcf_file,
-            af_cutoff = rare_af_threshold,
-            region = samtoolslike,
-            samples = subsamples
-        )
+
+        if(use_zilong) {
+            print_message("Begin building all indices in one pass through vcf")
+            mspbwt_binfile <- paste0(outputdir, "/" , regionName, ".mspbwt")
+            out <- STITCH::quilt_mspbwt_build(mspbwt_binfile, reference_vcf_file, subsamples, samtoolslike, mspbwt_nindices, mspbwtB, rare_af_threshold)
+            print_message("End building and dumping MSPBWT indices")
+        } else {
+            out <- STITCH::Rcpp_get_hap_info_from_vcf(
+                    vcffile = reference_vcf_file,
+                    af_cutoff = rare_af_threshold,
+                    region = samtoolslike,
+                    samples = subsamples
+            )
+        }
         print_message("End get sites and haplotypes from reference vcf")
 
         ref_alleleCount <- out[["ref_alleleCount"]]
@@ -472,30 +480,6 @@ QUILT_prepare_reference <- function(
         print_message("Done building mspbwt indices")
     } else {
         ms_indices <- NULL
-    }
-
-    if (use_zilong) {
-        print_message("Build zilong-pbwt indices")
-        ## if (reference_sample_file == "") {
-        ##     subsamples <- "-" ## all samples
-        ## }
-        ## else if (reference_exclude_samplelist_file == "") {
-        ##     s1 <- read.table(reference_sample_file, h = T)[,1]
-        ##     subsamples <- paste(s1, collapse = ",")
-        ## }
-        ## else {
-        ##     s1 <- read.table(reference_sample_file, h = T)[,1]
-        ##     s2 <- read.table(reference_exclude_samplelist_file, h = F)[,1]
-        ##     subsamples <- paste(s1[-which(s2%in%s1)], collapse = ",")
-        ## }
-        ifelse(regionStart-buffer<1, samtoolslike <- paste0(chr, ":", 1, "-", regionEnd+buffer), samtoolslike <- paste0(chr, ":", regionStart-buffer, "-", regionEnd+buffer) )
-        mspbwt_binfile <- paste0(outputdir, "/" , regionName, ".mspbwt")
-        ## zilong_indices <- mspbwt_index(reference_vcf_file, samples = subsamples, region = samtoolslike, nindices = mspbwt_nindices)
-        mspbwt_build(mspbwt_binfile, reference_vcf_file, subsamples, samtoolslike, mspbwt_nindices, mspbwtB, rare_af_threshold)
-        
-        print_message("End building and dumping Zilong msPBWT indices")
-    } else {
-        mspbwt_binfile <- NULL
     }
 
 
