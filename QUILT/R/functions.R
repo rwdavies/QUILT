@@ -80,7 +80,7 @@ select_new_haps_zilong_msp_robbie_version <- function(
     ends <- c(res[[1]][["ends"]], res[[2]][["ends"]])
     lens <- c(res[[1]][["lens"]], res[[2]][["lens"]])
     res <- cbind(
-        haps = c(res[[1]][["haps"]], res[[2]][["haps"]]) + 1, ## make 1-based
+        haps = c(res[[1]][["haps"]], res[[2]][["haps"]]),
         starts = ends - lens + 1,
         ends = ends,
         lens = lens,
@@ -125,7 +125,7 @@ select_new_haps_zilong_msp_robbie_version <- function(
             cur_sum[s:e] <- cur_sum[s:e] + 1
         }
         ##
-        unique_ordered_haps <- unique(res[order(weight), "haps"])
+        unique_ordered_haps <- unique(res[order(-weight), "haps"])
         print(paste("select", length(unique_ordered_haps), " unique haps after post-selection 2"))
         ## 
         if (length(unique_ordered_haps) >= Knew) {
@@ -255,9 +255,10 @@ get_and_impute_one_sample <- function(
     pos_all,
     special_rare_common_objects,
     special_rare_common_objects_per_core,    
-    impute_rare_common
+    impute_rare_common,
+    make_heuristic_plot,
+    heuristic_choice
 ) {
-
 
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
@@ -445,6 +446,8 @@ get_and_impute_one_sample <- function(
             stop("Something went wrong with gen naming")
         }
         truth_gen <- gen[, s, drop = FALSE]
+    } else {
+        truth_gen <- NULL
     }
     
 
@@ -775,24 +778,53 @@ get_and_impute_one_sample <- function(
             return_dosage <- (have_truth_haplotypes | record_interim_dosages | (i_it > n_burn_in_seek_its))
 
             igibbs <- (i_gibbs_sample - 1) * n_seek_its + i_it ## 1-based
-            if (zilong) {
-               Kfull <- nrow(hapMatcher)
-               which_haps_to_use <- select_new_haps_zilong_msp(
-                   gibbs_iterate$hapProbs_t,
-                   igibbs = igibbs,
-                   outputdir = outputdir,
-                   Kfull = Kfull,
-                   Knew = Knew,
-                   msp = msp,
-                   mspbwtB = mspbwtB,
-                   mspbwtL = mspbwtL,
-                   mspbwtM = mspbwtM,
-                   nGrids = nGrids
-               )
-             ## saveRDS(which_haps_to_use, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
+            if (zilong | make_heuristic_plot) {
+
+                Kfull <- nrow(hapMatcher)
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
-            } else if (use_mspbwt) {
+                
+                if (heuristic_choice == "A" | make_heuristic_plot) {
+
+                    which_haps_to_use <- select_new_haps_zilong_msp(
+                        gibbs_iterate$hapProbs_t,
+                        igibbs = igibbs,
+                        outputdir = outputdir,
+                        Kfull = Kfull,
+                        Knew = Knew,
+                        msp = msp,
+                        mspbwtB = mspbwtB,
+                        mspbwtL = mspbwtL,
+                        mspbwtM = mspbwtM,
+                        nGrids = nGrids
+                    )
+                    
+                    which_haps_to_use_zilong_A <- which_haps_to_use
+                    
+                }
+
+                if (heuristic_choice == "B" | make_heuristic_plot) {
+
+                    which_haps_to_use <- select_new_haps_zilong_msp_robbie_version(
+                        gibbs_iterate$hapProbs_t,
+                        igibbs = igibbs,
+                        outputdir = outputdir,
+                        Kfull = Kfull,
+                        Knew = Knew,
+                        msp = msp,
+                        mspbwtB = mspbwtB,
+                        mspbwtL = mspbwtL,
+                        mspbwtM = mspbwtM,
+                        nGrids = nGrids
+                    )
+
+                    which_haps_to_use_zilong_B <- which_haps_to_use
+
+                }
+                
+            }
+
+            if (use_mspbwt) {
 
                 ## for testing purposes
                 if (use_splitreadgl) {
@@ -859,26 +891,11 @@ get_and_impute_one_sample <- function(
                     Knew = Knew,
                     Kfull = Kfull
                 )
+                
+            }
 
-                    ## print("---REMOVE ME--- ahhdyehnfnehdfuhwefi")
-                    ## hap1 <- impute_all[["dosage1"]]
-                    ## hap2 <- impute_all[["dosage2"]]
-                    ## print_message("Special compare - from Gibbs")
-                    ## hap1_gibbs <- gibbs_iterate$hapProbs_t[1, ]
-                    ## hap2_gibbs <- gibbs_iterate$hapProbs_t[2, ]
-                    ## x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1_gibbs, hap2 = hap2_gibbs, truth_haps = truth_haps, af = af, verbose = verbose)
-                    ## print_message("Special compare - from split")
-                    ## x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = impute_all[["dosage1"]], hap2 = impute_all[["dosage2"]], truth_haps = truth_haps, af = af, verbose = verbose)
-                    ## print_message("Special compare - both")
-                    ## g <- truth_haps[inRegion2, 1] + truth_haps[inRegion2, 2]
-                    ## ## scaled version
-                    ## r2 <-  round(    cor(
-                    ## (hap1 + hap2)[inRegion2] - 2 * af[inRegion2],
-                    ## (hap1_gibbs + hap2_gibbs)[inRegion2] - 2 * af[inRegion2],
-                    ## use = "pairwise.complete.obs") ** 2, 3)
-                    ## print_message(paste0("r2 is ", r2))
-            ## }
-            } else {
+            if ((!zilong && !mspbwt) | make_heuristic_plot) {
+                
                 impute_all <- impute_using_everything(
                     eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
                     eMatDH_special_matrix = eMatDH_special_matrix,
@@ -934,8 +951,36 @@ get_and_impute_one_sample <- function(
                 which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
                 hap1 <- impute_all[["dosage1"]]
                 hap2 <- impute_all[["dosage2"]]
+
+                which_haps_to_use_quilt1 <- which_haps_to_use
             }
 
+            if (make_heuristic_plot) {
+
+                hapProbs_t <- gibbs_iterate$hapProbs_t 
+                
+                compare_heuristic_choices(                
+                    hapProbs_t,
+                    which_haps_to_use_zilong_A,
+                    which_haps_to_use_zilong_B,
+                    which_haps_to_use_quilt1,
+                    hapMatcherR,
+                    hapMatcher,
+                    use_hapMatcherR,
+                    distinctHapsB,
+                    eMatDH_special_matrix,
+                    eMatDH_special_matrix_helper,
+                    outputdir,
+                    sample_name,
+                    regionName,
+                    i_gibbs_sample,
+                    i_it,
+                    nGrids
+                )
+
+            }
+
+            
             if (record_interim_dosages) {
                 dosage_matrix[, paste0("gibbs", i_it)] <- get_dosages_from_fbsoL(gibbs_iterate)
                 dosage_matrix[, paste0("all", i_it)] <- hap1 + hap2
@@ -1001,8 +1046,8 @@ get_and_impute_one_sample <- function(
                 truth_haps_all = truth_haps_all,
                 have_truth_genotypes = have_truth_genotypes,
                 truth_gen_all = truth_gen_all,
-                truth_labels = truth_labels,
-                uncertain_truth_labels = uncertain_truth_labels,
+                truth_labels_all = truth_labels_all,
+                uncertain_truth_labels_all = uncertain_truth_labels_all,
                 shuffle_bin_radius = shuffle_bin_radius,
                 make_plots_block_gibbs = make_plots_block_gibbs,
                 sample_name = sample_name,
@@ -1708,8 +1753,12 @@ impute_using_everything <- function(
     use_eigen = FALSE
 ) {
 
-    ##
-    K <- nrow(rhb_t)
+    if (use_hapMatcherR) {
+        K <- nrow(hapMatcherR)
+    } else {
+        K <- nrow(hapMatcher)
+    }
+    
     dosage <- numeric(nSNPs)
     nGrids <- ncol(distinctHapsB)
     if (return_good_haps) {
@@ -1820,6 +1869,7 @@ impute_using_everything <- function(
             if (i_hap == 2) { fbsoL$gammaMU_t <- gamma_tNew}
         }
     }
+
     if (return_good_haps) {
         ## select some new haplotypes if possible!
         ## try all the depth-up-to-5 ones first, then go on
@@ -1862,6 +1912,7 @@ impute_using_everything <- function(
             buffer = buffer
         )
     }
+
     if (1 == 0) {
         check_accuracy_from_all(cheat_all)
     }

@@ -1103,12 +1103,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // Rcpp_get_top_K_or_more_matches_while_building_gamma_eigen
-Rcpp::List Rcpp_get_top_K_or_more_matches_while_building_gamma_eigen(Eigen::Map<Eigen::MatrixXd>& eigen_alphaHat_t, arma::colvec& betaHat_t_col, arma::colvec& gamma_t_col, int iGrid, int K, int K_top_matches, double special_multiplication_value);
+Rcpp::List Rcpp_get_top_K_or_more_matches_while_building_gamma_eigen(Eigen::Map<Eigen::MatrixXd> eigen_alphaHat_t, arma::colvec& betaHat_t_col, arma::colvec& gamma_t_col, int iGrid, int K, int K_top_matches, double special_multiplication_value);
 RcppExport SEXP _QUILT_Rcpp_get_top_K_or_more_matches_while_building_gamma_eigen(SEXP eigen_alphaHat_tSEXP, SEXP betaHat_t_colSEXP, SEXP gamma_t_colSEXP, SEXP iGridSEXP, SEXP KSEXP, SEXP K_top_matchesSEXP, SEXP special_multiplication_valueSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type eigen_alphaHat_t(eigen_alphaHat_tSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type eigen_alphaHat_t(eigen_alphaHat_tSEXP);
     Rcpp::traits::input_parameter< arma::colvec& >::type betaHat_t_col(betaHat_t_colSEXP);
     Rcpp::traits::input_parameter< arma::colvec& >::type gamma_t_col(gamma_t_colSEXP);
     Rcpp::traits::input_parameter< int >::type iGrid(iGridSEXP);
@@ -1220,13 +1220,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // Rcpp_haploid_reference_single_forward_version3
-void Rcpp_haploid_reference_single_forward_version3(Rcpp::IntegerVector& gammaSmall_cols_to_get, const arma::mat& gl, Eigen::Map<Eigen::MatrixXd>& alphaHat_t, arma::rowvec& c, const arma::mat& transMatRate_t, const arma::imat& rhb_t, Rcpp::IntegerMatrix& eMatDH_special_matrix_helper, Rcpp::IntegerMatrix& eMatDH_special_matrix, const bool use_eMatDH_special_symbols, arma::imat& hapMatcher, Rcpp::RawMatrix& hapMatcherR, bool use_hapMatcherR, arma::mat& eMatDH, const int& nGrids, const int& nSNPs, const int& K, const bool& use_eMatDH, double ref_error, const bool only_store_alpha_at_gamma_small, bool always_normalize, double min_emission_prob_normalization_threshold, const Rcpp::IntegerVector& eMatDH_special_grid_which, const Rcpp::List& eMatDH_special_values_list, const double maxEmissionMatrixDifference, const bool normalize_emissions);
+void Rcpp_haploid_reference_single_forward_version3(Rcpp::IntegerVector& gammaSmall_cols_to_get, const arma::mat& gl, Eigen::Map<Eigen::MatrixXd> alphaHat_t, arma::rowvec& c, const arma::mat& transMatRate_t, const arma::imat& rhb_t, Rcpp::IntegerMatrix& eMatDH_special_matrix_helper, Rcpp::IntegerMatrix& eMatDH_special_matrix, const bool use_eMatDH_special_symbols, arma::imat& hapMatcher, Rcpp::RawMatrix& hapMatcherR, bool use_hapMatcherR, arma::mat& eMatDH, const int& nGrids, const int& nSNPs, const int& K, const bool& use_eMatDH, double ref_error, const bool only_store_alpha_at_gamma_small, bool always_normalize, double min_emission_prob_normalization_threshold, const Rcpp::IntegerVector& eMatDH_special_grid_which, const Rcpp::List& eMatDH_special_values_list, const double maxEmissionMatrixDifference, const bool normalize_emissions);
 RcppExport SEXP _QUILT_Rcpp_haploid_reference_single_forward_version3(SEXP gammaSmall_cols_to_getSEXP, SEXP glSEXP, SEXP alphaHat_tSEXP, SEXP cSEXP, SEXP transMatRate_tSEXP, SEXP rhb_tSEXP, SEXP eMatDH_special_matrix_helperSEXP, SEXP eMatDH_special_matrixSEXP, SEXP use_eMatDH_special_symbolsSEXP, SEXP hapMatcherSEXP, SEXP hapMatcherRSEXP, SEXP use_hapMatcherRSEXP, SEXP eMatDHSEXP, SEXP nGridsSEXP, SEXP nSNPsSEXP, SEXP KSEXP, SEXP use_eMatDHSEXP, SEXP ref_errorSEXP, SEXP only_store_alpha_at_gamma_smallSEXP, SEXP always_normalizeSEXP, SEXP min_emission_prob_normalization_thresholdSEXP, SEXP eMatDH_special_grid_whichSEXP, SEXP eMatDH_special_values_listSEXP, SEXP maxEmissionMatrixDifferenceSEXP, SEXP normalize_emissionsSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type gammaSmall_cols_to_get(gammaSmall_cols_to_getSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type gl(glSEXP);
-    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type alphaHat_t(alphaHat_tSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type alphaHat_t(alphaHat_tSEXP);
     Rcpp::traits::input_parameter< arma::rowvec& >::type c(cSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type transMatRate_t(transMatRate_tSEXP);
     Rcpp::traits::input_parameter< const arma::imat& >::type rhb_t(rhb_tSEXP);
@@ -1335,11 +1335,11 @@ BEGIN_RCPP
 END_RCPP
 }
 // Rcpp_haploid_reference_single_backward_version3
-void Rcpp_haploid_reference_single_backward_version3(Eigen::Map<Eigen::MatrixXd>& alphaHat_t, arma::mat& betaHat_t, arma::mat& gamma_t, arma::mat& gammaSmall_t, Rcpp::List& best_haps_stuff_list, Rcpp::IntegerVector& gammaSmall_cols_to_get, Rcpp::NumericVector& dosage, const int& nGrids, const arma::mat& transMatRate_t, arma::mat& eMatDH, arma::imat& hapMatcher, Rcpp::RawMatrix& hapMatcherR, bool use_hapMatcherR, const int& nSNPs, const int& K, const bool& use_eMatDH, const arma::imat& rhb_t, Rcpp::IntegerMatrix& eMatDH_special_matrix_helper, Rcpp::IntegerMatrix& eMatDH_special_matrix, const bool use_eMatDH_special_symbols, double ref_error, const arma::mat& gl, arma::rowvec& c, arma::mat& distinctHapsIE, bool return_betaHat_t, bool return_dosage, bool return_gamma_t, bool return_gammaSmall_t, bool get_best_haps_from_thinned_sites, const int nMaxDH, const int K_top_matches, const Rcpp::IntegerVector& eMatDH_special_grid_which, const Rcpp::List& eMatDH_special_values_list, const double maxEmissionMatrixDifference, const bool normalize_emissions);
+void Rcpp_haploid_reference_single_backward_version3(Eigen::Map<Eigen::MatrixXd> alphaHat_t, arma::mat& betaHat_t, arma::mat& gamma_t, arma::mat& gammaSmall_t, Rcpp::List& best_haps_stuff_list, Rcpp::IntegerVector& gammaSmall_cols_to_get, Rcpp::NumericVector& dosage, const int& nGrids, const arma::mat& transMatRate_t, arma::mat& eMatDH, arma::imat& hapMatcher, Rcpp::RawMatrix& hapMatcherR, bool use_hapMatcherR, const int& nSNPs, const int& K, const bool& use_eMatDH, const arma::imat& rhb_t, Rcpp::IntegerMatrix& eMatDH_special_matrix_helper, Rcpp::IntegerMatrix& eMatDH_special_matrix, const bool use_eMatDH_special_symbols, double ref_error, const arma::mat& gl, arma::rowvec& c, arma::mat& distinctHapsIE, bool return_betaHat_t, bool return_dosage, bool return_gamma_t, bool return_gammaSmall_t, bool get_best_haps_from_thinned_sites, const int nMaxDH, const int K_top_matches, const Rcpp::IntegerVector& eMatDH_special_grid_which, const Rcpp::List& eMatDH_special_values_list, const double maxEmissionMatrixDifference, const bool normalize_emissions);
 RcppExport SEXP _QUILT_Rcpp_haploid_reference_single_backward_version3(SEXP alphaHat_tSEXP, SEXP betaHat_tSEXP, SEXP gamma_tSEXP, SEXP gammaSmall_tSEXP, SEXP best_haps_stuff_listSEXP, SEXP gammaSmall_cols_to_getSEXP, SEXP dosageSEXP, SEXP nGridsSEXP, SEXP transMatRate_tSEXP, SEXP eMatDHSEXP, SEXP hapMatcherSEXP, SEXP hapMatcherRSEXP, SEXP use_hapMatcherRSEXP, SEXP nSNPsSEXP, SEXP KSEXP, SEXP use_eMatDHSEXP, SEXP rhb_tSEXP, SEXP eMatDH_special_matrix_helperSEXP, SEXP eMatDH_special_matrixSEXP, SEXP use_eMatDH_special_symbolsSEXP, SEXP ref_errorSEXP, SEXP glSEXP, SEXP cSEXP, SEXP distinctHapsIESEXP, SEXP return_betaHat_tSEXP, SEXP return_dosageSEXP, SEXP return_gamma_tSEXP, SEXP return_gammaSmall_tSEXP, SEXP get_best_haps_from_thinned_sitesSEXP, SEXP nMaxDHSEXP, SEXP K_top_matchesSEXP, SEXP eMatDH_special_grid_whichSEXP, SEXP eMatDH_special_values_listSEXP, SEXP maxEmissionMatrixDifferenceSEXP, SEXP normalize_emissionsSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type alphaHat_t(alphaHat_tSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type alphaHat_t(alphaHat_tSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t(betaHat_tSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type gamma_t(gamma_tSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type gammaSmall_t(gammaSmall_tSEXP);
@@ -1379,13 +1379,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // Rcpp_haploid_dosage_versus_refs
-void Rcpp_haploid_dosage_versus_refs(const arma::mat& gl, arma::mat& arma_alphaHat_t, Eigen::Map<Eigen::MatrixXd>& eigen_alphaHat_t, arma::mat& betaHat_t, arma::rowvec& c, arma::mat& gamma_t, arma::mat& gammaSmall_t, Rcpp::List& best_haps_stuff_list, Rcpp::NumericVector& dosage, const arma::mat& transMatRate_t, const arma::imat& rhb_t, double ref_error, const bool use_eMatDH, arma::imat& distinctHapsB, arma::mat& distinctHapsIE, Rcpp::IntegerMatrix& eMatDH_special_matrix_helper, Rcpp::IntegerMatrix& eMatDH_special_matrix, const bool use_eMatDH_special_symbols, arma::imat& hapMatcher, Rcpp::RawMatrix& hapMatcherR, bool use_hapMatcherR, Rcpp::IntegerVector& gammaSmall_cols_to_get, const Rcpp::IntegerVector& eMatDH_special_grid_which, const Rcpp::List& eMatDH_special_values_list, const int K_top_matches, const int suppressOutput, const double min_emission_prob_normalization_threshold, bool return_betaHat_t, bool return_dosage, bool return_gamma_t, bool return_gammaSmall_t, bool get_best_haps_from_thinned_sites, bool is_version_2, bool is_version_3, bool return_extra, bool always_normalize, bool use_eigen, const bool normalize_emissions);
+void Rcpp_haploid_dosage_versus_refs(const arma::mat& gl, arma::mat& arma_alphaHat_t, Eigen::Map<Eigen::MatrixXd> eigen_alphaHat_t, arma::mat& betaHat_t, arma::rowvec& c, arma::mat& gamma_t, arma::mat& gammaSmall_t, Rcpp::List& best_haps_stuff_list, Rcpp::NumericVector& dosage, const arma::mat& transMatRate_t, const arma::imat& rhb_t, double ref_error, const bool use_eMatDH, arma::imat& distinctHapsB, arma::mat& distinctHapsIE, Rcpp::IntegerMatrix& eMatDH_special_matrix_helper, Rcpp::IntegerMatrix& eMatDH_special_matrix, const bool use_eMatDH_special_symbols, arma::imat& hapMatcher, Rcpp::RawMatrix& hapMatcherR, bool use_hapMatcherR, Rcpp::IntegerVector& gammaSmall_cols_to_get, const Rcpp::IntegerVector& eMatDH_special_grid_which, const Rcpp::List& eMatDH_special_values_list, const int K_top_matches, const int suppressOutput, const double min_emission_prob_normalization_threshold, bool return_betaHat_t, bool return_dosage, bool return_gamma_t, bool return_gammaSmall_t, bool get_best_haps_from_thinned_sites, bool is_version_2, bool is_version_3, bool return_extra, bool always_normalize, bool use_eigen, const bool normalize_emissions);
 RcppExport SEXP _QUILT_Rcpp_haploid_dosage_versus_refs(SEXP glSEXP, SEXP arma_alphaHat_tSEXP, SEXP eigen_alphaHat_tSEXP, SEXP betaHat_tSEXP, SEXP cSEXP, SEXP gamma_tSEXP, SEXP gammaSmall_tSEXP, SEXP best_haps_stuff_listSEXP, SEXP dosageSEXP, SEXP transMatRate_tSEXP, SEXP rhb_tSEXP, SEXP ref_errorSEXP, SEXP use_eMatDHSEXP, SEXP distinctHapsBSEXP, SEXP distinctHapsIESEXP, SEXP eMatDH_special_matrix_helperSEXP, SEXP eMatDH_special_matrixSEXP, SEXP use_eMatDH_special_symbolsSEXP, SEXP hapMatcherSEXP, SEXP hapMatcherRSEXP, SEXP use_hapMatcherRSEXP, SEXP gammaSmall_cols_to_getSEXP, SEXP eMatDH_special_grid_whichSEXP, SEXP eMatDH_special_values_listSEXP, SEXP K_top_matchesSEXP, SEXP suppressOutputSEXP, SEXP min_emission_prob_normalization_thresholdSEXP, SEXP return_betaHat_tSEXP, SEXP return_dosageSEXP, SEXP return_gamma_tSEXP, SEXP return_gammaSmall_tSEXP, SEXP get_best_haps_from_thinned_sitesSEXP, SEXP is_version_2SEXP, SEXP is_version_3SEXP, SEXP return_extraSEXP, SEXP always_normalizeSEXP, SEXP use_eigenSEXP, SEXP normalize_emissionsSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type gl(glSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type arma_alphaHat_t(arma_alphaHat_tSEXP);
-    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd>& >::type eigen_alphaHat_t(eigen_alphaHat_tSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type eigen_alphaHat_t(eigen_alphaHat_tSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t(betaHat_tSEXP);
     Rcpp::traits::input_parameter< arma::rowvec& >::type c(cSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type gamma_t(gamma_tSEXP);
@@ -1485,6 +1485,21 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// rcpp_test5
+void rcpp_test5(arma::mat& alphaHat_t1, arma::mat& alphaHat_t2, arma::mat& betaHat_t1, arma::mat& betaHat_t2, const Rcpp::List& sampleReads, arma::mat& eMatRead_t);
+RcppExport SEXP _QUILT_rcpp_test5(SEXP alphaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP betaHat_t1SEXP, SEXP betaHat_t2SEXP, SEXP sampleReadsSEXP, SEXP eMatRead_tSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t1(alphaHat_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t2(alphaHat_t2SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t1(betaHat_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t2(betaHat_t2SEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type sampleReads(sampleReadsSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type eMatRead_t(eMatRead_tSEXP);
+    rcpp_test5(alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_make_eMatRead_t", (DL_FUNC) &_QUILT_rcpp_make_eMatRead_t, 15},
@@ -1549,6 +1564,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_test2", (DL_FUNC) &_QUILT_rcpp_test2, 6},
     {"_QUILT_rcpp_test3", (DL_FUNC) &_QUILT_rcpp_test3, 6},
     {"_QUILT_rcpp_test4", (DL_FUNC) &_QUILT_rcpp_test4, 6},
+    {"_QUILT_rcpp_test5", (DL_FUNC) &_QUILT_rcpp_test5, 6},
     {NULL, NULL, 0}
 };
 

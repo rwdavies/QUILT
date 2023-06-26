@@ -66,6 +66,14 @@ test_that("speed test for cpp stuff", {
                         sampleReads,
                         eMatRead_t
                     )           ,
+                    rcpp_test5(
+                        alphaHat_t1,
+                        alphaHat_t2,
+                        betaHat_t1,
+                        betaHat_t2,
+                        sampleReads,
+                        eMatRead_t
+                    )           ,
                     times = 5L))
 
     

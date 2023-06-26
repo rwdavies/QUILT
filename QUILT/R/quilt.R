@@ -83,6 +83,8 @@
 #' @param use_eigen Use eigen library for per haploid full li and stephens pass of full haplotype reference panel
 #' @param impute_rare_common Whether to use common SNPs first for imputation, followed by a round of rare imputation
 #' @param rare_af_threshold Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common
+#' @param make_heuristic_plot Whether to make a plot for understanding heuristic performance
+#' @param heuristic_choice Which heuristic to use
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -168,7 +170,9 @@ QUILT <- function(
     ff0_shard_check_every_pair = TRUE,
     use_eigen = TRUE,
     impute_rare_common = FALSE,
-    rare_af_threshold = 0.0001
+    rare_af_threshold = 0.0001,
+    make_heuristic_plot = FALSE,
+    heuristic_approach = "A"
 ) {
 
     x <- as.list(environment())
@@ -497,6 +501,8 @@ QUILT <- function(
     } else {
         gen <- NULL
         phase <- NULL
+        gen_all <- NULL
+        phase_all <- NULL
     }
 
 
@@ -849,7 +855,9 @@ QUILT <- function(
                 pos_all = pos_all,
                 special_rare_common_objects = special_rare_common_objects,
                 special_rare_common_objects_per_core = special_rare_common_objects_per_core,                
-                impute_rare_common = impute_rare_common
+                impute_rare_common = impute_rare_common,
+                make_heuristic_plot = make_heuristic_plot,
+                heuristic_choice = heuristic_choice
             )
 
             if (out[["sample_was_imputed"]]) {

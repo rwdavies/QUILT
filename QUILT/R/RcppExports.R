@@ -311,3 +311,8 @@ rcpp_test4 <- function(alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleR
     invisible(.Call('_QUILT_rcpp_test4', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t))
 }
 
+#' @export
+rcpp_test5 <- function(alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t) {
+    invisible(.Call('_QUILT_rcpp_test5', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t))
+}
+

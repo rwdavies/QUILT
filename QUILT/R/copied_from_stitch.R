@@ -66,5 +66,5 @@ quilt_get_chromosome_length <- function(iBam, bam_files, cram_files, chr) {
 
 ## get_object_sizes(ls())
 get_object_sizes <- function(x) {
-    sort( sapply(x,function(x){object.size(get(x))}), decreasing = TRUE)
+    sort( sapply(x,function(x){object.size(get(x))}), decreasing = TRUE) / 1024 / 1024 / 1024
 }

@@ -86,7 +86,8 @@ QUILT(
   ff0_shard_check_every_pair = TRUE,
   use_eigen = TRUE,
   impute_rare_common = FALSE,
-  rare_af_threshold = 1e-04
+  rare_af_threshold = 1e-04,
+  make_heuristic_plot = FALSE
 )
 }
 \arguments{
@@ -253,6 +254,8 @@ QUILT(
 \item{impute_rare_common}{Whether to use common SNPs first for imputation, followed by a round of rare imputation}
 
 \item{rare_af_threshold}{Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common}
+
+\item{make_heuristic_plot}{Whether to make a plot for understanding heuristic performance}
 }
 \value{
 Results in properly formatted version
