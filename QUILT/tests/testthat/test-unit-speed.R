@@ -18,8 +18,8 @@ test_that("speed test for cpp stuff", {
 
     out <- make_quilt_fb_test_package(
         K = 400,
-        nReads = 3200,
-        nSNPs = 3200,
+        nReads = 32000,
+        nSNPs = 32000,
         S = 1,
         gridWindowSize = 32
     )
@@ -57,8 +57,16 @@ test_that("speed test for cpp stuff", {
                         betaHat_t2,
                         sampleReads,
                         eMatRead_t    
-                    )           ,         
-                    times = 1L))
+                    )           ,
+                    rcpp_test4(
+                        alphaHat_t1,
+                        alphaHat_t2,
+                        betaHat_t1,
+                        betaHat_t2,
+                        sampleReads,
+                        eMatRead_t
+                    )           ,
+                    times = 5L))
 
     
 

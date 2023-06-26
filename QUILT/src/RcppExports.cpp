@@ -1425,6 +1425,66 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// rcpp_test1
+void rcpp_test1(arma::mat& alphaHat_t1, arma::mat& alphaHat_t2, arma::mat& betaHat_t1, arma::mat& betaHat_t2, const Rcpp::List& sampleReads, arma::mat& eMatRead_t);
+RcppExport SEXP _QUILT_rcpp_test1(SEXP alphaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP betaHat_t1SEXP, SEXP betaHat_t2SEXP, SEXP sampleReadsSEXP, SEXP eMatRead_tSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t1(alphaHat_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t2(alphaHat_t2SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t1(betaHat_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t2(betaHat_t2SEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type sampleReads(sampleReadsSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type eMatRead_t(eMatRead_tSEXP);
+    rcpp_test1(alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t);
+    return R_NilValue;
+END_RCPP
+}
+// rcpp_test2
+void rcpp_test2(arma::mat& alphaHat_t1, arma::mat& alphaHat_t2, arma::mat& betaHat_t1, arma::mat& betaHat_t2, const Rcpp::List& sampleReads, arma::mat& eMatRead_t);
+RcppExport SEXP _QUILT_rcpp_test2(SEXP alphaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP betaHat_t1SEXP, SEXP betaHat_t2SEXP, SEXP sampleReadsSEXP, SEXP eMatRead_tSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t1(alphaHat_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t2(alphaHat_t2SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t1(betaHat_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t2(betaHat_t2SEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type sampleReads(sampleReadsSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type eMatRead_t(eMatRead_tSEXP);
+    rcpp_test2(alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t);
+    return R_NilValue;
+END_RCPP
+}
+// rcpp_test3
+void rcpp_test3(arma::mat& alphaHat_t1, arma::mat& alphaHat_t2, arma::mat& betaHat_t1, arma::mat& betaHat_t2, const Rcpp::List& sampleReads, arma::mat& eMatRead_t);
+RcppExport SEXP _QUILT_rcpp_test3(SEXP alphaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP betaHat_t1SEXP, SEXP betaHat_t2SEXP, SEXP sampleReadsSEXP, SEXP eMatRead_tSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t1(alphaHat_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t2(alphaHat_t2SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t1(betaHat_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t2(betaHat_t2SEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type sampleReads(sampleReadsSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type eMatRead_t(eMatRead_tSEXP);
+    rcpp_test3(alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t);
+    return R_NilValue;
+END_RCPP
+}
+// rcpp_test4
+void rcpp_test4(Eigen::Map<Eigen::ArrayXXd> alphaHat_t1, Eigen::Map<Eigen::ArrayXXd> alphaHat_t2, Eigen::Map<Eigen::ArrayXXd> betaHat_t1, Eigen::Map<Eigen::ArrayXXd> betaHat_t2, const Rcpp::List& sampleReads, Eigen::Map<Eigen::ArrayXXd> eMatRead_t);
+RcppExport SEXP _QUILT_rcpp_test4(SEXP alphaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP betaHat_t1SEXP, SEXP betaHat_t2SEXP, SEXP sampleReadsSEXP, SEXP eMatRead_tSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::ArrayXXd> >::type alphaHat_t1(alphaHat_t1SEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::ArrayXXd> >::type alphaHat_t2(alphaHat_t2SEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::ArrayXXd> >::type betaHat_t1(betaHat_t1SEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::ArrayXXd> >::type betaHat_t2(betaHat_t2SEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type sampleReads(sampleReadsSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::ArrayXXd> >::type eMatRead_t(eMatRead_tSEXP);
+    rcpp_test4(alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_make_eMatRead_t", (DL_FUNC) &_QUILT_rcpp_make_eMatRead_t, 15},
@@ -1485,6 +1545,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_Rcpp_haploid_reference_single_backward_version2", (DL_FUNC) &_QUILT_Rcpp_haploid_reference_single_backward_version2, 35},
     {"_QUILT_Rcpp_haploid_reference_single_backward_version3", (DL_FUNC) &_QUILT_Rcpp_haploid_reference_single_backward_version3, 35},
     {"_QUILT_Rcpp_haploid_dosage_versus_refs", (DL_FUNC) &_QUILT_Rcpp_haploid_dosage_versus_refs, 38},
+    {"_QUILT_rcpp_test1", (DL_FUNC) &_QUILT_rcpp_test1, 6},
+    {"_QUILT_rcpp_test2", (DL_FUNC) &_QUILT_rcpp_test2, 6},
+    {"_QUILT_rcpp_test3", (DL_FUNC) &_QUILT_rcpp_test3, 6},
+    {"_QUILT_rcpp_test4", (DL_FUNC) &_QUILT_rcpp_test4, 6},
     {NULL, NULL, 0}
 };
 
