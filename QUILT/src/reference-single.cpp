@@ -199,7 +199,7 @@ Rcpp::List Rcpp_get_top_K_or_more_matches_while_building_gamma(
 //' @export
 // [[Rcpp::export]]
 Rcpp::List Rcpp_get_top_K_or_more_matches_while_building_gamma_eigen(
-    Eigen::Map<Eigen::MatrixXd> & eigen_alphaHat_t,
+    Eigen::Map<Eigen::MatrixXd> eigen_alphaHat_t,
     arma::colvec& betaHat_t_col,
     arma::colvec& gamma_t_col,
     int iGrid,
@@ -878,7 +878,7 @@ void Rcpp_haploid_reference_single_forward_version2(
 void Rcpp_haploid_reference_single_forward_version3(
     Rcpp::IntegerVector& gammaSmall_cols_to_get,
     const arma::mat& gl,
-    Eigen::Map<Eigen::MatrixXd> & alphaHat_t,
+    Eigen::Map<Eigen::MatrixXd> alphaHat_t,
     arma::rowvec& c,
     const arma::mat& transMatRate_t,
     const arma::imat& rhb_t,
@@ -1779,7 +1779,7 @@ void Rcpp_haploid_reference_single_backward_version2(
 //' @export
 // [[Rcpp::export]]
 void Rcpp_haploid_reference_single_backward_version3(
-    Eigen::Map<Eigen::MatrixXd> & alphaHat_t,
+    Eigen::Map<Eigen::MatrixXd> alphaHat_t,
     arma::mat& betaHat_t,
     arma::mat& gamma_t,
     arma::mat& gammaSmall_t,
@@ -2189,7 +2189,7 @@ void Rcpp_haploid_reference_single_backward_version3(
 void Rcpp_haploid_dosage_versus_refs(
     const arma::mat& gl,
     arma::mat& arma_alphaHat_t,
-    Eigen::Map<Eigen::MatrixXd> & eigen_alphaHat_t,
+    Eigen::Map<Eigen::MatrixXd> eigen_alphaHat_t,
     arma::mat& betaHat_t,
     arma::rowvec& c,
     arma::mat& gamma_t,
