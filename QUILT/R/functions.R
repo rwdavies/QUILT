@@ -257,7 +257,7 @@ get_and_impute_one_sample <- function(
     special_rare_common_objects_per_core,    
     impute_rare_common,
     make_heuristic_plot,
-    heuristic_choice
+    heuristic_approach
 ) {
 
     sample_name <- sampleNames[iSample]
@@ -784,7 +784,7 @@ get_and_impute_one_sample <- function(
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
                 
-                if (heuristic_choice == "A" | make_heuristic_plot) {
+                if (heuristic_approach == "A" | make_heuristic_plot) {
 
                     which_haps_to_use <- select_new_haps_zilong_msp(
                         gibbs_iterate$hapProbs_t,
@@ -803,7 +803,7 @@ get_and_impute_one_sample <- function(
                     
                 }
 
-                if (heuristic_choice == "B" | make_heuristic_plot) {
+                if (heuristic_approach == "B" | make_heuristic_plot) {
 
                     which_haps_to_use <- select_new_haps_zilong_msp_robbie_version(
                         gibbs_iterate$hapProbs_t,
@@ -959,7 +959,7 @@ get_and_impute_one_sample <- function(
 
                 hapProbs_t <- gibbs_iterate$hapProbs_t 
                 
-                compare_heuristic_choices(                
+                compare_heuristic_approachs(                
                     hapProbs_t,
                     which_haps_to_use_zilong_A,
                     which_haps_to_use_zilong_B,

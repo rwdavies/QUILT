@@ -84,7 +84,7 @@
 #' @param impute_rare_common Whether to use common SNPs first for imputation, followed by a round of rare imputation
 #' @param rare_af_threshold Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common
 #' @param make_heuristic_plot Whether to make a plot for understanding heuristic performance
-#' @param heuristic_choice Which heuristic to use
+#' @param heuristic_approach Which heuristic to use
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -857,7 +857,7 @@ QUILT <- function(
                 special_rare_common_objects_per_core = special_rare_common_objects_per_core,                
                 impute_rare_common = impute_rare_common,
                 make_heuristic_plot = make_heuristic_plot,
-                heuristic_choice = heuristic_choice
+                heuristic_approach = heuristic_approach
             )
 
             if (out[["sample_was_imputed"]]) {
