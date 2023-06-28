@@ -37,9 +37,9 @@ make_rhb_t_local <- function(
     
 
 
-compare_heuristic_choices <- function(
-                                      hapProbs_t,
-                                      which_haps_to_use_zilong_A,
+compare_heuristic_approaches <- function(
+    hapProbs_t,
+    which_haps_to_use_zilong_A,
     which_haps_to_use_zilong_B,
     which_haps_to_use_quilt1,
     hapMatcherR,
@@ -62,6 +62,26 @@ compare_heuristic_choices <- function(
         paste0("heuristics.", sample_name, ".",regionName, ".", i_gibbs_sample, ".", i_it, ".pdf")
     )
 
+    ## save(
+    ## hapProbs_t,
+    ## which_haps_to_use_zilong_A,
+    ## which_haps_to_use_zilong_B,
+    ## which_haps_to_use_quilt1,
+    ## hapMatcherR,
+    ## hapMatcher,
+    ## use_hapMatcherR,
+    ## distinctHapsB,
+    ## eMatDH_special_matrix,
+    ## eMatDH_special_matrix_helper,
+    ## outputdir,
+    ## sample_name,
+    ## regionName,
+    ## i_gibbs_sample,
+    ## i_it,
+    ## nGrids,
+    ## file = paste0(filename, ".RData"))
+    ## print("SAVING FOR FILE")
+    
     pdf(filename, height = 24, width = 8)
     par(mfrow = c(3, 2))
     
@@ -96,6 +116,7 @@ compare_heuristic_choices <- function(
         for(i_hap in 1:2) {
 
             hap <- rcpp_int_contract(round(hapProbs_t[i_hap, ]))
+            what_is_plotted <- array(FALSE, dim(rhb_t_local))
             
             plot(x = 0, y = 0, xlim = c(0, nGrids + 1), ylim = c(1, Ksubset), axes = TRUE, xlab = "Grid", ylab = "Hap match", main = paste0(approach, ", hap ", i_hap))
             xleft <- 1:nGrids - 0.5
@@ -117,6 +138,7 @@ compare_heuristic_choices <- function(
                         x2[starts[i]:ends[i]] <- TRUE
                     }
                 }
+                what_is_plotted[i_k, ] <- x2
 
                 col <- rep("white", nGrids)
                 col[x2] <- "black"

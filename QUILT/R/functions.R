@@ -69,11 +69,12 @@ select_new_haps_zilong_msp_robbie_version <- function(
     mspbwtB,
     mspbwtL,
     mspbwtM,
-    nGrids
+    nGrids,
+    aggregated = FALSE
 ) {
     res <- lapply(1:2, function(x) {
         hap <- round(hapProbs_t[x, ])
-        res <- mspbwt_report(msp, hap, mspbwtL, mspbwtB)
+        res <- mspbwt_report(msp, hap, mspbwtL, mspbwtB, aggregated = aggregated)
         return(res)
     })
     ## merge, filter, order
@@ -894,7 +895,7 @@ get_and_impute_one_sample <- function(
                 
             }
 
-            if ((!zilong && !mspbwt) | make_heuristic_plot) {
+            if ((!zilong && !use_mspbwt) | make_heuristic_plot) {
                 
                 impute_all <- impute_using_everything(
                     eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
@@ -959,7 +960,7 @@ get_and_impute_one_sample <- function(
 
                 hapProbs_t <- gibbs_iterate$hapProbs_t 
                 
-                compare_heuristic_approachs(                
+                compare_heuristic_approaches(
                     hapProbs_t,
                     which_haps_to_use_zilong_A,
                     which_haps_to_use_zilong_B,
@@ -1003,7 +1004,7 @@ get_and_impute_one_sample <- function(
                     x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose, impute_rare_common = impute_rare_common, all_snps = FALSE)
                     pse_mat[w, ] <- c(i_gibbs_sample, i_it, as.integer(phasing_it), x)
                 } else if (have_truth_genotypes) {
-                    r2 <-  round(cor((dosage / nDosage)[inRegion2] - 2 * af[inRegion2], gen[inRegion2, sampleNames[iSample]] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
+                    r2 <-  round(cor((dosage / nDosage)[inRegion2] - 2 * af[inRegion2], gen[inRegion2, sample_name] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
                     print_message(paste0("Current accuracy for this gibbs sample for ", sample_name, ", r2:", r2))
                 }
 
