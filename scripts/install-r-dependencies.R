@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-required_packages <- c("proftools", "Rcpp", "RcppArmadillo", "optparse", "devtools", "testthat", "roxygen2", "data.table", "RcppEigen")
+required_packages <- c("proftools", "Rcpp", "RcppArmadillo", "optparse", "devtools", "testthat", "roxygen2", "data.table", "RcppEigen", "microbenchmark")
 for(package in required_packages) {
     if (!suppressPackageStartupMessages(require(package, character.only = TRUE))) {
         out <- install.packages(package, repos="http://cran.rstudio.com/")

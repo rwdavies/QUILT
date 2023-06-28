@@ -172,7 +172,7 @@ QUILT <- function(
     impute_rare_common = FALSE,
     rare_af_threshold = 0.0001,
     make_heuristic_plot = FALSE,
-    heuristic_approach = "A"
+    heuristic_approach = 'A'
 ) {
 
     x <- as.list(environment())
