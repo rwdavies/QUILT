@@ -472,7 +472,7 @@ test_that("QUILT can use or not use eigen to impute", {
         reference_haplotype_file = refpack$reference_haplotype_file,
         reference_legend_file = refpack$reference_legend_file,
         reference_sample_file = refpack$reference_sample_file,
-        genetic_map_file = genetic_map_file,
+        genetic_map_file = refpack$reference_genetic_map_file,
         regionStart = regionStart,
         regionEnd = regionEnd,
         buffer = buffer,
