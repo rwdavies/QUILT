@@ -234,7 +234,6 @@ QUILT_prepare_reference <- function(
                 reference_samples <- reference_samples[w, ]
             }
             subsamples <- paste0(reference_samples[, 1], collapse = ",")
-            subsamples_robbie <- subsamples
         }
 
         if(use_zilong) {
