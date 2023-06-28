@@ -41,133 +41,67 @@ refpack <- STITCH::make_reference_package(
 set.seed(010)
 
 
-test_that("QUILT can impute a few samples using robbie mspbwt", {
+test_that("QUILT can impute a few samples using robbie mspbwt or zilong pbwt", {
 
-    outputdir <- STITCH::make_unique_tempdir()
+    for (iii in 1:2) {
 
-    regionStart <- 11
-    regionEnd <- 40
-    buffer <- 5
-    QUILT_prepare_reference(
-        outputdir = outputdir,
-        chr = data_package$chr,
-        nGen = 100,
-        reference_haplotype_file = refpack$reference_haplotype_file,
-        reference_legend_file = refpack$reference_legend_file,
-        genetic_map_file = refpack$reference_genetic_map_file,
-        regionStart = regionStart,
-        regionEnd = regionEnd,
-        buffer = buffer,
-        use_mspbwt = TRUE
-    )
-    regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
-    expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
-    i <- 1
+        if (iii == 1) {
+            use_mspbwt <- TRUE
+            zilong <- FALSE
+        } else {
+            use_mspbwt <- FALSE
+            zilong <- TRUE
+        }
+        outputdir <- STITCH::make_unique_tempdir()
 
-    ##phasefile = data_package$phasefile,
-    phasefile <- ""
+        regionStart <- 11
+        regionEnd <- 40
+        buffer <- 5
+        QUILT_prepare_reference(
+            outputdir = outputdir,
+            chr = data_package$chr,
+            nGen = 100,
+            reference_vcf_file = refpack$reference_vcf_file,
+            genetic_map_file = refpack$reference_genetic_map_file,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer,
+            use_mspbwt = use_mspbwt,
+            use_zilong = zilong
+        )
+        regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
+        expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
+        i <- 1
 
-    QUILT(
-        outputdir = outputdir,
-        chr = data_package$chr,
-        regionStart = regionStart,
-        regionEnd = regionEnd,
-        buffer = buffer,
-        bamlist = data_package$bamlist,
-        posfile = data_package$posfile,
-        genfile = data_package$genfile,
-        phasefile = phasefile,
-        use_mspbwt = TRUE
-    )
+        ##phasefile = data_package$phasefile,
+        phasefile <- ""
 
-    which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
+        QUILT(
+            outputdir = outputdir,
+            chr = data_package$chr,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer,
+            bamlist = data_package$bamlist,
+            posfile = data_package$posfile,
+            genfile = data_package$genfile,
+            phasefile = phasefile,
+            use_mspbwt = use_mspbwt,
+            zilong = zilong
+        )
 
-    ## now evaluate versus truth!
-    check_quilt_output(
-        file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
-        data_package = data_package,
-        which_snps = which_snps,
-        tol = 0.1,
-        min_info = 0.9
-    )
+        which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
 
-})
+        ## now evaluate versus truth!
+        check_quilt_output(
+            file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+            data_package = data_package,
+            which_snps = which_snps,
+            tol = 0.1,
+            min_info = 0.9
+        )
 
-
-
-test_that("QUILT can impute a few samples using zilong pbwt", {
-
-    outputdir <- STITCH::make_unique_tempdir()
-
-    print("Fix me - figure out how best to make this work when reference files are larger than region to be imputed")
-
-    skip("work in progress")
-    
-    regionStart <- 1
-    regionEnd <- 50
-    buffer <- 0
-    regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
-    i <- 1
-    phasefile <- ""
-    QUILT_prepare_reference(
-        outputdir = outputdir,
-        chr = data_package$chr,
-        nGen = 100,
-        reference_haplotype_file = refpack$reference_haplotype_file,
-        reference_legend_file = refpack$reference_legend_file,
-        genetic_map_file = refpack$reference_genetic_map_file,
-        regionStart = regionStart,
-        regionEnd = regionEnd,
-        buffer = buffer,
-        use_mspbwt = TRUE
-    )
-
-
-    prefix <- gsub(".txt.gz", "", refpack$reference_haplotype_file)
-
-    x <- read.table(refpack$reference_legend_file, header = TRUE)
-    x[, 1] <- paste0(chr, ":", x[, 2], "_", x[, 3], "_", x[, 4])
-    new_ref_legend_file <- tempfile(fileext = ".vcf")
-    write.table(x, new_ref_legend_file, row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
-    system(paste0("gzip -1 ", new_ref_legend_file))
-    new_ref_legend_file <- paste0(new_ref_legend_file, ".gz")
-
-    fake_ref_vcf <- tempfile(fileext=".vcf.gz")
-    cmd <- paste0(
-        "bcftools convert ",
-        "--haplegendsample2vcf ",
-        shQuote(refpack$reference_haplotype_file), ",",
-        shQuote(new_ref_legend_file), ",",
-        shQuote(refpack$reference_sample_file), " ",
-        "--output-type z ",
-        "--output ", fake_ref_vcf
-    )
-    system(cmd)
-    system(paste("tabix ", fake_ref_vcf))
-
-
-    QUILT(
-        outputdir = outputdir,
-        chr = data_package$chr,
-        regionStart = regionStart,
-        regionEnd = regionEnd,
-        buffer = buffer,
-        bamlist = data_package$bamlist,
-        zilong = TRUE,
-        vcf = fake_ref_vcf,
-        reference_sample_file = refpack$reference_sample_file
-    )
-
-    which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
-
-    ## now evaluate versus truth!
-    check_quilt_output(
-        file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
-        data_package = data_package,
-        which_snps = which_snps,
-        tol = 0.1,
-        min_info = 0.9
-    )
+    }
 
 })
 
