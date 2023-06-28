@@ -65,8 +65,6 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
 
     options(warn=2)
 
-    set.seed(19)
-    
     regionStart <- 11
     regionEnd <- 200 - 10
     buffer <- 5
@@ -102,6 +100,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
             for(i_approach in 1:2) {
 
                 ## print(paste0("impute_rare_common = ", impute_rare_common ,", i_method = ", i_method, ", i_approach = ", i_approach, ", ", date()))
+                set.seed(19)
 
                 outputdir <- STITCH::make_unique_tempdir()
                 
