@@ -192,6 +192,104 @@ select_new_haps_mspbwt_v2 <- function(
 }
 
 
+
+
+
+
+
+
+
+select_new_haps_mspbwt_v3 <- function(
+    hapProbs_t,
+    hapMatcher,
+    hapMatcherR,
+    use_hapMatcherR,
+    ms_indices,
+    Knew,
+    Kfull,
+    mspbwtL,
+    mspbwtM
+) {
+    iIndex <- 1
+    ihap <- 1
+    nIndices <- length(ms_indices)
+    if (use_hapMatcherR) {
+        nGrids <- ncol(hapMatcherR)
+    } else {
+        nGrids <- ncol(hapMatcher)
+    }
+    a <- lapply(1:2, function(ihap) {
+        hap <- round(hapProbs_t[ihap, ])
+        Zs <- rcpp_int_contract(hap)
+        mtms <- lapply(1:nIndices, function(iIndex) {
+            which_grids <- seq(iIndex, nGrids, nIndices)
+            Z_local <- mspbwt::map_Z_to_all_symbols(Zs[which_grids], ms_indices[[iIndex]][["all_symbols"]])
+            mtm <- mspbwt::ms_MatchZ_Algorithm5(
+                X = hapMatcher,
+                XR = hapMatcherR,
+                use_XR = use_hapMatcherR,
+                ms_indices = ms_indices[[iIndex]],
+                Z = Z_local,
+                verbose = FALSE,
+                pbwtM = mspbwtM,
+                pbwtL = mspbwtL,
+                do_uppy_downy_scan = TRUE
+            )[["uppy_downy_reporter"]]
+            mtm[, "index0"] <- mtm[, "index0"] + 1
+            colnames(mtm)[colnames(mtm) == "index0"] <- "index1"
+            ##mtm[, 2] <- mtm[, 2]
+            key <- nGrids * mtm[, "start1"] + mtm[, "end1"]
+            length <- mtm[, "len1"]
+            mtm <- cbind(mtm, key) ## , length)
+            mtm
+        })
+        mtm <- mtms[[1]]
+        if (length(mtms) > 1) {
+            for(j in 2:length(mtms)) {
+                mtm <- rbind(mtm, mtms[[j]])
+            }
+        }
+        mtm
+    })
+    mtm <- rbind(a[[1]], a[[2]])
+    ## order everything
+    mtm <- mtm[order(-mtm[, "len1"], mtm[, "key"]), , drop = FALSE]
+    unique_haps <- unique(mtm[, "index1"])
+    if (length(unique_haps) == 0) {
+        ## special fluke case
+        ## likely driven by very small regions we are trying to impute, with few / no matches above the min length above
+        new_haps <- sample(1:Kfull, Knew)
+        return(new_haps)
+    } else if(length(unique_haps) <= Knew)  {
+        ##new_haps <- array(NA, Knew)
+        ## new_haps[1:length(unique_haps)] <- unique_haps
+        ## new_haps[-c(1:length(unique_haps))] <- sample(setdiff(1:Kfull, unique_haps), Knew - length(unique_haps), replace = FALSE)
+        ##
+        ## so in this faster version
+        ## oversample all we could possibly want. then take the new ones, plus some needed new ones
+        ##
+        new_haps <- unique(c(
+            unique_haps,
+            sample(Kfull, length(unique_haps) + Knew, replace = FALSE)
+        ))[1:Knew]
+        return(new_haps)
+    } else {
+        ## so this doesn't do anything about region specificity
+        ## as long as there are buffers it should be pretty OK
+        ## it will favour the longest matches, and take one per key
+        ## if it exhausts that, it will take other unique long hones
+        unique_keys <- unique(mtm[, "key"])
+        unique_haps_at_unique_keys <- unique(mtm[match(unique_keys, mtm[, "key"]), "index1"])
+        if (length(unique_haps_at_unique_keys) > Knew) {
+            return(unique_haps_at_unique_keys[1:Knew])
+        } else {
+            ## otherwise, take unique ones, then next best ones, from length down
+            return(c(unique_haps_at_unique_keys, setdiff(unique_haps, unique_haps_at_unique_keys))[1:Knew])
+        }
+    }
+}
+
+
 ##             print("--------------wer----------------saving stuff--------------wer--------------")
 ##                 hapProbs_t = gibbs_iterate[["hapProbs_t"]]
 ##                 hapMatcher = hapMatcher

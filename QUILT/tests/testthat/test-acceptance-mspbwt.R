@@ -63,7 +63,7 @@ chr <- data_package$chr
 
 test_that("QUILT can impute a few samples in a standard way using either normal, mspbwt, or zilong approaches, also using rare common idea", {
 
-    options(warn=2)
+    ## options(warn=2)
 
     regionStart <- 11
     regionEnd <- 200 - 10

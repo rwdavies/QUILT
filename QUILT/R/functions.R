@@ -881,16 +881,19 @@ get_and_impute_one_sample <- function(
                     hap2 <- gibbs_iterate$hapProbs_t[2, ]
                 }
 
+                ## this version here
                 hapProbs_t <- rbind(hap1, hap2)
                 Kfull <- nrow(hapMatcher)
-                which_haps_to_use <- select_new_haps_mspbwt_v2(
+                which_haps_to_use <- select_new_haps_mspbwt_v3(
                     hapProbs_t = hapProbs_t,
                     hapMatcher = hapMatcher,
                     hapMatcherR = hapMatcherR,
                     use_hapMatcherR = use_hapMatcherR,
                     ms_indices = ms_indices,
                     Knew = Knew,
-                    Kfull = Kfull
+                    Kfull = Kfull,
+                    mspbwtL = mspbwtL,
+                    mspbwtM = mspbwtM
                 )
                 
             }
