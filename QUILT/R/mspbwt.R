@@ -238,8 +238,8 @@ select_new_haps_mspbwt_v3 <- function(
                 ms_indices = ms_indices[[iIndex]],
                 Z = Z_local,
                 verbose = FALSE,
-                pbwtM = mspbwtM,
-                pbwtL = mspbwtL,
+                mspbwtM = mspbwtM,
+                mspbwtL = mspbwtL,
                 do_uppy_downy_scan = TRUE
             )[["uppy_downy_reporter"]]
             mtm[, "index0"] <- mtm[, "index0"] + 1
@@ -265,7 +265,7 @@ select_new_haps_mspbwt_v3 <- function(
     ## remove those with same start and n
     res <- res[order(-res[, "len1"], res[, "key"]), ]
     ## choose proportionally to uniqueness and length
-    unique_haps <- unique(mtm[, "index1"])
+    unique_haps <- unique(res[, "index1"])
     if (length(unique_haps) == 0) {
         ## special fluke case
         ## likely driven by very small regions we are trying to impute, with few / no matches above the min length above
