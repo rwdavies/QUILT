@@ -172,7 +172,7 @@ QUILT <- function(
     impute_rare_common = FALSE,
     rare_af_threshold = 0.0001,
     make_heuristic_plot = FALSE,
-    heuristic_approach = 'A'
+    heuristic_approach = "A"
 ) {
 
     x <- as.list(environment())
@@ -210,7 +210,7 @@ QUILT <- function(
         regionName <- paste0(chr, ".", regionStart,".", regionEnd)
     }
 
-    if (make_plots | make_plots_block_gibbs | plot_per_sample_likelihoods) {
+    if (make_plots | make_plots_block_gibbs | plot_per_sample_likelihoods | make_heuristic_plot) {
         dir.create(file.path(outputdir, "plots"), showWarnings = FALSE, recursive = TRUE)
     }
 
@@ -496,7 +496,7 @@ QUILT <- function(
         ## get all as well
         gen_all <- gen
         phase_all <- phase
-        gen <- gen[snp_is_common, , drop = FALSE]
+        gen <- gen[snp_is_common, drop = FALSE]
         phase <- phase[snp_is_common, , , drop = FALSE]
     } else {
         gen <- NULL

@@ -224,9 +224,16 @@ select_new_haps_mspbwt_v3 <- function(
         mtms <- lapply(1:nIndices, function(iIndex) {
             which_grids <- seq(iIndex, nGrids, nIndices)
             Z_local <- mspbwt::map_Z_to_all_symbols(Zs[which_grids], ms_indices[[iIndex]][["all_symbols"]])
+            if (use_hapMatcherR) {
+                X <- hapMatcherR[, which_grids]
+                XR <- hapMatcherR[, which_grids]
+            } else {
+                X <- hapMatcher[, which_grids]
+                XR <- matrix(0, 1, 1)
+            }
             mtm <- mspbwt::ms_MatchZ_Algorithm5(
-                X = hapMatcher,
-                XR = hapMatcherR,
+                X = X,
+                XR = XR,
                 use_XR = use_hapMatcherR,
                 ms_indices = ms_indices[[iIndex]],
                 Z = Z_local,
@@ -237,10 +244,11 @@ select_new_haps_mspbwt_v3 <- function(
             )[["uppy_downy_reporter"]]
             mtm[, "index0"] <- mtm[, "index0"] + 1
             colnames(mtm)[colnames(mtm) == "index0"] <- "index1"
+            mtm <- mtm[!duplicated(mtm[, "index1"], mtm[, "start1"]), ]
             ##mtm[, 2] <- mtm[, 2]
             key <- nGrids * mtm[, "start1"] + mtm[, "end1"]
             length <- mtm[, "len1"]
-            mtm <- cbind(mtm, key) ## , length)
+            mtm <- cbind(mtm, key, n = iIndex) ## , length)
             mtm
         })
         mtm <- mtms[[1]]
@@ -251,19 +259,19 @@ select_new_haps_mspbwt_v3 <- function(
         }
         mtm
     })
-    mtm <- rbind(a[[1]], a[[2]])
-    ## order everything
-    mtm <- mtm[order(-mtm[, "len1"], mtm[, "key"]), , drop = FALSE]
+    res <- rbind(a[[1]], a[[2]])
+    ## remove those with same start, often at 1
+    res <- res[!duplicated(res[, "index1"], res[, "start1"]), ]    
+    ## remove those with same start and n
+    res <- res[order(-res[, "len1"], res[, "key"]), ]
+    ## choose proportionally to uniqueness and length
     unique_haps <- unique(mtm[, "index1"])
     if (length(unique_haps) == 0) {
         ## special fluke case
         ## likely driven by very small regions we are trying to impute, with few / no matches above the min length above
         new_haps <- sample(1:Kfull, Knew)
         return(new_haps)
-    } else if(length(unique_haps) <= Knew)  {
-        ##new_haps <- array(NA, Knew)
-        ## new_haps[1:length(unique_haps)] <- unique_haps
-        ## new_haps[-c(1:length(unique_haps))] <- sample(setdiff(1:Kfull, unique_haps), Knew - length(unique_haps), replace = FALSE)
+    } else if (length(unique_haps) <= Knew)  {
         ##
         ## so in this faster version
         ## oversample all we could possibly want. then take the new ones, plus some needed new ones
@@ -274,17 +282,30 @@ select_new_haps_mspbwt_v3 <- function(
         ))[1:Knew]
         return(new_haps)
     } else {
-        ## so this doesn't do anything about region specificity
-        ## as long as there are buffers it should be pretty OK
-        ## it will favour the longest matches, and take one per key
-        ## if it exhausts that, it will take other unique long hones
-        unique_keys <- unique(mtm[, "key"])
-        unique_haps_at_unique_keys <- unique(mtm[match(unique_keys, mtm[, "key"]), "index1"])
-        if (length(unique_haps_at_unique_keys) > Knew) {
-            return(unique_haps_at_unique_keys[1:Knew])
+        ##
+        ## heuristically, prioritize based on length and new-ness
+        ## 
+        m <- max(res[, "end1"])
+        weight <- numeric(m)
+        cur_sum <- numeric(m)
+        cur_sum[] <- 1
+        for(i in 1:nrow(res)) {
+            s <- res[i, "start1"]
+            e <- res[i, "end1"]
+            weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
+            cur_sum[s:e] <- cur_sum[s:e] + 1
+        }
+        ##
+        unique_ordered_haps <- unique(res[order(-weight), "index1"])
+        print(paste("select", length(unique_ordered_haps), " unique haps after post-selection 2"))
+        ## 
+        if (length(unique_ordered_haps) >= Knew) {
+            return(unique_ordered_haps[1:Knew])
         } else {
-            ## otherwise, take unique ones, then next best ones, from length down
-            return(c(unique_haps_at_unique_keys, setdiff(unique_haps, unique_haps_at_unique_keys))[1:Knew])
+            ## add in some other (potentially) duplicated haps
+            new_haps <- c(setdiff(unique_ordered_haps, unique_haps), unique_haps)[1:Knew]
+            print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
+            return(new_haps)
         }
     }
 }

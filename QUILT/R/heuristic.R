@@ -42,6 +42,7 @@ compare_heuristic_approaches <- function(
     which_haps_to_use_zilong_A,
     which_haps_to_use_zilong_B,
     which_haps_to_use_quilt1,
+    which_haps_to_use_mspbwt,    
     hapMatcherR,
     hapMatcher,
     use_hapMatcherR,
@@ -53,7 +54,9 @@ compare_heuristic_approaches <- function(
     regionName,
     i_gibbs_sample,
     i_it,
-    nGrids
+    nGrids,
+    mspbwtL,
+    mspbwtM
 ) {
 
     filename <- file.path(
@@ -67,8 +70,7 @@ compare_heuristic_approaches <- function(
     ## which_haps_to_use_zilong_A,
     ## which_haps_to_use_zilong_B,
     ## which_haps_to_use_quilt1,
-    ## hapMatcherR,
-    ## hapMatcher,
+    ## which_haps_to_use_mspbwt,
     ## use_hapMatcherR,
     ## distinctHapsB,
     ## eMatDH_special_matrix,
@@ -80,7 +82,7 @@ compare_heuristic_approaches <- function(
     ## i_it,
     ## nGrids,
     ## file = paste0(filename, ".RData"))
-    ## print("SAVING FOR FILE")
+    ## print(paste0("SAVING FOR FILE:", paste0(filename, ".RData")))
     
     pdf(filename, height = 24, width = 8)
     par(mfrow = c(3, 2))
@@ -88,7 +90,8 @@ compare_heuristic_approaches <- function(
     ## so suppose we had rhb_t
     ## then would want for each of these a row against current hapProbs_t
     ## showing agree vs disagree
-    for(i in 1:3) {
+    for(i in 1:4) {
+        
         if (i == 1) {
             which_haps_to_use <- which_haps_to_use_quilt1
             approach <- "QUILT1"
@@ -98,59 +101,67 @@ compare_heuristic_approaches <- function(
         } else if (i == 3) {
             which_haps_to_use <- which_haps_to_use_zilong_B
             approach <- "Zilong B"
+        } else if (i == 4) {
+            which_haps_to_use <- which_haps_to_use_mspbwt
+            approach <- "mspbwt"
         }
+
         Ksubset <- length(which_haps_to_use)
-        
-        rhb_t_local <- make_rhb_t_local(
-            which_haps_to_use,
-            hapMatcherR,
-            hapMatcher,
-            use_hapMatcherR,
-            distinctHapsB,
-            eMatDH_special_matrix,
-            eMatDH_special_matrix_helper,
-            nGrids
-        )
 
-        
-        for(i_hap in 1:2) {
-
-            hap <- rcpp_int_contract(round(hapProbs_t[i_hap, ]))
-            what_is_plotted <- array(FALSE, dim(rhb_t_local))
+        if (Ksubset > 0) {
             
-            plot(x = 0, y = 0, xlim = c(0, nGrids + 1), ylim = c(1, Ksubset), axes = TRUE, xlab = "Grid", ylab = "Hap match", main = paste0(approach, ", hap ", i_hap))
-            xleft <- 1:nGrids - 0.5
-            xright <- xleft + 1
-            
-            for(i_k in 1:Ksubset) {
+            rhb_t_local <- make_rhb_t_local(
+                which_haps_to_use,
+                hapMatcherR,
+                hapMatcher,
+                use_hapMatcherR,
+                distinctHapsB,
+                eMatDH_special_matrix,
+                eMatDH_special_matrix_helper,
+                nGrids
+            )
 
-                ## plot upside down
-                x <- rhb_t_local[Ksubset - i_k + 1, ] == hap
-                ## censor if fewer than 5 in a row?
-                x2 <- rep(FALSE, nGrids)
-                a <- rle(x)
-                keep <- which((a$values == TRUE) & (a$lengths > 10))
-                b <- cumsum(a$lengths)
-                starts <- c(1, b[-length(b)] + 1)
-                ends <- b
-                if (length(keep) > 0) {
-                    for(i in keep) {
-                        x2[starts[i]:ends[i]] <- TRUE
+            
+            for(i_hap in 1:2) {
+
+                hap <- rcpp_int_contract(round(hapProbs_t[i_hap, ]))
+                what_is_plotted <- array(FALSE, dim(rhb_t_local))
+                
+                plot(x = 0, y = 0, xlim = c(0, nGrids + 1), ylim = c(1, Ksubset), axes = TRUE, xlab = "Grid", ylab = "Hap match", main = paste0(approach, ", hap ", i_hap))
+                xleft <- 1:nGrids - 0.5
+                xright <- xleft + 1
+                
+                for(i_k in 1:Ksubset) {
+
+                    ## plot upside down
+                    x <- rhb_t_local[Ksubset - i_k + 1, ] == hap
+                    ## censor if fewer than 5 in a row?
+                    x2 <- rep(FALSE, nGrids)
+                    a <- rle(x)
+                    keep <- which((a$values == TRUE) & (a$lengths > 10))
+                    b <- cumsum(a$lengths)
+                    starts <- c(1, b[-length(b)] + 1)
+                    ends <- b
+                    if (length(keep) > 0) {
+                        for(i in keep) {
+                            x2[starts[i]:ends[i]] <- TRUE
+                        }
                     }
-                }
-                what_is_plotted[i_k, ] <- x2
+                    what_is_plotted[i_k, ] <- x2
 
-                col <- rep("white", nGrids)
-                col[x2] <- "black"
-                rect(
-                    xleft = xleft,
-                    xright = xright,
-                    ybottom = rep(i_k, nGrids) - 0.5,
-                    ytop = rep(i_k, nGrids) + 0.5,
-                    col = col,
-                    border = NA
-                )
+                    col <- rep("white", nGrids)
+                    col[x2] <- "black"
+                    rect(
+                        xleft = xleft,
+                        xright = xright,
+                        ybottom = rep(i_k, nGrids) - 0.5,
+                        ytop = rep(i_k, nGrids) + 0.5,
+                        col = col,
+                        border = NA
+                    )
+                }
             }
+
         }
 
     }

@@ -779,7 +779,16 @@ get_and_impute_one_sample <- function(
             return_dosage <- (have_truth_haplotypes | record_interim_dosages | (i_it > n_burn_in_seek_its))
 
             igibbs <- (i_gibbs_sample - 1) * n_seek_its + i_it ## 1-based
-            if (zilong | make_heuristic_plot) {
+
+            which_haps_to_use_zilong_A <- NULL
+            which_haps_to_use_zilong_B <- NULL
+            which_haps_to_use_zilong_mspbwt <- NULL
+            which_haps_to_use_quilt1 <- NULL
+            
+            if (zilong | (!use_mspbwt && make_heuristic_plot)) {
+
+                print(paste0("zilong = ", zilong))
+                print(paste0("(!use_mspbwt && make_heuristic_plot) = ", (!use_mspbwt && make_heuristic_plot)))
 
                 Kfull <- nrow(hapMatcher)
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
@@ -825,7 +834,7 @@ get_and_impute_one_sample <- function(
                 
             }
 
-            if (use_mspbwt) {
+            if (use_mspbwt | (!zilong && make_heuristic_plot)) {
 
                 ## for testing purposes
                 if (use_splitreadgl) {
@@ -895,6 +904,7 @@ get_and_impute_one_sample <- function(
                     mspbwtL = mspbwtL,
                     mspbwtM = mspbwtM
                 )
+                which_haps_to_use_mspbwt <- which_haps_to_use
                 
             }
 
@@ -964,22 +974,23 @@ get_and_impute_one_sample <- function(
                 hapProbs_t <- gibbs_iterate$hapProbs_t 
                 
                 compare_heuristic_approaches(
-                    hapProbs_t,
-                    which_haps_to_use_zilong_A,
-                    which_haps_to_use_zilong_B,
-                    which_haps_to_use_quilt1,
-                    hapMatcherR,
-                    hapMatcher,
-                    use_hapMatcherR,
-                    distinctHapsB,
-                    eMatDH_special_matrix,
-                    eMatDH_special_matrix_helper,
-                    outputdir,
-                    sample_name,
-                    regionName,
-                    i_gibbs_sample,
-                    i_it,
-                    nGrids
+                    hapProbs_t = hapProbs_t,
+                    which_haps_to_use_zilong_A = which_haps_to_use_zilong_A,
+                    which_haps_to_use_zilong_B = which_haps_to_use_zilong_B,
+                    which_haps_to_use_mspbwt = which_haps_to_use_mspbwt,
+                    which_haps_to_use_quilt1 = which_haps_to_use_quilt1,
+                    hapMatcherR = hapMatcherR,
+                    hapMatcher = hapMatcher,
+                    use_hapMatcherR = use_hapMatcherR,
+                    distinctHapsB = distinctHapsB,
+                    eMatDH_special_matrix = eMatDH_special_matrix,
+                    eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                    outputdir = outputdir,
+                    sample_name = sample_name,
+                    regionName = regionName,
+                    i_gibbs_sample = i_gibbs_sample,
+                    i_it = i_it,
+                    nGrids = nGrids
                 )
 
             }
