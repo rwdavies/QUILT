@@ -218,7 +218,7 @@ select_new_haps_mspbwt_v3 <- function(
     } else {
         nGrids <- ncol(hapMatcher)
     }
-    a <- lapply(1:2, function(ihap) {
+    out <- lapply(1:2, function(ihap) {
         hap <- round(hapProbs_t[ihap, ])
         Zs <- rcpp_int_contract(hap)
         mtms <- lapply(1:nIndices, function(iIndex) {
@@ -242,9 +242,13 @@ select_new_haps_mspbwt_v3 <- function(
                 mspbwtL = mspbwtL,
                 do_uppy_downy_scan = TRUE
             )[["uppy_downy_reporter"]]
+            ## change to 1-based
             mtm[, "index0"] <- mtm[, "index0"] + 1
             colnames(mtm)[colnames(mtm) == "index0"] <- "index1"
-            mtm <- mtm[!duplicated(mtm[, "index1"], mtm[, "start1"]), ]
+            ## only keep one of the same index and start (shouldn't be on here?)
+            ## make sure sorted first
+            mtm <- mtm[order(mtm[, 1], -mtm[, "end1"], -mtm[, "start1"]), ]
+            mtm <- mtm[!duplicated(paste0(mtm[, "index1"], "-", mtm[, "start1"])), ]
             ##mtm[, 2] <- mtm[, 2]
             key <- nGrids * mtm[, "start1"] + mtm[, "end1"]
             length <- mtm[, "len1"]
@@ -257,15 +261,14 @@ select_new_haps_mspbwt_v3 <- function(
                 mtm <- rbind(mtm, mtms[[j]])
             }
         }
+        ## 
+        ## mtm <- mtm[order(mtm[, 1], -mtm[, "end1"], -mtm[, "start1"]), ]
+        ## order by length
+        mtm <- mtm[order(-mtm[, "len1"]), ]
         mtm
     })
-    res <- rbind(a[[1]], a[[2]])
-    ## remove those with same start, often at 1
-    res <- res[!duplicated(res[, "index1"], res[, "start1"]), ]    
-    ## remove those with same start and n
-    res <- res[order(-res[, "len1"], res[, "key"]), ]
-    ## choose proportionally to uniqueness and length
-    unique_haps <- unique(res[, "index1"])
+    ## check max number
+    unique_haps <- unique(c(out[[1]][, 1], out[[2]][, 1]))
     if (length(unique_haps) == 0) {
         ## special fluke case
         ## likely driven by very small regions we are trying to impute, with few / no matches above the min length above
@@ -284,20 +287,39 @@ select_new_haps_mspbwt_v3 <- function(
     } else {
         ##
         ## heuristically, prioritize based on length and new-ness
-        ## 
-        m <- max(res[, "end1"])
-        weight <- numeric(m)
-        cur_sum <- numeric(m)
-        cur_sum[] <- 1
-        for(i in 1:nrow(res)) {
-            s <- res[i, "start1"]
-            e <- res[i, "end1"]
-            weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
-            cur_sum[s:e] <- cur_sum[s:e] + 1
-        }
+        ## do this for each of the two haps
         ##
-        unique_ordered_haps <- unique(res[order(-weight), "index1"])
-        print(paste("select", length(unique_ordered_haps), " unique haps after post-selection 2"))
+        results <- lapply(out, function(mtm) {
+            m <- max(mtm[, "end1"])
+            weight <- numeric(m)
+            cur_sum <- numeric(m)
+            cur_sum[] <- 1
+            for(i in 1:nrow(mtm)) {
+                s <- mtm[i, "start1"]
+                e <- mtm[i, "end1"]
+                weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
+                cur_sum[s:e] <- cur_sum[s:e] + 1
+            }
+            ##
+            mtm <- mtm[order(-weight), ]
+            mtm[, "index1"]
+        })
+        ## pad out one of them
+        x <- results[[1]]
+        y <- results[[2]]
+        if (length(x) > length(y)) {
+            y <- c(y, rep(NA, length(x) - length(y)))
+        } else {
+            x <- c(x, rep(NA, length(y) - length(x)))
+        }
+        ## if (length(x) > Knew) {
+        ##     x <- x[1:Knew]
+        ##     y <- y[1:Knew]
+        ## }
+        unique_ordered_haps <- unique(c(t(cbind(x, y))))
+        unique_ordered_haps <- unique_ordered_haps[!is.na(unique_ordered_haps)]
+        ## want to interleave, then make unique, then take first Knew
+        ## print(paste("select", length(unique_ordered_haps), " unique haps after post-selection 2"))
         ## 
         if (length(unique_ordered_haps) >= Knew) {
             return(unique_ordered_haps[1:Knew])

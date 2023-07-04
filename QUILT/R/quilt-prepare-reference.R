@@ -469,6 +469,11 @@ QUILT_prepare_reference <- function(
     if (use_mspbwt) {
         print_message("Build mspbwt indices")
         all_symbols <- out$all_symbols
+        ## if (temp_pre_save) {
+        ##     print("temp pre save to /data/smew1/rdavies/ukbb_gel_2023_01_26/2023_06_22/quilt_mspbwt_FALSE_TRUE_488315_TRUE/RData/temp_presave.RData")
+        ##     save(hapMatcher,hapMatcherR,mspbwt_nindices,use_hapMatcherR,all_symbols, file = "/data/smew1/rdavies/ukbb_gel_2023_01_26/2023_06_22/quilt_mspbwt_FALSE_TRUE_488315_TRUE/RData/temp_presave.RData")
+        ##     print("end of temp pre save to /data/smew1/rdavies/ukbb_gel_2023_01_26/2023_06_22/quilt_mspbwt_FALSE_TRUE_488315_TRUE/RData/temp_presave.RData")
+        ## }
         ms_indices <- build_mspbwt_indices(
             hapMatcher = hapMatcher,
             hapMatcherR = hapMatcherR,
