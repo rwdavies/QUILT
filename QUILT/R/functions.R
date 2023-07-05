@@ -787,8 +787,8 @@ get_and_impute_one_sample <- function(
             
             if (zilong | (!use_mspbwt && make_heuristic_plot)) {
 
-                print(paste0("zilong = ", zilong))
-                print(paste0("(!use_mspbwt && make_heuristic_plot) = ", (!use_mspbwt && make_heuristic_plot)))
+                ##print(paste0("zilong = ", zilong))
+                ##print(paste0("(!use_mspbwt && make_heuristic_plot) = ", (!use_mspbwt && make_heuristic_plot)))
 
                 Kfull <- nrow(hapMatcher)
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]

@@ -231,7 +231,7 @@ select_new_haps_mspbwt_v3 <- function(
                 X <- hapMatcher[, which_grids]
                 XR <- matrix(0, 1, 1)
             }
-            mtm <- mspbwt::ms_MatchZ_Algorithm5(
+            mtm <- mspbwt::Rcpp_ms_MatchZ_Algorithm5(
                 X = X,
                 XR = XR,
                 use_XR = use_hapMatcherR,
@@ -240,8 +240,10 @@ select_new_haps_mspbwt_v3 <- function(
                 verbose = FALSE,
                 mspbwtM = mspbwtM,
                 mspbwtL = mspbwtL,
-                do_uppy_downy_scan = TRUE
-            )[["uppy_downy_reporter"]]
+                do_up_and_down_scan = TRUE,
+                cols_to_use0 = as.integer(which_grids - 1L)                
+            )
+            ## )[["uppy_downy_reporter"]]
             ## change to 1-based
             mtm[, "index0"] <- mtm[, "index0"] + 1
             colnames(mtm)[colnames(mtm) == "index0"] <- "index1"
