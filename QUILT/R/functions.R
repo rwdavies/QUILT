@@ -893,6 +893,19 @@ get_and_impute_one_sample <- function(
                 ## this version here
                 hapProbs_t <- rbind(hap1, hap2)
                 Kfull <- nrow(hapMatcher)
+
+                ## file <- paste0("~/temp.", i_gibbs_sample, ".", i_it, ".RData")
+                ## print(paste0("saving to file:", file))
+                ## save(
+                ##     hapProbs_t,
+                ##     use_hapMatcherR,
+                ##     Knew,
+                ##     Kfull,
+                ##     mspbwtL,
+                ##     mspbwtM,
+                ##     file = file
+                ## )
+
                 which_haps_to_use <- select_new_haps_mspbwt_v3(
                     hapProbs_t = hapProbs_t,
                     hapMatcher = hapMatcher,
@@ -906,7 +919,7 @@ get_and_impute_one_sample <- function(
                 )
                 which_haps_to_use_mspbwt <- which_haps_to_use
 
-b            }
+            }
 
             if ((!zilong && !use_mspbwt) | make_heuristic_plot) {
                 

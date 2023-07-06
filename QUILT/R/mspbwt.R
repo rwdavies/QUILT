@@ -222,6 +222,7 @@ select_new_haps_mspbwt_v3 <- function(
         hap <- round(hapProbs_t[ihap, ])
         Zs <- rcpp_int_contract(hap)
         mtms <- lapply(1:nIndices, function(iIndex) {
+            ## print_message(paste0("ihap = ", ihap, ", iIndex = ", iIndex))
             which_grids <- seq(iIndex, nGrids, nIndices)
             Z_local <- mspbwt::map_Z_to_all_symbols(Zs[which_grids], ms_indices[[iIndex]][["all_symbols"]])
             if (use_hapMatcherR) {
@@ -248,11 +249,12 @@ select_new_haps_mspbwt_v3 <- function(
             ## change to 1-based
             mtm[, "index0"] <- mtm[, "index0"] + 1
             colnames(mtm)[colnames(mtm) == "index0"] <- "index1"
-            ## only keep one of the same index and start (shouldn't be on here?)
-            ## make sure sorted first
-            mtm <- mtm[order(mtm[, 1], -mtm[, "end1"], -mtm[, "start1"]), ]
-            mtm <- mtm[!duplicated(paste0(mtm[, "index1"], "-", mtm[, "start1"])), ]
-            ##mtm[, 2] <- mtm[, 2]
+            ## order so the same index and start comes first, with longest first
+            mtm <- mtm[order(mtm[, 1], -mtm[, "end1"], -mtm[, "start1"]), ]            
+            x <- c(FALSE, diff(mtm[, "index1"]) == 0 & diff(mtm[, "start1"]) == 0)
+            ## y <- !duplicated(paste0(mtm[, "index1"], "-", mtm[, "start1"]))
+            mtm <- mtm[!x, ]
+            ## 
             key <- nGrids * mtm[, "start1"] + mtm[, "end1"]
             length <- mtm[, "len1"]
             mtm <- cbind(mtm, key, n = iIndex) ## , length)
