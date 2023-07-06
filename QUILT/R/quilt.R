@@ -442,6 +442,13 @@ QUILT <- function(
         }
     }
 
+    if (Knew > Ksubset) {
+        msg <- paste0("You have selected Knew = ", Knew, " and Ksubset = ", Ksubset, ". Re-setting Knew = ", Ksubset)
+        warning(msg)
+        print_message(msg)
+        Knew <- Ksubset
+    }
+
 
     ##
     ## optionally load genotypes and phasevali

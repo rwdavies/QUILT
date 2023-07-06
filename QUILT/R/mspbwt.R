@@ -225,10 +225,10 @@ select_new_haps_mspbwt_v3 <- function(
             which_grids <- seq(iIndex, nGrids, nIndices)
             Z_local <- mspbwt::map_Z_to_all_symbols(Zs[which_grids], ms_indices[[iIndex]][["all_symbols"]])
             if (use_hapMatcherR) {
-                X <- hapMatcherR[, which_grids]
-                XR <- hapMatcherR[, which_grids]
+                X <- matrix(0, 1, 1)
+                XR <- hapMatcherR
             } else {
-                X <- hapMatcher[, which_grids]
+                X <- hapMatcher
                 XR <- matrix(0, 1, 1)
             }
             mtm <- mspbwt::Rcpp_ms_MatchZ_Algorithm5(
@@ -237,11 +237,12 @@ select_new_haps_mspbwt_v3 <- function(
                 use_XR = use_hapMatcherR,
                 ms_indices = ms_indices[[iIndex]],
                 Z = Z_local,
-                verbose = FALSE,
                 mspbwtM = mspbwtM,
                 mspbwtL = mspbwtL,
                 do_up_and_down_scan = TRUE,
-                cols_to_use0 = as.integer(which_grids - 1L)                
+                cols_to_use0 = as.integer(which_grids - 1L),
+                use_cols_to_use0 = TRUE,
+                verbose = FALSE
             )
             ## )[["uppy_downy_reporter"]]
             ## change to 1-based

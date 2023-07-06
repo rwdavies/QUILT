@@ -905,8 +905,8 @@ get_and_impute_one_sample <- function(
                     mspbwtM = mspbwtM
                 )
                 which_haps_to_use_mspbwt <- which_haps_to_use
-                
-            }
+
+b            }
 
             if ((!zilong && !use_mspbwt) | make_heuristic_plot) {
                 
