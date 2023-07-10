@@ -248,7 +248,7 @@ select_new_haps_mspbwt_v3 <- function(
                 use_cols_to_use0 = TRUE,
                 verbose = FALSE,
                 have_d = FALSE,
-                cap_scan_count = min(100L, mspbwtL) ## don't bother doing a crazy number
+                cap_scan_count = max(100L, mspbwtL) ## don't bother doing a crazy number
             )
             ## )[["uppy_downy_reporter"]]
             ## change to 1-based

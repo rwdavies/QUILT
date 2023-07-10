@@ -2847,3 +2847,4 @@ final_phasing_accuracy_calculation <- function(
         print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
     }
 }
+
