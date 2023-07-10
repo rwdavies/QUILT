@@ -17,12 +17,15 @@ build_mspbwt_indices <- function(
         } else {
             X1C <- hapMatcher[, w, drop = FALSE]
         }
-        return(mspbwt::Rcpp_ms_BuildIndices_Algorithm5(
+        out <- mspbwt::Rcpp_ms_BuildIndices_Algorithm5(
             X1C = X1C,
             all_symbols = all_symbols[w],
             indices = list(),
             verbose = FALSE
-        ))
+        )
+        ## turn off d
+        out[["d"]] <- matrix(1L, 1, 1)
+        return(out)
     })
     ms_indices
 }
@@ -243,7 +246,9 @@ select_new_haps_mspbwt_v3 <- function(
                 do_up_and_down_scan = TRUE,
                 cols_to_use0 = as.integer(which_grids - 1L),
                 use_cols_to_use0 = TRUE,
-                verbose = FALSE
+                verbose = FALSE,
+                have_d = FALSE,
+                cap_scan_count = min(100L, mspbwtL) ## don't bother doing a crazy number
             )
             ## )[["uppy_downy_reporter"]]
             ## change to 1-based
