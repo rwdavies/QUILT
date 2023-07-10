@@ -503,7 +503,7 @@ QUILT <- function(
         ## get all as well
         gen_all <- gen
         phase_all <- phase
-        gen <- gen[snp_is_common, drop = FALSE]
+        gen <- gen[snp_is_common, , drop = FALSE]
         phase <- phase[snp_is_common, , , drop = FALSE]
     } else {
         gen <- NULL
