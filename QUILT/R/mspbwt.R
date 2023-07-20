@@ -311,7 +311,20 @@ select_new_haps_mspbwt_v3 <- function(
                 cur_sum[s:e] <- cur_sum[s:e] + 1
             }
             ##
-            mtm <- mtm[order(-weight), ]
+            o <- order(-weight)
+            if (is.null(dim(mtm))) {
+                save(o, mtm, weight, out, file = "~/debug.RData")
+                stop("there is an error because mtm has no dimension")
+            }
+            if (length(weight) != nrow(mtm)) {
+                save(o, mtm, weight, out, file = "~/debug.RData")
+                stop("there is an error because weight and mtm have different sizes, please see ~/debug.RData")
+            }
+            if (min(o) < 1 | max(o) > length(weight)) {
+                save(o, mtm, weight, out, file = "~/debug.RData")
+                stop("there is an error because order of weight went wrong, please see ~/debug.RData")
+            }
+            mtm <- mtm[o, ]
             mtm[, "index1"]
         })
         ## pad out one of them
