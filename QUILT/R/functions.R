@@ -13,23 +13,21 @@ select_new_haps_zilong_msp <- function(
     nGrids
 ) {
   ##
-  res <- lapply(1:2, function(x) {
+  out <- lapply(1:2, function(x) {
     hap <- round(hapProbs_t[x, ])
-    res <- as.data.frame(mspbwt_report(msp, hap, mspbwtL, mspbwtB))
-    res <- res[res$lens >= max(mspbwtM, 0), ]
-    res$keys <- (res$ends - res$lens + 1) * nGrids + res$ends
+    res <- as.data.frame(mspbwt_report(msp, mspbwtB, hap, mspbwtL, mspbwtM))
+    res <- res[order(-res$lens),]
+    res <- res[!duplicated(res[,c("haps")]),]
+    res$starts <- res$ends - res$lens + 1
+    res$keys <- res$starts * nGrids + res$ends
+    res$haps <- res$haps + 1
     res
   })
-  ## print(head(res))
-  res <- do.call(rbind.data.frame, res)
+  ## res <- do.call(rbind.data.frame, res)
+  unique_haps <- unique(c(out[[1]][, "haps"], out[[2]][, "haps"]))
   ## interhaps <- intersect(res[res$ihap == 1, "haps"], res[res$ihap == 2, "haps"])
   ## saveRDS(res, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
-    print_message(paste("select", length(unique(res$haps)), " unique haps by mpbwt query before post-selection"))
-  ## order by lens then nindicies then ends
-  ## res$lens <- res$lens * res$n
-  res <- res[order(-res$lens, -res$n, res$keys),]
-  res <- res[!duplicated(res[,c('haps')]),]
-  unique_haps <- unique(res$haps)
+  print_message(paste("select", length(unique_haps), " unique haps by mpbwt query before post-selection"))
   ## return(unique_haps[1:Knew])
   if (length(unique_haps) == 0) {
     new_haps <- sample(1:Kfull, Knew)
@@ -43,14 +41,43 @@ select_new_haps_zilong_msp <- function(
     print_message(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
     return(new_haps)
   } else {
-    unique_keys <- unique(res$keys)
-    unique_haps_at_unique_keys <- unique(res[match(unique_keys, res[, "keys"]), "haps"])
-    print_message(paste("select", length(unique(unique_haps_at_unique_keys)), " unique haps after post-selection 2"))
-    if (length(unique_haps_at_unique_keys) >= Knew) {
-      return(unique_haps_at_unique_keys[1:Knew])
+    ##
+    ## heuristically, prioritize based on length and new-ness
+    ## do this for each of the two haps
+    ##
+    results <- lapply(out, function(mtm) {
+      m <- max(mtm[, "ends"])
+      weight <- numeric(m)
+      cur_sum <- numeric(m)
+      cur_sum[] <- 1
+      for(i in 1:nrow(mtm)) {
+        s <- mtm[i, "starts"]
+        e <- mtm[i, "ends"]
+        weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
+        cur_sum[s:e] <- cur_sum[s:e] + 1
+      }
+      ##
+      o <- order(-weight)
+      mtm <- mtm[o, ]
+      mtm[, "haps"]
+    })
+    ## pad out one of them
+    x <- results[[1]]
+    y <- results[[2]]
+    if (length(x) > length(y)) {
+      y <- c(y, rep(NA, length(x) - length(y)))
     } else {
-      new_haps <- c(setdiff(unique_haps, unique_haps_at_unique_keys), unique_haps_at_unique_keys)[1:Knew]
-      print_message(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
+      x <- c(x, rep(NA, length(y) - length(x)))
+    }
+    unique_ordered_haps <- unique(c(t(cbind(x, y))))
+    unique_ordered_haps <- unique_ordered_haps[!is.na(unique_ordered_haps)]
+    print_message(paste("select", length(unique(unique_ordered_haps)), " unique haps after post-selection 2"))
+    if (length(unique_ordered_haps) >= Knew) {
+      return(unique_ordered_haps[1:Knew])
+    } else {
+      ## add in some other (potentially) duplicated haps
+      new_haps <- c(setdiff(unique_ordered_haps, unique_haps), unique_haps)[1:Knew]
+      print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
       return(new_haps)
     }
   }
