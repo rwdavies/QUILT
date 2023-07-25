@@ -52,6 +52,7 @@ test_that("QUILT can impute a few samples using robbie mspbwt or zilong pbwt", {
             use_mspbwt <- FALSE
             zilong <- TRUE
         }
+        print(paste0("zilong = ", zilong))
         outputdir <- STITCH::make_unique_tempdir()
 
         regionStart <- 11

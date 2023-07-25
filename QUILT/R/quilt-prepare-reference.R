@@ -430,7 +430,8 @@ QUILT_prepare_reference <- function(
         nMaxDH = nMaxDH,
         nSNPs = nSNPs,
         ref_error = ref_error,
-        use_hapMatcherR = use_hapMatcherR
+        use_hapMatcherR = use_hapMatcherR,
+        zilong = use_zilong
     )
     distinctHapsB <- out[["distinctHapsB"]]
     distinctHapsIE <- out[["distinctHapsIE"]]

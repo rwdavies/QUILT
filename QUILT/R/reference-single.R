@@ -1,5 +1,6 @@
 if (1 == 0) {
 
+    
     dl <- diff(L_grid)
     expRate <- 1
     nGen <- 10
@@ -380,7 +381,8 @@ make_rhb_t_equality <- function(
     ref_error,
     nMaxDH = NA,
     verbose = TRUE,
-    use_hapMatcherR = FALSE
+    use_hapMatcherR = FALSE,
+    zilong = TRUE
 ) {
     ## this overrides everything else
     if (is.na(nMaxDH)) {
@@ -423,8 +425,16 @@ make_rhb_t_equality <- function(
     for(iGrid in 1:nGrids) {
         ## can safely ignore the end, it will be zeros what is not captured
         a <- table(rhb_t[, iGrid], useNA = "always")
-        a <- a[order(-a)]
+        if (zilong) {
+            a <- a[order(-a)]
+        } else {
+            ## from STITCH, need the latest version
+            a <- a[match(int_determine_rspo(names(a)), names(a))]
+            ## a <- a[match(names(a), int_determine_rspo(names(a)))]
+            ## a <- a[length(a):1]
+        }
         a <- a[a > 0]
+        ## flip order to get conventional binary order
         if (infer_nMaxDH) {
             if (length(a) > nMaxDH_default) {
                 temp_counter[, iGrid] <- a[1:nMaxDH_default]
