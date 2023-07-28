@@ -211,7 +211,8 @@ select_new_haps_mspbwt_v3 <- function(
     Knew,
     Kfull,
     mspbwtL,
-    mspbwtM
+    mspbwtM,
+    heuristic_approach
 ) {
     iIndex <- 1
     ihap <- 1
@@ -235,21 +236,38 @@ select_new_haps_mspbwt_v3 <- function(
                 X <- hapMatcher
                 XR <- matrix(0, 1, 1)
             }
-            mtm <- mspbwt::Rcpp_ms_MatchZ_Algorithm5(
-                X = X,
-                XR = XR,
-                use_XR = use_hapMatcherR,
-                ms_indices = ms_indices[[iIndex]],
-                Z = Z_local,
-                mspbwtM = mspbwtM,
-                mspbwtL = mspbwtL,
-                do_up_and_down_scan = TRUE,
-                cols_to_use0 = as.integer(which_grids - 1L),
-                use_cols_to_use0 = TRUE,
-                verbose = FALSE,
-                have_d = FALSE,
-                cap_scan_count = max(100L, mspbwtL) ## don't bother doing a crazy number
-            )
+            if (heuristic_approach == "A") {
+                mtm <- mspbwt::Rcpp_ms_MatchZ_Algorithm5(
+                    X = X,
+                    XR = XR,
+                    use_XR = use_hapMatcherR,
+                    ms_indices = ms_indices[[iIndex]],
+                    Z = Z_local,
+                    mspbwtM = mspbwtM,
+                    mspbwtL = mspbwtL,
+                    do_up_and_down_scan = TRUE,
+                    cols_to_use0 = as.integer(which_grids - 1L),
+                    use_cols_to_use0 = TRUE,
+                    verbose = FALSE,
+                    have_d = FALSE,
+                    cap_scan_count = max(100L, mspbwtL) ## don't bother doing a crazy number
+                )
+            } else {
+                mtm <- mspbwt::find_good_matches_without_a(
+                    Z = Z_local,
+                    all_symbols = ms_indices[[iIndex]][["all_symbols"]],
+                    usge_all = ms_indices[[iIndex]][["usge_all"]],
+                    egs = ms_indices[[iIndex]][["egs"]],
+                    pbwtL = mspbwtL,
+                    pbwtM = mspbwtM,
+                    hapMatcherR = hapMatcherR,
+                    which_snps_in_hapMatcherR = which_grids
+                )
+                ## I think this is right
+                colnames(mtm) <- c("start0", "index0", "len1")
+                mtm <- cbind(mtm[, "index0"], mtm[, "start0"] + 1, mtm[, "start0"] + mtm[, "len1"], mtm[, "len1"])
+                colnames(mtm) <- c("index0", "start1", "end1", "len1")
+            }
             ## )[["uppy_downy_reporter"]]
             ## change to 1-based
             mtm[, "index0"] <- mtm[, "index0"] + 1

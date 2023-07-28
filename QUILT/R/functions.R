@@ -944,7 +944,8 @@ get_and_impute_one_sample <- function(
                     Knew = Knew,
                     Kfull = Kfull,
                     mspbwtL = mspbwtL,
-                    mspbwtM = mspbwtM
+                    mspbwtM = mspbwtM,
+                    heuristic_approach = heuristic_approach
                 )
                 which_haps_to_use_mspbwt <- which_haps_to_use
 

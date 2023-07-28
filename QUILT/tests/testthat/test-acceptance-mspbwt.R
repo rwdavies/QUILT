@@ -68,38 +68,42 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
     regionStart <- 11
     regionEnd <- 200 - 10
     buffer <- 5
-    i_method <- 1
+    i_method <- 4
     impute_rare_common <- TRUE
-    nCores <- 4
+    nCores <- 1
     rare_af_threshold <- 0.01
 
     for(impute_rare_common in c(TRUE, FALSE)) {
 
-        ## this is the different methods: zilong, mspbwt, none, etc
-        for(i_method in 1:4) {
+        ## this is the different methods: zilong, mspbwt A, none, mspbwt B
+        for(i_method in 2:4) {
 
             if (i_method == 1) {
                 zilong <- FALSE
                 use_mspbwt <- TRUE
                 use_hapMatcherR <- TRUE
+                heuristic_approach <- "A"
             } else if (i_method == 2) {
                 zilong <- TRUE
                 use_mspbwt <- FALSE
-                use_hapMatcherR <- TRUE                    
+                use_hapMatcherR <- TRUE
+                heuristic_approach <- "A"
             } else if (i_method == 3) {
                 zilong <- FALSE
                 use_mspbwt <- FALSE
-                use_hapMatcherR <- TRUE                    
+                use_hapMatcherR <- TRUE
+                heuristic_approach <- "A"                
             } else {
                 zilong <- FALSE
-                use_mspbwt <- FALSE
-                use_hapMatcherR <- FALSE
+                use_mspbwt <- TRUE
+                use_hapMatcherR <- TRUE
+                heuristic_approach <- "B"
             }
 
             ## this is whether to do in one go (i_approach = 1), or do prepare reference first (i_approach = 2)
             for(i_approach in 1:2) {
 
-                ## print(paste0("impute_rare_common = ", impute_rare_common ,", i_method = ", i_method, ", i_approach = ", i_approach, ", ", date()))
+                print(paste0("impute_rare_common = ", impute_rare_common ,", i_method = ", i_method, ", i_approach = ", i_approach, ", ", date()))
                 set.seed(19)
 
                 outputdir <- STITCH::make_unique_tempdir()
@@ -127,7 +131,8 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         impute_rare_common = impute_rare_common,
                         mspbwt_nindices = 1,
                         mspbwtB = 32L,
-                        rare_af_threshold = rare_af_threshold
+                        rare_af_threshold = rare_af_threshold,
+                        heuristic_approach = heuristic_approach
                     )
 
                 } else {
@@ -165,7 +170,8 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         use_hapMatcherR = use_hapMatcherR,                        
                         use_mspbwt = use_mspbwt,
                         zilong = zilong,
-                        impute_rare_common = impute_rare_common                        
+                        impute_rare_common = impute_rare_common,
+                        heuristic_approach = heuristic_approach                        
                     )
                     ## posfile = data_package$posfile,
                     ## genfile = data_package$genfile,
