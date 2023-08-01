@@ -935,19 +935,43 @@ get_and_impute_one_sample <- function(
                 ##     file = file
                 ## )
 
-                which_haps_to_use <- select_new_haps_mspbwt_v3(
-                    hapProbs_t = hapProbs_t,
-                    hapMatcher = hapMatcher,
-                    hapMatcherR = hapMatcherR,
-                    use_hapMatcherR = use_hapMatcherR,
-                    ms_indices = ms_indices,
-                    Knew = Knew,
-                    Kfull = Kfull,
-                    mspbwtL = mspbwtL,
-                    mspbwtM = mspbwtM,
-                    heuristic_approach = heuristic_approach
-                )
-                which_haps_to_use_mspbwt <- which_haps_to_use
+                if (heuristic_approach == "A" | make_heuristic_plot) {
+
+                    which_haps_to_use <- select_new_haps_mspbwt_v3(
+                        hapProbs_t = hapProbs_t,
+                        hapMatcher = hapMatcher,
+                        hapMatcherR = hapMatcherR,
+                        use_hapMatcherR = use_hapMatcherR,
+                        ms_indices = ms_indices,
+                        Knew = Knew,
+                        Kfull = Kfull,
+                        mspbwtL = mspbwtL,
+                        mspbwtM = mspbwtM,
+                        heuristic_approach = "A"
+                    )
+                    which_haps_to_use_mspbwt_A <- which_haps_to_use
+
+                }
+
+                if (heuristic_approach == "B" | make_heuristic_plot) {
+
+                    which_haps_to_use <- select_new_haps_mspbwt_v3(
+                        hapProbs_t = hapProbs_t,
+                        hapMatcher = hapMatcher,
+                        hapMatcherR = hapMatcherR,
+                        use_hapMatcherR = use_hapMatcherR,
+                        ms_indices = ms_indices,
+                        Knew = Knew,
+                        Kfull = Kfull,
+                        mspbwtL = mspbwtL,
+                        mspbwtM = mspbwtM,
+                        heuristic_approach = "B"
+                    )
+                    which_haps_to_use_mspbwt_B <- which_haps_to_use
+
+                }
+                
+                
 
             }
 
@@ -1018,10 +1042,11 @@ get_and_impute_one_sample <- function(
                 
                 compare_heuristic_approaches(
                     hapProbs_t = hapProbs_t,
+                    which_haps_to_use_quilt1 = which_haps_to_use_quilt1,
                     which_haps_to_use_zilong_A = which_haps_to_use_zilong_A,
                     which_haps_to_use_zilong_B = which_haps_to_use_zilong_B,
-                    which_haps_to_use_mspbwt = which_haps_to_use_mspbwt,
-                    which_haps_to_use_quilt1 = which_haps_to_use_quilt1,
+                    which_haps_to_use_mspbwt_A = which_haps_to_use_mspbwt_A,
+                    which_haps_to_use_mspbwt_B = which_haps_to_use_mspbwt_B,                    
                     hapMatcherR = hapMatcherR,
                     hapMatcher = hapMatcher,
                     use_hapMatcherR = use_hapMatcherR,

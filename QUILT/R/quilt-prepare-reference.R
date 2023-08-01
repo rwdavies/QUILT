@@ -30,6 +30,7 @@
 #' @param mspbwtB How many SNPs will be encoded as one grid
 #' @param impute_rare_common Whether to use common SNPs first for imputation, followed by a round of rare imputation
 #' @param rare_af_threshold Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common
+#' @param use_list_of_columns_of_A If when using mspbwt, use columns of A rather than the whole thing, to speed up this version
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -64,7 +65,8 @@ QUILT_prepare_reference <- function(
     use_hapMatcherR = TRUE,
     mspbwtB = 64L,
     impute_rare_common = FALSE,
-    rare_af_threshold = 0.0001
+    rare_af_threshold = 0.0001,
+    use_list_of_columns_of_A = TRUE
 ) {
 
     x <- as.list(environment())
@@ -480,7 +482,8 @@ QUILT_prepare_reference <- function(
             hapMatcherR = hapMatcherR,
             mspbwt_nindices = mspbwt_nindices,
             use_hapMatcherR = use_hapMatcherR,
-            all_symbols = all_symbols
+            all_symbols = all_symbols,
+            use_list_of_columns_of_A = use_list_of_columns_of_A
         )
         print_message("Done building mspbwt indices")
     } else {

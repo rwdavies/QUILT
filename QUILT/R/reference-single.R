@@ -455,7 +455,7 @@ make_rhb_t_equality <- function(
             hapMatcherR[!is.na(m), iGrid] <- as.raw(m[!is.na(m)])
         }
         ##
-        a <- cbind(names_a, a)
+        a <- cbind(as.integer(names_a), as.integer(a))
         rownames(a) <- NULL
         colnames(a) <- c("symbol", "count")
         all_symbols[[iGrid]] <- a

@@ -76,28 +76,32 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
     for(impute_rare_common in c(TRUE, FALSE)) {
 
         ## this is the different methods: zilong, mspbwt A, none, mspbwt B
-        for(i_method in 2:4) {
+        for(i_method in 1:4) {
 
             if (i_method == 1) {
                 zilong <- FALSE
                 use_mspbwt <- TRUE
                 use_hapMatcherR <- TRUE
                 heuristic_approach <- "A"
+                use_list_of_columns_of_A <- TRUE                
             } else if (i_method == 2) {
                 zilong <- TRUE
                 use_mspbwt <- FALSE
                 use_hapMatcherR <- TRUE
                 heuristic_approach <- "A"
+                use_list_of_columns_of_A <- TRUE                
             } else if (i_method == 3) {
                 zilong <- FALSE
                 use_mspbwt <- FALSE
                 use_hapMatcherR <- TRUE
-                heuristic_approach <- "A"                
+                heuristic_approach <- "A"
+                use_list_of_columns_of_A <- TRUE
             } else {
                 zilong <- FALSE
                 use_mspbwt <- TRUE
                 use_hapMatcherR <- TRUE
                 heuristic_approach <- "B"
+                use_list_of_columns_of_A <- FALSE
             }
 
             ## this is whether to do in one go (i_approach = 1), or do prepare reference first (i_approach = 2)
@@ -132,7 +136,8 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         mspbwt_nindices = 1,
                         mspbwtB = 32L,
                         rare_af_threshold = rare_af_threshold,
-                        heuristic_approach = heuristic_approach
+                        heuristic_approach = heuristic_approach,
+                        use_list_of_columns_of_A = use_list_of_columns_of_A
                     )
 
                 } else {
@@ -154,7 +159,8 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         impute_rare_common = impute_rare_common,
                         mspbwt_nindices = 1,
                         mspbwtB = 32L,
-                        rare_af_threshold = rare_af_threshold
+                        rare_af_threshold = rare_af_threshold,
+                        use_list_of_columns_of_A = use_list_of_columns_of_A
                     )
 
                     QUILT(

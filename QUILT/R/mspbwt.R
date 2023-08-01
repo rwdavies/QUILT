@@ -3,12 +3,21 @@ build_mspbwt_indices <- function(
    hapMatcherR,
    mspbwt_nindices,
    use_hapMatcherR,
-   all_symbols
+   all_symbols,
+   use_list_of_columns_of_A
 ) {
     if (use_hapMatcherR) {
         ncol <- ncol(hapMatcherR)
+        nrow <- nrow(hapMatcherR)        
     } else {
         ncol <- ncol(hapMatcher)
+        nrow <- nrow(hapMatcher)
+    }
+    ## auto-choose?
+    if (nrow > 1e5) {
+        egs <- 1000
+    } else {
+        egs <- 100
     }
     ms_indices <- lapply(1:mspbwt_nindices, function(iIndex) {
         w <- seq(iIndex, ncol, mspbwt_nindices)
@@ -21,10 +30,26 @@ build_mspbwt_indices <- function(
             X1C = X1C,
             all_symbols = all_symbols[w],
             indices = list(),
-            verbose = FALSE
+            verbose = FALSE,
+            egs = egs
         )
         ## turn off d
         out[["d"]] <- matrix(1L, 1, 1)
+        if (use_list_of_columns_of_A) {
+            ## nuke most of a
+            a <- out[["a"]]
+            list_of_columns_of_A <- as.list(1:ncol(a))
+            if (ncol(a) < 10) {
+                cols <- 1:ncol(a) 
+            } else {
+                cols <- sort(unique(c(1, 3, 5, seq(1, ncol(a), 10))))
+            }
+            for(i in cols) {
+                list_of_columns_of_A[[i]] <- a[, i]
+            }
+            out[["list_of_columns_of_A"]] <- list_of_columns_of_A
+            out[["a"]] <- NULL
+        }
         return(out)
     })
     ms_indices
@@ -213,19 +238,48 @@ select_new_haps_mspbwt_v3 <- function(
     mspbwtL,
     mspbwtM,
     heuristic_approach
-) {
+) {    
+
+    ## print("SAIHOIH")
+    ## save(
+    ## hapProbs_t,
+    ## hapMatcher,
+    ## hapMatcherR,
+    ## use_hapMatcherR,
+    ## ms_indices,
+    ## Knew,
+    ## Kfull,
+    ## mspbwtL,
+    ## mspbwtM,
+    ## heuristic_approach,
+    ## file = "/data/smew1/rdavies/werAwerTwerA.RData", compress = FALSE)
+    ## stop("wer")
+    
+    ## load("/data/smew1/rdavies/werAwerTwerA.RData")
+    
     iIndex <- 1
     ihap <- 1
     nIndices <- length(ms_indices)
     if (use_hapMatcherR) {
         nGrids <- ncol(hapMatcherR)
+        K <- nrow(hapMatcherR)
     } else {
         nGrids <- ncol(hapMatcher)
+        K <- nrow(hapMatcher)
     }
+    if (!is.null(ms_indices[[1]]$list_of_columns_of_A)) {
+        use_list_of_columns_of_A <- TRUE
+    } else {
+        use_list_of_columns_of_A <- FALSE
+    }
+    
     out <- lapply(1:2, function(ihap) {
+        
         hap <- round(hapProbs_t[ihap, ])
         Zs <- rcpp_int_contract(hap)
+        
         mtms <- lapply(1:nIndices, function(iIndex) {
+            
             ## print_message(paste0("ihap = ", ihap, ", iIndex = ", iIndex))
             which_grids <- seq(iIndex, nGrids, nIndices)
             Z_local <- mspbwt::map_Z_to_all_symbols(Zs[which_grids], ms_indices[[iIndex]][["all_symbols"]])
@@ -236,7 +290,36 @@ select_new_haps_mspbwt_v3 <- function(
                 X <- hapMatcher
                 XR <- matrix(0, 1, 1)
             }
+            
             if (heuristic_approach == "A") {
+
+                ## call this one approach A
+                ## message(paste0("ihap = ", ihap, ", iIndex = ", iIndex, ", ", date()))
+                mtm <- mspbwt::Rcpp_find_good_matches_without_a(
+                    Z = Z_local,
+                    all_symbols = ms_indices[[iIndex]][["all_symbols"]],
+                    usge_all = ms_indices[[iIndex]][["usge_all"]],
+                    egs = ms_indices[[iIndex]][["egs"]],
+                    pbwtL = mspbwtL,
+                    pbwtM = mspbwtM,
+                    hapMatcherR = hapMatcherR,
+                    which_snps_in_hapMatcherR = which_grids,
+                    verbose = FALSE,
+                    list_of_columns_of_A = ms_indices[[iIndex]][["list_of_columns_of_A"]],
+                    use_list_of_columns_of_A = use_list_of_columns_of_A,
+                    K = K
+                )
+                
+                ## I think this is right
+                colnames(mtm) <- c("start0", "index0", "len1")
+                mtm <- cbind(mtm[, "index0"], mtm[, "start0"] + 1, mtm[, "start0"] + mtm[, "len1"], mtm[, "len1"])
+                colnames(mtm) <- c("index0", "start1", "end1", "len1")
+            } else {
+
+                if (is.null(ms_indices[[iIndex]][["a"]])) {
+                    stop("You need to set use_list_of_columns_of_A to FALSE to use this option")
+                }
+
                 mtm <- mspbwt::Rcpp_ms_MatchZ_Algorithm5(
                     X = X,
                     XR = XR,
@@ -252,21 +335,8 @@ select_new_haps_mspbwt_v3 <- function(
                     have_d = FALSE,
                     cap_scan_count = max(100L, mspbwtL) ## don't bother doing a crazy number
                 )
-            } else {
-                mtm <- mspbwt::find_good_matches_without_a(
-                    Z = Z_local,
-                    all_symbols = ms_indices[[iIndex]][["all_symbols"]],
-                    usge_all = ms_indices[[iIndex]][["usge_all"]],
-                    egs = ms_indices[[iIndex]][["egs"]],
-                    pbwtL = mspbwtL,
-                    pbwtM = mspbwtM,
-                    hapMatcherR = hapMatcherR,
-                    which_snps_in_hapMatcherR = which_grids
-                )
-                ## I think this is right
-                colnames(mtm) <- c("start0", "index0", "len1")
-                mtm <- cbind(mtm[, "index0"], mtm[, "start0"] + 1, mtm[, "start0"] + mtm[, "len1"], mtm[, "len1"])
-                colnames(mtm) <- c("index0", "start1", "end1", "len1")
+                
+                
             }
             ## )[["uppy_downy_reporter"]]
             ## change to 1-based
@@ -295,6 +365,8 @@ select_new_haps_mspbwt_v3 <- function(
         mtm <- mtm[order(-mtm[, "len1"]), ]
         mtm
     })
+
+    
     ## check max number
     unique_haps <- unique(c(out[[1]][, 1], out[[2]][, 1]))
     if (length(unique_haps) == 0) {

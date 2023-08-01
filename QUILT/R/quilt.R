@@ -85,7 +85,8 @@
 #' @param rare_af_threshold Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common
 #' @param make_heuristic_plot Whether to make a plot for understanding heuristic performance
 #' @param heuristic_approach Which heuristic to use
-#' @return Results in properly formatted version
+#' @param use_list_of_columns_of_A If when using mspbwt, use columns of A rather than the whole thing, to speed up this version
+#' #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
 QUILT <- function(
@@ -172,7 +173,8 @@ QUILT <- function(
     impute_rare_common = FALSE,
     rare_af_threshold = 0.0001,
     make_heuristic_plot = FALSE,
-    heuristic_approach = 'A'
+    heuristic_approach = 'A',
+    use_list_of_columns_of_A = TRUE    
 ) {
 
     x <- as.list(environment())
@@ -352,7 +354,8 @@ QUILT <- function(
             impute_rare_common = impute_rare_common,
             rare_af_threshold = rare_af_threshold,
             mspbwt_nindices = mspbwt_nindices,
-            mspbwtB = mspbwtB
+            mspbwtB = mspbwtB,
+            use_list_of_columns_of_A = use_list_of_columns_of_A
         )
         print_message("Done processing reference information")        
     }

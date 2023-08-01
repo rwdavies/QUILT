@@ -35,7 +35,8 @@ QUILT_prepare_reference(
   use_hapMatcherR = TRUE,
   mspbwtB = 64L,
   impute_rare_common = FALSE,
-  rare_af_threshold = 1e-04
+  rare_af_threshold = 1e-04,
+  use_list_of_columns_of_A = TRUE
 )
 }
 \arguments{
@@ -100,6 +101,8 @@ QUILT_prepare_reference(
 \item{impute_rare_common}{Whether to use common SNPs first for imputation, followed by a round of rare imputation}
 
 \item{rare_af_threshold}{Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common}
+
+\item{use_list_of_columns_of_A}{If when using mspbwt, use columns of A rather than the whole thing, to speed up this version}
 }
 \value{
 Results in properly formatted version

@@ -39,10 +39,11 @@ make_rhb_t_local <- function(
 
 compare_heuristic_approaches <- function(
     hapProbs_t,
+    which_haps_to_use_quilt1,
     which_haps_to_use_zilong_A,
     which_haps_to_use_zilong_B,
-    which_haps_to_use_quilt1,
-    which_haps_to_use_mspbwt,    
+    which_haps_to_use_mspbwt_A,
+    which_haps_to_use_mspbwt_B,
     hapMatcherR,
     hapMatcher,
     use_hapMatcherR,
@@ -84,13 +85,13 @@ compare_heuristic_approaches <- function(
     ## file = paste0(filename, ".RData"))
     ## print(paste0("SAVING FOR FILE:", paste0(filename, ".RData")))
     
-    pdf(filename, height = 24, width = 8)
-    par(mfrow = c(3, 2))
+    pdf(filename, height = 30, width = 8)
+    par(mfrow = c(5, 2))
     
     ## so suppose we had rhb_t
     ## then would want for each of these a row against current hapProbs_t
     ## showing agree vs disagree
-    for(i in 1:4) {
+    for(i in 1:5) {
         
         if (i == 1) {
             which_haps_to_use <- which_haps_to_use_quilt1
@@ -102,9 +103,13 @@ compare_heuristic_approaches <- function(
             which_haps_to_use <- which_haps_to_use_zilong_B
             approach <- "Zilong B"
         } else if (i == 4) {
-            which_haps_to_use <- which_haps_to_use_mspbwt
-            approach <- "mspbwt"
+            which_haps_to_use <- which_haps_to_use_mspbwt_A
+            approach <- "mspbwt A"
+        } else if (i == 5) {
+            which_haps_to_use <- which_haps_to_use_mspbwt_B
+            approach <- "mspbwt B"
         }
+
 
         Ksubset <- length(which_haps_to_use)
 
@@ -120,7 +125,6 @@ compare_heuristic_approaches <- function(
                 eMatDH_special_matrix_helper,
                 nGrids
             )
-
             
             for(i_hap in 1:2) {
 

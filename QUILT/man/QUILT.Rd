@@ -88,7 +88,8 @@ QUILT(
   impute_rare_common = FALSE,
   rare_af_threshold = 1e-04,
   make_heuristic_plot = FALSE,
-  heuristic_approach = "A"
+  heuristic_approach = "A",
+  use_list_of_columns_of_A = TRUE
 )
 }
 \arguments{
@@ -259,9 +260,9 @@ QUILT(
 \item{make_heuristic_plot}{Whether to make a plot for understanding heuristic performance}
 
 \item{heuristic_approach}{Which heuristic to use}
-}
-\value{
-Results in properly formatted version
+
+\item{use_list_of_columns_of_A}{If when using mspbwt, use columns of A rather than the whole thing, to speed up this version
+#' @return Results in properly formatted version}
 }
 \description{
 QUILT
