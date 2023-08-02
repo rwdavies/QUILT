@@ -390,7 +390,8 @@ select_new_haps_mspbwt_v3 <- function(
         ## do this for each of the two haps
         ##
         results <- lapply(out, function(mtm) {
-            m <- max(mtm[, "end1"])
+            ## m <- max(mtm[, "end1"])
+            m <- nrow(mtm)
             weight <- numeric(m)
             cur_sum <- numeric(m)
             cur_sum[] <- 1
