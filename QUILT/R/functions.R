@@ -2315,6 +2315,66 @@ impute_one_sample <- function(
         skip_read_iteration[small_ref_panel_equally_likely_reads_update_iterations] <- FALSE
     }
     while(!done_imputing) {
+
+##         print("SAVE ME")
+##         save(
+##             sampleReads,
+## small_priorCurrent_m,
+## small_alphaMatCurrent_tc,
+## small_eHapsCurrent_tc,
+## small_transMatRate_tc_H,
+##             hapMatcher ,
+##             hapMatcherR ,
+##             use_hapMatcherR,
+##             distinctHapsB ,
+##             distinctHapsIE,
+##             eMatDH_special_matrix_helper,
+##             eMatDH_special_matrix ,
+##             use_eMatDH_special_symbols,
+##             rhb_t ,
+##             ref_error, 
+##             which_haps_to_use, 
+##             maxDifferenceBetweenReads,
+##             Jmax,
+##             maxEmissionMatrixDifference,
+##             grid ,
+##             skip_read_iteration,
+##             alphaHat_t1,
+##             alphaHat_t2,
+##             alphaHat_t3,
+##             betaHat_t1 ,
+##             betaHat_t2 ,
+##             betaHat_t3 ,
+##             eMatGrid_t1,
+##             eMatGrid_t2,
+##             eMatGrid_t3,
+##             gammaMT_t_local, 
+##             gammaMU_t_local ,
+##             gammaP_t_local ,
+##             suppressOutput,
+##             n_gibbs_burn_in_its,
+##             n_gibbs_sample_its,
+##             n_gibbs_starts,
+##             double_list_of_starting_read_labels,
+##             perform_block_gibbs,
+##             wif0 ,
+##             grid_has_read,
+##             shuffle_bin_radius,
+##             L_grid ,
+## small_ref_panel_block_gibbs_iterations,
+##             rescale_eMatRead_t,
+##             smooth_cm ,
+##             param_list,
+##             block_gibbs_quantile_prob,
+##         ff0_shard_check_every_pair,
+## file = "/dev/shm/rwdavies/temp.RData", compress = FALSE)
+##         stop("WER")
+
+        ## AM HERE
+        ## AFTER THIS TRY LOADING UP
+        ## SEE IF I CAN TWEAK WITH A-B TESTING
+
+        
         out <- rcpp_forwardBackwardGibbsNIPT(
             sampleReads = sampleReads,
             priorCurrent_m = small_priorCurrent_m,

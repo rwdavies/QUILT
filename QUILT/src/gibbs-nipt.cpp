@@ -761,6 +761,10 @@ void sample_reads_in_grid(
             pA1(h_rA2) = pC(h_rA2); // stays the same
             //
             // A1 - original hap loses
+            //for(int i = 0; i < ab_m.n_rows; i++) {
+            //    pA1(h_rC) += ab_m(i, h_rC) / eMatRead_t_col(i);
+            //n    pA1(h_rA1) += ab_m(i, h_rA1) / eMatRead_t_col(i);
+            //}
             pA1(h_rC) = sum(ab_m.col(h_rC) / eMatRead_t_col);
             // A1 - new hap gains
             pA1(h_rA1) = sum(ab_m.col(h_rA1) % eMatRead_t_col);
@@ -890,12 +894,16 @@ void sample_reads_in_grid(
             if (currently_doing_normal_progress) {            
                 if (h_rC == 0) {eMatGrid_t1.col(iGrid) /= eMatRead_t_col;}
                 if (h_rC == 1) {eMatGrid_t2.col(iGrid) /= eMatRead_t_col;}
-                if (h_rC == 2) {eMatGrid_t3.col(iGrid) /= eMatRead_t_col;}
+                if (!sample_is_diploid) {
+                    if (h_rC == 2) {eMatGrid_t3.col(iGrid) /= eMatRead_t_col;}
+                }
             }
             //
             if (h_rN == 0) {eMatGrid_t1.col(iGrid) %= eMatRead_t_col;}
             if (h_rN == 1) {eMatGrid_t2.col(iGrid) %= eMatRead_t_col;}
-            if (h_rN == 2) {eMatGrid_t3.col(iGrid) %= eMatRead_t_col;}
+            if (!sample_is_diploid) {
+                if (h_rN == 2) {eMatGrid_t3.col(iGrid) %= eMatRead_t_col;}
+            }
             // reset pC - UGGGGGH - I wish I could name these (can I?)
             // see above where I define these
             // again this is terribble uggggggh
