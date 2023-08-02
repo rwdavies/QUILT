@@ -735,8 +735,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // rcpp_gibbs_nipt_initialize
-void rcpp_gibbs_nipt_initialize(int s, std::string& prev_section, std::string& next_section, const int suppressOutput, double& prev, const bool run_fb_subset, const Rcpp::List& alphaBetaBlocks_one, const int i_snp_block_for_alpha_beta, arma::mat& eMatRead_t, const Rcpp::List& sampleReads, Rcpp::IntegerVector& H, const int run_fb_grid_offset, const bool bound_eMatGrid_t, const bool rescale_eMatGrid_t, arma::mat& alphaHat_t1, arma::mat& betaHat_t1, arma::rowvec& c1, arma::mat& eMatGrid_t1, arma::mat& alphaHat_t2, arma::mat& betaHat_t2, arma::rowvec& c2, arma::mat& eMatGrid_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t3, arma::rowvec& c3, arma::mat& eMatGrid_t3, const arma::cube& transMatRate_tc_H, const bool gibbs_initialize_iteratively, const arma::mat& priorCurrent_m, const arma::cube& alphaMatCurrent_tc, const double maxEmissionMatrixDifference);
-RcppExport SEXP _QUILT_rcpp_gibbs_nipt_initialize(SEXP sSEXP, SEXP prev_sectionSEXP, SEXP next_sectionSEXP, SEXP suppressOutputSEXP, SEXP prevSEXP, SEXP run_fb_subsetSEXP, SEXP alphaBetaBlocks_oneSEXP, SEXP i_snp_block_for_alpha_betaSEXP, SEXP eMatRead_tSEXP, SEXP sampleReadsSEXP, SEXP HSEXP, SEXP run_fb_grid_offsetSEXP, SEXP bound_eMatGrid_tSEXP, SEXP rescale_eMatGrid_tSEXP, SEXP alphaHat_t1SEXP, SEXP betaHat_t1SEXP, SEXP c1SEXP, SEXP eMatGrid_t1SEXP, SEXP alphaHat_t2SEXP, SEXP betaHat_t2SEXP, SEXP c2SEXP, SEXP eMatGrid_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t3SEXP, SEXP c3SEXP, SEXP eMatGrid_t3SEXP, SEXP transMatRate_tc_HSEXP, SEXP gibbs_initialize_iterativelySEXP, SEXP priorCurrent_mSEXP, SEXP alphaMatCurrent_tcSEXP, SEXP maxEmissionMatrixDifferenceSEXP) {
+void rcpp_gibbs_nipt_initialize(int s, std::string& prev_section, std::string& next_section, const int suppressOutput, double& prev, const bool run_fb_subset, const Rcpp::List& alphaBetaBlocks_one, const int i_snp_block_for_alpha_beta, arma::mat& eMatRead_t, const Rcpp::List& sampleReads, Rcpp::IntegerVector& H, const int run_fb_grid_offset, const bool bound_eMatGrid_t, const bool rescale_eMatGrid_t, arma::mat& alphaHat_t1, arma::mat& betaHat_t1, arma::rowvec& c1, arma::mat& eMatGrid_t1, arma::mat& alphaHat_t2, arma::mat& betaHat_t2, arma::rowvec& c2, arma::mat& eMatGrid_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t3, arma::rowvec& c3, arma::mat& eMatGrid_t3, const arma::cube& transMatRate_tc_H, const bool gibbs_initialize_iteratively, const arma::mat& priorCurrent_m, const arma::cube& alphaMatCurrent_tc, const double maxEmissionMatrixDifference, bool sample_is_diploid);
+RcppExport SEXP _QUILT_rcpp_gibbs_nipt_initialize(SEXP sSEXP, SEXP prev_sectionSEXP, SEXP next_sectionSEXP, SEXP suppressOutputSEXP, SEXP prevSEXP, SEXP run_fb_subsetSEXP, SEXP alphaBetaBlocks_oneSEXP, SEXP i_snp_block_for_alpha_betaSEXP, SEXP eMatRead_tSEXP, SEXP sampleReadsSEXP, SEXP HSEXP, SEXP run_fb_grid_offsetSEXP, SEXP bound_eMatGrid_tSEXP, SEXP rescale_eMatGrid_tSEXP, SEXP alphaHat_t1SEXP, SEXP betaHat_t1SEXP, SEXP c1SEXP, SEXP eMatGrid_t1SEXP, SEXP alphaHat_t2SEXP, SEXP betaHat_t2SEXP, SEXP c2SEXP, SEXP eMatGrid_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t3SEXP, SEXP c3SEXP, SEXP eMatGrid_t3SEXP, SEXP transMatRate_tc_HSEXP, SEXP gibbs_initialize_iterativelySEXP, SEXP priorCurrent_mSEXP, SEXP alphaMatCurrent_tcSEXP, SEXP maxEmissionMatrixDifferenceSEXP, SEXP sample_is_diploidSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type s(sSEXP);
@@ -770,7 +770,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type priorCurrent_m(priorCurrent_mSEXP);
     Rcpp::traits::input_parameter< const arma::cube& >::type alphaMatCurrent_tc(alphaMatCurrent_tcSEXP);
     Rcpp::traits::input_parameter< const double >::type maxEmissionMatrixDifference(maxEmissionMatrixDifferenceSEXP);
-    rcpp_gibbs_nipt_initialize(s, prev_section, next_section, suppressOutput, prev, run_fb_subset, alphaBetaBlocks_one, i_snp_block_for_alpha_beta, eMatRead_t, sampleReads, H, run_fb_grid_offset, bound_eMatGrid_t, rescale_eMatGrid_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, gibbs_initialize_iteratively, priorCurrent_m, alphaMatCurrent_tc, maxEmissionMatrixDifference);
+    Rcpp::traits::input_parameter< bool >::type sample_is_diploid(sample_is_diploidSEXP);
+    rcpp_gibbs_nipt_initialize(s, prev_section, next_section, suppressOutput, prev, run_fb_subset, alphaBetaBlocks_one, i_snp_block_for_alpha_beta, eMatRead_t, sampleReads, H, run_fb_grid_offset, bound_eMatGrid_t, rescale_eMatGrid_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, gibbs_initialize_iteratively, priorCurrent_m, alphaMatCurrent_tc, maxEmissionMatrixDifference, sample_is_diploid);
     return R_NilValue;
 END_RCPP
 }
@@ -1535,7 +1536,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_calculate_likelihoods_values", (DL_FUNC) &_QUILT_calculate_likelihoods_values, 7},
     {"_QUILT_rcpp_get_weights_for_entire_relabelling", (DL_FUNC) &_QUILT_rcpp_get_weights_for_entire_relabelling, 2},
     {"_QUILT_rcpp_consider_and_try_entire_relabelling", (DL_FUNC) &_QUILT_rcpp_consider_and_try_entire_relabelling, 3},
-    {"_QUILT_rcpp_gibbs_nipt_initialize", (DL_FUNC) &_QUILT_rcpp_gibbs_nipt_initialize, 31},
+    {"_QUILT_rcpp_gibbs_nipt_initialize", (DL_FUNC) &_QUILT_rcpp_gibbs_nipt_initialize, 32},
     {"_QUILT_rcpp_gibbs_nipt_iterate", (DL_FUNC) &_QUILT_rcpp_gibbs_nipt_iterate, 55},
     {"_QUILT_rcpp_fly_weighter", (DL_FUNC) &_QUILT_rcpp_fly_weighter, 14},
     {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 65},

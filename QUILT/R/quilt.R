@@ -185,8 +185,15 @@ QUILT <- function(
     )
     print_message(paste0("Running ", command_line))
 
-    ##
+    ## not sure about naming but use it for now
     use_sample_is_diploid <- TRUE
+    if (use_sample_is_diploid) {
+        sample_is_diploid <- TRUE
+    }else {
+        sample_is_diploid <- FALSE
+    }
+
+    
     ## turn this off for now
     ## plot_p1 Plot first haplotype read sampling probabilities
     plot_p1 = FALSE
@@ -688,12 +695,17 @@ QUILT <- function(
             full_gamma_t <- array(0, c(1, 1))
         }
 
-        
-        iSample <- 1
+
         ww <- seq(1, nGrids, length.out = max(1, round(heuristic_match_thin * nGrids)))
         full_gammaSmall_cols_to_get <- array(-1, nGrids)
         full_gammaSmall_cols_to_get[ww] <- 0:(length(ww) - 1)
-        full_gammaSmall_t <-  array(0, c(K, length(ww)))
+        ## can't remember exactly when I need it. keep off if no plots, and not using full heuristic 
+        if (!(use_mspbwt | zilong) | make_heuristic_plot | have_truth_haplotypes) {
+            full_gammaSmall_t <-  array(0, c(K, length(ww)))
+        } else {
+            full_gammaSmall_t <-  array(0, c(1, 1))
+        }
+        
         ## hmm, OK
         K <- Ksubset
         S <- 1
@@ -718,6 +730,8 @@ QUILT <- function(
             small_eHapsCurrent_tc <- array(0, c(1, 1, 1))
         }
 
+        ## iSample <- 1
+
 
         if (impute_rare_common) {
 
@@ -731,20 +745,39 @@ QUILT <- function(
                 complete_full_gamma_t <- array(0, c(1, 1))
             }
 
-            special_rare_common_objects_per_core <- list(
-                alphaHat_t1 = array(0, c(Ksubset, nFullGrids)),
-                betaHat_t1 = array(0, c(Ksubset, nFullGrids)),
-                eMatGrid_t1 = array(0, c(Ksubset, nFullGrids)),
-                alphaHat_t2 = array(0, c(Ksubset, nFullGrids)),
-                betaHat_t2 = array(0, c(Ksubset, nFullGrids)),
-                eMatGrid_t2 = array(0, c(Ksubset, nFullGrids)),
-                alphaHat_t3 = array(0, c(Ksubset, nFullGrids)),
-                betaHat_t3 = array(0, c(Ksubset, nFullGrids)),
-                eMatGrid_t3 = array(0, c(Ksubset, nFullGrids)),
-                gammaMT_t_local = array(0, c(Ksubset, nFullGrids)),
-                gammaMU_t_local = array(0, c(Ksubset, nFullGrids)),
-                gammaP_t_local = array(0, c(Ksubset, nFullGrids))
-            )
+            if (sample_is_diploid) {
+                ## honestly too hard to fix the code at this point
+                ## just going to need to carry some more RAM
+                special_rare_common_objects_per_core <- list(
+                    alphaHat_t1 = array(0, c(Ksubset, nFullGrids)),
+                    betaHat_t1 = array(0, c(Ksubset, nFullGrids)),
+                    eMatGrid_t1 = array(0, c(Ksubset, nFullGrids)),
+                    alphaHat_t2 = array(0, c(Ksubset, nFullGrids)),
+                    betaHat_t2 = array(0, c(Ksubset, nFullGrids)),
+                    eMatGrid_t2 = array(0, c(Ksubset, nFullGrids)),
+                    alphaHat_t3 = array(0, c(Ksubset, nFullGrids)),
+                    betaHat_t3 = array(0, c(Ksubset, nFullGrids)),
+                    eMatGrid_t3 = array(0, c(Ksubset, nFullGrids)),
+                    gammaMT_t_local = array(0, c(Ksubset, nFullGrids)),
+                    gammaMU_t_local = array(0, c(Ksubset, nFullGrids)),
+                    gammaP_t_local = array(0, c(Ksubset, nFullGrids))
+                )
+            } else {
+                special_rare_common_objects_per_core <- list(
+                    alphaHat_t1 = array(0, c(Ksubset, nFullGrids)),
+                    betaHat_t1 = array(0, c(Ksubset, nFullGrids)),
+                    eMatGrid_t1 = array(0, c(Ksubset, nFullGrids)),
+                    alphaHat_t2 = array(0, c(Ksubset, nFullGrids)),
+                    betaHat_t2 = array(0, c(Ksubset, nFullGrids)),
+                    eMatGrid_t2 = array(0, c(Ksubset, nFullGrids)),
+                    alphaHat_t3 = array(0, c(Ksubset, nFullGrids)),
+                    betaHat_t3 = array(0, c(Ksubset, nFullGrids)),
+                    eMatGrid_t3 = array(0, c(Ksubset, nFullGrids)),
+                    gammaMT_t_local = array(0, c(Ksubset, nFullGrids)),
+                    gammaMU_t_local = array(0, c(Ksubset, nFullGrids)),
+                    gammaP_t_local = array(0, c(Ksubset, nFullGrids))
+                )
+            }
         } else {
             special_rare_common_objects_per_core <- list()
         }

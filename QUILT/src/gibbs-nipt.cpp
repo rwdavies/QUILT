@@ -790,7 +790,9 @@ void sample_reads_in_grid(
             // now, over-lay pC
             pC(h_rC) = sum(ab_m.col(h_rC) % eMatRead_t_col);
             pA1(h_rA1) = sum(ab_m.col(h_rA1) % eMatRead_t_col);
-            pA2(h_rA2) = sum(ab_m.col(h_rA2) % eMatRead_t_col);
+            if (!sample_is_diploid) {
+                pA2(h_rA2) = sum(ab_m.col(h_rA2) % eMatRead_t_col);
+            }
         } else {
             // do nothing here
             for(j=0; j < 3; j++) {
@@ -977,7 +979,9 @@ void sample_reads_in_grid(
             }
             p_store(w, 8) = (minus_log_c1_sum + std::log(sum(alphaHat_m.col(0))));
             p_store(w, 9) = (minus_log_c2_sum + std::log(sum(alphaHat_m.col(1))));
-            p_store(w, 10) = (minus_log_c3_sum + std::log(sum(alphaHat_m.col(2))));
+            if (!sample_is_diploid) {
+                p_store(w, 10) = (minus_log_c3_sum + std::log(sum(alphaHat_m.col(2)))); // might fail if sample_is_diploid
+            }
             p_store(w, 11) = (p_store(w, 8) + p_store(w, 9) + p_store(w, 10));
             // argh - fix in a minute
             double d = 0;
@@ -1418,7 +1422,8 @@ void rcpp_gibbs_nipt_initialize(
     const bool gibbs_initialize_iteratively,
     const arma::mat& priorCurrent_m,
     const arma::cube& alphaMatCurrent_tc,
-    const double maxEmissionMatrixDifference
+    const double maxEmissionMatrixDifference,
+    bool sample_is_diploid
 ) {
     int nGrids = alphaHat_t1.n_cols;
     Rcpp::NumericVector alphaStart1, betaEnd1, alphaStart2, betaEnd2, alphaStart3, betaEnd3;
@@ -1494,13 +1499,17 @@ void rcpp_gibbs_nipt_initialize(
         alphaHat_t2.fill(1); betaHat_t2.fill(1); c2.fill(1);
         Rcpp_run_forward_haploid(alphaHat_t2, c2, eMatGrid_t2, alphaMatCurrent_tc, transMatRate_tc_H, priorCurrent_m, s, alphaStart_local, run_fb_subset_local, initialize_only_local);        
         //
-        alphaHat_t3.fill(1); betaHat_t3.fill(1); c3.fill(1);        
-        Rcpp_run_forward_haploid(alphaHat_t3, c3, eMatGrid_t3, alphaMatCurrent_tc, transMatRate_tc_H, priorCurrent_m, s, alphaStart_local, run_fb_subset_local, initialize_only_local);
+        if (!sample_is_diploid) {        
+            alphaHat_t3.fill(1); betaHat_t3.fill(1); c3.fill(1);        
+            Rcpp_run_forward_haploid(alphaHat_t3, c3, eMatGrid_t3, alphaMatCurrent_tc, transMatRate_tc_H, priorCurrent_m, s, alphaStart_local, run_fb_subset_local, initialize_only_local);
+        }
     } else {
         // recall s needs to be 0based in c++
         rcpp_initialize_gibbs_forward_backward(alphaMatCurrent_tc, transMatRate_tc_H, priorCurrent_m, s, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, run_fb_subset, alphaStart1, betaEnd1);
         rcpp_initialize_gibbs_forward_backward(alphaMatCurrent_tc, transMatRate_tc_H, priorCurrent_m, s, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, run_fb_subset, alphaStart2, betaEnd2);
-        rcpp_initialize_gibbs_forward_backward(alphaMatCurrent_tc, transMatRate_tc_H, priorCurrent_m, s, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, run_fb_subset, alphaStart3, betaEnd3);
+        if (!sample_is_diploid) {                
+            rcpp_initialize_gibbs_forward_backward(alphaMatCurrent_tc, transMatRate_tc_H, priorCurrent_m, s, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, run_fb_subset, alphaStart3, betaEnd3);
+        }
     }
     return;
 }
@@ -1580,14 +1589,14 @@ void rcpp_gibbs_nipt_iterate(
     int relabel = 1;
     int iReadStart;
     int nReads = sampleReads.size();
-    Rcpp::List readData;    
-    arma::mat alphaHat_m(K, 3); // tested, this is the better orientation
-    arma::mat betaHat_m(K, 3);
+    Rcpp::List readData;
     int nHaps = 3; // just  to declare ab_m below
     if (sample_is_diploid) {
         nHaps = 2;
     }
-    arma::mat ab_m(K, nHaps);    
+    arma::mat alphaHat_m(K, nHaps); // tested, this is the better orientation
+    arma::mat betaHat_m(K, nHaps);
+    arma::mat ab_m(K, nHaps);
     Rcpp::NumericVector pC(3), pA1(3), pA2(3);
     pC.fill(1);
     pA1.fill(1);
@@ -2542,7 +2551,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                 alphaHat_t2, betaHat_t2, c2, eMatGrid_t2,
                 alphaHat_t3, betaHat_t3, c3, eMatGrid_t3,
                 transMatRate_tc_H, gibbs_initialize_iteratively,
-                priorCurrent_m, alphaMatCurrent_tc, maxEmissionMatrixDifference
+                priorCurrent_m, alphaMatCurrent_tc, maxEmissionMatrixDifference,
+                sample_is_diploid
             );
             //
             //

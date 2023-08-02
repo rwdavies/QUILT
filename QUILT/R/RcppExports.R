@@ -167,8 +167,8 @@ rcpp_consider_and_try_entire_relabelling <- function(H, ff, relabel = -1L) {
 }
 
 #' @export
-rcpp_gibbs_nipt_initialize <- function(s, prev_section, next_section, suppressOutput, prev, run_fb_subset, alphaBetaBlocks_one, i_snp_block_for_alpha_beta, eMatRead_t, sampleReads, H, run_fb_grid_offset, bound_eMatGrid_t, rescale_eMatGrid_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, gibbs_initialize_iteratively, priorCurrent_m, alphaMatCurrent_tc, maxEmissionMatrixDifference) {
-    invisible(.Call('_QUILT_rcpp_gibbs_nipt_initialize', PACKAGE = 'QUILT', s, prev_section, next_section, suppressOutput, prev, run_fb_subset, alphaBetaBlocks_one, i_snp_block_for_alpha_beta, eMatRead_t, sampleReads, H, run_fb_grid_offset, bound_eMatGrid_t, rescale_eMatGrid_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, gibbs_initialize_iteratively, priorCurrent_m, alphaMatCurrent_tc, maxEmissionMatrixDifference))
+rcpp_gibbs_nipt_initialize <- function(s, prev_section, next_section, suppressOutput, prev, run_fb_subset, alphaBetaBlocks_one, i_snp_block_for_alpha_beta, eMatRead_t, sampleReads, H, run_fb_grid_offset, bound_eMatGrid_t, rescale_eMatGrid_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, gibbs_initialize_iteratively, priorCurrent_m, alphaMatCurrent_tc, maxEmissionMatrixDifference, sample_is_diploid) {
+    invisible(.Call('_QUILT_rcpp_gibbs_nipt_initialize', PACKAGE = 'QUILT', s, prev_section, next_section, suppressOutput, prev, run_fb_subset, alphaBetaBlocks_one, i_snp_block_for_alpha_beta, eMatRead_t, sampleReads, H, run_fb_grid_offset, bound_eMatGrid_t, rescale_eMatGrid_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, gibbs_initialize_iteratively, priorCurrent_m, alphaMatCurrent_tc, maxEmissionMatrixDifference, sample_is_diploid))
 }
 
 #' @export

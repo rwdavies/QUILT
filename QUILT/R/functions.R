@@ -288,8 +288,6 @@ get_and_impute_one_sample <- function(
     heuristic_approach
 ) {
 
-
-    
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
     nGrids <- ncol(distinctHapsB)
