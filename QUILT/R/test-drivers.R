@@ -132,7 +132,8 @@ make_quilt_fb_test_package <- function(
     return_eMatGridTri_t = TRUE,
     L = NULL,
     bq_mult = 30,
-    randomize_sample_read_length = FALSE
+    randomize_sample_read_length = FALSE,
+    simple_ematread = FALSE
 ) {
     if (method == "diploid") {
         n_haps <- 2
@@ -175,6 +176,15 @@ make_quilt_fb_test_package <- function(
             eHapsCurrent_tc[1, ,s] <- rep(c(eHapsMin, 1 - eHapsMin), each = 1, len = nSNPs)
             eHapsCurrent_tc[2, ,s] <- rep(c(eHapsMin, 1 - eHapsMin), each = 2, len = nSNPs)
             eHapsCurrent_tc[3, ,s] <- (1 - eHapsMin)
+        }
+        if (simple_ematread && gridWindowSize == 32) {
+            for(iGrid in 1:nGrids) {
+                w <- 1:32 + 32 * (iGrid - 1)
+                x <- rpois(1, 1) + 1 ## how many distinct haps
+                y <- matrix(sample(c(0, 1), x * 32, prob = c(0.9, 0.1), replace = TRUE), x, 32)
+                w2 <- sample(1:x, K, replace =  TRUE)
+                eHapsCurrent_tc[, w, s] <- y[w2, ]
+            }
         }
         m <- array(runif(K * (nGrids - 1)), c(K, (nGrids - 1)))
         alphaMatCurrent_tc[, , s] <- t(t(m) / colSums(m))

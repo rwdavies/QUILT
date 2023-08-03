@@ -263,10 +263,12 @@ impute_final_gibbs_with_rare_common <- function(
         i_gibbs_sample = i_gibbs_sample,
         ff0_shard_check_every_pair = ff0_shard_check_every_pair,
         suppressOutput = 1,
-        verbose = FALSE
+        verbose = FALSE,
+        return_extra = TRUE
     )
+
     
-    ## AM HERE
+
     hapProbs_t <- gibbs_iterate$hapProbs_t
     hap1 <- hapProbs_t[1, ]
     hap2 <- hapProbs_t[2, ]

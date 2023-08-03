@@ -258,6 +258,52 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
 
 
 
+
+
+
+//' @export
+// [[Rcpp::export]]
+void rcpp_evaluate_read_variability(
+    arma::mat& eMatRead_t,
+    arma::ivec& number_of_non_1_reads,
+    arma::imat& indices_of_non_1_reads,
+    arma::ivec& read_category,
+    int cutoff = 20
+) {
+    int K = eMatRead_t.n_rows;
+    int nReads = eMatRead_t.n_cols;
+    //number_of_non_1_reads <- integer(nReads)
+    //indices_of_non_1_reads <- array(0, c(K, nReads))
+    double thresh = 1 - pow(10, -12);
+    read_category.fill(0);
+    for(int iRead = 0; iRead < nReads; iRead++) {
+        int c = 0;
+        double val = -1;
+        bool more_than_two = false;
+        for(int k = 0; k < K; k++) {
+            if (eMatRead_t(k, iRead) < thresh) {
+                indices_of_non_1_reads(c, iRead) = k;
+                c++;
+                if (val != -1) {
+                    if (val != eMatRead_t(k, iRead)) {
+                        more_than_two = true;
+                    }
+                }
+            }
+        }
+        number_of_non_1_reads(iRead) = c - 1 + 1; // needs a plus 1 here
+        if (number_of_non_1_reads(iRead) == 0) {
+            read_category(iRead) = 1;
+        } else if (!more_than_two) {
+            read_category(iRead) = 2;
+        } else {
+            read_category(iRead) = 0;
+        }
+    }
+    return;
+}
+
+
 //' @export
 // [[Rcpp::export]]
 void rcpp_make_rescaled_on_fly_eMatGrid_t(
@@ -652,6 +698,9 @@ void sample_reads_in_grid(
     const int& i_gibbs_samplings,
     const int& n_gibbs_full_its,
     const Rcpp::NumericVector& prior_probs,
+    arma::ivec& number_of_non_1_reads,
+    arma::imat& indices_of_non_1_reads,
+    arma::ivec& read_category,
     const bool gibbs_initialize_iteratively = false,
     const int first_read_for_gibbs_initialization = 0,
     bool sample_is_diploid = false
@@ -676,358 +725,365 @@ void sample_reads_in_grid(
     bool currently_doing_pass_through = false;
     //
     // want to NOT continue if BOTH skip_read_iteration(iteration) AND skip_read(iRead) are true
+    // ALSO - SOMEHOW - add a check on whether read is informative?
+    // possibly in initialization
     //
     while((done_reads == false) & ((read_wif_iRead) == iGrid)) {
         //
+        // do not bother if read is unavoidable (ONLY do for sample_is_diploid)
         //
-        //
-        // determine type of iteration
-        //
-        if (!gibbs_initialize_iteratively) {
-            currently_doing_normal_progress = true;
-        } else {
-            if ((iRead < first_read_for_gibbs_initialization) & (iteration == 0)) { // iteration is 0-based here
-                currently_doing_pass_through = true;
-            } else if ((first_read_for_gibbs_initialization <= iRead) & (iteration == 0)) {
-                currently_doing_pass_through = false;
-                currently_doing_gibbs_initialization = true;
-            } else if ((iRead < first_read_for_gibbs_initialization) & (iteration == 1)) {
-                currently_doing_pass_through = false;                
-                currently_doing_gibbs_initialization = true;
-            } else {
-                currently_doing_gibbs_initialization = false;
+        std::cout << "iRead = " << iRead << ", read_category(iRead) = " << read_category(iRead) << ", H(iRead) = " << H(iRead) << std::endl;
+        if (sample_is_diploid && read_category(iRead) != 1) {
+            std::cout << "gone in! " << std::endl;            
+            //
+            // determine type of iteration
+            //
+            if (!gibbs_initialize_iteratively) {
                 currently_doing_normal_progress = true;
-            }
-        }
-        //
-        // re-set 
-        //
-        if (!this_grid_has_at_least_one_read) {
-            //
-            // build matrices to work with
-            //
-            pC.fill(1);
-            pA1.fill(1);
-            pA2.fill(1);
-            alphaHat_m.col(0) = alphaHat_t1.col(iGrid);
-            alphaHat_m.col(1) = alphaHat_t2.col(iGrid);
-            betaHat_m.col(0) = betaHat_t1.col(iGrid);
-            betaHat_m.col(1) = betaHat_t2.col(iGrid);
-            if (!sample_is_diploid) {
-                alphaHat_m.col(2) = alphaHat_t3.col(iGrid);
-                betaHat_m.col(2) = betaHat_t3.col(iGrid);
-            }
-            ab_m = alphaHat_m % betaHat_m;
-            pC(0) = sum(ab_m.col(0));
-            pC(1) = sum(ab_m.col(1));
-            if (!sample_is_diploid) {            
-                pC(2) = sum(ab_m.col(2));
-            }
-            // pC(0) = sum(alphaHat_m.col(0) % betaHat_m.col(0));
-            // pC(1) = sum(alphaHat_m.col(1) % betaHat_m.col(1));
-            // pC(2) = sum(alphaHat_m.col(2) % betaHat_m.col(2));
-            this_grid_has_at_least_one_read = true;
-            if (verbose) {
-                std::cout << "set pC = " << pC << std::endl;
-            }
-        }
-        //
-        //
-        if (verbose) {
-            std::cout << "------------------- it = " << iteration << ", iRead = " << iRead << std::endl;
-        }
-        //
-        //
-        // these are made 0-based here
-        if (currently_doing_normal_progress) {
-            eMatRead_t_col = eMatRead_t.col(iRead);
-            h_rC = H(iRead) - 1; // h_r current
-            // ugh just do this manually
-            if (h_rC == 0) {
-                h_rA1 = 1; h_rA2 = 2;
-            } else if (h_rC == 1) {
-                h_rA1 = 0; h_rA2 = 2;
-            } else if (h_rC == 2) {
-                h_rA1 = 0; h_rA2 = 1;                    
-            }
-            //
-            if (verbose) {
-                std::cout << "h_rC = " << h_rC << ", h_rA1 = " << h_rA1 << ", h_rA2 = " << h_rA2 << std::endl;
-            }
-            // so pC is current three probabilities
-            // need same three probabilities for flip 1, flip 2
-            pA1(h_rC) = 0;
-            pA1(h_rA1) = 0;
-            pA1(h_rA2) = pC(h_rA2); // stays the same
-            //
-            // A1 - original hap loses
-            //for(int i = 0; i < ab_m.n_rows; i++) {
-            //    pA1(h_rC) += ab_m(i, h_rC) / eMatRead_t_col(i);
-            //n    pA1(h_rA1) += ab_m(i, h_rA1) / eMatRead_t_col(i);
-            //}
-            pA1(h_rC) = sum(ab_m.col(h_rC) / eMatRead_t_col);
-            // A1 - new hap gains
-            pA1(h_rA1) = sum(ab_m.col(h_rA1) % eMatRead_t_col);
-            //
-            // second alternate option (for ff > 0)
-            // this is BY FAR the most important thing to avoid
-            //
-            if (!sample_is_diploid) {
-                pA2(h_rC) = 0;
-                pA2(h_rA1) = pC(h_rA1); // stays the same
-                pA2(h_rA2) = 0;
-                //
-                // A2 - original hap loses
-                pA2(h_rC) = pA1(h_rC);
-                // A2 - new hap gains
-                pA2(h_rA2) = sum(ab_m.col(h_rA2) % eMatRead_t_col);
-            }
-        } else if (currently_doing_gibbs_initialization) {
-            eMatRead_t_col = eMatRead_t.col(iRead);            
-            h_rC = 0; // wlog
-            h_rA1 = 1;
-            h_rA2 = 2;
-            for(j=0; j < 3; j++) {
-                pA1(j) = pC(j);
-                pA2(j) = pC(j);                
-            }
-            // now, over-lay pC
-            pC(h_rC) = sum(ab_m.col(h_rC) % eMatRead_t_col);
-            pA1(h_rA1) = sum(ab_m.col(h_rA1) % eMatRead_t_col);
-            if (!sample_is_diploid) {
-                pA2(h_rA2) = sum(ab_m.col(h_rA2) % eMatRead_t_col);
-            }
-        } else {
-            // do nothing here
-            for(j=0; j < 3; j++) {
-                pA1(j) = pC(j);
-                pA2(j) = pC(j);                
-            }
-        }
-        //
-        // I think pC and pA1 and pA2 should always be in log space
-        //
-        // double log_prod_pC =   log(pC(0))  + log(pC(1))  + log(pC(2)) +  log(prior_probs(h_rC));
-        // double log_prod_pA1 =  log(pA1(0)) + log(pA1(1)) + log(pA1(2)) + log(prior_probs(h_rA1));
-        // double log_prod_pA2 =  log(pA2(0)) + log(pA2(1)) + log(pA2(2)) + log(prior_probs(h_rA2));
-        // double max = std::max({log_prod_pC, log_prod_pA1, log_prod_pA2});
-        // log_prod_pC -= max;
-        // log_prod_pA1 -= max;
-        // log_prod_pA2 -= max;
-        // prod_pC=std::exp(log_prod_pC);
-        // prod_pA1=std::exp(log_prod_pA1);
-        // prod_pA2=std::exp(log_prod_pA2);
-        //
-        //
-        prod_pC = (pC(0) * pC(1) * pC(2)   ) * prior_probs(h_rC);
-        prod_pA1 = (pA1(0) * pA1(1) * pA1(2)) * prior_probs(h_rA1);
-        prod_pA2 = (pA2(0) * pA2(1) * pA2(2)) * prior_probs(h_rA2); // doesn't matter as much        
-        denom = prod_pC + prod_pA1 + prod_pA2;
-        norm_pC = prod_pC / denom;
-        norm_pA1 = prod_pA1 / denom;
-        norm_pA2 = prod_pA2 / denom;
-        if (verbose) {
-            std::cout << "prior_probs = " << prior_probs << std::endl;
-            std::cout << "pC = " << pC << std::endl;
-            std::cout << "pA1 = " << pA1 << std::endl;
-            std::cout << "pA2 = " << pA2 << std::endl;                                   
-            std::cout << "prod_pC = " << prod_pC << std::endl;
-            std::cout << "prod_pA1 = " << prod_pA1 << std::endl;
-            std::cout << "prod_pA2 = " << prod_pA2 << std::endl;                        
-            std::cout << "denom = " << denom << std::endl;
-            std::cout << "norm_pC = " << norm_pC << std::endl;
-            std::cout << "norm_pA1 = " << norm_pA1 << std::endl;
-            std::cout << "norm_pA2 = " << norm_pA2 << std::endl;                        
-        }
-        // probably fast enough
-        //if (-0.001 < (norm_pC - 0.5) & (norm_pC - 0.5) < 0.001) {
-        //    skip_read(iRead) = true;
-        //} else {
-        //    skip_read(iRead) = false;
-        // }
-        //
-        // mt = 0            -> 0.5
-        // mu = 0.5          -> 0.5 + ff / 2
-        // p  = 0.5 + ff / 2 -> 1
-        //
-        // which one is the winner - again, do this manually
-        //
-        // right - now need to choose one
-        chance = runif_reads(nReads * (iteration) + iRead);                
-        cumsum_flip_probs.fill(0);
-        cumsum_flip_probs(h_rC) = norm_pC;
-        cumsum_flip_probs(h_rA1) = norm_pA1;
-        cumsum_flip_probs(h_rA2) = norm_pA2;
-        //
-        cumsum_flip_probs(1) += cumsum_flip_probs(0);
-        cumsum_flip_probs(2) += cumsum_flip_probs(1);
-        //
-        h_rN = 0;
-        for(int i = 2; i >= 0; i--) {
-            if (chance < cumsum_flip_probs(i)) {
-                h_rN = i;
-            }
-        }
-        //
-        if (verbose) {
-            std::cout << "h_rC = " << h_rC << std::endl;
-            std::cout << "h_rN = " << h_rN << std::endl;
-        }
-        //
-        //
-        //
-        if (
-            ((h_rN != h_rC) | currently_doing_gibbs_initialization) & (!currently_doing_pass_through)
-        ) {
-            //
-            at_least_one_read_has_changed = true;
-            H(iRead) = h_rN + 1; // store as 1-based                    
-            // update alphas
-            if (currently_doing_normal_progress) {
-                alphaHat_m.col(h_rC) /= eMatRead_t_col;
-                ab_m.col(h_rC) /= eMatRead_t_col;                
-            }
-            alphaHat_m.col(h_rN) %= eMatRead_t_col;
-            // also, have to update ab
-            ab_m.col(h_rN) %= eMatRead_t_col;
-            //
-            if (currently_doing_normal_progress) {            
-                if (h_rC == 0) {eMatGrid_t1.col(iGrid) /= eMatRead_t_col;}
-                if (h_rC == 1) {eMatGrid_t2.col(iGrid) /= eMatRead_t_col;}
-                if (!sample_is_diploid) {
-                    if (h_rC == 2) {eMatGrid_t3.col(iGrid) /= eMatRead_t_col;}
+            } else {
+                if ((iRead < first_read_for_gibbs_initialization) & (iteration == 0)) { // iteration is 0-based here
+                    currently_doing_pass_through = true;
+                } else if ((first_read_for_gibbs_initialization <= iRead) & (iteration == 0)) {
+                    currently_doing_pass_through = false;
+                    currently_doing_gibbs_initialization = true;
+                } else if ((iRead < first_read_for_gibbs_initialization) & (iteration == 1)) {
+                    currently_doing_pass_through = false;                
+                    currently_doing_gibbs_initialization = true;
+                } else {
+                    currently_doing_gibbs_initialization = false;
+                    currently_doing_normal_progress = true;
                 }
             }
             //
-            if (h_rN == 0) {eMatGrid_t1.col(iGrid) %= eMatRead_t_col;}
-            if (h_rN == 1) {eMatGrid_t2.col(iGrid) %= eMatRead_t_col;}
-            if (!sample_is_diploid) {
-                if (h_rN == 2) {eMatGrid_t3.col(iGrid) %= eMatRead_t_col;}
+            // re-set 
+            //
+            if (!this_grid_has_at_least_one_read) {
+                //
+                // build matrices to work with
+                //
+                pC.fill(1);
+                pA1.fill(1);
+                pA2.fill(1);
+                alphaHat_m.col(0) = alphaHat_t1.col(iGrid);
+                alphaHat_m.col(1) = alphaHat_t2.col(iGrid);
+                betaHat_m.col(0) = betaHat_t1.col(iGrid);
+                betaHat_m.col(1) = betaHat_t2.col(iGrid);
+                if (!sample_is_diploid) {
+                    alphaHat_m.col(2) = alphaHat_t3.col(iGrid);
+                    betaHat_m.col(2) = betaHat_t3.col(iGrid);
+                }
+                ab_m = alphaHat_m % betaHat_m;
+                pC(0) = sum(ab_m.col(0));
+                pC(1) = sum(ab_m.col(1));
+                if (!sample_is_diploid) {            
+                    pC(2) = sum(ab_m.col(2));
+                }
+                // pC(0) = sum(alphaHat_m.col(0) % betaHat_m.col(0));
+                // pC(1) = sum(alphaHat_m.col(1) % betaHat_m.col(1));
+                // pC(2) = sum(alphaHat_m.col(2) % betaHat_m.col(2));
+                this_grid_has_at_least_one_read = true;
+                if (verbose) {
+                    std::cout << "set pC = " << pC << std::endl;
+                }
             }
-            // reset pC - UGGGGGH - I wish I could name these (can I?)
-            // see above where I define these
-            // again this is terribble uggggggh
+            //
+            //
+            if (verbose) {
+                std::cout << "------------------- it = " << iteration << ", iRead = " << iRead << std::endl;
+            }
+            //
+            //
+            // these are made 0-based here
             if (currently_doing_normal_progress) {
-                for(int i = 0; i < 3; i++) {
-                    if (h_rC == 0) {
-                        if (h_rN == 1) {pC(i) = pA1(i);}
-                        if (h_rN == 2) {pC(i) = pA2(i);}
-                    } else if (h_rC == 1) {
-                        if (h_rN == 0) {pC(i) = pA1(i);}
-                        if (h_rN == 2) {pC(i) = pA2(i);}
-                    } else if (h_rC == 2) {
-                        if (h_rN == 0) {pC(i) = pA1(i);}
-                        if (h_rN == 1) {pC(i) = pA2(i);}
+                eMatRead_t_col = eMatRead_t.col(iRead);
+                h_rC = H(iRead) - 1; // h_r current
+                // ugh just do this manually
+                if (h_rC == 0) {
+                    h_rA1 = 1; h_rA2 = 2;
+                } else if (h_rC == 1) {
+                    h_rA1 = 0; h_rA2 = 2;
+                } else if (h_rC == 2) {
+                    h_rA1 = 0; h_rA2 = 1;                    
+                }
+                //
+                if (verbose) {
+                    std::cout << "h_rC = " << h_rC << ", h_rA1 = " << h_rA1 << ", h_rA2 = " << h_rA2 << std::endl;
+                }
+                // so pC is current three probabilities
+                // need same three probabilities for flip 1, flip 2
+                pA1(h_rC) = 0;
+                pA1(h_rA1) = 0;
+                pA1(h_rA2) = pC(h_rA2); // stays the same
+                //
+                // A1 - original hap loses
+                //for(int i = 0; i < ab_m.n_rows; i++) {
+                //    pA1(h_rC) += ab_m(i, h_rC) / eMatRead_t_col(i);
+                //n    pA1(h_rA1) += ab_m(i, h_rA1) / eMatRead_t_col(i);
+                //}
+                pA1(h_rC) = sum(ab_m.col(h_rC) / eMatRead_t_col);
+                // A1 - new hap gains
+                pA1(h_rA1) = sum(ab_m.col(h_rA1) % eMatRead_t_col);
+                //
+                // second alternate option (for ff > 0)
+                // this is BY FAR the most important thing to avoid
+                //
+                if (!sample_is_diploid) {
+                    pA2(h_rC) = 0;
+                    pA2(h_rA1) = pC(h_rA1); // stays the same
+                    pA2(h_rA2) = 0;
+                    //
+                    // A2 - original hap loses
+                    pA2(h_rC) = pA1(h_rC);
+                    // A2 - new hap gains
+                    pA2(h_rA2) = sum(ab_m.col(h_rA2) % eMatRead_t_col);
+                }
+            } else if (currently_doing_gibbs_initialization) {
+                eMatRead_t_col = eMatRead_t.col(iRead);            
+                h_rC = 0; // wlog
+                h_rA1 = 1;
+                h_rA2 = 2;
+                for(j=0; j < 3; j++) {
+                    pA1(j) = pC(j);
+                    pA2(j) = pC(j);                
+                }
+                // now, over-lay pC
+                pC(h_rC) = sum(ab_m.col(h_rC) % eMatRead_t_col);
+                pA1(h_rA1) = sum(ab_m.col(h_rA1) % eMatRead_t_col);
+                if (!sample_is_diploid) {
+                    pA2(h_rA2) = sum(ab_m.col(h_rA2) % eMatRead_t_col);
+                }
+            } else {
+                // do nothing here
+                for(j=0; j < 3; j++) {
+                    pA1(j) = pC(j);
+                    pA2(j) = pC(j);                
+                }
+            }
+            //
+            // I think pC and pA1 and pA2 should always be in log space
+            //
+            // double log_prod_pC =   log(pC(0))  + log(pC(1))  + log(pC(2)) +  log(prior_probs(h_rC));
+            // double log_prod_pA1 =  log(pA1(0)) + log(pA1(1)) + log(pA1(2)) + log(prior_probs(h_rA1));
+            // double log_prod_pA2 =  log(pA2(0)) + log(pA2(1)) + log(pA2(2)) + log(prior_probs(h_rA2));
+            // double max = std::max({log_prod_pC, log_prod_pA1, log_prod_pA2});
+            // log_prod_pC -= max;
+            // log_prod_pA1 -= max;
+            // log_prod_pA2 -= max;
+            // prod_pC=std::exp(log_prod_pC);
+            // prod_pA1=std::exp(log_prod_pA1);
+            // prod_pA2=std::exp(log_prod_pA2);
+            //
+            //
+            prod_pC = (pC(0) * pC(1) * pC(2)   ) * prior_probs(h_rC);
+            prod_pA1 = (pA1(0) * pA1(1) * pA1(2)) * prior_probs(h_rA1);
+            prod_pA2 = (pA2(0) * pA2(1) * pA2(2)) * prior_probs(h_rA2); // doesn't matter as much        
+            denom = prod_pC + prod_pA1 + prod_pA2;
+            norm_pC = prod_pC / denom;
+            norm_pA1 = prod_pA1 / denom;
+            norm_pA2 = prod_pA2 / denom;
+            if (verbose) {
+                std::cout << "prior_probs = " << prior_probs << std::endl;
+                std::cout << "pC = " << pC << std::endl;
+                std::cout << "pA1 = " << pA1 << std::endl;
+                std::cout << "pA2 = " << pA2 << std::endl;                                   
+                std::cout << "prod_pC = " << prod_pC << std::endl;
+                std::cout << "prod_pA1 = " << prod_pA1 << std::endl;
+                std::cout << "prod_pA2 = " << prod_pA2 << std::endl;                        
+                std::cout << "denom = " << denom << std::endl;
+                std::cout << "norm_pC = " << norm_pC << std::endl;
+                std::cout << "norm_pA1 = " << norm_pA1 << std::endl;
+                std::cout << "norm_pA2 = " << norm_pA2 << std::endl;                        
+            }
+            // probably fast enough
+            //if (-0.001 < (norm_pC - 0.5) & (norm_pC - 0.5) < 0.001) {
+            //    skip_read(iRead) = true;
+            //} else {
+            //    skip_read(iRead) = false;
+            // }
+            //
+            // mt = 0            -> 0.5
+            // mu = 0.5          -> 0.5 + ff / 2
+            // p  = 0.5 + ff / 2 -> 1
+            //
+            // which one is the winner - again, do this manually
+            //
+            // right - now need to choose one
+            chance = runif_reads(nReads * (iteration) + iRead);                
+            cumsum_flip_probs.fill(0);
+            cumsum_flip_probs(h_rC) = norm_pC;
+            cumsum_flip_probs(h_rA1) = norm_pA1;
+            cumsum_flip_probs(h_rA2) = norm_pA2;
+            //
+            cumsum_flip_probs(1) += cumsum_flip_probs(0);
+            cumsum_flip_probs(2) += cumsum_flip_probs(1);
+            //
+            h_rN = 0;
+            for(int i = 2; i >= 0; i--) {
+                if (chance < cumsum_flip_probs(i)) {
+                    h_rN = i;
+                }
+            }
+            //
+            if (verbose) {
+                std::cout << "h_rC = " << h_rC << std::endl;
+                std::cout << "h_rN = " << h_rN << std::endl;
+            }
+            //
+            //
+            //
+            if (
+                ((h_rN != h_rC) | currently_doing_gibbs_initialization) & (!currently_doing_pass_through)
+                ) {
+                //
+                at_least_one_read_has_changed = true;
+                H(iRead) = h_rN + 1; // store as 1-based                    
+                // update alphas
+                if (currently_doing_normal_progress) {
+                    alphaHat_m.col(h_rC) /= eMatRead_t_col;
+                    ab_m.col(h_rC) /= eMatRead_t_col;                
+                }
+                alphaHat_m.col(h_rN) %= eMatRead_t_col;
+                // also, have to update ab
+                ab_m.col(h_rN) %= eMatRead_t_col;
+                //
+                if (currently_doing_normal_progress) {            
+                    if (h_rC == 0) {eMatGrid_t1.col(iGrid) /= eMatRead_t_col;}
+                    if (h_rC == 1) {eMatGrid_t2.col(iGrid) /= eMatRead_t_col;}
+                    if (!sample_is_diploid) {
+                        if (h_rC == 2) {eMatGrid_t3.col(iGrid) /= eMatRead_t_col;}
                     }
                 }
-            } else if (currently_doing_gibbs_initialization) {            
-                //otherwise, if gibbs_initialize
-                // reset no matter what, based on new sampled read
-                for(int i = 0; i < 3; i++) {
-                    // if h_rN is 0, we're good already
-                    if (h_rN == 1) {pC(i) = pA1(i);}
-                    if (h_rN == 2) {pC(i) = pA2(i);}
+                //
+                if (h_rN == 0) {eMatGrid_t1.col(iGrid) %= eMatRead_t_col;}
+                if (h_rN == 1) {eMatGrid_t2.col(iGrid) %= eMatRead_t_col;}
+                if (!sample_is_diploid) {
+                    if (h_rN == 2) {eMatGrid_t3.col(iGrid) %= eMatRead_t_col;}
+                }
+                // reset pC - UGGGGGH - I wish I could name these (can I?)
+                // see above where I define these
+                // again this is terribble uggggggh
+                if (currently_doing_normal_progress) {
+                    for(int i = 0; i < 3; i++) {
+                        if (h_rC == 0) {
+                            if (h_rN == 1) {pC(i) = pA1(i);}
+                            if (h_rN == 2) {pC(i) = pA2(i);}
+                        } else if (h_rC == 1) {
+                            if (h_rN == 0) {pC(i) = pA1(i);}
+                            if (h_rN == 2) {pC(i) = pA2(i);}
+                        } else if (h_rC == 2) {
+                            if (h_rN == 0) {pC(i) = pA1(i);}
+                            if (h_rN == 1) {pC(i) = pA2(i);}
+                        }
+                    }
+                } else if (currently_doing_gibbs_initialization) {            
+                    //otherwise, if gibbs_initialize
+                    // reset no matter what, based on new sampled read
+                    for(int i = 0; i < 3; i++) {
+                        // if h_rN is 0, we're good already
+                        if (h_rN == 1) {pC(i) = pA1(i);}
+                        if (h_rN == 2) {pC(i) = pA2(i);}
+                    }
+                }
+                //if (iRead <= 3) {
+                //    std::cout << "the new pC is " << pC << std::endl;
+                // }
+            }
+            //
+            if (record_read_set) {
+                Rcpp::NumericVector x(3);
+                x(h_rC) = norm_pC;
+                x(h_rA1) = norm_pA1;
+                x(h_rA2) = norm_pA2;
+                Rcpp::NumericVector y(7);
+                double local_min = 2;
+                int local_min_which = 8;
+                for(int i = 0; i < 7; i++) {
+                    y(i) = std::abs(rlc(i, 0) - x(0)) + std::abs(rlc(i, 1) - x(1)) + std::abs(rlc(i, 2) - x(2));
+                    if (y(i) < local_min) {
+                        local_min = y(i);
+                        local_min_which = i;
+                    }
+                }
+                if (local_min < class_sum_cutoff) {
+                    H_class(iRead) = local_min_which + 1; // this is 0 for no match, 1 through 7 otherwise!
+                } else {
+                    H_class(iRead) = 0;
                 }
             }
-            //if (iRead <= 3) {
-            //    std::cout << "the new pC is " << pC << std::endl;
+            if (return_p1) {
+                p1(i_gibbs_samplings * n_gibbs_full_its + iteration ,iRead) = norm_pC;
+                pH(i_gibbs_samplings * n_gibbs_full_its + iteration ,iRead) = H(iRead); // so after sampling
+            }
+            if (return_p_store) {
+                // p_store_cols <- c("p_1", "p_2", "p_3", "chance", "h_rC", "h_rN", "c1", "c2", "c3", "p", "agreePer")
+                w = \
+                    (i_gibbs_samplings) * n_gibbs_full_its * nReads + \
+                    nReads * (iteration) + iRead;
+                // argh - can I access these by names? I think not?
+                p_store(w, h_rC) = norm_pC;
+                p_store(w, h_rA1) = norm_pA1;
+                p_store(w, h_rA2) = norm_pA2;
+                p_store(w, 3) = chance;
+                p_store(w, 4) = h_rC + 1;
+                p_store(w, 5) = h_rN + 1;
+                p_store(w, 6) = 0; // agree percentage, requires true H, not done here
+                if (currently_doing_normal_progress) {
+                    p_store(w, 7) = 2;
+                } else if (currently_doing_gibbs_initialization) {
+                    p_store(w, 7) = 1;
+                } else if (currently_doing_pass_through) {
+                    p_store(w, 7) = 0;
+                }
+                //
+                if ((minus_log_c1_sum + std::log(sum(alphaHat_m.col(0)))) > 1) {
+                    std::cout << "minus_log_c1_sum=" << minus_log_c1_sum << std::endl;
+                    std::cout << "alphaHat_m.col(0) = " << alphaHat_m.col(0) << std::endl;                
+                    std::cout << "std::log(sum(alphaHat_m.col(0))) = " << std::log(sum(alphaHat_m.col(0))) << std::endl;
+                }
+                p_store(w, 8) = (minus_log_c1_sum + std::log(sum(alphaHat_m.col(0))));
+                p_store(w, 9) = (minus_log_c2_sum + std::log(sum(alphaHat_m.col(1))));
+                if (!sample_is_diploid) {
+                    p_store(w, 10) = (minus_log_c3_sum + std::log(sum(alphaHat_m.col(2)))); // might fail if sample_is_diploid
+                }
+                p_store(w, 11) = (p_store(w, 8) + p_store(w, 9) + p_store(w, 10));
+                // argh - fix in a minute
+                double d = 0;
+                for(int i = 0; i < nReads; i++) {
+                    d += std::log(prior_probs(H(i) - 1));
+                }
+                p_store(w, 12) = d; // argh - cannot figure out how to get/use character col names
+                p_store(w, 13) = p_store(w, 11) + p_store(w, 12);
+                //
+                //p_store[w, "agreePer"] <- sum(abs(H ==  true_H)) / length(H) * 100
+            }
+            //
+            // update the read to consider
+            //
+            // normal functionality, just to go the next one, unless at the end
+            // bool done = false;
+            // while(!done) {
+            //     iRead++;
+            //     // continue if the normal continue condition met AND the next read
+            //     if ((nReads - 1) < iRead) {
+            //         done_reads = true;
+            //         read_wif_iRead = -1;
+            //     } else {
+            //         // update
+            //         readData = as<Rcpp::List>(sampleReads[iRead]);
+            //         read_wif_iRead = as<int>(readData[1]);
+            //     }
+            //     if (!skip_read_iteration(iteration)) {
+            //         // normally we just do the one
+            //         done = true;
+            //     } else {
+            //         // otherwise, we check. we can SKIP this read if the above condition is good, AND the next read is a skip read
+            //         bool above_while_cond=(done_reads == false) & ((read_wif_iRead) == iGrid);
+            //         if (!(skip_read(iRead) & above_while_cond)) {
+            //             done = true;
+            //         }
+            //     }
             // }
         }
-        //
-        if (record_read_set) {
-            Rcpp::NumericVector x(3);
-            x(h_rC) = norm_pC;
-            x(h_rA1) = norm_pA1;
-            x(h_rA2) = norm_pA2;
-            Rcpp::NumericVector y(7);
-            double local_min = 2;
-            int local_min_which = 8;
-            for(int i = 0; i < 7; i++) {
-                y(i) = std::abs(rlc(i, 0) - x(0)) + std::abs(rlc(i, 1) - x(1)) + std::abs(rlc(i, 2) - x(2));
-                if (y(i) < local_min) {
-                    local_min = y(i);
-                    local_min_which = i;
-                }
-            }
-            if (local_min < class_sum_cutoff) {
-                H_class(iRead) = local_min_which + 1; // this is 0 for no match, 1 through 7 otherwise!
-            } else {
-                H_class(iRead) = 0;
-            }
-        }
-        if (return_p1) {
-            p1(i_gibbs_samplings * n_gibbs_full_its + iteration ,iRead) = norm_pC;
-            pH(i_gibbs_samplings * n_gibbs_full_its + iteration ,iRead) = H(iRead); // so after sampling
-        }
-        if (return_p_store) {
-            // p_store_cols <- c("p_1", "p_2", "p_3", "chance", "h_rC", "h_rN", "c1", "c2", "c3", "p", "agreePer")
-            w = \
-                (i_gibbs_samplings) * n_gibbs_full_its * nReads + \
-                nReads * (iteration) + iRead;
-            // argh - can I access these by names? I think not?
-            p_store(w, h_rC) = norm_pC;
-            p_store(w, h_rA1) = norm_pA1;
-            p_store(w, h_rA2) = norm_pA2;
-            p_store(w, 3) = chance;
-            p_store(w, 4) = h_rC + 1;
-            p_store(w, 5) = h_rN + 1;
-            p_store(w, 6) = 0; // agree percentage, requires true H, not done here
-            if (currently_doing_normal_progress) {
-                p_store(w, 7) = 2;
-            } else if (currently_doing_gibbs_initialization) {
-                p_store(w, 7) = 1;
-            } else if (currently_doing_pass_through) {
-                p_store(w, 7) = 0;
-            }
-            //
-            if ((minus_log_c1_sum + std::log(sum(alphaHat_m.col(0)))) > 1) {
-                 std::cout << "minus_log_c1_sum=" << minus_log_c1_sum << std::endl;
-                 std::cout << "alphaHat_m.col(0) = " << alphaHat_m.col(0) << std::endl;                
-                 std::cout << "std::log(sum(alphaHat_m.col(0))) = " << std::log(sum(alphaHat_m.col(0))) << std::endl;
-            }
-            p_store(w, 8) = (minus_log_c1_sum + std::log(sum(alphaHat_m.col(0))));
-            p_store(w, 9) = (minus_log_c2_sum + std::log(sum(alphaHat_m.col(1))));
-            if (!sample_is_diploid) {
-                p_store(w, 10) = (minus_log_c3_sum + std::log(sum(alphaHat_m.col(2)))); // might fail if sample_is_diploid
-            }
-            p_store(w, 11) = (p_store(w, 8) + p_store(w, 9) + p_store(w, 10));
-            // argh - fix in a minute
-            double d = 0;
-            for(int i = 0; i < nReads; i++) {
-                d += std::log(prior_probs(H(i) - 1));
-            }
-            p_store(w, 12) = d; // argh - cannot figure out how to get/use character col names
-            p_store(w, 13) = p_store(w, 11) + p_store(w, 12);
-            //
-            //p_store[w, "agreePer"] <- sum(abs(H ==  true_H)) / length(H) * 100
-        }
-        //
-        // update the read to consider
-        //
-        // normal functionality, just to go the next one, unless at the end
-        // bool done = false;
-        // while(!done) {
-        //     iRead++;
-        //     // continue if the normal continue condition met AND the next read
-        //     if ((nReads - 1) < iRead) {
-        //         done_reads = true;
-        //         read_wif_iRead = -1;
-        //     } else {
-        //         // update
-        //         readData = as<Rcpp::List>(sampleReads[iRead]);
-        //         read_wif_iRead = as<int>(readData[1]);
-        //     }
-        //     if (!skip_read_iteration(iteration)) {
-        //         // normally we just do the one
-        //         done = true;
-        //     } else {
-        //         // otherwise, we check. we can SKIP this read if the above condition is good, AND the next read is a skip read
-        //         bool above_while_cond=(done_reads == false) & ((read_wif_iRead) == iGrid);
-        //         if (!(skip_read(iRead) & above_while_cond)) {
-        //             done = true;
-        //         }
-        //     }
-        // }
         iRead++;
         // continue if the normal continue condition met AND the next read
         if ((nReads - 1) < iRead) {
@@ -1577,6 +1633,9 @@ void rcpp_gibbs_nipt_iterate(
     const Rcpp::NumericVector prior_probs,
     Rcpp::NumericMatrix & per_it_likelihoods,
     const Rcpp::LogicalVector& grid_has_read,
+    arma::ivec& number_of_non_1_reads,
+    arma::imat& indices_of_non_1_reads,
+    arma::ivec& read_category,
     const bool gibbs_initialize_iteratively = false,
     const int first_read_for_gibbs_initialization = 0,
     const bool do_block_resampling = false,
@@ -1676,6 +1735,7 @@ void rcpp_gibbs_nipt_iterate(
                 p1, pH, skip_read, skip_read_iteration,
                 record_read_set, rlc, H_class, class_sum_cutoff,
                 i_gibbs_samplings, n_gibbs_full_its, prior_probs,
+                number_of_non_1_reads, indices_of_non_1_reads, read_category,
                 gibbs_initialize_iteratively, first_read_for_gibbs_initialization, sample_is_diploid
             );
         }
@@ -2356,6 +2416,10 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     arma::vec pRgivenH1;
     arma::vec pRgivenH2;
     arma::mat eMatRead_t = arma::ones(K, nReads);
+    arma::ivec number_of_non_1_reads(nReads);
+    arma::imat indices_of_non_1_reads(K, nReads);
+    arma::ivec read_category(nReads);
+    //
     const bool run_pseudo_haploid = false;
     //
     //
@@ -2497,6 +2561,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         } else {
             Rcpp_make_eMatRead_t_for_gibbs_using_objects(eMatRead_t, sampleReads, hapMatcher, hapMatcherR, use_hapMatcherR, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax_local, maxDifferenceBetweenReads, use_eMatDH_special_symbols);
         }
+        rcpp_evaluate_read_variability(eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, read_category);
         //
         //
         //
@@ -2617,6 +2682,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         i_gibbs_samplings, n_gibbs_starts, i_result_it, ff,
                         record_read_set, rlc, H_class, class_sum_cutoff,
                         run_fb_grid_offset, prior_probs, per_it_likelihoods, grid_has_read,
+                        number_of_non_1_reads, indices_of_non_1_reads, read_category,
                         gibbs_initialize_iteratively, first_read_for_gibbs_initialization,
                         do_block_resampling, artificial_relabel, sample_is_diploid
                     );
@@ -2949,3 +3015,6 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     //
     return(to_return);
 }
+
+
+

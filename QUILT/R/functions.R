@@ -2283,7 +2283,7 @@ impute_one_sample <- function(
     }
     param_list <- list(
         return_alpha = FALSE,
-        return_extra = FALSE,
+        return_extra = return_extra,
         return_genProbs = return_genProbs,
         return_gamma = as.logical(return_gamma | make_plots),
         return_hapProbs = as.logical(return_hapProbs | make_plots),

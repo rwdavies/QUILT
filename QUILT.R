@@ -505,6 +505,12 @@ option_list <- list(
         type = "character",
         help = "Which heuristic to use [default 'A'] ",
         default = 'A'
+    ), 
+    make_option(
+        "--use_list_of_columns_of_A",
+        type = "logical",
+        help = "If when using mspbwt, use columns of A rather than the whole thing, to speed up this version [default TRUE    ] ",
+        default = TRUE    
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -594,5 +600,6 @@ QUILT(
     impute_rare_common = opt$impute_rare_common,
     rare_af_threshold = opt$rare_af_threshold,
     make_heuristic_plot = opt$make_heuristic_plot,
-    heuristic_approach = opt$heuristic_approach
+    heuristic_approach = opt$heuristic_approach,
+    use_list_of_columns_of_A = opt$use_list_of_columns_of_A
 )

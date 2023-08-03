@@ -186,6 +186,12 @@ option_list <- list(
         type = "double",
         help = "Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common [default 0.0001] ",
         default = 0.0001
+    ), 
+    make_option(
+        "--use_list_of_columns_of_A",
+        type = "logical",
+        help = "If when using mspbwt, use columns of A rather than the whole thing, to speed up this version [default TRUE] ",
+        default = TRUE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -222,5 +228,6 @@ QUILT_prepare_reference(
     use_hapMatcherR = opt$use_hapMatcherR,
     mspbwtB = opt$mspbwtB,
     impute_rare_common = opt$impute_rare_common,
-    rare_af_threshold = opt$rare_af_threshold
+    rare_af_threshold = opt$rare_af_threshold,
+    use_list_of_columns_of_A = opt$use_list_of_columns_of_A
 )
