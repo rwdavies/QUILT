@@ -232,7 +232,8 @@ test_that("can skip reads and more efficiently calculate probabilities for gibbs
         use_small_eHapsCurrent_tc = TRUE,
         sample_is_diploid = TRUE,
         update_in_place = FALSE,
-        do_shard_ff0_block_gibbs = TRUE
+        do_shard_ff0_block_gibbs = TRUE,
+        force_reset_read_category_zero = FALSE
     )
 
 

@@ -2301,7 +2301,8 @@ impute_one_sample <- function(
         use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
         sample_is_diploid = sample_is_diploid,
         update_in_place = FALSE,
-        do_shard_ff0_block_gibbs = TRUE
+        do_shard_ff0_block_gibbs = TRUE,
+        force_reset_read_category_zero = FALSE
     )
     ## use_provided_small_eHapsCurrent_tc = use_provided_small_eHapsCurrent_tc
     ## this should catch hopefully rare underflow problems and re-run the samples

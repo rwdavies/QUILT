@@ -302,6 +302,8 @@ void rcpp_evaluate_read_variability(
             read_category(iRead) = 2;
         } else if (number_of_non_1_reads(iRead) < thresh2) {
             read_category(iRead) = 3;
+        } else {
+            read_category(iRead) = 0;
         }
     }
     return;
@@ -2324,7 +2326,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool rescale_eMatRead_t = true,
     const double block_gibbs_quantile_prob = 0.9,
     const bool use_eMatDH_special_symbols = true,
-    bool ff0_shard_check_every_pair = false    
+    bool ff0_shard_check_every_pair = false
 ) {
     //
     //
@@ -2378,6 +2380,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool sample_is_diploid = as<bool>(param_list["sample_is_diploid"]);        
     const bool update_in_place = as<bool>(param_list["update_in_place"]);
     const bool do_shard_ff0_block_gibbs = as<bool>(param_list["do_shard_ff0_block_gibbs"]);
+    const bool force_reset_read_category_zero = as<bool>(param_list["force_reset_read_category_zero"]);
     //const bool use_provided_small_eHapsCurrent_tc = as<bool>(param_list["use_provided_small_eHapsCurrent_tc"]);
     //
     //
@@ -2522,7 +2525,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         gamma2_t = arma::zeros(K, nGrids);        
         gamma3_t = arma::zeros(K, nGrids);
     }
-    int iGrid;
+    int iGrid, iRead;
     //
     //
     //
@@ -2633,7 +2636,17 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         } else {
             Rcpp_make_eMatRead_t_for_gibbs_using_objects(eMatRead_t, sampleReads, hapMatcher, hapMatcherR, use_hapMatcherR, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax_local, maxDifferenceBetweenReads, use_eMatDH_special_symbols);
         }
+        next_section="Evaluate read variability";
+        prev=print_times(prev, suppressOutput, prev_section, next_section);
+        prev_section=next_section;
         rcpp_evaluate_read_variability(eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, read_category);
+        if (force_reset_read_category_zero) {
+            for(iRead = 0; iRead < nReads; iRead++) {
+                if (read_category[iRead] != 1) {
+                    read_category[iRead] = 0;
+                }
+            }
+        }
         //
         //
         //

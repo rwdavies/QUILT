@@ -149,7 +149,7 @@ forwardBackwardGibbsNIPT <- function(
     read_category <- outR[["read_category"]]
     ##
     if (force_reset_read_category_zero) {
-        read_category[read_category == 2L] <- 0L
+        read_category[read_category != 1L] <- 0L
     }
     ##
     to_return <- list()
