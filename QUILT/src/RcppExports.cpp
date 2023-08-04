@@ -957,6 +957,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcpp_evaluate_read_probabilities
+Rcpp::List rcpp_evaluate_read_probabilities(arma::mat& alphaHat_m, arma::mat& betaHat_m, arma::mat& ab_m, Rcpp::NumericVector& pC, Rcpp::NumericVector& pA1, Rcpp::NumericVector& pA2, arma::ivec& read_category, int iRead, int h_rC, int h_rA1, int h_rA2, const arma::mat& eMatRead_t, arma::ivec& number_of_non_1_reads, arma::imat& indices_of_non_1_reads, bool sample_is_diploid);
+RcppExport SEXP _QUILT_rcpp_evaluate_read_probabilities(SEXP alphaHat_mSEXP, SEXP betaHat_mSEXP, SEXP ab_mSEXP, SEXP pCSEXP, SEXP pA1SEXP, SEXP pA2SEXP, SEXP read_categorySEXP, SEXP iReadSEXP, SEXP h_rCSEXP, SEXP h_rA1SEXP, SEXP h_rA2SEXP, SEXP eMatRead_tSEXP, SEXP number_of_non_1_readsSEXP, SEXP indices_of_non_1_readsSEXP, SEXP sample_is_diploidSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_m(alphaHat_mSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_m(betaHat_mSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type ab_m(ab_mSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type pC(pCSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type pA1(pA1SEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type pA2(pA2SEXP);
+    Rcpp::traits::input_parameter< arma::ivec& >::type read_category(read_categorySEXP);
+    Rcpp::traits::input_parameter< int >::type iRead(iReadSEXP);
+    Rcpp::traits::input_parameter< int >::type h_rC(h_rCSEXP);
+    Rcpp::traits::input_parameter< int >::type h_rA1(h_rA1SEXP);
+    Rcpp::traits::input_parameter< int >::type h_rA2(h_rA2SEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type eMatRead_t(eMatRead_tSEXP);
+    Rcpp::traits::input_parameter< arma::ivec& >::type number_of_non_1_reads(number_of_non_1_readsSEXP);
+    Rcpp::traits::input_parameter< arma::imat& >::type indices_of_non_1_reads(indices_of_non_1_readsSEXP);
+    Rcpp::traits::input_parameter< bool >::type sample_is_diploid(sample_is_diploidSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_evaluate_read_probabilities(alphaHat_m, betaHat_m, ab_m, pC, pA1, pA2, read_category, iRead, h_rC, h_rA1, h_rA2, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, sample_is_diploid));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_simple_binary_search
 int rcpp_simple_binary_search(int val, Rcpp::IntegerVector vec);
 RcppExport SEXP _QUILT_rcpp_simple_binary_search(SEXP valSEXP, SEXP vecSEXP) {
@@ -1561,6 +1586,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_gibbs_nipt_iterate", (DL_FUNC) &_QUILT_rcpp_gibbs_nipt_iterate, 58},
     {"_QUILT_rcpp_fly_weighter", (DL_FUNC) &_QUILT_rcpp_fly_weighter, 14},
     {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 65},
+    {"_QUILT_rcpp_evaluate_read_probabilities", (DL_FUNC) &_QUILT_rcpp_evaluate_read_probabilities, 15},
     {"_QUILT_rcpp_simple_binary_search", (DL_FUNC) &_QUILT_rcpp_simple_binary_search, 2},
     {"_QUILT_rcpp_simple_binary_matrix_search", (DL_FUNC) &_QUILT_rcpp_simple_binary_matrix_search, 4},
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 16},

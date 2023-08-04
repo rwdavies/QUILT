@@ -2039,42 +2039,10 @@ evaluate_read_probabilities <- function(
     number_of_non_1_reads,
     indices_of_non_1_reads
 ) {
-
-##     if (iRead == 3) {
-##         save(
-##     alphaHat_m,
-##     betaHat_m,
-##     pC,
-##     read_category,
-##     iRead,
-##     h_rC,
-##     h_rA1,
-##     h_rA2,
-##     eMatRead_t,
-##     number_of_non_1_reads,
-##     indices_of_non_1_reads,
-##     file = "~/temp.RData")
-##         ## print('done saving')
-## ## sum(ab_m.col(h_rC) / eMatRead_t_col)
-## ## 12497.9
-## ##         sum(alphaHat_m[h_rC, ] * betaHat_m[h_rC, ] / eMatRead_t[ , iRead])
-## ##         12497.89
-        
-## ##         sum(ab_m.col(h_rA1) % eMatRead_t_col)
-## ## 0.00367375
-## ##         sum(alphaHat_m[h_rA1, ] * betaHat_m[h_rA1, ] * eMatRead_t[ , iRead])
-## ## 0.00367375
-##         pA1[2]
-##         101015.2
-##         quite different 
-    ##     }
-    
     ## need same three probabilities for flip 1, flip 2
     pA1 <- pC ## read label becomes h_rA1
     pA2 <- pC ## read label becomes h_rA2
-    
     if (read_category[iRead] == 0L) {
-        
         ## default behaviour
         pA1[c(h_rC, h_rA1)] <- 0
         pA2[c(h_rC, h_rA2)] <- 0

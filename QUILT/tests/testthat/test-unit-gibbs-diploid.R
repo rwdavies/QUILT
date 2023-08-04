@@ -64,6 +64,8 @@ test_that("subtraction approach works", {
     
     ## 
     pC <- rowSums(alphaHat_m * betaHat_m)
+    ab_m <- t(alphaHat_m * betaHat_m)
+
     for(iii in 1:6) {
         
         if (iii == 1) { h <- c(1, 2, 3) }
@@ -82,18 +84,43 @@ test_that("subtraction approach works", {
         ## recall 0 = normal
         read_category <- 0L
         out0 <- evaluate_read_probabilities(alphaHat_m, betaHat_m, pC, read_category, iRead, h_rC, h_rA1, h_rA2, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads)
+
+        ## rcpp 
+        rcpp0_pA1 <- numeric(3)
+        rcpp0_pA2 <- numeric(3)
+        rcpp_evaluate_read_probabilities(alphaHat_m, betaHat_m, ab_m, pC, rcpp0_pA1, rcpp0_pA2, read_category, iRead - 1, h_rC - 1, h_rA1 - 1, h_rA2 - 1, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, FALSE)
         
         ## 2 = subraction, same vals
         read_category <- 2L
         out2 <- evaluate_read_probabilities(alphaHat_m, betaHat_m, pC, read_category, iRead, h_rC, h_rA1, h_rA2, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads)
+
+        ## rcpp
+        rcpp2_pA1 <- numeric(3)
+        rcpp2_pA2 <- numeric(3)
+        rcpp_evaluate_read_probabilities(alphaHat_m, betaHat_m, ab_m, pC, rcpp2_pA1, rcpp2_pA2, read_category, iRead - 1, h_rC - 1, h_rA1 - 1, h_rA2 - 1, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, FALSE)
         
         ## 3 = subraction
         read_category <- 3L
         out3 <- evaluate_read_probabilities(alphaHat_m, betaHat_m, pC, read_category, iRead, h_rC, h_rA1, h_rA2, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads)
-        
+
+        ## rcpp
+        rcpp3_pA1 <- numeric(3)
+        rcpp3_pA2 <- numeric(3)
+        rcpp_evaluate_read_probabilities(alphaHat_m, betaHat_m, ab_m, pC, rcpp3_pA1, rcpp3_pA2, read_category, iRead - 1, h_rC - 1, h_rA1 - 1, h_rA2 - 1, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, FALSE)
+
         expect_equal(out0, out2)
         expect_equal(out0, out3)
+        
+        expect_equivalent(out0[["pA1"]], rcpp0_pA1)
+        expect_equivalent(out0[["pA2"]], rcpp0_pA2)
+        
+        expect_equivalent(out0[["pA1"]], rcpp2_pA1)
+        expect_equivalent(out0[["pA2"]], rcpp2_pA2)
 
+        expect_equivalent(out0[["pA1"]], rcpp3_pA1)
+        expect_equivalent(out0[["pA2"]], rcpp3_pA2)
+
+        
     }
 
 })
@@ -101,6 +128,7 @@ test_that("subtraction approach works", {
 
 test_that("can skip reads and more efficiently calculate probabilities for gibbs sampling, specifically diploid", {
 
+    
     ## have test package
     ## have R version
     ## have Rcpp version
@@ -120,7 +148,6 @@ test_that("can skip reads and more efficiently calculate probabilities for gibbs
     )
     eMatRead_t <- test_package$list_of_eMatRead_t[[1]]
     outR <- evaluate_read_variability(eMatRead_t)
-
     
     ## require sufficiently diverse
     expect_equal(sort(unique(outR[["read_category"]])), 0:3)    
