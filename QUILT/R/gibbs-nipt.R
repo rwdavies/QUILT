@@ -61,7 +61,8 @@ forwardBackwardGibbsNIPT <- function(
     perform_block_gibbs = FALSE,
     shuffle_bin_radius = NULL,
     block_gibbs_iterations = NULL,
-    return_gibbs_block_output = NULL
+    return_gibbs_block_output = NULL,
+    force_reset_read_category_zero = TRUE
 ) {
     if (!is.na(seed)) {
         set.seed(seed)
@@ -146,6 +147,10 @@ forwardBackwardGibbsNIPT <- function(
     number_of_non_1_reads <- outR[["number_of_non_1_reads"]]
     indices_of_non_1_reads <- outR[["indices_of_non_1_reads"]]
     read_category <- outR[["read_category"]]
+    ##
+    if (force_reset_read_category_zero) {
+        read_category[read_category == 2L] <- 0L
+    }
     ##
     to_return <- list()
     if (return_extra) {
@@ -730,6 +735,20 @@ gibbs_nipt_one_iteration <- function(
                     print(chance)
                     stop("bad h_rN")
                 }
+                ## if (iRead == 4) {
+                ##     print(alphaHat_m[, 1:5])
+                ##     print(betaHat_m[, 1:5])
+                ##     print(paste0("iRead = ", iRead, ", read_category(iRead) = ", read_category[iRead]))
+                ##     print(paste0("h_rC = ", h_rC, ", h_rN = ", h_rN))
+                ##     print(paste0("chance = ", chance))
+                ##     ##     print(paste0("cumsum_flip_probs = ", cumsum_flip_probs, collapse = ", "))
+                ##     print(paste0("norm_pC = ", paste0(norm_pC, collapse = ", ")))
+                ##     print(paste0("norm_pA1 = ", paste0(norm_pA1, collapse = ", ")))
+                ##     print(paste0("pC = ", paste0(pC, collapse = ", ")))
+                ##     print(paste0("pA1 = ", paste0(pA1, collapse = ", ")))
+                ##     ##     print(paste0("prior_probs = ", paste0(prior_probs, collapse = ", ")))
+                ##     ##
+                ## }
                 ##
                 if (
                 ((h_rN != h_rC) | currently_doing_gibbs_initialization) & (!currently_doing_pass_through)
@@ -782,7 +801,7 @@ gibbs_nipt_one_iteration <- function(
                     ## }
                 }
                 ##
-                ## 
+                ##
                 ##
                 if ((sum(pC > 1*10**50) > 0) | (sum(pC < 1*10**(-50)) > 0)) {
                     if (verbose) {
@@ -1961,6 +1980,7 @@ evaluate_read_variability <- function(eMatRead_t) {
     number_of_non_1_reads <- integer(nReads)
     indices_of_non_1_reads <- array(0, c(K, nReads))
     thresh <- 1 - 1e-12
+    thresh2 <- as.integer(floor(K * 0.20)) ## threshold for "few" subtractions to do
     ## category 0 = normal (full mult)
     ## category 1 = can skip completely (all 1s)
     ## category 2 = subraction of specific entries, all with the same value (one non-1 value seen)
@@ -1975,8 +1995,10 @@ evaluate_read_variability <- function(eMatRead_t) {
             if (eMatRead_t[k, iRead] < (thresh)) {
                 indices_of_non_1_reads[c, iRead] <- k - 1 ## make 0-based
                 c <- c + 1
-                if (val != -1) {
-                    if (val != eMatRead_t[k, iRead]) {
+                if (val == -1) {
+                    val <- eMatRead_t[k, iRead]
+                } else {
+                    if (eMatRead_t[k, iRead] != val) {
                         more_than_two <- TRUE
                     }
                 }
@@ -1987,6 +2009,8 @@ evaluate_read_variability <- function(eMatRead_t) {
             read_category[iRead] <- 1L
         } else if (!more_than_two) {
             read_category[iRead] <- 2L
+        } else if (number_of_non_1_reads[iRead] < thresh2) {
+            read_category[iRead] <- 3L
         } else {
             read_category[iRead] <- 0L
         }
@@ -2002,11 +2026,55 @@ evaluate_read_variability <- function(eMatRead_t) {
 
 
 
-evaluate_read_probabilities <- function(alphaHat_m, betaHat_m, pC, read_category, iRead, h_rC, h_rA1, h_rA2, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads) {
+evaluate_read_probabilities <- function(
+    alphaHat_m,
+    betaHat_m,
+    pC,
+    read_category,
+    iRead,
+    h_rC,
+    h_rA1,
+    h_rA2,
+    eMatRead_t,
+    number_of_non_1_reads,
+    indices_of_non_1_reads
+) {
+
+##     if (iRead == 3) {
+##         save(
+##     alphaHat_m,
+##     betaHat_m,
+##     pC,
+##     read_category,
+##     iRead,
+##     h_rC,
+##     h_rA1,
+##     h_rA2,
+##     eMatRead_t,
+##     number_of_non_1_reads,
+##     indices_of_non_1_reads,
+##     file = "~/temp.RData")
+##         ## print('done saving')
+## ## sum(ab_m.col(h_rC) / eMatRead_t_col)
+## ## 12497.9
+## ##         sum(alphaHat_m[h_rC, ] * betaHat_m[h_rC, ] / eMatRead_t[ , iRead])
+## ##         12497.89
+        
+## ##         sum(ab_m.col(h_rA1) % eMatRead_t_col)
+## ## 0.00367375
+## ##         sum(alphaHat_m[h_rA1, ] * betaHat_m[h_rA1, ] * eMatRead_t[ , iRead])
+## ## 0.00367375
+##         pA1[2]
+##         101015.2
+##         quite different 
+    ##     }
+    
     ## need same three probabilities for flip 1, flip 2
     pA1 <- pC ## read label becomes h_rA1
     pA2 <- pC ## read label becomes h_rA2
+    
     if (read_category[iRead] == 0L) {
+        
         ## default behaviour
         pA1[c(h_rC, h_rA1)] <- 0
         pA2[c(h_rC, h_rA2)] <- 0
@@ -2021,6 +2089,7 @@ evaluate_read_probabilities <- function(alphaHat_m, betaHat_m, pC, read_category
         }
         ## A2 loser
         pA2[h_rC] <- pA1[h_rC]
+        
     } else if (read_category[iRead] == 2L) {
         ##
         ## subtraction based approach, all the same

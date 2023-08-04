@@ -180,14 +180,15 @@ make_quilt_fb_test_package <- function(
         if (simple_ematread && gridWindowSize == 32) {
             for(iGrid in 1:nGrids) {
                 w <- 1:32 + 32 * (iGrid - 1)
-                x <- rpois(1, 1) + 1 ## how many distinct haps
-                y <- matrix(sample(c(0, 1), x * 32, prob = c(0.9, 0.1), replace = TRUE), x, 32)
-                w2 <- sample(1:x, K, replace =  TRUE)
+                x <- rpois(1, 3) + 1 ## how many distinct haps
+                y <- matrix(sample(c(0, 1), x * 32, prob = c(0.90, 0.10), replace = TRUE), x, 32)
+                prob <- c(1, rep(0.1, x - 1))                
+                w2 <- sample(1:x, K, replace =  TRUE, prob = prob / sum(prob))
                 eHapsCurrent_tc[, w, s] <- y[w2, ]
             }
         }
-        m <- array(runif(K * (nGrids - 1)), c(K, (nGrids - 1)))
-        alphaMatCurrent_tc[, , s] <- t(t(m) / colSums(m))
+        ## m <- array(runif(K * (nGrids - 1)), c(K, (nGrids - 1)))
+        alphaMatCurrent_tc[, , s] <- 1 / K
     }
     sigmaCurrent_m <- array(0.9 + 0.1 * runif((nGrids - 1) * S), c(nGrids - 1, S))
     priorCurrent_m <- array(1 / K, c(K, S))

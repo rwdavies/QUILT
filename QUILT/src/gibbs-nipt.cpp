@@ -275,6 +275,8 @@ void rcpp_evaluate_read_variability(
     //number_of_non_1_reads <- integer(nReads)
     //indices_of_non_1_reads <- array(0, c(K, nReads))
     double thresh = 1 - pow(10, -12);
+    int thresh2 = K * 0.20;
+    //std::cout << "thresh2 = " << thresh2 << std::endl;
     read_category.fill(0);
     for(int iRead = 0; iRead < nReads; iRead++) {
         int c = 0;
@@ -284,7 +286,9 @@ void rcpp_evaluate_read_variability(
             if (eMatRead_t(k, iRead) < thresh) {
                 indices_of_non_1_reads(c, iRead) = k;
                 c++;
-                if (val != -1) {
+                if (val == -1) {
+                    val = eMatRead_t(k, iRead);
+                } else {
                     if (val != eMatRead_t(k, iRead)) {
                         more_than_two = true;
                     }
@@ -296,8 +300,8 @@ void rcpp_evaluate_read_variability(
             read_category(iRead) = 1;
         } else if (!more_than_two) {
             read_category(iRead) = 2;
-        } else {
-            read_category(iRead) = 0;
+        } else if (number_of_non_1_reads(iRead) < thresh2) {
+            read_category(iRead) = 3;
         }
     }
     return;
@@ -732,9 +736,7 @@ void sample_reads_in_grid(
         //
         // do not bother if read is unavoidable (ONLY do for sample_is_diploid)
         //
-        std::cout << "iRead = " << iRead << ", read_category(iRead) = " << read_category(iRead) << ", H(iRead) = " << H(iRead) << std::endl;
         if (sample_is_diploid && read_category(iRead) != 1) {
-            std::cout << "gone in! " << std::endl;            
             //
             // determine type of iteration
             //
@@ -930,6 +932,32 @@ void sample_reads_in_grid(
             }
             //
             //
+            // if (iRead == 2) {
+            //     std::cout << "iRead = " << iRead << ", read_category(iRead) = " << read_category(iRead) << std::endl;
+            //     std::cout << "h_rC = " << h_rC << ", h_rN = " << h_rN << std::endl;;
+            //     std::cout << "chance = " << chance << std::endl;
+            //     std::cout << "norm_pC = " << norm_pC << std::endl;
+            //     std::cout << "norm_pA1 = " << norm_pA1 << std::endl;
+            //     std::cout << "pC = " << pC << std::endl;
+            //     std::cout << "pA1 = " << pA1 << std::endl;
+            //     std::cout << "prior_probs = " << prior_probs << std::endl;
+            //     // std::cout << "sum(ab_m.col(h_rC) / eMatRead_t_col)" << std::endl;                
+            //     // std::cout << sum(ab_m.col(h_rC) / eMatRead_t_col) << std::endl;
+            //     // std::cout << "ab_m.col(h_rC) / eMatRead_t_col" << std::endl;                
+            //     // std::cout << ab_m.col(h_rC) / eMatRead_t_col << std::endl;
+            //     // std::cout << "sum(ab_m.col(h_rA1) % eMatRead_t_col)" << std::endl;
+            //     // std::cout << sum(ab_m.col(h_rA1) % eMatRead_t_col) << std::endl;                                
+            //     // std::cout << "ab_m.col(h_rA1) % eMatRead_t_col" << std::endl;
+            //     // std::cout << ab_m.col(h_rA1) % eMatRead_t_col << std::endl;                                
+            // }
+            // if (iRead == 3) {
+            //     std::cout << "h_rC = " << h_rC << ", h_rN = " << h_rN << std::endl;;
+            //     std::cout << "chance = " << chance << std::endl;
+            //     std::cout << "norm_pC = " << norm_pC << std::endl;
+            //     std::cout << "norm_pA1 = " << norm_pA1 << std::endl;
+            //     std::cout << "pC = " << pC << std::endl;
+            //     std::cout << "pA1 = " << pA1 << std::endl;
+            // }
             //
             if (
                 ((h_rN != h_rC) | currently_doing_gibbs_initialization) & (!currently_doing_pass_through)
