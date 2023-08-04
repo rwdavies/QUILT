@@ -391,9 +391,8 @@ select_new_haps_mspbwt_v3 <- function(
         ##
         results <- lapply(out, function(mtm) {
             ## m <- max(mtm[, "end1"])
-            m <- nrow(mtm)
-            weight <- numeric(m)
-            cur_sum <- numeric(m)
+            weight <- numeric(nrow(mtm))
+            cur_sum <- numeric(max(mtm[, "end1"]))
             cur_sum[] <- 1
             for(i in 1:nrow(mtm)) {
                 s <- mtm[i, "start1"]
