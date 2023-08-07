@@ -15,7 +15,7 @@ if ( 1 == 0 ) {
 
 
 
-test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
+test_that("can avoid using eHapsCurrent_tc and gammas in genProbs calculation", {
 
     set.seed(12)
 
@@ -53,15 +53,38 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
 
     ##
     f <- function() {
-        gammaMT_t <- array(runif(K * nGrids), c(Ksmall, nGrids))
-        for(iGrid in 1:nGrids) {
-            gammaMT_t[, iGrid] <- gammaMT_t[, iGrid] / sum(gammaMT_t[, iGrid])
-        }
-        gammaMT_t
+        alphaHat_t <- array(runif(Ksmall * nGrids), c(Ksmall, nGrids))
+        betaHat_t <- array(runif(Ksmall * nGrids), c(Ksmall, nGrids))
+        gammaMT_t <- alphaHat_t * betaHat_t
+        c <- colSums(gammaMT_t)
+        gammaMT_t <- gammaMT_t / rep(c, each = nrow(gammaMT_t))
+        stopifnot(abs(colSums(gammaMT_t)  - 1) < 1e-10)
+        return(list(alphaHat_t, betaHat_t, c, gammaMT_t))
     }
-    gammaMT_t <- f()
-    gammaMU_t <- f()
-    gammaP_t <- f()
+    
+    out1 <- f()
+    alphaHat_t1 <- out1[[1]]
+    betaHat_t1 <- out1[[2]]
+    c1 <- out1[[3]]
+    gamma_t1 <- out1[[4]]
+
+    out2 <- f()
+    alphaHat_t2 <- out2[[1]]
+    betaHat_t2 <- out2[[2]]
+    c2 <- out2[[3]]
+    gamma_t2 <- out2[[4]]
+
+    out3 <- f()
+    alphaHat_t3 <- out3[[1]]
+    betaHat_t3 <- out3[[2]]
+    c3 <- out3[[3]]
+    gamma_t3 <- out3[[4]]
+    
+    ## also
+    gammaMT_t <- gamma_t1
+    gammaMU_t <- gamma_t2
+    gammaP_t <- gamma_t3
+    
     ## this is on subse
     small_eHapsCurrent_tc <- array(NA, c(Ksmall, nSNPs, 1))
     small_eHapsCurrent_tc[, , 1] <- rhi_t[which_haps_to_use, ]
@@ -131,29 +154,55 @@ test_that("can avoid using eHapsCurrent_tc in genProbs calculation", {
 
         for(use_hapMatcherR in c(FALSE, TRUE)) {
 
-            rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
-                genProbsM_t = genProbsM_t_new,
-                genProbsF_t = genProbsF_t_new,
-                hapProbs_t = hapProbs_t_new,
-                gammaMT_t = gammaMT_t,
-                gammaMU_t = gammaMU_t,
-                gammaP_t = gammaP_t,
-                hapMatcher = hapMatcher,
-                hapMatcherR = hapMatcherR,
-                use_hapMatcherR = use_hapMatcherR,
-                distinctHapsB = distinctHapsB,
-                distinctHapsIE = distinctHapsIE,
-                which_haps_to_use = which_haps_to_use,
-                ref_error = ref_error,
-                rhb_t = rhb_t,
-                eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
-                eMatDH_special_matrix = eMatDH_special_matrix,
-                use_eMatDH_special_symbols = use_eMatDH_special_symbols
-            )
+            for(calculate_gamma_on_the_fly in c(FALSE, TRUE)) {
 
-            expect_equal( hapProbs_t_new, hapProbs_t)
-            expect_equal( genProbsM_t_new, genProbsM_t)
-            expect_equal( genProbsF_t_new, genProbsF_t)
+                if (calculate_gamma_on_the_fly) {
+                    alphaHat_t1 <- out1[[1]];     betaHat_t1 <- out1[[2]];     c1 <- out1[[3]];     gamma_t1 <- out1[[4]]
+                    alphaHat_t2 <- out2[[1]];    betaHat_t2 <- out2[[2]];     c2 <- out2[[3]];     gamma_t2 <- out2[[4]]
+                    alphaHat_t3 <- out3[[1]];     betaHat_t3 <- out3[[2]];     c3 <- out3[[3]];     gamma_t3 <- out3[[4]]
+                    gammaMT <- array(0, c(1, 1)); gammaMU_t <- array(0, c(1, 1)); gammaP_t <- array(0, c(1, 1));                    
+                } else {
+                    alphaHat_t1 <- array(0, c(1, 1)); betaHat_t1 <- array(0, c(1, 1)); c1 <- array(0, 1)
+                    alphaHat_t2 <- array(0, c(1, 1)); betaHat_t2 <- array(0, c(1, 1)); c2 <- array(0, 1)
+                    alphaHat_t3 <- array(0, c(1, 1)); betaHat_t3 <- array(0, c(1, 1)); c3 <- array(0, 1)
+                    gammaMT <- out1[[4]]; gammaMU_t <- out2[[4]]; gammaP_t <- out3[[4]]
+                }
+
+                rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
+                    alphaHat_t1 = alphaHat_t1,
+                    alphaHat_t2 = alphaHat_t2,
+                    alphaHat_t3 = alphaHat_t3,     
+                    betaHat_t1 = betaHat_t1,
+                    betaHat_t2 = betaHat_t2, 
+                    betaHat_t3 = betaHat_t3,
+                    c1 = c1,
+                    c2 = c2,
+                    c3 = c3,
+                    genProbsM_t = genProbsM_t_new,
+                    genProbsF_t = genProbsF_t_new,
+                    hapProbs_t = hapProbs_t_new,
+                    gammaMT_t = gammaMT_t,
+                    gammaMU_t = gammaMU_t,
+                    gammaP_t = gammaP_t,
+                    hapMatcher = hapMatcher,
+                    hapMatcherR = hapMatcherR,
+                    use_hapMatcherR = use_hapMatcherR,
+                    distinctHapsB = distinctHapsB,
+                    distinctHapsIE = distinctHapsIE,
+                    which_haps_to_use = which_haps_to_use,
+                    ref_error = ref_error,
+                    rhb_t = rhb_t,
+                    eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                    eMatDH_special_matrix = eMatDH_special_matrix,
+                    use_eMatDH_special_symbols = use_eMatDH_special_symbols,
+                    calculate_gamma_on_the_fly = calculate_gamma_on_the_fly
+                )
+                
+                expect_equal( hapProbs_t_new, hapProbs_t)
+                expect_equal( genProbsM_t_new, genProbsM_t)
+                expect_equal( genProbsF_t_new, genProbsF_t)
+
+            }
 
         }
 

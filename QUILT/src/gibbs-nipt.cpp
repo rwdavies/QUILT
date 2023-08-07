@@ -62,6 +62,15 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
 );
 
 void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
+    arma::mat& alphaHat_t1,
+    arma::mat& alphaHat_t2,
+    arma::mat& alphaHat_t3,     
+    arma::mat& betaHat_t1,
+    arma::mat& betaHat_t2, 
+    arma::mat& betaHat_t3,
+    arma::rowvec& c1,
+    arma::rowvec& c2,
+    arma::rowvec& c3,
     arma::mat& genProbsM_t,
     arma::mat& genProbsF_t,    
     arma::mat& hapProbs_t,
@@ -78,7 +87,8 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
     const Rcpp::IntegerVector& which_haps_to_use,
     const double ref_error,
     const arma::imat& rhb_t,
-    const bool use_eMatDH_special_symbols
+    const bool use_eMatDH_special_symbols,
+    const bool calculate_gamma_on_the_fly
 );
 
 void rcpp_make_eMatGrid_t(
@@ -2094,6 +2104,7 @@ Rcpp::NumericMatrix unpack_gammas(
     const Rcpp::NumericVector prior_probs,
     Rcpp::NumericVector& hg_log_mult,
     Rcpp::NumericVector& hg_ll_rescaled,
+    const bool calculate_gamma_on_the_fly,
     const int log_mult_max = 40
 ) {
     //
@@ -2132,49 +2143,51 @@ Rcpp::NumericMatrix unpack_gammas(
     prev=print_times(prev, suppressOutput, prev_section, next_section);
     prev_section=next_section;
     // if diagonals are all close to 1, skip this step
-    if (
-        (hap_label_prob_matrix(0, 0) > 0.99) &&
-        (hap_label_prob_matrix(1, 1) > 0.99) &&
-        (hap_label_prob_matrix(2, 2) > 0.99)
-    ) {
-        //
-        gammaMT_t_local = alphaHat_t1 % betaHat_t1;
-        for(iGrid = 0; iGrid < nGrids; iGrid++) {
-            g_temp = 1 / c1(iGrid);
-            gammaMT_t_local.col(iGrid) *= g_temp;
-        }
-        gammaMU_t_local = alphaHat_t2 % betaHat_t2;
-        for(iGrid = 0; iGrid < nGrids; iGrid++) {
-            g_temp = 1 / c2(iGrid);
-            gammaMU_t_local.col(iGrid) *= g_temp;
-        }
-        gammaP_t_local = alphaHat_t3 % betaHat_t3;
-        for(iGrid = 0; iGrid < nGrids; iGrid++) {
-            g_temp = 1 / c3(iGrid);
-            gammaP_t_local.col(iGrid) *= g_temp;
-        }
-    } else {
-        // ugh, see + vs += below...
-        for(iGrid = 0; iGrid < nGrids; iGrid++) {
-            g_temp = 1 / c1(iGrid);        
-            gamma_col = (alphaHat_t1.col(iGrid) % betaHat_t1.col(iGrid)) * g_temp;
-            gammaMT_t_local.col(iGrid) = hap_label_prob_matrix(0, 0) * gamma_col;
-            gammaMU_t_local.col(iGrid) = hap_label_prob_matrix(1, 0) * gamma_col;
-            gammaP_t_local.col(iGrid) = hap_label_prob_matrix(2, 0) * gamma_col;
-        }
-        for(iGrid = 0; iGrid < nGrids; iGrid++) {
-            g_temp = 1 / c2(iGrid);        
-            gamma_col = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * g_temp;
-            gammaMT_t_local.col(iGrid) += hap_label_prob_matrix(0, 1) * gamma_col;
-            gammaMU_t_local.col(iGrid) += hap_label_prob_matrix(1, 1) * gamma_col;
-            gammaP_t_local.col(iGrid) += hap_label_prob_matrix(2, 1) * gamma_col;
-        }
-        for(iGrid = 0; iGrid < nGrids; iGrid++) {
-            g_temp = 1 / c3(iGrid);        
-            gamma_col = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * g_temp;
-            gammaMT_t_local.col(iGrid) += hap_label_prob_matrix(0, 2) * gamma_col;
-            gammaMU_t_local.col(iGrid) += hap_label_prob_matrix(1, 2) * gamma_col;
-            gammaP_t_local.col(iGrid) += hap_label_prob_matrix(2, 2) * gamma_col;
+    if (!calculate_gamma_on_the_fly) {
+        if (
+            (hap_label_prob_matrix(0, 0) > 0.99) &&
+            (hap_label_prob_matrix(1, 1) > 0.99) &&
+            (hap_label_prob_matrix(2, 2) > 0.99)
+            ) {
+            //
+            gammaMT_t_local = alphaHat_t1 % betaHat_t1;
+            for(iGrid = 0; iGrid < nGrids; iGrid++) {
+                g_temp = 1 / c1(iGrid);
+                gammaMT_t_local.col(iGrid) *= g_temp;
+            }
+            gammaMU_t_local = alphaHat_t2 % betaHat_t2;
+            for(iGrid = 0; iGrid < nGrids; iGrid++) {
+                g_temp = 1 / c2(iGrid);
+                gammaMU_t_local.col(iGrid) *= g_temp;
+            }
+            gammaP_t_local = alphaHat_t3 % betaHat_t3;
+            for(iGrid = 0; iGrid < nGrids; iGrid++) {
+                g_temp = 1 / c3(iGrid);
+                gammaP_t_local.col(iGrid) *= g_temp;
+            }
+        } else {
+            // ugh, see + vs += below...
+            for(iGrid = 0; iGrid < nGrids; iGrid++) {
+                g_temp = 1 / c1(iGrid);        
+                gamma_col = (alphaHat_t1.col(iGrid) % betaHat_t1.col(iGrid)) * g_temp;
+                gammaMT_t_local.col(iGrid) = hap_label_prob_matrix(0, 0) * gamma_col;
+                gammaMU_t_local.col(iGrid) = hap_label_prob_matrix(1, 0) * gamma_col;
+                gammaP_t_local.col(iGrid) = hap_label_prob_matrix(2, 0) * gamma_col;
+            }
+            for(iGrid = 0; iGrid < nGrids; iGrid++) {
+                g_temp = 1 / c2(iGrid);        
+                gamma_col = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * g_temp;
+                gammaMT_t_local.col(iGrid) += hap_label_prob_matrix(0, 1) * gamma_col;
+                gammaMU_t_local.col(iGrid) += hap_label_prob_matrix(1, 1) * gamma_col;
+                gammaP_t_local.col(iGrid) += hap_label_prob_matrix(2, 1) * gamma_col;
+            }
+            for(iGrid = 0; iGrid < nGrids; iGrid++) {
+                g_temp = 1 / c3(iGrid);        
+                gamma_col = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * g_temp;
+                gammaMT_t_local.col(iGrid) += hap_label_prob_matrix(0, 2) * gamma_col;
+                gammaMU_t_local.col(iGrid) += hap_label_prob_matrix(1, 2) * gamma_col;
+                gammaP_t_local.col(iGrid) += hap_label_prob_matrix(2, 2) * gamma_col;
+            }
         }
     }
     //
@@ -2193,12 +2206,15 @@ Rcpp::NumericMatrix unpack_gammas(
             );
         } else {
             rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
+                alphaHat_t1, alphaHat_t2, alphaHat_t3,     
+                betaHat_t1, betaHat_t2, betaHat_t3,
+                c1, c2, c3,
                 genProbsM_t_local, genProbsF_t_local, hapProbs_t_local,
                 gammaMT_t_local, gammaMU_t_local, gammaP_t_local,
                 hapMatcher, hapMatcherR, use_hapMatcherR,
                 distinctHapsB, distinctHapsIE,
                 eMatDH_special_matrix_helper, eMatDH_special_matrix,
-                which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols
+                which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols, calculate_gamma_on_the_fly
             );
         }
     }
@@ -2381,6 +2397,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool update_in_place = as<bool>(param_list["update_in_place"]);
     const bool do_shard_ff0_block_gibbs = as<bool>(param_list["do_shard_ff0_block_gibbs"]);
     const bool force_reset_read_category_zero = as<bool>(param_list["force_reset_read_category_zero"]);
+    const bool calculate_gamma_on_the_fly = as<bool>(param_list["calculate_gamma_on_the_fly"]);
     //const bool use_provided_small_eHapsCurrent_tc = as<bool>(param_list["use_provided_small_eHapsCurrent_tc"]);
     //
     //
@@ -2739,7 +2756,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                     previous_hap_label_prob_matrix, i_gibbs_samplings, i_result_it,
                     generate_fb_snp_offsets, haploid_gibbs_equal_weighting,
                     return_gamma, return_genProbs, return_hapProbs,
-                    prior_probs, hg_log_mult, hg_ll_rescaled
+                    prior_probs, hg_log_mult, hg_ll_rescaled,
+                    calculate_gamma_on_the_fly
                 );
                 //
                 if (!run_fb_subset) {
@@ -2907,7 +2925,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             previous_hap_label_prob_matrix, i_gibbs_samplings, i_result_it,
                             generate_fb_snp_offsets, haploid_gibbs_equal_weighting,
                             return_gamma, return_genProbs, return_hapProbs,
-                            prior_probs, hg_log_mult, hg_ll_rescaled
+                            prior_probs, hg_log_mult, hg_ll_rescaled,
+                            calculate_gamma_on_the_fly
                         );
                         list_of_ending_read_labels.push_back(Rcpp::clone(H), "H") ;
                         //

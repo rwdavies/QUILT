@@ -212,8 +212,8 @@ Rcpp_make_eMatRead_t_for_gibbs_using_objects <- function(eMatRead_t, sampleReads
 }
 
 #' @export
-rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects <- function(genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols) {
-    invisible(.Call('_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects', PACKAGE = 'QUILT', genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols))
+rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols, calculate_gamma_on_the_fly) {
+    invisible(.Call('_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols, calculate_gamma_on_the_fly))
 }
 
 #' @export

@@ -285,7 +285,8 @@ get_and_impute_one_sample <- function(
     special_rare_common_objects_per_core,    
     impute_rare_common,
     make_heuristic_plot,
-    heuristic_approach
+    heuristic_approach,
+    calculate_gamma_on_the_fly
 ) {
 
     sample_name <- sampleNames[iSample]
@@ -759,7 +760,8 @@ get_and_impute_one_sample <- function(
                 i_it = i_it,
                 i_gibbs_sample = i_gibbs_sample,
                 ff0_shard_check_every_pair = ff0_shard_check_every_pair,
-                zilong = zilong
+                zilong = zilong,
+                calculate_gamma_on_the_fly = calculate_gamma_on_the_fly                    
             )
 
             if (plot_p1) {
@@ -2241,7 +2243,8 @@ impute_one_sample <- function(
     i_it = NA,
     i_gibbs_sample = NA,
     ff0_shard_check_every_pair = FALSE,
-    zilong = FALSE
+    zilong = FALSE,
+    calculate_gamma_on_the_fly = FALSE
 ) {
     ##
     K <- length(which_haps_to_use)
@@ -2302,7 +2305,8 @@ impute_one_sample <- function(
         sample_is_diploid = sample_is_diploid,
         update_in_place = FALSE,
         do_shard_ff0_block_gibbs = TRUE,
-        force_reset_read_category_zero = FALSE
+        force_reset_read_category_zero = FALSE,
+        calculate_gamma_on_the_fly = calculate_gamma_on_the_fly
     )
     ## use_provided_small_eHapsCurrent_tc = use_provided_small_eHapsCurrent_tc
     ## this should catch hopefully rare underflow problems and re-run the samples

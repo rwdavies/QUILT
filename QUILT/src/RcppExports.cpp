@@ -1034,10 +1034,19 @@ BEGIN_RCPP
 END_RCPP
 }
 // rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects
-void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(arma::mat& genProbsM_t, arma::mat& genProbsF_t, arma::mat& hapProbs_t, const arma::mat& gammaMT_t, const arma::mat& gammaMU_t, const arma::mat& gammaP_t, const arma::imat& hapMatcher, const Rcpp::RawMatrix& hapMatcherR, bool use_hapMatcherR, const arma::imat& distinctHapsB, const arma::mat& distinctHapsIE, const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper, const Rcpp::IntegerMatrix& eMatDH_special_matrix, const Rcpp::IntegerVector& which_haps_to_use, const double ref_error, const arma::imat& rhb_t, const bool use_eMatDH_special_symbols);
-RcppExport SEXP _QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(SEXP genProbsM_tSEXP, SEXP genProbsF_tSEXP, SEXP hapProbs_tSEXP, SEXP gammaMT_tSEXP, SEXP gammaMU_tSEXP, SEXP gammaP_tSEXP, SEXP hapMatcherSEXP, SEXP hapMatcherRSEXP, SEXP use_hapMatcherRSEXP, SEXP distinctHapsBSEXP, SEXP distinctHapsIESEXP, SEXP eMatDH_special_matrix_helperSEXP, SEXP eMatDH_special_matrixSEXP, SEXP which_haps_to_useSEXP, SEXP ref_errorSEXP, SEXP rhb_tSEXP, SEXP use_eMatDH_special_symbolsSEXP) {
+void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(arma::mat& alphaHat_t1, arma::mat& alphaHat_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t1, arma::mat& betaHat_t2, arma::mat& betaHat_t3, arma::rowvec& c1, arma::rowvec& c2, arma::rowvec& c3, arma::mat& genProbsM_t, arma::mat& genProbsF_t, arma::mat& hapProbs_t, const arma::mat& gammaMT_t, const arma::mat& gammaMU_t, const arma::mat& gammaP_t, const arma::imat& hapMatcher, const Rcpp::RawMatrix& hapMatcherR, bool use_hapMatcherR, const arma::imat& distinctHapsB, const arma::mat& distinctHapsIE, const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper, const Rcpp::IntegerMatrix& eMatDH_special_matrix, const Rcpp::IntegerVector& which_haps_to_use, const double ref_error, const arma::imat& rhb_t, const bool use_eMatDH_special_symbols, const bool calculate_gamma_on_the_fly);
+RcppExport SEXP _QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(SEXP alphaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t1SEXP, SEXP betaHat_t2SEXP, SEXP betaHat_t3SEXP, SEXP c1SEXP, SEXP c2SEXP, SEXP c3SEXP, SEXP genProbsM_tSEXP, SEXP genProbsF_tSEXP, SEXP hapProbs_tSEXP, SEXP gammaMT_tSEXP, SEXP gammaMU_tSEXP, SEXP gammaP_tSEXP, SEXP hapMatcherSEXP, SEXP hapMatcherRSEXP, SEXP use_hapMatcherRSEXP, SEXP distinctHapsBSEXP, SEXP distinctHapsIESEXP, SEXP eMatDH_special_matrix_helperSEXP, SEXP eMatDH_special_matrixSEXP, SEXP which_haps_to_useSEXP, SEXP ref_errorSEXP, SEXP rhb_tSEXP, SEXP use_eMatDH_special_symbolsSEXP, SEXP calculate_gamma_on_the_flySEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t1(alphaHat_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t2(alphaHat_t2SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_t3(alphaHat_t3SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t1(betaHat_t1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t2(betaHat_t2SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_t3(betaHat_t3SEXP);
+    Rcpp::traits::input_parameter< arma::rowvec& >::type c1(c1SEXP);
+    Rcpp::traits::input_parameter< arma::rowvec& >::type c2(c2SEXP);
+    Rcpp::traits::input_parameter< arma::rowvec& >::type c3(c3SEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type genProbsM_t(genProbsM_tSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type genProbsF_t(genProbsF_tSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type hapProbs_t(hapProbs_tSEXP);
@@ -1055,7 +1064,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type ref_error(ref_errorSEXP);
     Rcpp::traits::input_parameter< const arma::imat& >::type rhb_t(rhb_tSEXP);
     Rcpp::traits::input_parameter< const bool >::type use_eMatDH_special_symbols(use_eMatDH_special_symbolsSEXP);
-    rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols);
+    Rcpp::traits::input_parameter< const bool >::type calculate_gamma_on_the_fly(calculate_gamma_on_the_flySEXP);
+    rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols, calculate_gamma_on_the_fly);
     return R_NilValue;
 END_RCPP
 }
@@ -1590,7 +1600,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_simple_binary_search", (DL_FUNC) &_QUILT_rcpp_simple_binary_search, 2},
     {"_QUILT_rcpp_simple_binary_matrix_search", (DL_FUNC) &_QUILT_rcpp_simple_binary_matrix_search, 4},
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 16},
-    {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 17},
+    {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 27},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
     {"_QUILT_Rcpp_raw_test", (DL_FUNC) &_QUILT_Rcpp_raw_test, 2},
     {"_QUILT_Rcpp_raw_test_int", (DL_FUNC) &_QUILT_Rcpp_raw_test_int, 2},

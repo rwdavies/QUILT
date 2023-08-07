@@ -255,6 +255,15 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
 //' @export
 // [[Rcpp::export]]
 void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
+    arma::mat& alphaHat_t1,
+    arma::mat& alphaHat_t2,
+    arma::mat& alphaHat_t3,     
+    arma::mat& betaHat_t1,
+    arma::mat& betaHat_t2, 
+    arma::mat& betaHat_t3,
+    arma::rowvec& c1,
+    arma::rowvec& c2,
+    arma::rowvec& c3,
     arma::mat& genProbsM_t,
     arma::mat& genProbsF_t,    
     arma::mat& hapProbs_t,
@@ -271,12 +280,20 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
     const Rcpp::IntegerVector& which_haps_to_use,
     const double ref_error,
     const arma::imat& rhb_t,
-    const bool use_eMatDH_special_symbols
+    const bool use_eMatDH_special_symbols,
+    const bool calculate_gamma_on_the_fly
 ) {
     // loop over grids
     int k, iGrid, s, e, b, dh, nSNPsLocal, bvtd, kk;
-    const int K = gammaMT_t.n_rows;
-    const int nGrids = gammaMT_t.n_cols;
+    int K;
+    int nGrids;
+    if (calculate_gamma_on_the_fly) {
+        nGrids = alphaHat_t1.n_cols;
+        K = alphaHat_t1.n_rows;
+    } else {
+        nGrids = gammaMT_t.n_cols;
+        K = gammaMT_t.n_rows;        
+    }
     const int nSNPs = genProbsM_t.n_cols;
     const int nMaxDH = distinctHapsIE.n_rows;    
     const double ref_one_minus_error = 1 - ref_error;
@@ -294,9 +311,14 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
     arma::vec h2(32);
     h2.fill(0);
     double gk0, gk1, gk2;
+    double x1, x2, x3;
     arma::vec mg0(nMaxDH + 1);
     arma::vec mg1(nMaxDH + 1);
-    arma::vec mg2(nMaxDH + 1);        
+    arma::vec mg2(nMaxDH + 1);
+    //
+    arma::colvec gammaMT_t_local;
+    arma::colvec gammaMU_t_local;
+    arma::colvec gammaP_t_local;    
     //
     for(iGrid = 0; iGrid < nGrids; iGrid++) {
         s = 32 * (iGrid); // 0-based here
@@ -311,10 +333,27 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
         h0.fill(0);
         h1.fill(0);
         h2.fill(0);
+        if (calculate_gamma_on_the_fly) {
+            // hope this is right / don't get this wrong with labelling
+            x1 = 1 / c1(iGrid);        
+            gammaMT_t_local = (alphaHat_t1.col(iGrid) % betaHat_t1.col(iGrid)) * x1;
+            x2 = 1 / c2(iGrid);        
+            gammaMU_t_local = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * x2;
+            x3 = 1 / c3(iGrid);        
+            gammaP_t_local = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * x3;
+            //
+        } else {
+            gammaMT_t_local = gammaMT_t.col(iGrid);
+            gammaMU_t_local = gammaMU_t.col(iGrid);
+            gammaP_t_local = gammaP_t.col(iGrid);
+        }
         for(k = 0; k < K; k++) {
-            gk0 = gammaMT_t(k, iGrid);
-            gk1 = gammaMU_t(k, iGrid);
-            gk2 = gammaP_t(k, iGrid);
+            gk0 = gammaMT_t_local(k);
+            gk1 = gammaMU_t_local(k);
+            gk2 = gammaP_t_local(k);
+            //gk0 = gammaMT_t(k, iGrid);
+            //gk1 = gammaMU_t(k, iGrid);
+            //gk2 = gammaP_t(k, iGrid);
             //
             // get the binary value to decompose
             //
