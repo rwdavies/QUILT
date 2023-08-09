@@ -136,59 +136,55 @@ impute_final_gibbs_with_rare_common <- function(
 ) {
 
 
-    save(
-    special_rare_common_objects,
-    special_rare_common_objects_per_core,                                                
-    allSNP_sampleReads,
-    hap1,
-    hap2,
-    pos_all,
-    maxDifferenceBetweenReads,
-    hapMatcher,
-    hapMatcherR,
-    use_hapMatcherR,
-    distinctHapsIE,
-    eMatDH_special_matrix_helper,
-    eMatDH_special_matrix,
-    Ksubset,
-    ref_error,
-    which_haps_to_use,
-    small_ref_panel_gibbs_iterations,
-    small_ref_panel_block_gibbs_iterations,
-    allSNP_wif0,
-    allSNP_grid_has_read,
-    make_plots,
-    outplotprefix,
-    have_truth_haplotypes,
-    truth_haps_all,
-    have_truth_genotypes,
-    truth_gen_all,
-    truth_labels_all,
-    uncertain_truth_labels_all,
-    shuffle_bin_radius,
-    make_plots_block_gibbs,
-    sample_name,
-    regionStart,
-    regionEnd,
-    buffer,
-    i_it,
-    i_gibbs_sample,
-    ff0_shard_check_every_pair,
-    sampleNames,
-    iSample,
-    phase_all,
-    file = "/dev/shm/rwdavies/temp_irc.RData", compress = FALSE)
-    stop("WER")
+    ## save(
+    ## special_rare_common_objects,
+    ## special_rare_common_objects_per_core,                                                
+    ## allSNP_sampleReads,
+    ## hap1,
+    ## hap2,
+    ## pos_all,
+    ## maxDifferenceBetweenReads,
+    ## hapMatcher,
+    ## hapMatcherR,
+    ## use_hapMatcherR,
+    ## distinctHapsIE,
+    ## eMatDH_special_matrix_helper,
+    ## eMatDH_special_matrix,
+    ## Ksubset,
+    ## ref_error,
+    ## which_haps_to_use,
+    ## small_ref_panel_gibbs_iterations,
+    ## small_ref_panel_block_gibbs_iterations,
+    ## allSNP_wif0,
+    ## allSNP_grid_has_read,
+    ## make_plots,
+    ## outplotprefix,
+    ## have_truth_haplotypes,
+    ## truth_haps_all,
+    ## have_truth_genotypes,
+    ## truth_gen_all,
+    ## truth_labels_all,
+    ## uncertain_truth_labels_all,
+    ## shuffle_bin_radius,
+    ## make_plots_block_gibbs,
+    ## sample_name,
+    ## regionStart,
+    ## regionEnd,
+    ## buffer,
+    ## i_it,
+    ## i_gibbs_sample,
+    ## ff0_shard_check_every_pair,
+    ## sampleNames,
+    ## iSample,
+    ## phase_all,
+    ## file = "/data/smew1/rdavies/temp/123.RData", compress = FALSE)
+    ## stop("WER")
 
 
-    
     snp_is_common <- special_rare_common_objects[["snp_is_common"]]
     rare_per_hap_info <- special_rare_common_objects[["rare_per_hap_info"]]
     nSNPs <- nrow(pos_all)
 
-    print_message("get initial read labels")
-    Sys.sleep(1)
-    
     H <- get_initial_read_labels(
         pos_all = pos_all,
         allSNP_sampleReads = allSNP_sampleReads,
@@ -197,25 +193,42 @@ impute_final_gibbs_with_rare_common <- function(
         hap2 = hap2,
         maxDifferenceBetweenReads = maxDifferenceBetweenReads
     )   
-
-    print_message("make eHapsCurrent_tc")
-    Sys.sleep(1)
     
-    snp_is_common_1_based <- which(snp_is_common)
-    small_eHapsCurrent_tc <- make_eHapsCurrent_tc_using_rare_and_common_stuff(
-        hapMatcher = hapMatcher,        
-        hapMatcherR = hapMatcherR,
-        use_hapMatcherR = use_hapMatcherR,
-        distinctHapsIE = distinctHapsIE,
-        eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
-        eMatDH_special_matrix = eMatDH_special_matrix,
-        rare_per_hap_info = rare_per_hap_info,
-        snp_is_common = snp_is_common,
-        which_haps_to_use = which_haps_to_use,
-        snp_is_common_1_based = snp_is_common_1_based,
-        Ksubset = Ksubset,
-        ref_error = ref_error
-    )
+    ## snp_is_common_1_based <- which(snp_is_common)
+    common_snp_index <- integer(nSNPs)
+    common_snp_index[which(snp_is_common)] <- 1L:as.integer(sum(snp_is_common))
+    
+    ## small_eHapsCurrent_tc <- make_eHapsCurrent_tc_using_rare_and_common_stuff(
+    ##     hapMatcher = hapMatcher,        
+    ##     hapMatcherR = hapMatcherR,
+    ##     use_hapMatcherR = use_hapMatcherR,
+    ##     distinctHapsIE = distinctHapsIE,
+    ##     eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+    ##     eMatDH_special_matrix = eMatDH_special_matrix,
+    ##     rare_per_hap_info = rare_per_hap_info,
+    ##     snp_is_common = snp_is_common,
+    ##     which_haps_to_use = which_haps_to_use,
+    ##     snp_is_common_1_based = snp_is_common_1_based,
+    ##     Ksubset = Ksubset,
+    ##     ref_error = ref_error
+    ## )
+    
+    ## do this to get quick indicator on whether we need to examine this k and this read for rare haps
+    ## not perfect overall but should be reasonably fast, and use much less RAM than making small_eHapsCurrent_tc
+
+    ## do not need this anymore
+    ## eMatRead_t <- determine_which_reads_require_k_haps(
+    ##     sampleReads = allSNP_sampleReads,
+    ##     nSNPs = nSNPs,
+    ##     rare_per_hap_info = rare_per_hap_info,
+    ##     which_haps_to_use = which_haps_to_use
+    ## )
+    Ksubset <- length(which_haps_to_use)
+    nReads <- length(allSNP_sampleReads)
+    ## 1 is normal
+    ## 0 is special
+    eMatRead_t <- array(1, c(Ksubset, nReads))
+    
     
 
     if (have_truth_haplotypes) {
@@ -226,11 +239,6 @@ impute_final_gibbs_with_rare_common <- function(
         truth_haps <- NULL
     }
 
-    print_message("get out special objects")
-    Sys.sleep(1)    
-    
-    use_small_eHapsCurrent_tc <- TRUE
-    use_provided_small_eHapsCurrent_tc <- TRUE
 
     ## get objects out for convenience
     alphaHat_t1 <- special_rare_common_objects_per_core[["alphaHat_t1"]]
@@ -261,13 +269,35 @@ impute_final_gibbs_with_rare_common <- function(
     ## 
     double_list_of_starting_read_labels <- list(list(H))
 
-    print_message("impute one sample")
-    Sys.sleep(1)
+
+
+
+##print("test it out")
+##    Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects(eMatRead_t, rare_per_hap_info, common_snp_index, snp_is_common, allSNP_sampleReads,hapMatcherR,grid,distinctHapsIE,eMatDH_special_matrix_helper,eMatDH_special_matrix,ref_error,which_haps_to_use,rescale_eMatRead_t = TRUE,Jmax = 100,maxDifferenceBetweenReads);
+##print("end of test it out")    
+
+
+    ## hopefully not a RAM monster
+    ## create a new one that is per-site, and gives list of k
+    rare_per_snp_info <- lapply(1:nSNPs, function(x) -1L)
+    ## want this to be the index of the rare SNP in the overall
+    for(k in 1:length(which_haps_to_use)) {
+        ## expand back out to all SNPs
+        snps <- rare_per_hap_info[[which_haps_to_use[[k]]]] ## this IS an index among all SNPs
+        ## this is among all SNPs
+        for(snp in snps) {
+            rare_per_snp_info[[snp]] <- c(rare_per_snp_info[[snp]], k) ## keep 1-based
+        }
+    }
+    
 
     gibbs_iterate <- impute_one_sample(
         nSNPs = nSNPs,
+        hapMatcherR = hapMatcherR,
         sampleReads = allSNP_sampleReads,
-        small_eHapsCurrent_tc = small_eHapsCurrent_tc,
+        distinctHapsIE = distinctHapsIE,
+        eMatDH_special_matrix = eMatDH_special_matrix,
+        eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
         small_transMatRate_tc_H = small_transMatRate_tc_H,
         alphaHat_t1 = alphaHat_t1,
         betaHat_t1 = betaHat_t1,
@@ -312,15 +342,20 @@ impute_final_gibbs_with_rare_common <- function(
         regionStart = regionStart,
         regionEnd = regionEnd,
         buffer = buffer,
-        use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
-        use_provided_small_eHapsCurrent_tc = use_provided_small_eHapsCurrent_tc,
+        use_small_eHapsCurrent_tc = FALSE, ## set this to FALSE now
         use_sample_is_diploid = TRUE,
         i_it = i_it,
         i_gibbs_sample = i_gibbs_sample,
         ff0_shard_check_every_pair = ff0_shard_check_every_pair,
         suppressOutput = 1,
         verbose = FALSE,
-        return_extra = TRUE
+        return_extra = FALSE,
+        eMatRead_t = eMatRead_t,
+        make_eMatRead_t_rare_common = TRUE, ## need this to use eMatRead_t properly
+        common_snp_index = common_snp_index,
+        snp_is_common = snp_is_common,
+        rare_per_hap_info = rare_per_hap_info,
+        rare_per_snp_info = rare_per_snp_info
     )
 
     

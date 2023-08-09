@@ -1,4 +1,4 @@
-print_message <- function(x, include_mem = TRUE) {
+print_message <- function(x, include_mem = FALSE) {
     if (include_mem) {
         ## mem <- system("ps auxww | grep 'scripts/profile.R' | grep slave | grep -v 'grep' | awk -v OFS='\t' '$1=$1' | cut -f6", intern = TRUE)
         a <- system("ps aux | grep '/usr/lib64/R/bin/exec/R -f scratch/ukbb_gel.R'", intern = TRUE)

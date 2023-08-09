@@ -194,11 +194,26 @@ test_that("can make old eHapsCurrent_tc using rare common idea", {
 
     expect_equal(slow_check_eMatRead_t, check_eMatRead_t)
 
+    ## hopefully not a RAM monster
+    ## create a new one that is per-site, and gives list of k
+    rare_per_snp_info <- lapply(1:nSNPs, function(x) -1L)
+    ## want this to be the index of the rare SNP in the overall
+    snp_is_rare_1_based <- which(!snp_is_common)            
+    for(k in 1:length(which_haps_to_use)) {
+        ## expand back out to all SNPs
+        snps <- rare_per_hap_info[[which_haps_to_use[[k]]]] ## this IS an index among all SNPs
+        ## this is among all SNPs
+        for(snp in snps) {
+            rare_per_snp_info[[snp]] <- c(rare_per_snp_info[[snp]], k) ## keep 1-based
+        }
+    }
+    
     ##
     ## now use this one and expand it 
     ##
     aabbaa <- check_eMatRead_t[, 13]
     final_eMatRead_t <- check_eMatRead_t
+    final_eMatRead_t[] <- 1
     Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects(
         eMatRead_t = final_eMatRead_t,
         rare_per_hap_info = rare_per_hap_info,
@@ -212,28 +227,22 @@ test_that("can make old eHapsCurrent_tc using rare common idea", {
         eMatDH_special_matrix = eMatDH_special_matrix,
         ref_error = ref_error,
         which_haps_to_use = which_haps_to_use,
+        rescale_eMatRead_t = TRUE,        
         Jmax = 100,
         maxDifferenceBetweenReads = maxDifferenceBetweenReads,
-        rescale_eMatRead_t = TRUE
+        rare_per_snp_info = rare_per_snp_info
     )
 
+    
     expect_equal(final_eMatRead_t, original_eMatRead_t)
 
-    ## ## hmm see which ones
-    ## print(which(colSums(abs(final_eMatRead_t - original_eMatRead_t)) > 0.01))
-
     ## print("ori values")
-    ## w <- which(original_eMatRead_t[, 13] != final_eMatRead_t[, 13])
+    ## 
     ## print(w)
     ## ## wk1 <- c(7, 23, 26, 50)    
     ## wk1 <- 5:8
     ## wk1 <- 21:26
     ## ## print(rare_per_hap_info[which_haps_to_use[wk1]])
-    ## m <- cbind(
-    ##     ori = original_eMatRead_t[, 13],
-    ##     new = final_eMatRead_t[, 13],
-    ##     hap = hapMatcherR[which_haps_to_use, 1]
-    ## )
     ## ## Maybe check out 6, 7, 8?
     ## print(m[wk1, ])
     ## print(m[c(7, 23, 26, 50), ])

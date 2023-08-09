@@ -2173,7 +2173,7 @@ impute_one_sample <- function(
     ref_error = 0.001,
     nSNPs,
     sampleReads,
-    small_eHapsCurrent_tc,
+    small_eHapsCurrent_tc = array(0, c(1, 1, 1)),
     small_transMatRate_tc_H,
     alphaHat_t1,
     betaHat_t1,
@@ -2248,10 +2248,15 @@ impute_one_sample <- function(
     i_gibbs_sample = NA,
     ff0_shard_check_every_pair = FALSE,
     zilong = FALSE,
-    calculate_gamma_on_the_fly = FALSE
+    calculate_gamma_on_the_fly = FALSE,
+    eMatRead_t = NULL,
+    make_eMatRead_t_rare_common = FALSE,
+    common_snp_index = integer(1),
+    snp_is_common = logical(1),
+    rare_per_hap_info = vector("list", 1),
+    rare_per_snp_info = vector("list", 1)
 ) {
     ##
-    print("AM INSIDE R FUNCTION")
     K <- length(which_haps_to_use)
     S <- 1
     ## print(paste0("start = ", Sys.time()))
@@ -2289,6 +2294,13 @@ impute_one_sample <- function(
     }else {
         sample_is_diploid <- FALSE
     }
+    ## I dunno, could clearly be fixed
+    if (is.null(eMatRead_t)) {
+        pass_in_eMatRead_t <- FALSE
+        eMatRead_t <- array(0, c(1, 1))
+    } else {
+        pass_in_eMatRead_t <- TRUE
+    }
     param_list <- list(
         return_alpha = FALSE,
         return_extra = return_extra,
@@ -2311,7 +2323,15 @@ impute_one_sample <- function(
         update_in_place = FALSE,
         do_shard_ff0_block_gibbs = TRUE,
         force_reset_read_category_zero = FALSE,
-        calculate_gamma_on_the_fly = calculate_gamma_on_the_fly
+        calculate_gamma_on_the_fly = calculate_gamma_on_the_fly,
+        rescale_eMatRead_t = rescale_eMatRead_t,
+        pass_in_eMatRead_t = pass_in_eMatRead_t,
+        make_eMatRead_t_rare_common = make_eMatRead_t_rare_common,
+        pass_in_alphaBeta = TRUE,
+        update_hapSum = FALSE,
+        record_read_set = TRUE,
+        perform_block_gibbs = perform_block_gibbs,
+        use_eMatDH_special_symbols = use_eMatDH_special_symbols
     )
     ## use_provided_small_eHapsCurrent_tc = use_provided_small_eHapsCurrent_tc
     ## this should catch hopefully rare underflow problems and re-run the samples
@@ -2325,71 +2345,10 @@ impute_one_sample <- function(
         skip_read_iteration[small_ref_panel_equally_likely_reads_update_iterations] <- FALSE
     }
     while(!done_imputing) {
-
-##         if (ncol(alphaHat_t1) > 1000) {
-##         print("SAVE ME")
-##         save(
-##             sampleReads,
-## small_priorCurrent_m,
-## small_alphaMatCurrent_tc,
-## small_eHapsCurrent_tc,
-## small_transMatRate_tc_H,
-##             hapMatcher ,
-##             hapMatcherR ,
-##             use_hapMatcherR,
-##             distinctHapsB ,
-##             distinctHapsIE,
-##             eMatDH_special_matrix_helper,
-##             eMatDH_special_matrix ,
-##             use_eMatDH_special_symbols,
-##             rhb_t ,
-##             ref_error, 
-##             which_haps_to_use, 
-##             maxDifferenceBetweenReads,
-##             Jmax,
-##             maxEmissionMatrixDifference,
-##             grid ,
-##             skip_read_iteration,
-##             alphaHat_t1,
-##             alphaHat_t2,
-##             alphaHat_t3,
-##             betaHat_t1 ,
-##             betaHat_t2 ,
-##             betaHat_t3 ,
-##             eMatGrid_t1,
-##             eMatGrid_t2,
-##             eMatGrid_t3,
-##             gammaMT_t_local, 
-##             gammaMU_t_local ,
-##             gammaP_t_local ,
-##             suppressOutput,
-##             n_gibbs_burn_in_its,
-##             n_gibbs_sample_its,
-##             n_gibbs_starts,
-##             double_list_of_starting_read_labels,
-##             perform_block_gibbs,
-##             wif0 ,
-##             grid_has_read,
-##             shuffle_bin_radius,
-##             L_grid ,
-## small_ref_panel_block_gibbs_iterations,
-##             rescale_eMatRead_t,
-##             smooth_cm ,
-##             param_list,
-##             block_gibbs_quantile_prob,
-##         ff0_shard_check_every_pair,
-## file = "/dev/shm/rwdavies/temp123.RData", compress = FALSE)
-##         stop("WER")
-##         }
-
-        ## AM HERE
-        ## AFTER THIS TRY LOADING UP
-        ## SEE IF I CAN TWEAK WITH A-B TESTING
-
-
-    print("NOW START RCPP FUNCTION")
+        
         out <- rcpp_forwardBackwardGibbsNIPT(
             sampleReads = sampleReads,
+            eMatRead_t = eMatRead_t,
             priorCurrent_m = small_priorCurrent_m,
             alphaMatCurrent_tc = small_alphaMatCurrent_tc,
             eHapsCurrent_tc = small_eHapsCurrent_tc,
@@ -2401,7 +2360,6 @@ impute_one_sample <- function(
             distinctHapsIE = distinctHapsIE,
             eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
             eMatDH_special_matrix = eMatDH_special_matrix,
-            use_eMatDH_special_symbols = use_eMatDH_special_symbols,
             rhb_t = rhb_t,
             ref_error = ref_error,
             which_haps_to_use = which_haps_to_use,
@@ -2412,7 +2370,6 @@ impute_one_sample <- function(
             run_fb_grid_offset = FALSE,
             blocks_for_output = array(0, c(1, 1)),
             grid = grid,
-            pass_in_alphaBeta = TRUE,
             skip_read_iteration = skip_read_iteration,
             alphaHat_t1 = alphaHat_t1,
             alphaHat_t2 = alphaHat_t2,
@@ -2430,7 +2387,7 @@ impute_one_sample <- function(
             snp_start_1_based = -1,
             snp_end_1_based = -1,
             generate_fb_snp_offsets = FALSE,
-            suppressOutput = 0, ## suppressOutput
+            suppressOutput = suppressOutput,
             n_gibbs_burn_in_its = n_gibbs_burn_in_its,
             n_gibbs_sample_its = n_gibbs_sample_its,
             n_gibbs_starts = n_gibbs_starts,
@@ -2438,22 +2395,22 @@ impute_one_sample <- function(
             prev_list_of_alphaBetaBlocks = as.list(c(1, 2)),
             i_snp_block_for_alpha_beta = -1,
             do_block_resampling = FALSE, ## turn off for now
-            perform_block_gibbs = perform_block_gibbs,
             seed_vector = 0,
-            update_hapSum = FALSE, ## do not bother for now
             class_sum_cutoff = 0.06, ## what is this
-            record_read_set = TRUE, ## needed for block gibbs
             wif0 = wif0,
             grid_has_read = grid_has_read,
             shuffle_bin_radius = shuffle_bin_radius,
             L_grid = L_grid,
             block_gibbs_iterations = small_ref_panel_block_gibbs_iterations,
-            rescale_eMatRead_t = rescale_eMatRead_t,
             smooth_cm = smooth_cm,
             param_list = param_list,
             block_gibbs_quantile_prob = block_gibbs_quantile_prob,
             artificial_relabel = -1,
-            ff0_shard_check_every_pair = ff0_shard_check_every_pair
+            ff0_shard_check_every_pair = ff0_shard_check_every_pair,
+            common_snp_index = common_snp_index,
+            snp_is_common = snp_is_common,
+            rare_per_hap_info = rare_per_hap_info,
+            rare_per_snp_info = rare_per_snp_info
         )
         if (out[["underflow_problem"]]) {
             new_maxDifferenceBetweenReads <- max(1, maxDifferenceBetweenReads / 10)

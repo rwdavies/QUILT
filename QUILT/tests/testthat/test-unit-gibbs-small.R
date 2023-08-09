@@ -27,7 +27,8 @@ test_that("can avoid using eHapsCurrent_tc and gammas in genProbs calculation", 
     K <- 100
     nMaxDH <- 80
     Ksmall <- 10 ## i.e. the subset
-    nSNPs <- 200
+    nSNPs <- 500
+    nCommonSNPs <- 100
     nReads <- 20
     Jmax <- 1000
     S <- 1
@@ -48,6 +49,11 @@ test_that("can avoid using eHapsCurrent_tc and gammas in genProbs calculation", 
     nGrids <- out$nGrids
     rhi <- t(round(out$eHapsCurrent_tc[, , 1]))
     rhi_t <- t(rhi)
+    ## actuall re-do a bit to make some rarer and some more common
+    snp_is_common <- rep(FALSE, nSNPs)
+    snp_is_common[sample(nSNPs, nCommonSNPs)] <- TRUE   
+    rhi_t[, !snp_is_common] <- matrix(sample(c(0, 1), (nSNPs - nCommonSNPs) * K, replace = TRUE, prob = c(0.9, 0.1)), nrow = K, ncol = nSNPs - nCommonSNPs)
+    rhi <- t(rhi_t)
     rhb_t <- make_rhb_t_from_rhi_t(rhi_t)
     rhb <- t(rhb_t)
 
@@ -146,10 +152,6 @@ test_that("can avoid using eHapsCurrent_tc and gammas in genProbs calculation", 
     )
     hapMatcherR <- out[["hapMatcherR"]]
 
-    genProbsM_t_new <- array(0, c(3, nSNPs))
-    genProbsF_t_new <- array(0, c(3, nSNPs))
-    hapProbs_t_new <- array(0, c(3, nSNPs))
-
     for(use_eMatDH_special_symbols in c(TRUE, FALSE)) {
 
         for(use_hapMatcherR in c(FALSE, TRUE)) {
@@ -167,6 +169,10 @@ test_that("can avoid using eHapsCurrent_tc and gammas in genProbs calculation", 
                     alphaHat_t3 <- array(0, c(1, 1)); betaHat_t3 <- array(0, c(1, 1)); c3 <- array(0, 1)
                     gammaMT <- out1[[4]]; gammaMU_t <- out2[[4]]; gammaP_t <- out3[[4]]
                 }
+
+                genProbsM_t_new <- array(0, c(3, nSNPs))
+                genProbsF_t_new <- array(0, c(3, nSNPs))
+                hapProbs_t_new <- array(0, c(3, nSNPs))
 
                 rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
                     alphaHat_t1 = alphaHat_t1,
@@ -208,6 +214,121 @@ test_that("can avoid using eHapsCurrent_tc and gammas in genProbs calculation", 
 
     }
 
+
+    
+    ##
+    ## now do the same thing but using rare common ideas
+    ##
+    nGrids <- ceiling(nSNPs / 32)
+    grid <- floor((1:nSNPs) / 32)
+    nCommonGrids <- ceiling(nCommonSNPs / 32)
+    rhb <- array(0L, c(nCommonGrids, K))
+    
+    for(k in 1:K) {
+        rhb[, k] <- rcpp_int_contract(rhi[snp_is_common, k])
+    }
+    rhb_t <- t(rhb)
+    snp_is_rare_1_based <- which(!snp_is_common)        
+    rare_per_hap_info <- sapply(1:K, function(k) {
+        ## this is among rare SNPs
+        snp_is_rare_1_based[which(rhi[!snp_is_common, k] == 1)]
+    })
+    common_snp_index <- integer(nSNPs)
+    common_snp_index[which(snp_is_common)] <- 1:nCommonSNPs ## 1-based
+
+
+    out <- make_rhb_t_equality(
+        rhb_t = rhb_t,
+        nMaxDH = nMaxDH,
+        nSNPs = nCommonSNPs,
+        ref_error = ref_error,
+        use_hapMatcherR = TRUE
+    )
+    distinctHapsB <- out[["distinctHapsB"]]
+    distinctHapsIE <- out[["distinctHapsIE"]]
+    eMatDH_special_grid_which <- out[["eMatDH_special_grid_which"]]
+    eMatDH_special_values_list <- out[["eMatDH_special_values_list"]]
+    nrow_which_hapMatcher_0 <- out[["nrow_which_hapMatcher_0"]]
+    eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
+    eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
+    hapMatcherR <- out[["hapMatcherR"]]
+    
+
+    genProbsM_t_new <- array(0, c(3, nSNPs))
+    genProbsF_t_new <- array(0, c(3, nSNPs))
+    hapProbs_t_new <- array(0, c(3, nSNPs))
+    
+    alphaHat_t1 <- out1[[1]];     betaHat_t1 <- out1[[2]];     c1 <- out1[[3]];     gamma_t1 <- out1[[4]]
+    alphaHat_t2 <- out2[[1]];    betaHat_t2 <- out2[[2]];     c2 <- out2[[3]];     gamma_t2 <- out2[[4]]
+    alphaHat_t3 <- out3[[1]];     betaHat_t3 <- out3[[2]];     c3 <- out3[[3]];     gamma_t3 <- out3[[4]]
+    gammaMT <- array(0, c(1, 1)); gammaMU_t <- array(0, c(1, 1)); gammaP_t <- array(0, c(1, 1));                    
+
+
+    ## this is the overall sites
+    common_snp_overall0 <- which(snp_is_common) - 1
+    common_snp_grids0 <- floor(common_snp_overall0 / 32)
+
+    ## hopefully not a RAM monster
+    ## create a new one that is per-site, and gives list of k
+    rare_per_snp_info <- lapply(1:nSNPs, function(x) -1L)
+    ## want this to be the index of the rare SNP in the overall
+    snp_is_rare_1_based <- which(!snp_is_common)            
+    for(k in 1:length(which_haps_to_use)) {
+        ## expand back out to all SNPs
+        snps <- rare_per_hap_info[[which_haps_to_use[[k]]]] ## this IS an index among all SNPs
+        ## this is among all SNPs
+        for(snp in snps) {
+            rare_per_snp_info[[snp]] <- c(rare_per_snp_info[[snp]], k) ## keep 1-based
+        }
+    }
+    
+    rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
+        alphaHat_t1 = alphaHat_t1,
+        alphaHat_t2 = alphaHat_t2,
+        alphaHat_t3 = alphaHat_t3,     
+        betaHat_t1 = betaHat_t1,
+        betaHat_t2 = betaHat_t2, 
+        betaHat_t3 = betaHat_t3,
+        c1 = c1,
+        c2 = c2,
+        c3 = c3,
+        genProbsM_t = genProbsM_t_new,
+        genProbsF_t = genProbsF_t_new,
+        hapProbs_t = hapProbs_t_new,
+        gammaMT_t = gammaMT_t,
+        gammaMU_t = gammaMU_t,
+        gammaP_t = gammaP_t,
+        hapMatcherR = hapMatcherR,
+        distinctHapsB = distinctHapsB,
+        distinctHapsIE = distinctHapsIE,
+        which_haps_to_use = which_haps_to_use,
+        ref_error = ref_error,
+        rhb_t = rhb_t,
+        eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+        eMatDH_special_matrix = eMatDH_special_matrix,
+        use_eMatDH_special_symbols = use_eMatDH_special_symbols,
+        rare_per_hap_info = rare_per_hap_info,
+        common_snp_index = common_snp_index,
+        snp_is_common = snp_is_common,
+        rare_per_snp_info = rare_per_snp_info
+    )
+
+    expect_equal( hapProbs_t_new, hapProbs_t)
+    expect_equal( genProbsM_t_new, genProbsM_t)
+    expect_equal( genProbsF_t_new, genProbsF_t)
+    
+    ## bad_cols <- which(colSums(abs(hapProbs_t_new - hapProbs_t)) > 0.01)
+    ## print("bad cols")
+    ## print(head(bad_cols))
+    ## print("first 10 cols")
+    ## print(snp_is_common[1:10])
+
+    ## print("lets check out those cols")
+    ## print(hapProbs_t_new[1:2, 1:10])
+    ## print(hapProbs_t[1:2, 1:10])
+    ## print(hapProbs_t_new[1:2, 1:10] / hapProbs_t[1:2, 1:10])
+
+    
 })
 
 

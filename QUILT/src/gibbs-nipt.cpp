@@ -268,8 +268,56 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
 
 
 
+void Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects(
+    arma::mat& eMatRead_t,
+    const Rcpp::List& rare_per_hap_info,
+    const Rcpp::IntegerVector& common_snp_index,
+    const Rcpp::LogicalVector& snp_is_common,
+    const Rcpp::List& sampleReads,
+    const Rcpp::RawMatrix hapMatcherR,
+    const Rcpp::IntegerVector& grid,
+    const arma::mat& distinctHapsIE,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix,
+    const double ref_error,
+    const Rcpp::IntegerVector& which_haps_to_use,
+    const bool rescale_eMatRead_t,
+    const int Jmax,
+    const double maxDifferenceBetweenReads,
+    const Rcpp::List& rare_per_snp_info    
+);
 
 
+void rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
+    arma::mat& alphaHat_t1,
+    arma::mat& alphaHat_t2,
+    arma::mat& alphaHat_t3,     
+    arma::mat& betaHat_t1,
+    arma::mat& betaHat_t2, 
+    arma::mat& betaHat_t3,
+    arma::rowvec& c1,
+    arma::rowvec& c2,
+    arma::rowvec& c3,
+    arma::mat& genProbsM_t,
+    arma::mat& genProbsF_t,    
+    arma::mat& hapProbs_t,
+    const arma::mat& gammaMT_t,
+    const arma::mat& gammaMU_t,
+    const arma::mat& gammaP_t,
+    const Rcpp::RawMatrix& hapMatcherR,
+    const arma::imat& distinctHapsB,
+    const arma::mat& distinctHapsIE,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix,
+    const Rcpp::IntegerVector& which_haps_to_use,
+    const double ref_error,
+    const arma::imat& rhb_t,
+    const bool use_eMatDH_special_symbols,
+    const Rcpp::List& rare_per_hap_info,
+    const Rcpp::IntegerVector& common_snp_index,
+    const Rcpp::LogicalVector& snp_is_common,
+    const Rcpp::List& rare_per_snp_info
+);
 
 
 //' @export
@@ -2106,6 +2154,11 @@ Rcpp::NumericMatrix unpack_gammas(
     Rcpp::NumericVector& hg_log_mult,
     Rcpp::NumericVector& hg_ll_rescaled,
     const bool calculate_gamma_on_the_fly,
+    const bool make_eMatRead_t_rare_common,
+    const Rcpp::List& rare_per_hap_info,
+    const Rcpp::IntegerVector& common_snp_index,
+    const Rcpp::LogicalVector& snp_is_common,
+    const Rcpp::List& rare_per_snp_info,    
     const int log_mult_max = 40
 ) {
     //
@@ -2205,6 +2258,21 @@ Rcpp::NumericMatrix unpack_gammas(
                 gammaMT_t_local, gammaMU_t_local, gammaP_t_local,
                 grid, snp_start_1_based, snp_end_1_based, run_fb_grid_offset
             );
+        } else if (make_eMatRead_t_rare_common) {
+            // not quite right title but need the same ideas here
+            rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
+                alphaHat_t1, alphaHat_t2, alphaHat_t3,     
+                betaHat_t1, betaHat_t2, betaHat_t3,
+                c1, c2, c3,
+                genProbsM_t_local, genProbsF_t_local, hapProbs_t_local,
+                gammaMT_t_local, gammaMU_t_local, gammaP_t_local,
+                hapMatcherR,
+                distinctHapsB, distinctHapsIE,
+                eMatDH_special_matrix_helper, eMatDH_special_matrix,
+                which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols, 
+                rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info
+            );
+
         } else {
             rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
                 alphaHat_t1, alphaHat_t2, alphaHat_t3,     
@@ -2280,6 +2348,7 @@ Rcpp::NumericMatrix unpack_gammas(
 // [[Rcpp::export]]
 Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const Rcpp::List& sampleReads,
+    arma::mat& eMatRead_t,
     const arma::mat& priorCurrent_m,
     const arma::cube& alphaMatCurrent_tc,
     const arma::cube& eHapsCurrent_tc,
@@ -2333,17 +2402,15 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const int i_snp_block_for_alpha_beta = 1,
     const bool do_block_resampling = false,
     const int artificial_relabel = -1,
-    const bool pass_in_alphaBeta = false,
-    const bool update_hapSum = false,
-    const bool record_read_set = false,
+    bool ff0_shard_check_every_pair = false,
     const double class_sum_cutoff = 0.06,
-    const bool perform_block_gibbs = false,
     const int shuffle_bin_radius = 5000,
     const Rcpp::IntegerVector block_gibbs_iterations = Rcpp::IntegerVector::create(0),
-    const bool rescale_eMatRead_t = true,
     const double block_gibbs_quantile_prob = 0.9,
-    const bool use_eMatDH_special_symbols = true,
-    bool ff0_shard_check_every_pair = false
+    const Rcpp::List& rare_per_hap_info = Rcpp::List::create(0),
+    const Rcpp::IntegerVector& common_snp_index = Rcpp::IntegerVector::create(0),
+    const Rcpp::LogicalVector& snp_is_common = Rcpp::LogicalVector::create(0),
+    const Rcpp::List& rare_per_snp_info = Rcpp::List::create(0)
 ) {
     //
     //
@@ -2412,6 +2479,14 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool do_shard_ff0_block_gibbs = as<bool>(param_list["do_shard_ff0_block_gibbs"]);
     const bool force_reset_read_category_zero = as<bool>(param_list["force_reset_read_category_zero"]);
     const bool calculate_gamma_on_the_fly = as<bool>(param_list["calculate_gamma_on_the_fly"]);
+    const bool pass_in_eMatRead_t = as<bool>(param_list["pass_in_eMatRead_t"]);
+    const bool rescale_eMatRead_t = as<bool>(param_list["rescale_eMatRead_t"]);
+    const bool make_eMatRead_t_rare_common = as<bool>(param_list["make_eMatRead_t_rare_common"]);
+    const bool pass_in_alphaBeta = as<bool>(param_list["pass_in_alphaBeta"]);
+    const bool update_hapSum = as<bool>(param_list["update_hapSum"]);
+    const bool record_read_set = as<bool>(param_list["record_read_set"]);
+    const bool perform_block_gibbs = as<bool>(param_list["perform_block_gibbs"]);    
+    const bool use_eMatDH_special_symbols = as<bool>(param_list["use_eMatDH_special_symbols"]);
     //const bool use_provided_small_eHapsCurrent_tc = as<bool>(param_list["use_provided_small_eHapsCurrent_tc"]);
     //
     //
@@ -2524,7 +2599,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     arma::mat eMatHapOri_t;
     arma::vec pRgivenH1;
     arma::vec pRgivenH2;
-    arma::mat eMatRead_t = arma::ones(K, nReads);
+    if (!pass_in_eMatRead_t) {    
+        eMatRead_t = arma::ones(K, nReads);
+    }
     arma::ivec number_of_non_1_reads(nReads);
     arma::imat indices_of_non_1_reads(K, nReads);
     arma::ivec read_category(nReads);
@@ -2651,7 +2728,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         //
         list_of_ending_read_labels = R_NilValue; // null-ify
         if (s > 0) {
-            eMatRead_t.fill(1);
+            if (!make_eMatRead_t_rare_common) {
+                eMatRead_t.fill(1);
+            }
             genProbsM_t.fill(0);
             genProbsF_t.fill(0);
             hapProbs_t.fill(0);            
@@ -2675,6 +2754,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
         prev_section=next_section;
         if (use_small_eHapsCurrent_tc) {
             rcpp_make_eMatRead_t(eMatRead_t, sampleReads, eHapsCurrent_tc, s, maxDifferenceBetweenReads, Jmax_local, eMatHapOri_t, pRgivenH1, pRgivenH2, prev, suppressOutput, prev_section, next_section, run_pseudo_haploid, rescale_eMatRead_t);
+        } else if (make_eMatRead_t_rare_common) {
+            Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects(eMatRead_t, rare_per_hap_info, common_snp_index, snp_is_common, sampleReads,hapMatcherR,grid,distinctHapsIE,eMatDH_special_matrix_helper,eMatDH_special_matrix,ref_error,which_haps_to_use,rescale_eMatRead_t,Jmax_local,maxDifferenceBetweenReads, rare_per_snp_info);
         } else {
             Rcpp_make_eMatRead_t_for_gibbs_using_objects(eMatRead_t, sampleReads, hapMatcher, hapMatcherR, use_hapMatcherR, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax_local, maxDifferenceBetweenReads, use_eMatDH_special_symbols);
         }
@@ -2782,7 +2863,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                     generate_fb_snp_offsets, haploid_gibbs_equal_weighting,
                     return_gamma, return_genProbs, return_hapProbs,
                     prior_probs, hg_log_mult, hg_ll_rescaled,
-                    calculate_gamma_on_the_fly
+                    calculate_gamma_on_the_fly,
+                    make_eMatRead_t_rare_common, rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info 
                 );
                 //
                 if (!run_fb_subset) {
@@ -2951,7 +3033,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             generate_fb_snp_offsets, haploid_gibbs_equal_weighting,
                             return_gamma, return_genProbs, return_hapProbs,
                             prior_probs, hg_log_mult, hg_ll_rescaled,
-                            calculate_gamma_on_the_fly
+                            calculate_gamma_on_the_fly,
+                            make_eMatRead_t_rare_common, rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info
                         );
                         list_of_ending_read_labels.push_back(Rcpp::clone(H), "H") ;
                         //
