@@ -509,8 +509,14 @@ option_list <- list(
     make_option(
         "--use_list_of_columns_of_A",
         type = "logical",
-        help = "If when using mspbwt, use columns of A rather than the whole thing, to speed up this version [default TRUE    ] ",
-        default = TRUE    
+        help = "If when using mspbwt, use columns of A rather than the whole thing, to speed up this version [default TRUE] ",
+        default = TRUE
+    ), 
+    make_option(
+        "--calculate_gamma_on_the_fly",
+        type = "logical",
+        help = "If when calculating genProbs, calculate gamma on the fly rather than saving [default TRUE] ",
+        default = TRUE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -601,5 +607,6 @@ QUILT(
     rare_af_threshold = opt$rare_af_threshold,
     make_heuristic_plot = opt$make_heuristic_plot,
     heuristic_approach = opt$heuristic_approach,
-    use_list_of_columns_of_A = opt$use_list_of_columns_of_A
+    use_list_of_columns_of_A = opt$use_list_of_columns_of_A,
+    calculate_gamma_on_the_fly = opt$calculate_gamma_on_the_fly
 )
