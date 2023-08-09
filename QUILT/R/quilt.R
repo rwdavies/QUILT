@@ -378,6 +378,7 @@ QUILT <- function(
     new_buffer <- buffer
 
     load(prepared_reference_filename)
+    L_grid <- as.integer(L_grid)
 
     if (use_mspbwt) {
         if (is.null(ms_indices)) {

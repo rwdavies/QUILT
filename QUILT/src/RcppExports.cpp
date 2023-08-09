@@ -883,7 +883,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // rcpp_forwardBackwardGibbsNIPT
-Rcpp::List rcpp_forwardBackwardGibbsNIPT(const Rcpp::List& sampleReads, const arma::mat& priorCurrent_m, const arma::cube& alphaMatCurrent_tc, const arma::cube& eHapsCurrent_tc, const arma::cube& transMatRate_tc_H, const double ff, const arma::mat& blocks_for_output, arma::mat& alphaHat_t1, arma::mat& betaHat_t1, arma::mat& alphaHat_t2, arma::mat& betaHat_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t3, arma::mat& eMatGrid_t1, arma::mat& eMatGrid_t2, arma::mat& eMatGrid_t3, arma::mat& gammaMT_t_local, arma::mat& gammaMU_t_local, arma::mat& gammaP_t_local, arma::cube& hapSum_tc, arma::imat& hapMatcher, Rcpp::RawMatrix& hapMatcherR, bool use_hapMatcherR, arma::imat distinctHapsB, arma::mat& distinctHapsIE, Rcpp::IntegerMatrix& eMatDH_special_matrix_helper, Rcpp::IntegerMatrix& eMatDH_special_matrix, const arma::imat& rhb_t, double ref_error, const Rcpp::IntegerVector& which_haps_to_use, Rcpp::IntegerVector& wif0, Rcpp::LogicalVector& grid_has_read, Rcpp::IntegerVector& L_grid, Rcpp::NumericVector& smooth_cm, Rcpp::List param_list, Rcpp::LogicalVector& skip_read_iteration, const int Jmax_local, const double maxDifferenceBetweenReads, const double maxEmissionMatrixDifference, const int run_fb_grid_offset, const Rcpp::IntegerVector& grid, int snp_start_1_based, int snp_end_1_based, const bool generate_fb_snp_offsets, const int suppressOutput, int n_gibbs_starts, const int n_gibbs_sample_its, const int n_gibbs_burn_in_its, const Rcpp::List& double_list_of_starting_read_labels, Rcpp::IntegerVector seed_vector, const Rcpp::List& prev_list_of_alphaBetaBlocks, const int i_snp_block_for_alpha_beta, const bool do_block_resampling, const int artificial_relabel, const bool pass_in_alphaBeta, const bool update_hapSum, const bool record_read_set, const double class_sum_cutoff, const bool perform_block_gibbs, const int shuffle_bin_radius, const Rcpp::IntegerVector block_gibbs_iterations, const bool rescale_eMatRead_t, const double block_gibbs_quantile_prob, const bool use_eMatDH_special_symbols, bool ff0_shard_check_every_pair);
+Rcpp::List rcpp_forwardBackwardGibbsNIPT(const Rcpp::List& sampleReads, const arma::mat& priorCurrent_m, const arma::cube& alphaMatCurrent_tc, const arma::cube& eHapsCurrent_tc, const arma::cube& transMatRate_tc_H, const double ff, const arma::mat& blocks_for_output, arma::mat& alphaHat_t1, arma::mat& betaHat_t1, arma::mat& alphaHat_t2, arma::mat& betaHat_t2, arma::mat& alphaHat_t3, arma::mat& betaHat_t3, arma::mat& eMatGrid_t1, arma::mat& eMatGrid_t2, arma::mat& eMatGrid_t3, arma::mat& gammaMT_t_local, arma::mat& gammaMU_t_local, arma::mat& gammaP_t_local, arma::cube& hapSum_tc, arma::imat& hapMatcher, Rcpp::RawMatrix& hapMatcherR, bool use_hapMatcherR, arma::imat& distinctHapsB, arma::mat& distinctHapsIE, Rcpp::IntegerMatrix& eMatDH_special_matrix_helper, Rcpp::IntegerMatrix& eMatDH_special_matrix, const arma::imat& rhb_t, double ref_error, const Rcpp::IntegerVector& which_haps_to_use, Rcpp::IntegerVector& wif0, Rcpp::LogicalVector& grid_has_read, Rcpp::IntegerVector& L_grid, Rcpp::NumericVector& smooth_cm, Rcpp::List param_list, Rcpp::LogicalVector& skip_read_iteration, const int Jmax_local, const double maxDifferenceBetweenReads, const double maxEmissionMatrixDifference, const int run_fb_grid_offset, const Rcpp::IntegerVector& grid, int snp_start_1_based, int snp_end_1_based, const bool generate_fb_snp_offsets, const int suppressOutput, int n_gibbs_starts, const int n_gibbs_sample_its, const int n_gibbs_burn_in_its, const Rcpp::List& double_list_of_starting_read_labels, Rcpp::IntegerVector seed_vector, const Rcpp::List& prev_list_of_alphaBetaBlocks, const int i_snp_block_for_alpha_beta, const bool do_block_resampling, const int artificial_relabel, const bool pass_in_alphaBeta, const bool update_hapSum, const bool record_read_set, const double class_sum_cutoff, const bool perform_block_gibbs, const int shuffle_bin_radius, const Rcpp::IntegerVector block_gibbs_iterations, const bool rescale_eMatRead_t, const double block_gibbs_quantile_prob, const bool use_eMatDH_special_symbols, bool ff0_shard_check_every_pair);
 RcppExport SEXP _QUILT_rcpp_forwardBackwardGibbsNIPT(SEXP sampleReadsSEXP, SEXP priorCurrent_mSEXP, SEXP alphaMatCurrent_tcSEXP, SEXP eHapsCurrent_tcSEXP, SEXP transMatRate_tc_HSEXP, SEXP ffSEXP, SEXP blocks_for_outputSEXP, SEXP alphaHat_t1SEXP, SEXP betaHat_t1SEXP, SEXP alphaHat_t2SEXP, SEXP betaHat_t2SEXP, SEXP alphaHat_t3SEXP, SEXP betaHat_t3SEXP, SEXP eMatGrid_t1SEXP, SEXP eMatGrid_t2SEXP, SEXP eMatGrid_t3SEXP, SEXP gammaMT_t_localSEXP, SEXP gammaMU_t_localSEXP, SEXP gammaP_t_localSEXP, SEXP hapSum_tcSEXP, SEXP hapMatcherSEXP, SEXP hapMatcherRSEXP, SEXP use_hapMatcherRSEXP, SEXP distinctHapsBSEXP, SEXP distinctHapsIESEXP, SEXP eMatDH_special_matrix_helperSEXP, SEXP eMatDH_special_matrixSEXP, SEXP rhb_tSEXP, SEXP ref_errorSEXP, SEXP which_haps_to_useSEXP, SEXP wif0SEXP, SEXP grid_has_readSEXP, SEXP L_gridSEXP, SEXP smooth_cmSEXP, SEXP param_listSEXP, SEXP skip_read_iterationSEXP, SEXP Jmax_localSEXP, SEXP maxDifferenceBetweenReadsSEXP, SEXP maxEmissionMatrixDifferenceSEXP, SEXP run_fb_grid_offsetSEXP, SEXP gridSEXP, SEXP snp_start_1_basedSEXP, SEXP snp_end_1_basedSEXP, SEXP generate_fb_snp_offsetsSEXP, SEXP suppressOutputSEXP, SEXP n_gibbs_startsSEXP, SEXP n_gibbs_sample_itsSEXP, SEXP n_gibbs_burn_in_itsSEXP, SEXP double_list_of_starting_read_labelsSEXP, SEXP seed_vectorSEXP, SEXP prev_list_of_alphaBetaBlocksSEXP, SEXP i_snp_block_for_alpha_betaSEXP, SEXP do_block_resamplingSEXP, SEXP artificial_relabelSEXP, SEXP pass_in_alphaBetaSEXP, SEXP update_hapSumSEXP, SEXP record_read_setSEXP, SEXP class_sum_cutoffSEXP, SEXP perform_block_gibbsSEXP, SEXP shuffle_bin_radiusSEXP, SEXP block_gibbs_iterationsSEXP, SEXP rescale_eMatRead_tSEXP, SEXP block_gibbs_quantile_probSEXP, SEXP use_eMatDH_special_symbolsSEXP, SEXP ff0_shard_check_every_pairSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -911,7 +911,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::imat& >::type hapMatcher(hapMatcherSEXP);
     Rcpp::traits::input_parameter< Rcpp::RawMatrix& >::type hapMatcherR(hapMatcherRSEXP);
     Rcpp::traits::input_parameter< bool >::type use_hapMatcherR(use_hapMatcherRSEXP);
-    Rcpp::traits::input_parameter< arma::imat >::type distinctHapsB(distinctHapsBSEXP);
+    Rcpp::traits::input_parameter< arma::imat& >::type distinctHapsB(distinctHapsBSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type distinctHapsIE(distinctHapsIESEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerMatrix& >::type eMatDH_special_matrix_helper(eMatDH_special_matrix_helperSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerMatrix& >::type eMatDH_special_matrix(eMatDH_special_matrixSEXP);
@@ -954,31 +954,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const bool >::type use_eMatDH_special_symbols(use_eMatDH_special_symbolsSEXP);
     Rcpp::traits::input_parameter< bool >::type ff0_shard_check_every_pair(ff0_shard_check_every_pairSEXP);
     rcpp_result_gen = Rcpp::wrap(rcpp_forwardBackwardGibbsNIPT(sampleReads, priorCurrent_m, alphaMatCurrent_tc, eHapsCurrent_tc, transMatRate_tc_H, ff, blocks_for_output, alphaHat_t1, betaHat_t1, alphaHat_t2, betaHat_t2, alphaHat_t3, betaHat_t3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, gammaMT_t_local, gammaMU_t_local, gammaP_t_local, hapSum_tc, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, rhb_t, ref_error, which_haps_to_use, wif0, grid_has_read, L_grid, smooth_cm, param_list, skip_read_iteration, Jmax_local, maxDifferenceBetweenReads, maxEmissionMatrixDifference, run_fb_grid_offset, grid, snp_start_1_based, snp_end_1_based, generate_fb_snp_offsets, suppressOutput, n_gibbs_starts, n_gibbs_sample_its, n_gibbs_burn_in_its, double_list_of_starting_read_labels, seed_vector, prev_list_of_alphaBetaBlocks, i_snp_block_for_alpha_beta, do_block_resampling, artificial_relabel, pass_in_alphaBeta, update_hapSum, record_read_set, class_sum_cutoff, perform_block_gibbs, shuffle_bin_radius, block_gibbs_iterations, rescale_eMatRead_t, block_gibbs_quantile_prob, use_eMatDH_special_symbols, ff0_shard_check_every_pair));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcpp_evaluate_read_probabilities
-Rcpp::List rcpp_evaluate_read_probabilities(arma::mat& alphaHat_m, arma::mat& betaHat_m, arma::mat& ab_m, Rcpp::NumericVector& pC, Rcpp::NumericVector& pA1, Rcpp::NumericVector& pA2, arma::ivec& read_category, int iRead, int h_rC, int h_rA1, int h_rA2, const arma::mat& eMatRead_t, arma::ivec& number_of_non_1_reads, arma::imat& indices_of_non_1_reads, bool sample_is_diploid);
-RcppExport SEXP _QUILT_rcpp_evaluate_read_probabilities(SEXP alphaHat_mSEXP, SEXP betaHat_mSEXP, SEXP ab_mSEXP, SEXP pCSEXP, SEXP pA1SEXP, SEXP pA2SEXP, SEXP read_categorySEXP, SEXP iReadSEXP, SEXP h_rCSEXP, SEXP h_rA1SEXP, SEXP h_rA2SEXP, SEXP eMatRead_tSEXP, SEXP number_of_non_1_readsSEXP, SEXP indices_of_non_1_readsSEXP, SEXP sample_is_diploidSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat& >::type alphaHat_m(alphaHat_mSEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type betaHat_m(betaHat_mSEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type ab_m(ab_mSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type pC(pCSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type pA1(pA1SEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type pA2(pA2SEXP);
-    Rcpp::traits::input_parameter< arma::ivec& >::type read_category(read_categorySEXP);
-    Rcpp::traits::input_parameter< int >::type iRead(iReadSEXP);
-    Rcpp::traits::input_parameter< int >::type h_rC(h_rCSEXP);
-    Rcpp::traits::input_parameter< int >::type h_rA1(h_rA1SEXP);
-    Rcpp::traits::input_parameter< int >::type h_rA2(h_rA2SEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type eMatRead_t(eMatRead_tSEXP);
-    Rcpp::traits::input_parameter< arma::ivec& >::type number_of_non_1_reads(number_of_non_1_readsSEXP);
-    Rcpp::traits::input_parameter< arma::imat& >::type indices_of_non_1_reads(indices_of_non_1_readsSEXP);
-    Rcpp::traits::input_parameter< bool >::type sample_is_diploid(sample_is_diploidSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_evaluate_read_probabilities(alphaHat_m, betaHat_m, ab_m, pC, pA1, pA2, read_category, iRead, h_rC, h_rA1, h_rA2, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, sample_is_diploid));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1030,6 +1005,30 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type maxDifferenceBetweenReads(maxDifferenceBetweenReadsSEXP);
     Rcpp::traits::input_parameter< const bool >::type use_eMatDH_special_symbols(use_eMatDH_special_symbolsSEXP);
     Rcpp_make_eMatRead_t_for_gibbs_using_objects(eMatRead_t, sampleReads, hapMatcher, hapMatcherR, use_hapMatcherR, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads, use_eMatDH_special_symbols);
+    return R_NilValue;
+END_RCPP
+}
+// Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects
+void Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects(arma::mat& eMatRead_t, Rcpp::List& rare_per_hap_info, Rcpp::IntegerVector& common_snp_index, Rcpp::LogicalVector& snp_is_common, const Rcpp::List& sampleReads, const Rcpp::RawMatrix hapMatcherR, const Rcpp::IntegerVector& grid, const arma::mat& distinctHapsIE, const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper, const Rcpp::IntegerMatrix& eMatDH_special_matrix, const double ref_error, const Rcpp::IntegerVector& which_haps_to_use, const bool rescale_eMatRead_t, const int Jmax, const double maxDifferenceBetweenReads);
+RcppExport SEXP _QUILT_Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects(SEXP eMatRead_tSEXP, SEXP rare_per_hap_infoSEXP, SEXP common_snp_indexSEXP, SEXP snp_is_commonSEXP, SEXP sampleReadsSEXP, SEXP hapMatcherRSEXP, SEXP gridSEXP, SEXP distinctHapsIESEXP, SEXP eMatDH_special_matrix_helperSEXP, SEXP eMatDH_special_matrixSEXP, SEXP ref_errorSEXP, SEXP which_haps_to_useSEXP, SEXP rescale_eMatRead_tSEXP, SEXP JmaxSEXP, SEXP maxDifferenceBetweenReadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type eMatRead_t(eMatRead_tSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List& >::type rare_per_hap_info(rare_per_hap_infoSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type common_snp_index(common_snp_indexSEXP);
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector& >::type snp_is_common(snp_is_commonSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type sampleReads(sampleReadsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::RawMatrix >::type hapMatcherR(hapMatcherRSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type grid(gridSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type distinctHapsIE(distinctHapsIESEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerMatrix& >::type eMatDH_special_matrix_helper(eMatDH_special_matrix_helperSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerMatrix& >::type eMatDH_special_matrix(eMatDH_special_matrixSEXP);
+    Rcpp::traits::input_parameter< const double >::type ref_error(ref_errorSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type which_haps_to_use(which_haps_to_useSEXP);
+    Rcpp::traits::input_parameter< const bool >::type rescale_eMatRead_t(rescale_eMatRead_tSEXP);
+    Rcpp::traits::input_parameter< const int >::type Jmax(JmaxSEXP);
+    Rcpp::traits::input_parameter< const double >::type maxDifferenceBetweenReads(maxDifferenceBetweenReadsSEXP);
+    Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects(eMatRead_t, rare_per_hap_info, common_snp_index, snp_is_common, sampleReads, hapMatcherR, grid, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads);
     return R_NilValue;
 END_RCPP
 }
@@ -1596,10 +1595,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_rcpp_gibbs_nipt_iterate", (DL_FUNC) &_QUILT_rcpp_gibbs_nipt_iterate, 58},
     {"_QUILT_rcpp_fly_weighter", (DL_FUNC) &_QUILT_rcpp_fly_weighter, 14},
     {"_QUILT_rcpp_forwardBackwardGibbsNIPT", (DL_FUNC) &_QUILT_rcpp_forwardBackwardGibbsNIPT, 65},
-    {"_QUILT_rcpp_evaluate_read_probabilities", (DL_FUNC) &_QUILT_rcpp_evaluate_read_probabilities, 15},
     {"_QUILT_rcpp_simple_binary_search", (DL_FUNC) &_QUILT_rcpp_simple_binary_search, 2},
     {"_QUILT_rcpp_simple_binary_matrix_search", (DL_FUNC) &_QUILT_rcpp_simple_binary_matrix_search, 4},
     {"_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects, 16},
+    {"_QUILT_Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects, 15},
     {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 27},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
     {"_QUILT_Rcpp_raw_test", (DL_FUNC) &_QUILT_Rcpp_raw_test, 2},

@@ -136,10 +136,58 @@ impute_final_gibbs_with_rare_common <- function(
 ) {
 
 
+    save(
+    special_rare_common_objects,
+    special_rare_common_objects_per_core,                                                
+    allSNP_sampleReads,
+    hap1,
+    hap2,
+    pos_all,
+    maxDifferenceBetweenReads,
+    hapMatcher,
+    hapMatcherR,
+    use_hapMatcherR,
+    distinctHapsIE,
+    eMatDH_special_matrix_helper,
+    eMatDH_special_matrix,
+    Ksubset,
+    ref_error,
+    which_haps_to_use,
+    small_ref_panel_gibbs_iterations,
+    small_ref_panel_block_gibbs_iterations,
+    allSNP_wif0,
+    allSNP_grid_has_read,
+    make_plots,
+    outplotprefix,
+    have_truth_haplotypes,
+    truth_haps_all,
+    have_truth_genotypes,
+    truth_gen_all,
+    truth_labels_all,
+    uncertain_truth_labels_all,
+    shuffle_bin_radius,
+    make_plots_block_gibbs,
+    sample_name,
+    regionStart,
+    regionEnd,
+    buffer,
+    i_it,
+    i_gibbs_sample,
+    ff0_shard_check_every_pair,
+    sampleNames,
+    iSample,
+    phase_all,
+    file = "/dev/shm/rwdavies/temp_irc.RData", compress = FALSE)
+    stop("WER")
+
+
     
     snp_is_common <- special_rare_common_objects[["snp_is_common"]]
     rare_per_hap_info <- special_rare_common_objects[["rare_per_hap_info"]]
     nSNPs <- nrow(pos_all)
+
+    print_message("get initial read labels")
+    Sys.sleep(1)
     
     H <- get_initial_read_labels(
         pos_all = pos_all,
@@ -150,6 +198,9 @@ impute_final_gibbs_with_rare_common <- function(
         maxDifferenceBetweenReads = maxDifferenceBetweenReads
     )   
 
+    print_message("make eHapsCurrent_tc")
+    Sys.sleep(1)
+    
     snp_is_common_1_based <- which(snp_is_common)
     small_eHapsCurrent_tc <- make_eHapsCurrent_tc_using_rare_and_common_stuff(
         hapMatcher = hapMatcher,        
@@ -175,6 +226,8 @@ impute_final_gibbs_with_rare_common <- function(
         truth_haps <- NULL
     }
 
+    print_message("get out special objects")
+    Sys.sleep(1)    
     
     use_small_eHapsCurrent_tc <- TRUE
     use_provided_small_eHapsCurrent_tc <- TRUE
@@ -207,6 +260,9 @@ impute_final_gibbs_with_rare_common <- function(
 
     ## 
     double_list_of_starting_read_labels <- list(list(H))
+
+    print_message("impute one sample")
+    Sys.sleep(1)
 
     gibbs_iterate <- impute_one_sample(
         nSNPs = nSNPs,
@@ -347,4 +403,57 @@ final_phasing_accuracy_calculation_rare_common <- function(
         r2 <-  round(cor((dosage_all)[inRegion2] - 2 * af[inRegion2], gen_all[inRegion2, sampleNames[iSample]] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
         print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
     }
+}
+
+
+
+determine_which_reads_require_k_haps <- function(
+    sampleReads,
+    nSNPs,
+    rare_per_hap_info,
+    which_haps_to_use
+) {
+    ##
+    Ksubset <- length(which_haps_to_use)
+    nReads <- length(sampleReads)
+    ## 1 is normal
+    ## 0 is special
+    eMatRead_t <- array(1, c(Ksubset, nReads))
+    ## rare_per_hap_info is 1-based
+    ## want knowledge of for each hap, 
+    ## build an index of what sites have a k
+    has_a_k <- logical(nSNPs)
+    for(k in 1:Ksubset) {
+        x <- rare_per_hap_info[[which_haps_to_use[[k]]]]
+        for(i in 1:length(x)) {
+            has_a_k[x[i]] <- TRUE
+        }
+    }
+    n_affected_SNPs <- sum(has_a_k)
+    ## now get their positions
+    snp_n_for_has_a_k <- integer(nSNPs)
+    snp_n_for_has_a_k[has_a_k] <- 1:n_affected_SNPs
+    ## among those sites, figure out which k are involved
+    which_k <- vector("list", n_affected_SNPs)
+    for(k in 1:Ksubset) {
+        x <- rare_per_hap_info[[which_haps_to_use[[k]]]]
+        for(n in snp_n_for_has_a_k[x]) {        
+            which_k[[n]] <- c(which_k[[n]], k)
+        }
+    }
+    ## now find reads
+    read_has_a_k <- logical(nReads)
+    for(iRead in 1:nReads) {
+        u <- sampleReads[[iRead]][[4]] + 1 ## 1-based
+        if (sum(has_a_k[u]) > 0) {
+            ## get these (could be more than 1)
+            x <- snp_n_for_has_a_k[u]
+            y <- x[x > 0]
+            for(yy in y) {
+                ks <- which_k[[yy]]
+                eMatRead_t[ks, iRead] <- 0
+            }
+        }
+    }
+    eMatRead_t
 }

@@ -192,11 +192,6 @@ rcpp_forwardBackwardGibbsNIPT <- function(sampleReads, priorCurrent_m, alphaMatC
 }
 
 #' @export
-rcpp_evaluate_read_probabilities <- function(alphaHat_m, betaHat_m, ab_m, pC, pA1, pA2, read_category, iRead, h_rC, h_rA1, h_rA2, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, sample_is_diploid = TRUE) {
-    .Call('_QUILT_rcpp_evaluate_read_probabilities', PACKAGE = 'QUILT', alphaHat_m, betaHat_m, ab_m, pC, pA1, pA2, read_category, iRead, h_rC, h_rA1, h_rA2, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, sample_is_diploid)
-}
-
-#' @export
 rcpp_simple_binary_search <- function(val, vec) {
     .Call('_QUILT_rcpp_simple_binary_search', PACKAGE = 'QUILT', val, vec)
 }
@@ -209,6 +204,11 @@ rcpp_simple_binary_matrix_search <- function(val, mat, s1, e1) {
 #' @export
 Rcpp_make_eMatRead_t_for_gibbs_using_objects <- function(eMatRead_t, sampleReads, hapMatcher, hapMatcherR, use_hapMatcherR, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads, use_eMatDH_special_symbols) {
     invisible(.Call('_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects', PACKAGE = 'QUILT', eMatRead_t, sampleReads, hapMatcher, hapMatcherR, use_hapMatcherR, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads, use_eMatDH_special_symbols))
+}
+
+#' @export
+Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects <- function(eMatRead_t, rare_per_hap_info, common_snp_index, snp_is_common, sampleReads, hapMatcherR, grid, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads) {
+    invisible(.Call('_QUILT_Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects', PACKAGE = 'QUILT', eMatRead_t, rare_per_hap_info, common_snp_index, snp_is_common, sampleReads, hapMatcherR, grid, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads))
 }
 
 #' @export

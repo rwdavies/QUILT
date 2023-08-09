@@ -195,7 +195,7 @@ prepare_full_objects_for_rare_common <- function(
     )
     nGrids <- out2$nGrids
     grid <- out2$grid
-    L_grid <- out2$L_grid
+    L_grid <- as.integer(out2$L_grid)
     dl <- diff(L_grid)
 
     cM_grid <- match_genetic_map_to_L(

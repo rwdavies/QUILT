@@ -513,6 +513,10 @@ get_and_impute_one_sample <- function(
     ## truth_g <- as.integer(truth_gen[, sampleNames[iSample]])
     for(i_gibbs_sample in 1:(nGibbsSamples + 1)) {
 
+        if (K >100000) {
+            gc(reset = TRUE);            gc(reset = TRUE);
+        }
+
         if (i_gibbs_sample == (nGibbsSamples + 1)) {
             print_message("Phasing it")
             phasing_it <- TRUE
@@ -2247,6 +2251,7 @@ impute_one_sample <- function(
     calculate_gamma_on_the_fly = FALSE
 ) {
     ##
+    print("AM INSIDE R FUNCTION")
     K <- length(which_haps_to_use)
     S <- 1
     ## print(paste0("start = ", Sys.time()))
@@ -2321,6 +2326,7 @@ impute_one_sample <- function(
     }
     while(!done_imputing) {
 
+##         if (ncol(alphaHat_t1) > 1000) {
 ##         print("SAVE ME")
 ##         save(
 ##             sampleReads,
@@ -2372,14 +2378,16 @@ impute_one_sample <- function(
 ##             param_list,
 ##             block_gibbs_quantile_prob,
 ##         ff0_shard_check_every_pair,
-## file = "/dev/shm/rwdavies/temp.RData", compress = FALSE)
+## file = "/dev/shm/rwdavies/temp123.RData", compress = FALSE)
 ##         stop("WER")
+##         }
 
         ## AM HERE
         ## AFTER THIS TRY LOADING UP
         ## SEE IF I CAN TWEAK WITH A-B TESTING
 
-        
+
+    print("NOW START RCPP FUNCTION")
         out <- rcpp_forwardBackwardGibbsNIPT(
             sampleReads = sampleReads,
             priorCurrent_m = small_priorCurrent_m,
@@ -2422,7 +2430,7 @@ impute_one_sample <- function(
             snp_start_1_based = -1,
             snp_end_1_based = -1,
             generate_fb_snp_offsets = FALSE,
-            suppressOutput = suppressOutput,
+            suppressOutput = 0, ## suppressOutput
             n_gibbs_burn_in_its = n_gibbs_burn_in_its,
             n_gibbs_sample_its = n_gibbs_sample_its,
             n_gibbs_starts = n_gibbs_starts,

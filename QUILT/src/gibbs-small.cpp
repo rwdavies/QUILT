@@ -61,6 +61,9 @@ int rcpp_simple_binary_search(
 
 
 
+
+
+
 //' @export
 // [[Rcpp::export]]
 int rcpp_simple_binary_matrix_search(
@@ -100,6 +103,13 @@ int rcpp_simple_binary_matrix_search(
     std::cout << "Something has gone wrong with binary matrix search, val = " << val << ", s1 = " << s1 << ", e1 = " << e1 << std::endl;
     return(mat(s1, 1));
 }
+
+
+
+
+
+
+
 
 //' @export
 // [[Rcpp::export]]
@@ -187,10 +197,14 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
 	    }
 	    iGrid0_prev = iGrid0;
 	    for(k = 0; k < K; k++) {
+
+                // if common, do something
+                // if rare, do something else, IF necessary
+                
                 if (use_hapMatcherR & (haps_at_gridR(k) > 0)) {
                     e = distinctHapsIE(haps_at_gridR(k) - 1, u(j));
                 } else if (haps_at_grid(k) > 0) {
-		  e = distinctHapsIE(haps_at_grid(k) - 1, u(j));
+                    e = distinctHapsIE(haps_at_grid(k) - 1, u(j));
 		} else {
                     if (use_eMatDH_special_symbols) {
                         bvtd = rcpp_simple_binary_matrix_search(
@@ -207,14 +221,205 @@ void Rcpp_make_eMatRead_t_for_gibbs_using_objects(
                     for (int i = 0; i < 32; i++, tmp >>= 1) {
                         hap(j2++) = tmp & 0x1;
                     }
-                    if (hap(u(j) - iGrid0 * 32) == 1) {
+                    if (hap(u(j) % 32) == 1) {
                         e = 1 - ref_error;
                     } else {
                         e = ref_error;
                     }
 		}
+                
                 eMatRead_t(k, iRead) *= (e * pA + (1 - e) * pR);
 	    }
+	    //
+        }
+        if (rescale_eMatRead_t) {
+	  //
+	  // this is copied from rcpp_make_eMatRead_t, informed by real data!
+	  // 
+	  double x=0;
+	  for(k=0; k < K; k++) {
+	    if(eMatRead_t(k,iRead)>x) {
+	      x = eMatRead_t(k,iRead);
+	    }
+	  }
+	  // of course I hit an error where x was defined but d1 was not for a read with x as 4.51168e-311
+	  d1 = 1 / x;
+	  if ((x == R_NaN) | (x == R_PosInf) | (x == R_NegInf) | (x == 0) | (d1 == R_PosInf) | (d1 == R_NegInf) | (d1 == R_NaN)) {
+	    // e.g. with extremely long molecule, just ignore, hopefully not frequent
+	    // note - could probably get around by doing this on the fly periodically
+	    for(k=0; k < K; k++) {                
+	        eMatRead_t(k, iRead) = 1;
+	    }
+	  } else {
+	      // x is the maximum now
+	      for(k=0; k < K; k++) {
+	          eMatRead_t(k,iRead) *= d1;
+	          if(eMatRead_t(k,iRead) < d2) {
+		      eMatRead_t(k,iRead) = d2;
+		  }
+	      }
+	  }
+	}
+    }
+    return;
+}
+
+
+
+
+
+
+
+//' @export
+// [[Rcpp::export]]
+void Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects(
+    arma::mat& eMatRead_t,
+    Rcpp::List& rare_per_hap_info,
+    Rcpp::IntegerVector& common_snp_index,
+    Rcpp::LogicalVector& snp_is_common,
+    const Rcpp::List& sampleReads,
+    const Rcpp::RawMatrix hapMatcherR,
+    const Rcpp::IntegerVector& grid,
+    const arma::mat& distinctHapsIE,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix_helper,
+    const Rcpp::IntegerMatrix& eMatDH_special_matrix,
+    const double ref_error,
+    const Rcpp::IntegerVector& which_haps_to_use,
+    const bool rescale_eMatRead_t,
+    const int Jmax,
+    const double maxDifferenceBetweenReads
+) {
+    const int nReads = sampleReads.size();
+    const int K = which_haps_to_use.length();
+    int iRead, iGrid0, iGrid0_prev, k, j;
+    double eps, d1;
+    double pR = 1;
+    double pA = 1;
+    double e;
+    Rcpp::RawVector haps_at_gridR(K);
+    Rcpp::IntegerVector haps_at_grid(K);
+    Rcpp::IntegerVector hap(32);
+    double d2 = 1 / maxDifferenceBetweenReads;
+    int bvtd; // binary value to decompose
+    int s1 = 0;
+    int e1 = 0;
+    int u_j_common;
+    arma::colvec ori_eMatRead_t_col(K);
+    bool check_val;
+    Rcpp::IntegerVector vals;
+    for(iRead = 0; iRead < nReads; iRead++) {
+        for(k = 0; k < K; k++) {        
+            ori_eMatRead_t_col(k) = eMatRead_t(k, iRead);
+        }
+        // reset this to 1
+        eMatRead_t.col(iRead).fill(1);
+        Rcpp::List readData = as<Rcpp::List>(sampleReads[iRead]);
+        int J = as<int>(readData[0]); // number of Unique SNPs on read
+        arma::ivec bq = as<arma::ivec>(readData[2]); // bq for each SNP
+        arma::ivec u = as<arma::ivec>(readData[3]); // position of each SNP from 0 to T-1
+        iGrid0_prev = -1;
+        if(J >= Jmax) {
+            J = Jmax;
+        }
+        for(j = 0; j <= J; j++) {
+            if(bq(j) < 0) {
+                eps = pow(10,(double(bq(j)) / 10));
+                pR = 1 - eps;
+                pA = eps / 3;
+            }
+            if(bq(j) > 0) {
+                eps = pow(10, (-double(bq(j)) / 10));
+                pR = eps / 3;
+                pA = 1 - eps;
+            }
+            //
+            // remember rare thing now MUCH more common
+            //
+            if (snp_is_common(u(j))) {
+                //
+                // potentially update this
+                //
+                //iGrid0 = grid(u(j));
+                u_j_common = common_snp_index(u(j)) - 1; // common_snp_index is 1-based
+                iGrid0 = floor(u_j_common / 32); // grid among common SNPs
+                if (iGrid0 != iGrid0_prev) {
+                    for(k = 0; k < K; k++) {
+                        haps_at_gridR(k) = hapMatcherR(which_haps_to_use(k) - 1, iGrid0);
+                    }
+                    s1 = eMatDH_special_matrix_helper(iGrid0, 0);
+                    e1 = eMatDH_special_matrix_helper(iGrid0, 1);
+                }
+                iGrid0_prev = iGrid0;
+                // this is the position of u(j) (which is common) among all SNPs
+                for(k = 0; k < K; k++) {
+                    //bool temp_condition = false;
+                    // if (iRead == 12 && (k >= 20 && k <= 25)) {                    
+                    //     temp_condition = true;
+                    // }
+                    // if (temp_condition) {
+                    //     std::cout << "k = " << k << ", haps_at_gridR(k) = " << haps_at_gridR(k) << ", which_haps_to_use(k) = " << which_haps_to_use(k) << ", direct values hapMatcherR(which_haps_to_use(k) - 1, iGrid0) = " << hapMatcherR(which_haps_to_use(k) - 1, iGrid0) << std::endl;
+                    // }
+                    if (haps_at_gridR(k) > 0) {
+                        e = distinctHapsIE(haps_at_gridR(k) - 1, u_j_common);
+                    } else {
+                        //std::cout << "which_haps_to_use(k) = " << which_haps_to_use(k) << std::endl;
+                        bvtd = rcpp_simple_binary_matrix_search(
+                            which_haps_to_use(k) - 1,
+                            eMatDH_special_matrix,
+                            s1,
+                            e1
+                        );
+                        std::uint32_t tmp(bvtd);
+                        int j2 = 0;
+                        for (int i = 0; i < 32; i++, tmp >>= 1) {
+                            hap(j2++) = tmp & 0x1;
+                        }
+                        // this could be a bug, heeds to be grid of specific location
+                        if (hap(u_j_common % 32) == 1) {
+                            e = 1 - ref_error;
+                        } else {
+                            e = ref_error;
+                        }
+                        // if (temp_condition) {
+                        //     std::cout << "here2, bvtd = " << bvtd << std::endl;
+                        //     std::cout << "here2, tmp = " << tmp << std::endl;
+                        //     std::cout << "hap" << std::endl;
+                        //     std::cout << hap << std::endl;
+                        //     std::cout << "u(j) = " << u(j) << ", hap(u(j) % 32) = " << hap(u(j) % 32) << std::endl;
+                        //     std::cout << "e = " << e << std::endl;
+                        // }
+                    }
+                    eMatRead_t(k, iRead) *= (e * pA + (1 - e) * pR);
+                }
+            } else {
+                // snp is rare so go for it
+                int u_j_plus_1 = u(j) + 1;
+                for(k = 0; k < K; k++) {
+                    if (ori_eMatRead_t_col(k) == 0) {
+                        if (iRead == 12 && k < 6) {
+                            std::cout << "k = " << k << " and j = " << j << " is worth study" << std::endl;
+                        }
+                        // need to check this one
+                        vals = rare_per_hap_info[which_haps_to_use(k) - 1];
+                        check_val = false;
+                        for(int v = 0; v < vals.length(); v++) {
+                            if (u_j_plus_1 == (vals(v))) {
+                                check_val = true;
+                            }
+                        }
+                        // 
+                        if (check_val) {
+                            e = 1 - ref_error;
+                        } else {
+                            e = ref_error;
+                        }
+                    } else {
+                        // assume ref
+                        e = ref_error;
+                    }
+                    eMatRead_t(k, iRead) *= (e * pA + (1 - e) * pR);                    
+                }
+            }
 	    //
         }
         if (rescale_eMatRead_t) {

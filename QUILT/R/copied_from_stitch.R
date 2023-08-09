@@ -1,20 +1,29 @@
-print_message <- function(x, include_mem = FALSE) {
+print_message <- function(x, include_mem = TRUE) {
     if (include_mem) {
-        mem <- system("ps auxww | grep 'scripts/profile.R' | grep slave | grep -v 'grep' | awk -v OFS='\t' '$1=$1' | cut -f6", intern = TRUE)
+        ## mem <- system("ps auxww | grep 'scripts/profile.R' | grep slave | grep -v 'grep' | awk -v OFS='\t' '$1=$1' | cut -f6", intern = TRUE)
+        a <- system("ps aux | grep '/usr/lib64/R/bin/exec/R -f scratch/ukbb_gel.R'", intern = TRUE)
+        a <- a[-grep("grep", a)]
+        b <- unlist(strsplit(a, " "))
+        mem <- as.integer(b[b!= ""][6])
         if (length(mem) > 0) {
             mem <- paste0(paste0(round(as.integer(mem) / 2 ** 20, 3), collapse = ", "), " - ")
+            ## mem <- paste0(round(as.integer(mem) / 2 ** 20, 3), collapse = ", ")
         } else {
             mem <- ""
         }
+        
     } else {
         mem <- ""
     }
-    message(
+    
+    print(
         paste0(
             "[", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "] ", mem, x
         )
     )
 }
+
+
 
 
 check_mclapply_OK <- function(out, stop_message = "An error occured during QUILT. The first such error is above") {
