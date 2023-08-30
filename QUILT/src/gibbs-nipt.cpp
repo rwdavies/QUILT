@@ -2478,6 +2478,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool update_in_place = as<bool>(param_list["update_in_place"]);
     const bool do_shard_ff0_block_gibbs = as<bool>(param_list["do_shard_ff0_block_gibbs"]);
     const bool force_reset_read_category_zero = as<bool>(param_list["force_reset_read_category_zero"]);
+    const bool disable_read_category_usage = as<bool>(param_list["disable_read_category_usage"]);
     const bool calculate_gamma_on_the_fly = as<bool>(param_list["calculate_gamma_on_the_fly"]);
     const bool pass_in_eMatRead_t = as<bool>(param_list["pass_in_eMatRead_t"]);
     const bool rescale_eMatRead_t = as<bool>(param_list["rescale_eMatRead_t"]);
@@ -2769,6 +2770,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                     read_category[iRead] = 0;
                 }
             }
+        }
+        if (disable_read_category_usage) {
+            read_category.fill(0); // turn off for testing / comparison stuff
         }
         //
         //

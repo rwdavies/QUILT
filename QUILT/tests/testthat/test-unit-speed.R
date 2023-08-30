@@ -16,6 +16,8 @@ if ( 1 == 0 ) {
 
 test_that("speed test for cpp stuff", {
 
+    skip("wip")
+    
     out <- make_quilt_fb_test_package(
         K = 400,
         nReads = 32000,

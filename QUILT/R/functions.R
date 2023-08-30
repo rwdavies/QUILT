@@ -509,6 +509,10 @@ get_and_impute_one_sample <- function(
         return_p1 <- FALSE
     }
 
+    ## want this off for real usage (should be OK!)
+    ## testing might want this off for consistency
+    disable_read_category_usage <- FALSE
+    
     ## don't need this for routine use - or do better matching!
     ## truth_g <- as.integer(truth_gen[, sampleNames[iSample]])
     for(i_gibbs_sample in 1:(nGibbsSamples + 1)) {
@@ -765,7 +769,8 @@ get_and_impute_one_sample <- function(
                 i_gibbs_sample = i_gibbs_sample,
                 ff0_shard_check_every_pair = ff0_shard_check_every_pair,
                 zilong = zilong,
-                calculate_gamma_on_the_fly = calculate_gamma_on_the_fly                    
+                calculate_gamma_on_the_fly = calculate_gamma_on_the_fly,
+                disable_read_category_usage = disable_read_category_usage
             )
 
             if (plot_p1) {
@@ -2254,7 +2259,8 @@ impute_one_sample <- function(
     common_snp_index = integer(1),
     snp_is_common = logical(1),
     rare_per_hap_info = vector("list", 1),
-    rare_per_snp_info = vector("list", 1)
+    rare_per_snp_info = vector("list", 1),
+    disable_read_category_usage = TRUE
 ) {
     ##
     K <- length(which_haps_to_use)
@@ -2323,6 +2329,7 @@ impute_one_sample <- function(
         update_in_place = FALSE,
         do_shard_ff0_block_gibbs = TRUE,
         force_reset_read_category_zero = FALSE,
+        disable_read_category_usage = disable_read_category_usage,
         calculate_gamma_on_the_fly = calculate_gamma_on_the_fly,
         rescale_eMatRead_t = rescale_eMatRead_t,
         pass_in_eMatRead_t = pass_in_eMatRead_t,
