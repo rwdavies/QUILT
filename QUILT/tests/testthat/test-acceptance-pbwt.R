@@ -13,7 +13,7 @@ if ( 1 == 0 ) {
 
 }
 
-n_snps <- 50
+n_snps <- 200
 chr <- 10
 K <- 6
 set.seed(919)
@@ -56,7 +56,7 @@ test_that("QUILT can impute a few samples using robbie mspbwt or zilong pbwt", {
         outputdir <- STITCH::make_unique_tempdir()
 
         regionStart <- 11
-        regionEnd <- 40
+        regionEnd <- 190
         buffer <- 5
         QUILT_prepare_reference(
             outputdir = outputdir,
@@ -68,7 +68,8 @@ test_that("QUILT can impute a few samples using robbie mspbwt or zilong pbwt", {
             regionEnd = regionEnd,
             buffer = buffer,
             use_mspbwt = use_mspbwt,
-            use_zilong = zilong
+            use_zilong = zilong,
+            mspbwt_nindices = 1
         )
         regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
         expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))

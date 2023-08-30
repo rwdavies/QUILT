@@ -314,6 +314,7 @@ select_new_haps_mspbwt_v3 <- function(
                 colnames(mtm) <- c("start0", "index0", "len1")
                 mtm <- cbind(mtm[, "index0"], mtm[, "start0"] + 1, mtm[, "start0"] + mtm[, "len1"], mtm[, "len1"])
                 colnames(mtm) <- c("index0", "start1", "end1", "len1")
+                
             } else {
 
                 if (is.null(ms_indices[[iIndex]][["a"]])) {
@@ -346,7 +347,12 @@ select_new_haps_mspbwt_v3 <- function(
             mtm <- mtm[order(mtm[, 1], -mtm[, "end1"], -mtm[, "start1"]), ]            
             x <- c(FALSE, diff(mtm[, "index1"]) == 0 & diff(mtm[, "start1"]) == 0)
             ## y <- !duplicated(paste0(mtm[, "index1"], "-", mtm[, "start1"]))
+
+            ##print("in-A")
+            ##save(mtm, x, file = "~/temp.RData")
             mtm <- mtm[!x, ]
+            ##print("out-A")
+            
             ## 
             key <- nGrids * mtm[, "start1"] + mtm[, "end1"]
             length <- mtm[, "len1"]
