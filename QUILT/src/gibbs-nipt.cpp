@@ -3238,3 +3238,104 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
 
 
 
+// STRICTLY FOR TEESTING PURPOSES
+// this code shoudl be copy and paste into the above when working
+
+//' @export
+// [[Rcpp::export]]
+Rcpp::List rcpp_evaluate_read_probabilities(
+    arma::mat& alphaHat_m,
+    arma::mat& betaHat_m,
+    arma::mat& ab_m,
+    Rcpp::NumericVector& pC,
+    Rcpp::NumericVector& pA1,
+    Rcpp::NumericVector& pA2,
+    arma::ivec& read_category,
+    int iRead,
+    int h_rC,
+    int h_rA1,
+    int h_rA2,
+    const arma::mat& eMatRead_t,
+    arma::ivec& number_of_non_1_reads,
+    arma::imat& indices_of_non_1_reads,
+    bool sample_is_diploid = true
+) {
+    arma::colvec  eMatRead_t_col = eMatRead_t.col(iRead);
+    int ik, k;
+    double val1, val2, val3;
+    // copy over values initially
+    pA1(0) = pC(0);
+    pA2(0) = pC(0);
+    pA1(1) = pC(1);
+    pA2(1) = pC(1);
+    pA1(2) = pC(2);
+    pA2(2) = pC(2);
+    //
+    //pA1(h_rA1) = 0;
+    //pA1(h_rA2) = pC(h_rA2); // stays the same
+    // have these here, simple
+    //pA2(h_rC) = 0;
+    //pA2(h_rA2) = 0;
+    //
+    // do the options depending on what kind of read
+    //
+    if (read_category(iRead) == 0) {
+        pA1(h_rC) = sum(ab_m.col(h_rC) / eMatRead_t_col);             // A1 - original hap loses
+        pA1(h_rA1) = sum(ab_m.col(h_rA1) % eMatRead_t_col);           // A1 - new hap gains
+        if (!sample_is_diploid) {
+            pA2(h_rA2) = sum(ab_m.col(h_rA2) % eMatRead_t_col);        // A2 - new hap gains
+        }
+    } else if (read_category(iRead) == 2) {
+        // note: separate two cases (diploid, not-diploid), as hope this is faster than two for loops?
+        // as accessing eMatRead_t_col(k) both times
+        val1 = 0;
+        val2 = 0;
+        val3 = 0;
+        if (sample_is_diploid) {
+            for(ik = 0; ik < number_of_non_1_reads(iRead); ik++) {
+                k = indices_of_non_1_reads(ik, iRead);
+                val1 += ab_m(k, h_rC);
+                val2 += ab_m(k, h_rA1);
+            }
+            pA1(h_rC)  += val1 * (1 / eMatRead_t_col(k) - 1);  // A1 - original hap loses
+            pA1(h_rA1) += val2 * (eMatRead_t_col(k) - 1);     // A1 - new hap gains
+        } else {
+            for(ik = 0; ik < number_of_non_1_reads(iRead); ik++) {
+                k = indices_of_non_1_reads(ik, iRead);
+                val1 += ab_m(k, h_rC);
+                val2 += ab_m(k, h_rA1);
+                val3 += ab_m(k, h_rA2);
+            }
+            pA1(h_rC)  += val1 * (1 / eMatRead_t_col(k) - 1);  // A1 - original hap loses
+            pA1(h_rA1) += val2 * (eMatRead_t_col(k) - 1);     // A1 - new hap gains
+            pA2(h_rA2) += val3 * (eMatRead_t_col(k) - 1);     // A2 - new hap gains
+        }
+    } else if (read_category(iRead) == 3) {
+        // note: separate two cases (diploid, not-diploid), as hope this is faster than two for loops?
+        // as accessing eMatRead_t_col(k) both times
+        if (sample_is_diploid) {
+            for(ik = 0; ik < number_of_non_1_reads(iRead); ik++) {
+                k = indices_of_non_1_reads(ik, iRead);
+                pA1(h_rC)  += ab_m(k, h_rC)  * (1 / eMatRead_t_col(k) - 1); // A1 - original hap loses
+                pA1(h_rA1) += ab_m(k, h_rA1) * (eMatRead_t_col(k) - 1);     // A1 - new hap gains
+            }
+        } else {
+            for(ik = 0; ik < number_of_non_1_reads(iRead); ik++) {
+                k = indices_of_non_1_reads(ik, iRead);
+                pA1(h_rC)  += ab_m(k, h_rC)  * (1 / eMatRead_t_col(k) - 1); // A1 - original hap loses
+                pA1(h_rA1) += ab_m(k, h_rA1) * (eMatRead_t_col(k) - 1);     // A1 - new hap gains
+                pA2(h_rA2) += ab_m(k, h_rA2) * (eMatRead_t_col(k) - 1);     // A2 - new hap gains
+            }
+        }
+    }
+    // afterwards, copy in some of the ff > 0 options, simple
+    pA2(h_rA1) = pC(h_rA1);                                   // stays the same
+    pA2(h_rC) = pA1(h_rC);                                    // A2 - original hap loses
+    //
+    //
+    //
+    Rcpp::List to_return(2);
+    to_return[0] = pA1;
+    to_return[1] = pA2;
+    return(to_return);
+}

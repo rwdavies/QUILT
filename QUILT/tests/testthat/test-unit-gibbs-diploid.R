@@ -11,7 +11,8 @@ if (1 == 0) {
     o <- sapply(a, source)
     setwd(dir)
     Sys.setenv(PATH = paste0(getwd(), ":", Sys.getenv("PATH")))
-    rcpp_int_expand(1, 32)
+    STITCH::rcpp_int_expand(1, 32)
+    QUILT::increment2N(0, 0, 0, 0)
 
 
 }
@@ -237,8 +238,19 @@ test_that("can skip reads and more efficiently calculate probabilities for gibbs
         update_in_place = FALSE,
         do_shard_ff0_block_gibbs = TRUE,
         force_reset_read_category_zero = FALSE,
-        calculate_gamma_on_the_fly = FALSE
+        calculate_gamma_on_the_fly = FALSE,
+        use_eMatDH_special_symbols = FALSE,
+        disable_read_category_usage = FALSE,
+        pass_in_eMatRead_t = FALSE,
+        rescale_eMatRead_t = TRUE,
+        make_eMatRead_t_rare_common = FALSE,
+        pass_in_alphaBeta = TRUE,
+        update_hapSum = FALSE,
+        record_read_set = FALSE,
+        perform_block_gibbs = FALSE
     )
+
+    
 
 
     wif0 <- as.integer(sapply(sampleReads, function(x) x[[2]]))
@@ -249,10 +261,12 @@ test_that("can skip reads and more efficiently calculate probabilities for gibbs
     a <-  double_list_of_starting_read_labelsX[[1]][[1]][1] 
     double_list_of_starting_read_labelsX[[1]][[1]][1] <- 10
     double_list_of_starting_read_labelsX[[1]][[1]][1] <- a
-
+    eMatRead_t <- array(0, c(1, 1))
+    
     set.seed(123)
     outRCPP <- rcpp_forwardBackwardGibbsNIPT(
         sampleReads = sampleReads,
+        eMatRead_t = eMatRead_t,
         priorCurrent_m = priorCurrent_m,
         alphaMatCurrent_tc = alphaMatCurrent_tc,
         eHapsCurrent_tc = eHapsCurrent_tc,
@@ -265,7 +279,7 @@ test_that("can skip reads and more efficiently calculate probabilities for gibbs
         blocks_for_output = array(0, c(1, 1)),
         double_list_of_starting_read_labels = double_list_of_starting_read_labels,
         param_list = param_list,
-        suppressOutput = 0,
+        suppressOutput = 1,
         wif0 = integer(1),
         L_grid = integer(1),
         alphaHat_t1 = array(0, c(K, nGrids)),
@@ -283,7 +297,6 @@ test_that("can skip reads and more efficiently calculate probabilities for gibbs
         hapSum_tc = array(0, c(1, 1, 1)),
         eMatDH_special_matrix_helper = array(0, c(1, 1)),
         eMatDH_special_matrix = array(0,c(1, 1)),
-        use_eMatDH_special_symbols = FALSE,
         distinctHapsB = array(0L, c(1, 1)),
         distinctHapsIE = array(0, c(1, 1)),
         hapMatcher = array(0L, c(1, 1)),
@@ -294,7 +307,10 @@ test_that("can skip reads and more efficiently calculate probabilities for gibbs
         which_haps_to_use = 0:(K - 1),
         grid_has_read = grid_has_read,
         smooth_cm = numeric(1),
-        skip_read_iteration = FALSE
+        skip_read_iteration = FALSE,
+        rare_per_hap_info = vector("list", 1),
+        rare_per_snp_info = vector("list", 1),
+        snp_is_common = rep(TRUE, nSNPs)
     )
 
     ## getting there...

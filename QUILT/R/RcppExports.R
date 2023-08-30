@@ -192,6 +192,11 @@ rcpp_forwardBackwardGibbsNIPT <- function(sampleReads, eMatRead_t, priorCurrent_
 }
 
 #' @export
+rcpp_evaluate_read_probabilities <- function(alphaHat_m, betaHat_m, ab_m, pC, pA1, pA2, read_category, iRead, h_rC, h_rA1, h_rA2, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, sample_is_diploid = TRUE) {
+    .Call('_QUILT_rcpp_evaluate_read_probabilities', PACKAGE = 'QUILT', alphaHat_m, betaHat_m, ab_m, pC, pA1, pA2, read_category, iRead, h_rC, h_rA1, h_rA2, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, sample_is_diploid)
+}
+
+#' @export
 rcpp_simple_binary_search <- function(val, vec) {
     .Call('_QUILT_rcpp_simple_binary_search', PACKAGE = 'QUILT', val, vec)
 }
