@@ -34,4 +34,6 @@ if (!suppressPackageStartupMessages(require("STITCH"))) {
 }
 
 
-
+if (!suppressPackageStartupMessages(require("mspbwt"))) {
+    install.packages("https://www.stats.ox.ac.uk/~rdavies/mspbwt_0.0.1.tar.gz")
+}
