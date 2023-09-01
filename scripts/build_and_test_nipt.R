@@ -27,9 +27,9 @@ if ( 1 == 0 ) {
 ## - subsetting of reads in simulation doesn't account for single vs paired end properly
 
 ## important global variables
-ANALYSIS_DIR <- "/well/davies/users/dcc832/nipt_test_2022_12_08/"
-##REF_PREFIX <- "HRC" ## or use ONEKG for 1000 Genomes, should work I think
-REF_PREFIX <- "ONEKG"
+ANALYSIS_DIR <- "/well/davies/users/dcc832/nipt_test_2023_08_30/"
+REF_PREFIX <- "HRC" ## or use ONEKG for 1000 Genomes, should work I think
+## REF_PREFIX <- "ONEKG"
 CHR <- "chr20"
 REGIONSTART <- 10000000
 REGIONEND <- 15000000
@@ -378,6 +378,7 @@ QUILT_prepare_reference(
 ## can either do full or downsampled versions
 ## not entirely sure 
 run("samtools view -b -s 100.1666 nipt.", REGIONNAME, ".bam > nipt.downsampled.", REGIONNAME, ".bam")
+run("samtools view -b -s 100.999 nipt.", REGIONNAME, ".bam > nipt.downsampled.", REGIONNAME, ".bam")
 run("samtools index nipt.downsampled.", REGIONNAME, ".bam")
 cat("nipt.downsampled.", REGIONNAME, ".bam\n", sep = "", file = "bamlist.nipt.txt")
 
@@ -394,7 +395,7 @@ n_seek_its <- 3
 QUILT(
     outputdir = outputdir2,
     chr = CHR,
-   regionStart= REGIONSTART,
+    regionStart= REGIONSTART,
     regionEnd = REGIONEND,
     buffer = BUFFER,
     nGen = 100,
@@ -403,10 +404,22 @@ QUILT(
     prepared_reference_filename = file.path(outputdir2, "RData", paste0("QUILT_prepared_reference.", REGIONNAME, ".RData")),
     method = "nipt",
     fflist = fflist,
-   nGibbsSamples = nGibbsSamples,
-   phasefile = "phasefile.txt",   
-   n_seek_its = n_seek_its,
-   make_plots = TRUE
+    nGibbsSamples = nGibbsSamples,
+    phasefile = "phasefile.txt",   
+    n_seek_its = n_seek_its,
+    make_plots = TRUE,
+    make_plots_block_gibbs = TRUE
 )
 ## 
 
+
+## things to look at
+## - fix final phasing read label aggregation (maybe?)
+## - really doesn't look like block gibbs is working properly
+## - not clear if block gibbs is working optimally, need to check other fetal fraction / haps, and/or walk through examples carefully
+
+## - todo
+## 1) merge code, make work
+## 2) work on block gibbs
+
+## definitely take a look at blocking, even right at the start

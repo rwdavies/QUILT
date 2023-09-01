@@ -145,7 +145,8 @@ get_and_validate_phase <- function(
 alpha_col <- function(col, alpha) {
     x <- col2rgb(col) / 255
     return(rgb(x["red", 1], x["green", 1], x["blue", 1], alpha = alpha)    )
-=======
+}
+
 ## get_object_sizes(ls())
 get_object_sizes <- function(x) {
     sort( sapply(x,function(x){object.size(get(x))}), decreasing = TRUE) / 1024 / 1024 / 1024

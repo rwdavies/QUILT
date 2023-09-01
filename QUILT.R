@@ -203,11 +203,7 @@ option_list <- list(
     make_option(
         "--make_plots_block_gibbs",
         type = "logical",
-
         help = "Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs [default FALSE] ",
-
-        help = "Whether to make some plots of gibbs block sampling. This is pretty slow though so useful more for debugging and understanding and visualizing performance [default FALSE] ",
-
         default = FALSE
     ), 
     make_option(

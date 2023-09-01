@@ -258,26 +258,27 @@ plot_single_gamma_dosage <- function(
     ##
     ## abline(h = (1 - frac_reads))
     text(x = mean(xlim), y = (1 - frac_reads) * 0.85, labels = "Imputed genotypes", cex = 1.5, font = 2)
-        
-#<<<<<<< HEAD
-    if (method == "nipt") {
-        r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = rowSums(haps[, 1:2]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = (1 - frac_reads) / 2, scale = (1 - frac_reads) / 2, col = "green", label = "Rolling accuracy of maternal genotypes versus truth"))
-        r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][c(1, 3), ]), truth = rowSums(haps[, c(1, 3)]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads) / 2, col = "orange", label = "Rolling accuracy of fetal genotypes versus truth"))
-    } else {
-        r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = rowSums(haps[, 1:2]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads), col = "green", label = "Rolling accuracy versus truth genotypes"))        
-#=======
+    ##
+    ##
+    ##
     if (have_truth_haplotypes | have_truth_genotypes) {
-        if (have_truth_genotypes & !have_truth_haplotypes) {
-            truthH <- c(truth_gen)
+        if (method == "nipt") {
+            if (have_truth_haplotypes) {
+                truthH_m <- rowSums(haps[, 1:2])
+                truthH_g <- rowSums(haps[, c(1, 3)])
+                ## not sure what to do about truth_genotypes here honestly
+                r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = truthH_m, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = (1 - frac_reads) / 2, scale = (1 - frac_reads) / 2, col = "green", label = "Rolling accuracy of maternal genotypes versus truth"))
+                r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][c(1, 3), ]), truth = truthH_g, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads) / 2, col = "orange", label = "Rolling accuracy of fetal genotypes versus truth"))
+            }
         } else {
-            truthH <- rowSums(haps[, 1:2])
+            if (have_truth_genotypes & !have_truth_haplotypes) {
+                truthH <- c(truth_gen)
+            } else {
+                truthH <- rowSums(haps[, 1:2])
+            }
+            r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = truthH, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads), col = "green", label = "Rolling accuracy versus truth genotypes"))
         }
-        ## could re-do with truth genotypes
-        r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = truthH, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads), col = "green", label = "Rolling accuracy versus truth genotypes"))
->>>>>>> origin/zilong
     }
-
-        
     ##
     ## plot section 4 - recombination rate (need real thing!), and x-axis with locations
     ##
