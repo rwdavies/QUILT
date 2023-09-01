@@ -201,7 +201,9 @@ test_that("QUILT can use all combinations of posfile, genfile and phasfile in th
                 genfile <- data_package$genfile
                 phasefile <- data_package$phasefile
             }
+            
             ## capture messages from this to check it worked
+
             output <- testthat::capture_messages(
                 QUILT(
                     outputdir = outputdir,
@@ -216,8 +218,15 @@ test_that("QUILT can use all combinations of posfile, genfile and phasfile in th
                     nGibbsSamples = 3
                 )
             )
-            n_imp_dos <- length(grep("Final imputation dosage", output))
-            n_phase <- length(grep("Final phasing accuracy", output))            
+
+            a <- grep("Final imputation accuracy", output)
+            if (length(a) > 0) {
+                n_imp_dos <- length(grep("r2", output[a]))
+                n_phase <- length(grep("PSE", output[a]))
+            } else {
+                n_imp_dos <- 0
+                n_phase <- 0
+            }
             if (verbose) {
                 print(paste0("n_imp_dos = ", n_imp_dos))
                 print(paste0("n_phase = ", n_phase))
@@ -255,7 +264,6 @@ test_that("QUILT can use all combinations of posfile, genfile and phasfile in th
     }
     
 })
-
 
 
 

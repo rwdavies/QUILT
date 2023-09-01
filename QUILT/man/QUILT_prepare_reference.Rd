@@ -33,7 +33,7 @@ QUILT_prepare_reference(
   mspbwt_nindices = 4L,
   override_use_eMatDH_special_symbols = NA,
   use_hapMatcherR = TRUE,
-  mspbwtB = 64L,
+  mspbwtB = 32L,
   impute_rare_common = FALSE,
   rare_af_threshold = 1e-04,
   use_list_of_columns_of_A = TRUE

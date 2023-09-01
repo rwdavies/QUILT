@@ -164,7 +164,7 @@ QUILT <- function(
     small_ref_panel_gibbs_iterations = 20,
     plot_per_sample_likelihoods = FALSE,
     use_small_eHapsCurrent_tc = FALSE,
-    mspbwtB = 64L,
+    mspbwtB = 32L,
     mspbwtL = 40,
     mspbwtM = 1,
     zilong = FALSE,

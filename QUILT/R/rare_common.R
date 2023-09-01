@@ -132,7 +132,8 @@ impute_final_gibbs_with_rare_common <- function(
     ff0_shard_check_every_pair,
     sampleNames,
     iSample,
-    phase_all
+    phase_all,
+    ff 
 ) {
 
 
@@ -355,7 +356,8 @@ impute_final_gibbs_with_rare_common <- function(
         common_snp_index = common_snp_index,
         snp_is_common = snp_is_common,
         rare_per_hap_info = rare_per_hap_info,
-        rare_per_snp_info = rare_per_snp_info
+        rare_per_snp_info = rare_per_snp_info,
+        ff = ff
     )
 
     
@@ -375,70 +377,9 @@ impute_final_gibbs_with_rare_common <- function(
 
 
 
-calculate_pse_and_r2_rare_common <- function(
-    hap1_all,
-    hap2_all,
-    have_truth_haplotypes,
-    truth_haps_all,
-    have_truth_genotypes,
-    truth_gen_all,
-    special_rare_common_objects,
-    verbose
-) {
-    
-    ref_alleleCount_all <- special_rare_common_objects[["ref_alleleCount_all"]]
-    af <- ref_alleleCount_all[, 3]
-    inRegion2 <- special_rare_common_objects[["inRegion2"]]
-    
-    if (have_truth_haplotypes) {
-        x <- calculate_pse_and_r2_during_gibbs(
-            inRegion2 = inRegion2,
-            hap1 = hap1_all,
-            hap2 = hap2_all,
-            truth_haps = truth_haps_all,
-            af = af,
-            verbose = verbose,
-            impute_rare_common = TRUE,
-            all_snps = TRUE
-        )
-    } else if (have_truth_genotypes) {
-        r2 <-  round(cor((dosage_all)[inRegion2] - 2 * af[inRegion2], truth_gen_all[inRegion2, ] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
-        print_message(paste0("Current accuracy for this gibbs sample for ", sample_name, " for all SNPs, r2:", r2))
-    }
-    
-}
 
 
 
-final_phasing_accuracy_calculation_rare_common <- function(
-    have_truth_haplotypes,
-    have_truth_genotypes,
-    truth_haps_all,
-    dosage_all,
-    hap1_all,
-    hap2_all,
-    gen_all,
-    sampleNames,
-    iSample,
-    special_rare_common_objects,
-    sample_name
-) {
-    ref_alleleCount_all <- special_rare_common_objects[["ref_alleleCount_all"]]
-    af <- ref_alleleCount_all[, 3]
-    inRegion2 <- special_rare_common_objects[["inRegion2"]]
-    if (have_truth_haplotypes) {    
-        w <- (inRegion2)
-        g <- truth_haps_all[inRegion2, 1] + truth_haps_all[inRegion2, 2]
-        r2 <-  round(cor((dosage_all)[inRegion2] - 2 * af[inRegion2], g - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
-        ##
-        x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1_all, hap2 = hap2_all, truth_haps = truth_haps_all, af = af, verbose = FALSE)
-        print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
-        print_message(paste0("Final phasing accuracy for sample ", sample_name, ", pse:", x["pse"], ", disc(%):", x["disc"], "%"))
-    } else if (have_truth_genotypes) {
-        r2 <-  round(cor((dosage_all)[inRegion2] - 2 * af[inRegion2], gen_all[inRegion2, sampleNames[iSample]] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
-        print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
-    }
-}
 
 
 

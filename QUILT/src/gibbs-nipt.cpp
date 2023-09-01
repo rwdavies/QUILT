@@ -1067,6 +1067,9 @@ void sample_reads_in_grid(
             if (
                 ((h_rN != h_rC) | currently_doing_gibbs_initialization) & (!currently_doing_pass_through)
                 ) {
+                if (verbose) {
+                    std::cout << "a read has changed" << std::endl;
+                }
                 //
                 at_least_one_read_has_changed = true;
                 H(iRead) = h_rN + 1; // store as 1-based                    
@@ -1123,6 +1126,9 @@ void sample_reads_in_grid(
             }
             //
             if (record_read_set) {
+                if (verbose) {
+                    std::cout << "record read set" << std::endl;
+                }
                 Rcpp::NumericVector x(3);
                 x(h_rC) = norm_pC;
                 x(h_rA1) = norm_pA1;
@@ -1144,10 +1150,16 @@ void sample_reads_in_grid(
                 }
             }
             if (return_p1) {
+                if (verbose) {
+                    std::cout << "return p1" << std::endl;
+                }
                 p1(i_gibbs_samplings * n_gibbs_full_its + iteration ,iRead) = norm_pC;
                 pH(i_gibbs_samplings * n_gibbs_full_its + iteration ,iRead) = H(iRead); // so after sampling
             }
             if (return_p_store) {
+                if (verbose) {
+                    std::cout << "return p store" << std::endl;
+                }
                 // p_store_cols <- c("p_1", "p_2", "p_3", "chance", "h_rC", "h_rN", "c1", "c2", "c3", "p", "agreePer")
                 w = \
                     (i_gibbs_samplings) * n_gibbs_full_its * nReads + \
@@ -1189,6 +1201,10 @@ void sample_reads_in_grid(
                 //
                 //p_store[w, "agreePer"] <- sum(abs(H ==  true_H)) / length(H) * 100
             }
+            if (verbose) {
+                std::cout << "end of main bit for this read" << std::endl;
+            }
+            
             //
             // update the read to consider
             //

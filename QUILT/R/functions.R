@@ -374,10 +374,18 @@ get_and_impute_one_sample <- function(
             truth_labels_all <- NULL
             uncertain_truth_labels_all <- NULL
         }
-        
-        nSNPs_all <- nrow(pos_all)        
-        dosage_all <- numeric(nSNPs_all)
-        gp_t_all <- array(0, c(3, nSNPs_all))
+
+        nSNPs_all <- nrow(pos_all)
+
+        if (method == "diploid") {
+            dosage_all <- numeric(nSNPs_all)
+            gp_t_all <- array(0, c(3, nSNPs_all))
+        } else {
+            mat_dosage_all <- numeric(nSNPs_all)
+            fet_dosage_all <- numeric(nSNPs_all)            
+            mat_gp_t_all <- array(0, c(3, nSNPs_all))
+            fet_gp_t_all <- array(0, c(3, nSNPs_all))            
+        }
 
 
     }
@@ -452,6 +460,7 @@ get_and_impute_one_sample <- function(
         gp_t <- array(0, c(3, nSNPs))
     }
     nDosage <- 0
+    nDosage_all <- 0
 
     wif0 <- as.integer(sapply(sampleReads, function(x) x[[2]]))
     grid_has_read <- rep(FALSE, nGrids)
@@ -649,19 +658,31 @@ get_and_impute_one_sample <- function(
 
             if (verbose) {
 
-                if (method == "diploid") {
-                    hap1 <- truth_all[["dosage1"]]
-                    hap2 <- truth_all[["dosage2"]]
-                    x <- calculate_pse_and_r2_during_gibbs(inRegion2, hap1, hap2, truth_haps, af, verbose = verbose)
-
-                } else {
-                    hap1 <- truth_all[["dosage1"]]
-                    hap2 <- truth_all[["dosage2"]]
+                hap1 <- truth_all[["dosage1"]]
+                hap2 <- truth_all[["dosage2"]]
+                if (method == "nipt") {
                     hap3 <- truth_all[["dosage3"]]
-                    x <- calculate_pse_and_r2_during_gibbs_nipt(inRegion2, hap1, hap2, hap3, truth_haps, af, verbose = verbose)
-
+                } else {
+                    hap3 <- NULL
                 }
-                
+
+                calculate_pse_and_r2_master(
+                    method = method,
+                    have_truth_haplotypes = have_truth_haplotypes,
+                    have_truth_genotypes = have_truth_genotypes,                    
+                    truth_haps = truth_haps,
+                    truth_gen = truth_gen,
+                    hap1 = hap1,
+                    hap2 = hap2,
+                    hap3 = hap3,
+                    impute_rare_common = impute_rare_common,
+                    checking_all_snps = FALSE,
+                    verbose = verbose,
+                    af = af,
+                    inRegion2 = inRegion2
+                )
+
+                rm(hap1, hap2, hap3)
             }
 
         } else {
@@ -887,6 +908,9 @@ get_and_impute_one_sample <- function(
                 Kfull <- nrow(hapMatcher)
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
+                if (method == "nipt") {
+                    hap3 <- gibbs_iterate$hapProbs_t[3, ]
+                }
                 
                 if (heuristic_approach == "A" | make_heuristic_plot) {
 
@@ -975,17 +999,28 @@ get_and_impute_one_sample <- function(
                         regionEnd = regionEnd,
                         buffer = buffer,
                         minGLValue = minGLValue,
-                        suppressOutput = suppressOutput
+                        suppressOutput = suppressOutput,
+                        method = method
                     )
                     hap1 <- impute_all[["dosage1"]]
                     hap2 <- impute_all[["dosage2"]]
+                    if (method == "nipt") {
+                        hap3 <- impute_all[["dosage3"]]
+                    }
                 } else {
                     hap1 <- gibbs_iterate$hapProbs_t[1, ]
                     hap2 <- gibbs_iterate$hapProbs_t[2, ]
+                    if (method == "nipt") {
+                        hap3 <- gibbs_iterate$hapProbs_t[3, ]
+                    }
                 }
 
                 ## this version here
-                hapProbs_t <- rbind(hap1, hap2)
+                if (method == "diploid") {
+                    hapProbs_t <- rbind(hap1, hap2)
+                } else {
+                    hapProbs_t <- rbind(hap1, hap2, hap3)
+                }
                 Kfull <- nrow(hapMatcher)
 
                 ## file <- paste0("~/temp.", i_gibbs_sample, ".", i_it, ".RData")
@@ -1092,12 +1127,15 @@ get_and_impute_one_sample <- function(
                     buffer = buffer,
                     minGLValue = minGLValue,
                     suppressOutput = suppressOutput,
-                    use_eigen = use_eigen
+                    use_eigen = use_eigen,
+                    method = method
                 )
                 which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
                 hap1 <- impute_all[["dosage1"]]
                 hap2 <- impute_all[["dosage2"]]
-
+                if (method == "nipt") {
+                    hap3 <- impute_all[["dosage3"]]
+                }
                 which_haps_to_use_quilt1 <- which_haps_to_use
             }
 
@@ -1132,6 +1170,7 @@ get_and_impute_one_sample <- function(
             if (record_interim_dosages) {
                 dosage_matrix[, paste0("gibbs", i_it)] <- get_dosages_from_fbsoL(gibbs_iterate)
                 dosage_matrix[, paste0("all", i_it)] <- hap1 + hap2
+                stopifnot(method == "diploid") ## else fix above
             }
 
             if (record_read_label_usage) {
@@ -1140,22 +1179,44 @@ get_and_impute_one_sample <- function(
 
             ## if not a phasing iteration, and past burn in, store!
             if (!phasing_it && (i_it > n_burn_in_seek_its)) {
-                ## print(paste0("temptemp - ", i_gibbs_sample, " ", i_it, " ", n_seek_its, " ", n_burn_in_seek_its))
-                dosage <- dosage + hap1 + hap2
-                gp_t <- gp_t +
-                    rbind((1 - hap1) * (1 - hap2), (1 - hap1) * hap2 + hap1 * (1 - hap2), hap1 * hap2)
-                nDosage <- nDosage + 1
 
-                if (have_truth_haplotypes) {
-                    w <- i_it + n_seek_its * (i_gibbs_sample - 1)
-                    x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose, impute_rare_common = impute_rare_common, all_snps = FALSE)
-                    pse_mat[w, ] <- c(i_gibbs_sample, i_it, as.integer(phasing_it), x)
-                } else if (have_truth_genotypes) {
-                    r2 <-  round(cor((dosage / nDosage)[inRegion2] - 2 * af[inRegion2], gen[inRegion2, sample_name] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
-                    print_message(paste0("Current accuracy for this gibbs sample for ", sample_name, ", r2:", r2))
+                if (method == "diploid") {
+
+                    dosage <- dosage + hap1 + hap2
+                    gp_t <- gp_t +
+                        rbind((1 - hap1) * (1 - hap2), (1 - hap1) * hap2 + hap1 * (1 - hap2), hap1 * hap2)
+                    nDosage <- nDosage + 1
+
+                } else {
+                    
+                    mat_dosage <- mat_dosage + hap1 + hap2
+                    fet_dosage <- fet_dosage + hap1 + hap3
+                    mat_gp_t <- mat_gp_t + 
+                        rbind((1 - hap1) * (1 - hap2), (1 - hap1) * hap2 + hap1 * (1 - hap2), hap1 * hap2)
+                    fet_gp_t <- fet_gp_t + 
+                        rbind((1 - hap1) * (1 - hap3), (1 - hap1) * hap3 + hap1 * (1 - hap3), hap1 * hap3)
+                    nDosage <- nDosage + 1
+
                 }
 
             }
+
+            ## regardless, print out accuracy as going along
+            calculate_pse_and_r2_master(
+                method = method,
+                have_truth_haplotypes = have_truth_haplotypes,
+                have_truth_genotypes = have_truth_genotypes,                    
+                truth_haps = truth_haps,
+                truth_gen = truth_gen,
+                hap1 = hap1,
+                hap2 = hap2,
+                hap3 = hap3,
+                impute_rare_common = impute_rare_common,
+                checking_all_snps = FALSE,
+                verbose = verbose,
+                af = af,
+                inRegion2 = inRegion2
+            )
 
         }
 
@@ -1206,7 +1267,8 @@ get_and_impute_one_sample <- function(
                 ff0_shard_check_every_pair = ff0_shard_check_every_pair,
                 sampleNames = sampleNames,
                 iSample = iSample,
-                phase_all = phase_all
+                phase_all = phase_all,
+                ff = ff
             )
 
             hap1_all <- out_rare_common[["hap1"]]
@@ -1218,30 +1280,41 @@ get_and_impute_one_sample <- function(
             if (!phasing_it && (i_it > n_burn_in_seek_its)) {
                 
                 if (method == "diploid") {
+                    
                     dosage_all <- dosage_all + hap1_all + hap2_all
                     gp_t_all <- gp_t_all + rbind(
                     (1 - hap1_all) * (1 - hap2_all),
                     (1 - hap1_all) * hap2_all + hap1_all * (1 - hap2_all),
                     hap1_all * hap2_all
                     )
-                    ## nDosage <- nDosage + 1
-                    
-                    calculate_pse_and_r2_rare_common(                
-                        hap1_all = hap1_all,
-                        hap2_all = hap2_all,
-                        have_truth_haplotypes = have_truth_haplotypes,
-                        truth_haps_all = truth_haps_all,
-                        have_truth_genotypes = have_truth_genotypes,
-                        truth_gen_all = truth_gen_all,
-                        special_rare_common_objects = special_rare_common_objects,
-                        verbose = verbose
-                    )
-                    
+                    nDosage_all <- nDosage_all + 1
+
                 } else {
-                    
-                    stop("write in this part of NIPT later")
-                    
+
+                    mat_dosage_all <- mat_dosage_all + hap1_all + hap2_all
+                    fet_dosage_all <- fet_dosage_all + hap1_all + hap2_all           
+                    mat_gp_t_all <- mat_gp_t_all + 
+                        rbind((1 - hap1_all) * (1 - hap2_all), (1 - hap1_all) * hap2_all + hap1_all * (1 - hap2_all), hap1_all * hap2_all)
+                    fet_gp_t_all <- fet_gp_t_all + 
+                        rbind((1 - hap1_all) * (1 - hap3_all), (1 - hap1_all) * hap3_all + hap1_all * (1 - hap3_all), hap1_all * hap3_all)
+
                 }
+
+                calculate_pse_and_r2_master(
+                    method = method,
+                    have_truth_haplotypes = have_truth_haplotypes,
+                    have_truth_genotypes = have_truth_genotypes,                    
+                    truth_haps = truth_haps,
+                    truth_gen = truth_gen,
+                    hap1 = hap1,
+                    hap2 = hap2,
+                    hap3 = hap3,
+                    impute_rare_common = TRUE, ## has to be true here!
+                    checking_all_snps = TRUE,
+                    verbose = verbose,
+                    af = special_rare_common_objects[["ref_alleleCount_all"]][, 3],
+                    inRegion2 = special_rare_common_objects[["inRegion2"]]
+                )
                 
             }
             
@@ -1365,79 +1438,66 @@ get_and_impute_one_sample <- function(
     }
 
 
+    ##
+    ## perform normalization and switchover here
+    ##
     if (method == "diploid") {
-        dosage <- dosage / nDosage
-        gp_t <- gp_t / nDosage
         if (impute_rare_common) {
-            dosage_all <- dosage_all / nDosage
-            gp_t_all <- gp_t_all / nDosage
+            dosage <- dosage_all / nDosage_all
+            gp_t <- gp_t_all / nDosage_all
+        } else {
+            dosage <- dosage / nDosage
+            gp_t <- gp_t / nDosage
         }
     } else {
-        mat_dosage <- mat_dosage / nDosage
-        fet_dosage <- fet_dosage / nDosage
-        mat_gp_t <- mat_gp_t / nDosage
-        fet_gp_t <- fet_gp_t / nDosage
-        if (impute_rare_common) {
-            mat_dosage_all <- mat_dosage_all / nDosage
-            fet_dosage_all <- fet_dosage_all / nDosage
-            mat_gp_t_all <- mat_gp_t_all / nDosage
-            fet_gp_t_all <- fet_gp_t_all / nDosage
+        if (impute_rare_common) {        
+            mat_dosage <- mat_dosage_all / nDosage
+            fet_dosage <- fet_dosage_all / nDosage
+            mat_gp_t <- mat_gp_t_all / nDosage_all
+            fet_gp_t <- fet_gp_t_all / nDosage_all
+        } else {
+            mat_dosage <- mat_dosage / nDosage
+            fet_dosage <- fet_dosage / nDosage
+            mat_gp_t <- mat_gp_t / nDosage
+            fet_gp_t <- fet_gp_t / nDosage
         }
     }
-        
-
+    if (impute_rare_common) {
+        phasing_haps <- phasing_haps_all    
+        sampleReads <- allSNP_sampleReads    
+        nSNPs <- ncol(gp_t)
+        af <- special_rare_common_objects[["ref_alleleCount_all"]][, 3]
+        inRegion2 <- special_rare_common_objects[["inRegion2"]]
+    }
 
     
     ##
     ## print final accuracies
     ##
-    ## NOTE I should re-write this to more easily handle all 4 cases using one function
-    ##
-    if (impute_rare_common) {
-        if (method == "diploid") {
-            final_phasing_accuracy_calculation_rare_common(
-                have_truth_haplotypes = have_truth_haplotypes,
-                have_truth_genotypes = have_truth_genotypes,
-                truth_haps_all = truth_haps_all,
-                dosage_all = dosage_all,
-                hap1_all = hap1_all,
-                hap2_all = hap2_all,
-                gen_all = gen_all,
-                sampleNames = sampleNames,
-                iSample = iSample,
-                special_rare_common_objects = special_rare_common_objects,
-                sample_name = sample_name
-            )
-        } else {
-            stop("write me")
-        }
-    } else {
-        if (have_truth_haplotypes) {
-            print_message("Final accuracies using final phasing and overall dosages")
-            if (method == "diploid") {
-                final_phasing_accuracy_calculation(
-                    have_truth_haplotypes = have_truth_haplotypes,
-                    have_truth_genotypes = have_truth_genotypes,
-                    truth_haps = truth_haps,
-                    inRegion2 = inRegion2,
-                    dosage = dosage,
-                    af = af,
-                    phasing_haps = phasing_haps,
-                    gen = gen,
-                    sample_name = sample_name
-                )
-                ## hap1 <- phasing_haps[, 1]
-                ## hap2 <- phasing_haps[, 2]
-                ## x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose, dosage = dosage)
-            } else {
-                hap1 <- phasing_haps[, 1]
-                hap2 <- phasing_haps[, 2]
-                hap3 <- phasing_haps[, 3]
-                x <- calculate_pse_and_r2_during_gibbs_nipt(inRegion2, hap1, hap2, hap3, truth_haps, af, verbose = verbose, mat_dosage = mat_dosage, fet_dosage = fet_dosage)
-            }
-        }
+    hap1 <- phasing_haps[, 1]
+    hap2 <- phasing_haps[, 2]
+    if (method == "nipt") {
+        hap3 <- phasing_haps[, 3]
     }
-
+    calculate_pse_and_r2_master(
+        method = method,
+        have_truth_haplotypes = have_truth_haplotypes,
+        have_truth_genotypes = have_truth_genotypes,
+        truth_haps = truth_haps,
+        truth_gen = truth_gen,
+        hap1 = hap1,
+        hap2 = hap2,
+        hap3 = hap3,
+        impute_rare_common = impute_rare_common,
+        checking_all_snps = TRUE,
+        verbose = verbose,
+        inRegion2 = inRegion2,
+        af = af,
+        dosage = dosage,
+        mat_dosage = mat_dosage,
+        fet_dosage = fet_dosage,
+        prefix = paste0("Final imputation accuracy for sample ", sample_name, " ")
+    )
         
 
     ## optionally plot here
@@ -1456,15 +1516,6 @@ get_and_impute_one_sample <- function(
         )
     }
 
-    ## perform switch over here
-    if (impute_rare_common) {
-
-        gp_t <- gp_t_all
-        phasing_haps <- phasing_haps_all
-        sampleReads <- allSNP_sampleReads
-        nSNPs <- ncol(gp_t)
-
-    }
 
     ##
     ## for allele count, from buildAlleleCount_subfunction in STITCH
@@ -1512,14 +1563,14 @@ get_and_impute_one_sample <- function(
             x_t <- matrix()
         }
         per_sample_vcf_col <- STITCH::rcpp_make_column_of_vcf(
-                                          gp_t = gp_t,
-                                          use_read_proportions = FALSE,
-                                          use_state_probabilities = TRUE,
-                                          read_proportions = matrix(),
-                                          q_t = t(phasing_haps),
-                                          add_x_2_cols = add_x_2_cols,
-                                          x_t = x_t
-                                      )
+            gp_t = gp_t,
+            use_read_proportions = FALSE,
+            use_state_probabilities = TRUE,
+            read_proportions = matrix(),
+            q_t = t(phasing_haps),
+            add_x_2_cols = add_x_2_cols,
+            x_t = x_t
+        )
         ## annoying but shouldn't be that slow I hope
         if (output_gt_phased_genotypes) {
             per_sample_vcf_col <-
@@ -1694,109 +1745,7 @@ modified_calculate_pse <- function(
 }
 
 
-calculate_pse_and_r2_during_gibbs <- function(
-    inRegion2,
-    hap1,
-    hap2,
-    truth_haps,
-    af,
-    verbose = FALSE,
-    impute_rare_common = FALSE,
-    all_snps = FALSE,
-    dosage = NULL
-) {
-    ## wow, confident
-    w <- (inRegion2)
-    g <- truth_haps[inRegion2, 1] + truth_haps[inRegion2, 2]
-    ## scaled version
-    if (is.null(dosage)) {
-        d <- (hap1 + hap2)[inRegion2]
-    } else {
-        d <- dosage[inRegion2]
-    }
-    r2 <-  round(cor(d - 2 * af[inRegion2], g - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
-    fake_LL <- 1:sum(w)
-    values <- modified_calculate_pse(test = round(cbind(hap1, hap2)[w, ]), truth = truth_haps[w, ], LL = fake_LL)$values
-    ## discordance
-    pse <- values["phase_errors_def1"] / values["phase_sites_def1"]
-    pse <- round(100 * pse, 1)
-    disc <- round(100 * values["disc_errors"] / values["dist_n"], 1)
-    if (impute_rare_common) {
-        if (all_snps && verbose) {
-            print_message(paste0("r2:", r2, ", PSE:", pse, "%, disc:", disc, "% (all SNPs)"))
-        } else {
-            print_message(paste0("r2:", r2, ", PSE:", pse, "%, disc:", disc, "% (common SNPs only)"))
-        }
-    } else {
-        if (verbose) {
-            print_message(paste0("r2:", r2, ", PSE:", pse, "%, disc:", disc, "%"))
-        }
-    }
-    return(c(r2 = r2, pse = as.numeric(pse), disc = as.numeric(disc)))
-}
 
-
-calculate_pse_and_r2_during_gibbs_nipt <- function(
-    inRegion2,
-    hap1,
-    hap2,
-    hap3,
-    truth_haps,
-    af,
-    verbose = FALSE,
-    mat_dosage = NULL,
-    fet_dosage = NULL
-) {
-    to_return <- NULL
-    ## wow, confident
-    w <- (inRegion2)
-    ## scaled version
-    fake_LL <- 1:sum(w)
-    for(i_hap in 1:2) {
-        if (i_hap == 1) {
-            who <- "mat "
-            hapA <- hap1
-            hapB <- hap2
-            th1 <- 1
-            th2 <- 2
-            if (is.null(mat_dosage)) {
-                dosage <- hapA + hapB
-            } else {
-                dosage <- mat_dosage
-            }
-        } else {
-            who <- "fet "
-            hapA <- hap1
-            hapB <- hap3
-            th1 <- 1
-            th2 <- 3
-            if (is.null(mat_dosage)) {
-                dosage <- hapA + hapB
-            } else {
-                dosage <- fet_dosage
-            }
-        }
-        values <- modified_calculate_pse(test = round(cbind(hapA, hapB)[w, ]), truth = truth_haps[w, c(th1, th2)], LL = fake_LL)$values
-        g <- truth_haps[inRegion2, th1] + truth_haps[inRegion2, th2]
-        r2 <-  round(cor((dosage)[inRegion2] - 2 * af[inRegion2], g - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
-        pse <- round(100 * values["phase_errors_def1"] / values["phase_sites_def1"], 1)
-        disc <- round(100 * values["disc_errors"] / values["dist_n"], 1)
-        if (verbose) {
-            print_message(paste0(who, "r2:", r2, ", PSE:", pse, "%, disc:", disc, "%"))
-        }
-        to_return[paste0("r2_", who)] <- r2
-        to_return[paste0("pse_", who)] <- pse
-        to_return[paste0("disc_", who)] <- disc
-    }
-    if (verbose) {
-        ##
-        r2_1 <- round(cor(hap1[inRegion2] - af[inRegion2], truth_haps[inRegion2, 1] - af[inRegion2]) ** 2, 3)
-        r2_2 <- round(cor(hap2[inRegion2] - af[inRegion2], truth_haps[inRegion2, 2] - af[inRegion2]) ** 2, 3)
-        r2_3 <- round(cor(hap3[inRegion2] - af[inRegion2], truth_haps[inRegion2, 3] - af[inRegion2]) ** 2, 3)            
-        print_message(paste0("r2 mt:", r2_1, ", mu:", r2_2, ", pt:", r2_3))
-    }
-    return(to_return)
-}
 
 
 
@@ -2113,7 +2062,7 @@ impute_using_everything <- function(
     ##
     dosage <- numeric(nSNPs)
     nGrids <- ncol(rhb_t)
-    n <- c(diploid = 2, nipt = 3)[method]        
+    n <- c(diploid = 2, nipt = 3)[method]
     
     if (use_hapMatcherR) {
         K <- nrow(hapMatcherR)
@@ -2249,7 +2198,7 @@ impute_using_everything <- function(
             K = K
         )
     }
-    
+
     to_return <- list(
         dosage1 = dosage1,
         dosage2 = dosage2,
@@ -2547,10 +2496,6 @@ impute_one_sample <- function(
 ) {
 
 
-
-
-
-
     ## save(
     ## eMatDH_special_matrix_helper,
     ## eMatDH_special_matrix,
@@ -2652,6 +2597,8 @@ impute_one_sample <- function(
     ## file = "~/temp.RData")
 
     ## print("SAVING")
+    ## stop("WER")
+    
 
     ##
     K <- length(which_haps_to_use)
@@ -2671,22 +2618,7 @@ impute_one_sample <- function(
         return_advanced_gibbs_block_output <- TRUE
     }
     ##
-    ## ugh, alphaMatCurrent_tc is a CONSTANT
-    ##
-    ## param_list <- list(
-    ##     return_alpha = FALSE,
-    ##     return_p_store = FALSE,
-    ##     return_extra = FALSE,
-    ##     return_genProbs = TRUE,
-    ##     return_hapProbs = TRUE,
-    ##     return_gamma = TRUE,
-    ##     return_gibbs_block_output = FALSE,
-    ##     return_advanced_gibbs_block_output = FALSE,
-    ##     use_starting_read_labels = FALSE,
-    ##     verbose = FALSE,
-    ##     run_fb_subset = FALSE
-    ## )
-    if (use_sample_is_diploid) {
+    if (use_sample_is_diploid && ff == 0) {
         sample_is_diploid <- TRUE
     }else {
         sample_is_diploid <- FALSE
@@ -3314,28 +3246,4 @@ recast_haps <- function(hd1, hd2, gp) {
 
 
 
-final_phasing_accuracy_calculation <- function(
-    have_truth_haplotypes,
-    have_truth_genotypes,
-    truth_haps,
-    inRegion2,
-    dosage,
-    af,
-    phasing_haps,
-    gen,
-    sample_name
-) {
-    if (have_truth_haplotypes) {    
-        w <- (inRegion2)
-        g <- truth_haps[inRegion2, 1] + truth_haps[inRegion2, 2]
-        r2 <-  round(cor((dosage)[inRegion2] - 2 * af[inRegion2], g - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
-        ##
-        x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = phasing_haps[, 1], hap2 = phasing_haps[, 2], truth_haps = truth_haps, af = af, verbose = FALSE)
-        print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
-        print_message(paste0("Final phasing accuracy for sample ", sample_name, ", pse:", x["pse"], ", disc(%):", x["disc"], "%"))
-    } else if (have_truth_genotypes) {
-        r2 <-  round(cor((dosage)[inRegion2] - 2 * af[inRegion2], gen[inRegion2, sample_name] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
-        print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
-    }
-}
 
