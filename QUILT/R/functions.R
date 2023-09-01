@@ -1812,7 +1812,7 @@ assess_ability_of_reads_to_be_confident <- function(
     method = "diploid"
 ) {
     ## 
-    p <- calculate_eMatRead_t_vs_two_haplotypes(
+    p <- calculate_eMatRead_t_vs_haplotypes(
         sampleReads,
         hap1 = hap1,
         hap2 = hap2,
@@ -2005,16 +2005,18 @@ determine_a_set_of_truth_labels <- function(
     sampleReads,
     truth_hap1,
     truth_hap2,
+    truth_hap3 = NULL,
     maxDifferenceBetweenReads
 ) {
     ## do not count where both sites missing
     w <- is.na(truth_hap1) & is.na(truth_hap2)
     truth_hap1[w] <- 0.5
     truth_hap2[w] <- 0.5
-    eMatRead_truth_t <- calculate_eMatRead_t_vs_two_haplotypes(
+    eMatRead_truth_t <- calculate_eMatRead_t_vs_haplotypes(
         sampleReads,
         hap1 = truth_hap1,
         hap2 = truth_hap2,
+        hap3 = truth_hap3,
         maxDifferenceBetweenReads = maxDifferenceBetweenReads,
         rescale_eMatRead_t = FALSE
     )
@@ -3081,11 +3083,11 @@ calculate_eMatRead_t_some_haplotypes <- function(
 
 
 
-calculate_eMatRead_t_vs_two_haplotypes <- function(
+calculate_eMatRead_t_vs_haplotypes <- function(
     sampleReads,
     hap1,
     hap2,
-    hap3,
+    hap3 = NULL,
     maxDifferenceBetweenReads,
     rescale_eMatRead_t = TRUE,
     method = "diploid"
@@ -3102,7 +3104,10 @@ calculate_eMatRead_t_vs_two_haplotypes <- function(
     if (method == "nipt") {
         ehc[3, , 1] <- hap3        
     }
-    gc(reset = TRUE); gc(reset = TRUE);
+    ## shouldn't be necessary
+    ## if (nSNPs > 10000) {
+    ##     gc(reset = TRUE); gc(reset = TRUE);
+    ## }
     ## 
     rcpp_make_eMatRead_t(
         eMatRead_t = eMatRead_t,
