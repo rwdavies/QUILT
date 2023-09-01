@@ -150,6 +150,9 @@ if ( 1 == 0 ) {
 
 test_that("can run acceptance test on HLA", {
 
+    skip("wip")
+
+    
     ## this is quite a big file!
     ref_dir <- "/well/davies/users/dcc832/quilt_hla_packages/quilt_hla_reference_panel_files_2021_12_28_benchmarking_3.43/"
 

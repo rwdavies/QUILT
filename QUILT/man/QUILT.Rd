@@ -19,8 +19,9 @@ QUILT(
   nCores = 1,
   nGibbsSamples = 7,
   n_seek_its = 3,
+  n_burn_in_seek_its = NA,
   Ksubset = 400,
-  Knew = 100,
+  Knew = 400,
   K_top_matches = 5,
   output_gt_phased_genotypes = TRUE,
   heuristic_match_thin = 0.1,
@@ -55,6 +56,7 @@ QUILT(
   minGLValue = 1e-10,
   minimum_number_of_sample_reads = 2,
   nGen = NA,
+  reference_vcf_file = "",
   reference_haplotype_file = "",
   reference_legend_file = "",
   reference_sample_file = "",
@@ -70,10 +72,27 @@ QUILT(
   maxRate = 100,
   minRate = 0.1,
   print_extra_timing_information = FALSE,
-  block_gibbs_iterations = c(3, 6, 9),
-  n_gibbs_burn_in_its = 20,
+  small_ref_panel_block_gibbs_iterations = c(3, 6, 9),
+  small_ref_panel_gibbs_iterations = 20,
   plot_per_sample_likelihoods = FALSE,
-  use_small_eHapsCurrent_tc = FALSE
+  use_small_eHapsCurrent_tc = FALSE,
+  mspbwtB = 64L,
+  mspbwtL = 40,
+  mspbwtM = 1,
+  zilong = FALSE,
+  use_mspbwt = FALSE,
+  mspbwt_nindices = 4L,
+  use_splitreadgl = FALSE,
+  override_use_eMatDH_special_symbols = NA,
+  use_hapMatcherR = TRUE,
+  ff0_shard_check_every_pair = TRUE,
+  use_eigen = TRUE,
+  impute_rare_common = FALSE,
+  rare_af_threshold = 1e-04,
+  make_heuristic_plot = FALSE,
+  heuristic_approach = "A",
+  use_list_of_columns_of_A = TRUE,
+  calculate_gamma_on_the_fly = TRUE
 )
 }
 \arguments{
@@ -104,6 +123,8 @@ QUILT(
 \item{nGibbsSamples}{How many Gibbs samples to use}
 
 \item{n_seek_its}{How many iterations between first using current haplotypes to update read labels, and using current read labels to get new reference haplotypes, to perform}
+
+\item{n_burn_in_seek_its}{How many iterations of the seek_its should be burn in. As an example, if n_seek_its is 3 and n_burn_in_seek_its is 2, then only the dosage from the final round is included. If n_seek_its is 4 and n_burn_in_seek_its is 2, then dosages from the last two rounds are used. Default value NA sets n_burn_in_seek_its to n_seek_its minus 1}
 
 \item{Ksubset}{How many haplotypes to use in the faster Gibbs sampling}
 
@@ -140,9 +161,7 @@ QUILT(
 \item{maxDifferenceBetweenReads}{How much of a difference to allow the reads to make in the forward backward probability calculation. For example, if P(read | state 1)=1 and P(read | state 2)=1e-6, re-scale so that their ratio is this value. This helps prevent any individual read as having too much of an influence on state changes, helping prevent against influence by false positive SNPs}
 
 \item{make_plots}{Whether to make some plots of per-sample imputation. Especially nice when truth data. This is pretty slow though so useful more for debugging and understanding and visualizing performance}
-
 \item{make_plots_block_gibbs}{Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs}
-
 \item{verbose}{whether to be more verbose when running}
 
 \item{shuffle_bin_radius}{Parameter that controls how to detect ancestral haplotypes that are shuffled during EM for possible re-setting. If set (not NULL), then recombination rate is calculated around pairs of SNPs in window of twice this value, and those that exceed what should be the maximum (defined by nGen and maxRate) are checked for whether they are shuffled}
@@ -177,6 +196,8 @@ QUILT(
 
 \item{nGen}{Number of generations since founding or mixing. Note that the algorithm is relatively robust to this. Use nGen = 4 * Ne / K if unsure}
 
+\item{reference_vcf_file}{Path to reference VCF file with haplotypes, matching the reference haplotype and legend file}
+
 \item{reference_haplotype_file}{Path to reference haplotype file in IMPUTE format (file with no header and no rownames, one row per SNP, one column per reference haplotype, space separated, values must be 0 or 1)}
 
 \item{reference_legend_file}{Path to reference haplotype legend file in IMPUTE format (file with one row per SNP, and a header including position for the physical position in 1 based coordinates, a0 for the reference allele, and a1 for the alternate allele)}
@@ -207,16 +228,48 @@ QUILT(
 
 \item{print_extra_timing_information}{Print extra timing information, i.e. how long sub-processes take, to better understand why things take as long as they do}
 
-\item{block_gibbs_iterations}{What iterations to perform block Gibbs sampling for the Gibbs sampler}
+\item{small_ref_panel_block_gibbs_iterations}{What iterations to perform block Gibbs sampling for the Gibbs sampler}
 
-\item{n_gibbs_burn_in_its}{How many iterations to run the Gibbs sampler for each time it is run}
+\item{small_ref_panel_gibbs_iterations}{How many iterations to run the Gibbs sampler for each time it is run (i.e. how many full passes to run the Gibbs sampler over all the reads)}
 
 \item{plot_per_sample_likelihoods}{Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations}
 
 \item{use_small_eHapsCurrent_tc}{For testing purposes only}
-}
-\value{
-Results in properly formatted version
+
+\item{mspbwtB}{How many SNPs will be encoded as one grid}
+
+\item{mspbwtL}{How many neighouring haplotypes to scan up and down at each grid.}
+
+\item{mspbwtM}{Minimun long grids matches}
+
+\item{zilong}{Using zilong's mspbwt solution}
+
+\item{use_mspbwt}{Use msPBWT to select new haplotypes}
+
+\item{mspbwt_nindices}{How many mspbwt indices to build}
+
+\item{use_splitreadgl}{Use split real GL in hap selection and imputation}
+
+\item{override_use_eMatDH_special_symbols}{Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.}
+
+\item{use_hapMatcherR}{Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use}
+
+\item{ff0_shard_check_every_pair}{When using shard gibbs sampler, whether to check every pair of SNPs, or not}
+
+\item{use_eigen}{Use eigen library for per haploid full li and stephens pass of full haplotype reference panel}
+
+\item{impute_rare_common}{Whether to use common SNPs first for imputation, followed by a round of rare imputation}
+
+\item{rare_af_threshold}{Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common}
+
+\item{make_heuristic_plot}{Whether to make a plot for understanding heuristic performance}
+
+\item{heuristic_approach}{Which heuristic to use}
+
+\item{use_list_of_columns_of_A}{If when using mspbwt, use columns of A rather than the whole thing, to speed up this version}
+
+\item{calculate_gamma_on_the_fly}{If when calculating genProbs, calculate gamma on the fly rather than saving
+#' @return Results in properly formatted version}
 }
 \description{
 QUILT

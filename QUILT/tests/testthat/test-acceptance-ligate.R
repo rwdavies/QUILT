@@ -21,8 +21,8 @@ K <- 6
 set.seed(919)
 phasemaster <- array(sample(c(0, 1), n_snps * K, replace = TRUE), c(n_snps, K))
 reads_span_n_snps <- 3
-## want about 4X here
-n_reads <- round(4 * n_snps / reads_span_n_snps)
+## want about 1X here
+n_reads <- round(1.0 * n_snps / reads_span_n_snps)
 data_package <- STITCH::make_acceptance_test_data_package(
     reads_span_n_snps = reads_span_n_snps,
     n_samples = 3,
@@ -152,6 +152,35 @@ test_that("can concatenate using external software", {
     ## m[1:50, 3:4] <- read.table("quilt.10.31.80.phased.vcf.gz")[, c(2, 12)]
     ## m[31:80, 5:6] <- read.table("quilt.10.61.110.phased.vcf.gz")[, c(2, 12)]
     ## m <- cbind(m, NA, truth[1:110, ])
+
+
+    ## OK - to confirm
+    ## this code checks below that bcftools concat ligate will take the dosage etc from the middle outwards
+    ## e.g. if two files with overlap of 20 SNPs (not sure if on SNPs or physical position - probably physical)
+    ## then the first half will come from first file, second half from second file
+    if (1 == 0) {
+
+        ## phased
+        f2 <- function(x) {
+            as.numeric(sapply(strsplit(as.character(x[, 2]), ":"), function(x) {
+                if (length(x) == 1)
+                    return(NA)
+                x[[3]]
+            }))
+        }
+        f <- function(x) {
+            ## overlap is 60-80
+            f2(x[match(51:90, x[, 1]), ])
+        }
+        cbind(
+            f(read.table(newfile)[, c(2, 10)]),
+            f(read.table(to_ligate2[1])[, c(2, 10)]),
+            f(read.table(to_ligate2[2])[, c(2, 10)])
+        )
+        
+        
+    }
+
     
 })
 

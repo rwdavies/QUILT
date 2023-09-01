@@ -13,8 +13,7 @@ if ( 1 == 0 ) {
 
 }
 
-## n_snps <- 500
-n_snps <- 50
+n_snps <- 200
 chr <- 10
 K <- 6
 set.seed(919)
@@ -39,38 +38,45 @@ refpack <- STITCH::make_reference_package(
     chr = chr,
     phasemaster = phasemaster
 )
+set.seed(010)
 
 
-test_that("QUILT can impute a few samples in a standard way, using a large panel", {
+test_that("QUILT can impute a few samples using robbie mspbwt or zilong pbwt", {
 
-    set.seed(0105)
+    for (iii in 1:2) {
 
-    outputdir <- STITCH::make_unique_tempdir()
+        if (iii == 1) {
+            use_mspbwt <- TRUE
+            zilong <- FALSE
+        } else {
+            use_mspbwt <- FALSE
+            zilong <- TRUE
+        }
+        print(paste0("zilong = ", zilong))
+        outputdir <- STITCH::make_unique_tempdir()
 
-    regionStart <- 11
-    ## regionEnd <- 400
-    regionEnd <- 40
-    buffer <- 5
-    QUILT_prepare_reference(
-        outputdir = outputdir,
-        chr = data_package$chr,
-        nGen = 100,
-        reference_haplotype_file = refpack$reference_haplotype_file,
-        reference_legend_file = refpack$reference_legend_file,
-        genetic_map_file = refpack$reference_genetic_map_file,
-        regionStart = regionStart,
-        regionEnd = regionEnd,
-        buffer = buffer
-    )
+        regionStart <- 11
+        regionEnd <- 190
+        buffer <- 5
+        QUILT_prepare_reference(
+            outputdir = outputdir,
+            chr = data_package$chr,
+            nGen = 100,
+            reference_vcf_file = refpack$reference_vcf_file,
+            genetic_map_file = refpack$reference_genetic_map_file,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer,
+            use_mspbwt = use_mspbwt,
+            use_zilong = zilong,
+            mspbwt_nindices = 1
+        )
+        regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
+        expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
+        i <- 1
 
-    regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
-    expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
-    i <- 1
-
-    for(i in 1:2) {
-
-        if (i == 1) {phasefile <- "" }
-        if (i == 2) {phasefile <- data_package$phasefile}
+        ##phasefile = data_package$phasefile,
+        phasefile <- ""
 
         QUILT(
             outputdir = outputdir,
@@ -82,18 +88,9 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
             posfile = data_package$posfile,
             genfile = data_package$genfile,
             phasefile = phasefile,
-            nGibbsSamples = 5,
-            n_seek_its = 2,
-            nCores = 1,
-            RData_objects_to_save = "final_set_of_results",
-            addOptimalHapsToVCF = FALSE,
-            make_plots = FALSE,
-            make_plots_block_gibbs = FALSE,
-            use_eigen = TRUE
+            use_mspbwt = use_mspbwt,
+            zilong = zilong
         )
-
-        ## Ksubset = 100,
-        ## Knew = 25,
 
         which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
 
@@ -106,12 +103,9 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
             min_info = 0.9
         )
 
-        ## check loaded stuff
-        load(file_quilt_output_RData(outputdir, regionName))
-        expect_equal(length(final_set_of_results), 3)
-        unlink(file_quilt_output_RData(outputdir, regionName))
-
     }
 
 })
+
+
 

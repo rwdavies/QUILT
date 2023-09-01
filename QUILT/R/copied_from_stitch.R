@@ -1,11 +1,17 @@
 print_message <- function(x, include_mem = FALSE) {
     if (include_mem) {
-        mem <- system("ps auxww | grep 'scripts/profile.R' | grep slave | grep -v 'grep' | awk -v OFS='\t' '$1=$1' | cut -f6", intern = TRUE)
+        ## mem <- system("ps auxww | grep 'scripts/profile.R' | grep slave | grep -v 'grep' | awk -v OFS='\t' '$1=$1' | cut -f6", intern = TRUE)
+        a <- system("ps aux | grep '/usr/lib64/R/bin/exec/R -f scratch/ukbb_gel.R'", intern = TRUE)
+        a <- a[-grep("grep", a)]
+        b <- unlist(strsplit(a, " "))
+        mem <- as.integer(b[b!= ""][6])
         if (length(mem) > 0) {
             mem <- paste0(paste0(round(as.integer(mem) / 2 ** 20, 3), collapse = ", "), " - ")
+            ## mem <- paste0(round(as.integer(mem) / 2 ** 20, 3), collapse = ", ")
         } else {
             mem <- ""
         }
+        
     } else {
         mem <- ""
     }
@@ -15,6 +21,8 @@ print_message <- function(x, include_mem = FALSE) {
         )
     )
 }
+
+
 
 
 check_mclapply_OK <- function(out, stop_message = "An error occured during QUILT. The first such error is above") {
@@ -27,7 +35,7 @@ check_mclapply_OK <- function(out, stop_message = "An error occured during QUILT
 }
 
 check_system_OK <- function(out, stop_message = "An error occured during QUILT. The first such error is above") {
-    status <- attr(out, "status")    
+    status <- attr(out, "status")
     if (length(status) > 0) {
         if (status > 0) {
             stop(stop_message)
@@ -60,7 +68,6 @@ quilt_get_chromosome_length <- function(iBam, bam_files, cram_files, chr) {
         stop(paste0("Could not find chromosome length for file:", file))
     return(seq[1, 2])
 }
-
 
 
 
@@ -134,7 +141,12 @@ get_and_validate_phase <- function(
     return(phase)
 }
 
+
 alpha_col <- function(col, alpha) {
     x <- col2rgb(col) / 255
     return(rgb(x["red", 1], x["green", 1], x["blue", 1], alpha = alpha)    )
+=======
+## get_object_sizes(ls())
+get_object_sizes <- function(x) {
+    sort( sapply(x,function(x){object.size(get(x))}), decreasing = TRUE) / 1024 / 1024 / 1024
 }

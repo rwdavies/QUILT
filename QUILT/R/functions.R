@@ -1,13 +1,190 @@
+## zilong mspbwt32.cpp
+## @param msp is xptr to msPBWT object in C++
+select_new_haps_zilong_msp <- function(
+    hapProbs_t,
+    igibbs,
+    outputdir,
+    Kfull,
+    Knew,
+    msp,
+    mspbwtB,
+    mspbwtL,
+    mspbwtM,
+    nGrids
+) {
+  ##
+  out <- lapply(1:2, function(x) {
+    hap <- round(hapProbs_t[x, ])
+    res <- as.data.frame(mspbwt_report(msp, mspbwtB, hap, mspbwtL, mspbwtM))
+    res <- res[order(-res$lens),]
+    res <- res[!duplicated(res[,c("haps")]),]
+    res$starts <- res$ends - res$lens + 1
+    res$keys <- res$starts * nGrids + res$ends
+    res$haps <- res$haps + 1
+    res
+  })
+  ## res <- do.call(rbind.data.frame, res)
+  unique_haps <- unique(c(out[[1]][, "haps"], out[[2]][, "haps"]))
+  ## interhaps <- intersect(res[res$ihap == 1, "haps"], res[res$ihap == 2, "haps"])
+  ## saveRDS(res, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
+  print_message(paste("select", length(unique_haps), " unique haps by mpbwt query before post-selection"))
+  ## return(unique_haps[1:Knew])
+  if (length(unique_haps) == 0) {
+    new_haps <- sample(1:Kfull, Knew)
+    return(new_haps)
+  } else if (length(unique_haps) <= Knew) {
+    ## cannot take a sample larger than the population when 'replace = FALSE'
+    new_haps <- unique(c(
+      unique_haps,
+      sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
+    ))[1:Knew]
+    print_message(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
+    return(new_haps)
+  } else {
+    ##
+    ## heuristically, prioritize based on length and new-ness
+    ## do this for each of the two haps
+    ##
+    results <- lapply(out, function(mtm) {
+      m <- max(mtm[, "ends"])
+      weight <- numeric(m)
+      cur_sum <- numeric(m)
+      cur_sum[] <- 1
+      for(i in 1:nrow(mtm)) {
+        s <- mtm[i, "starts"]
+        e <- mtm[i, "ends"]
+        weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
+        cur_sum[s:e] <- cur_sum[s:e] + 1
+      }
+      ##
+      o <- order(-weight)
+      mtm <- mtm[o, ]
+      mtm[, "haps"]
+    })
+    ## pad out one of them
+    x <- results[[1]]
+    y <- results[[2]]
+    if (length(x) > length(y)) {
+      y <- c(y, rep(NA, length(x) - length(y)))
+    } else {
+      x <- c(x, rep(NA, length(y) - length(x)))
+    }
+    unique_ordered_haps <- unique(c(t(cbind(x, y))))
+    unique_ordered_haps <- unique_ordered_haps[!is.na(unique_ordered_haps)]
+    print_message(paste("select", length(unique(unique_ordered_haps)), " unique haps after post-selection 2"))
+    if (length(unique_ordered_haps) >= Knew) {
+      return(unique_ordered_haps[1:Knew])
+    } else {
+      ## add in some other (potentially) duplicated haps
+      new_haps <- c(setdiff(unique_ordered_haps, unique_haps), unique_haps)[1:Knew]
+      print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
+      return(new_haps)
+    }
+  }
+}
+
+
+## zilong mspbwt32.cpp
+## @param msp is xptr to msPBWT object in C++
+select_new_haps_zilong_msp_robbie_version <- function(
+    hapProbs_t,
+    igibbs,
+    outputdir,
+    Kfull,
+    Knew,
+    msp,
+    mspbwtB,
+    mspbwtL,
+    mspbwtM,
+    nGrids,
+    aggregated = FALSE
+) {
+    res <- lapply(1:2, function(x) {
+        hap <- round(hapProbs_t[x, ])
+        res <- mspbwt_report(msp, hap, mspbwtL, mspbwtB, aggregated = aggregated)
+        return(res)
+    })
+    ## merge, filter, order
+    ends <- c(res[[1]][["ends"]], res[[2]][["ends"]])
+    lens <- c(res[[1]][["lens"]], res[[2]][["lens"]])
+    res <- cbind(
+        haps = c(res[[1]][["haps"]], res[[2]][["haps"]]),
+        starts = ends - lens + 1,
+        ends = ends,
+        lens = lens,
+        n = c(res[[1]][["n"]], res[[2]][["n"]])
+    )
+    res <- res[res[, "lens"] >= max(mspbwtM, 0), , drop = FALSE]
+    res <- cbind(res, keys = res[, "starts"] * nGrids + res[, "ends"])
+    ## remove those that are the same thing (effectively)
+    res <- res[!duplicated((res[, "n"] + 1) * (res[, "starts"] + 1) + nGrids * (res[, "haps"])), ]
+    ## remove those that are the same key
+    res <- res[!duplicated(res[, "keys"]), ]
+    ## can make this linear rather than an order
+    ## I'm too lazy to do it now, see if it comes back with a profile
+    ## print("make me linear")
+    res <- res[order(-res[, "lens"]), ]
+    ## 
+    unique_haps <- unique(res[, "haps"])
+    ## 
+    if (length(unique_haps) == 0) {
+        new_haps <- sample(1:Kfull, Knew)
+        return(new_haps)
+    } else if (length(unique_haps) <= Knew) {
+        ## cannot take a sample larger than the population when 'replace = FALSE'
+        new_haps <- unique(c(
+            unique_haps,
+            sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
+        ))[1:Knew]
+        print(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
+        return(new_haps)
+    } else {
+        ##
+        ## heuristically, prioritize based on length and new-ness
+        ## 
+        m <- max(res[, "ends"])
+        weight <- numeric(m)
+        cur_sum <- numeric(m)
+        cur_sum[] <- 1
+        for(i in 1:nrow(res)) {
+            s <- res[i, "starts"]
+            e <- res[i, "ends"]
+            weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
+            cur_sum[s:e] <- cur_sum[s:e] + 1
+        }
+        ##
+        unique_ordered_haps <- unique(res[order(-weight), "haps"])
+        print(paste("select", length(unique_ordered_haps), " unique haps after post-selection 2"))
+        ## 
+        if (length(unique_ordered_haps) >= Knew) {
+            return(unique_ordered_haps[1:Knew])
+        } else {
+            ## add in some other (potentially) duplicated haps
+            new_haps <- c(setdiff(unique_ordered_haps, unique_haps), unique_haps)[1:Knew]
+            print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
+            return(new_haps)
+        }
+  }
+}
+
+
+
+
+
+    
+
+
 get_and_impute_one_sample <- function(
     rhb_t,
     outputdir,
     nGibbsSamples,
     n_seek_its,
+    n_burn_in_seek_its,
     full_alphaHat_t,
     full_betaHat_t,
     full_gamma_t,
     full_gammaSmall_t,
-    full_gammaSmall_cols_to_get,    
+    full_gammaSmall_cols_to_get,
     full_transMatRate_t_H,
     small_transMatRate_tc_H,
     alphaHat_t1,
@@ -15,7 +192,7 @@ get_and_impute_one_sample <- function(
     eMatGrid_t1,
     alphaHat_t2,
     betaHat_t2,
-    eMatGrid_t2,    
+    eMatGrid_t2,
     alphaHat_t3,
     betaHat_t3,
     eMatGrid_t3,
@@ -36,6 +213,8 @@ get_and_impute_one_sample <- function(
     buffer,
     gen,
     phase,
+    gen_all,
+    phase_all,
     iSample,
     grid,
     ancAlleleFreqAll,
@@ -48,6 +227,7 @@ get_and_impute_one_sample <- function(
     heuristic_match_thin,
     record_interim_dosages,
     have_truth_haplotypes,
+    have_truth_genotypes, 
     bqFilter,
     record_read_label_usage,
     sampleNames,
@@ -58,7 +238,12 @@ get_and_impute_one_sample <- function(
     ref_error,
     distinctHapsB,
     distinctHapsIE,
+    eMatDH_special_matrix_helper,
+    eMatDH_special_matrix,
+    use_eMatDH_special_symbols,
     hapMatcher,
+    hapMatcherR,
+    use_hapMatcherR,
     eMatDH_special_grid_which,
     eMatDH_special_values_list,
     inRegion2,
@@ -77,20 +262,125 @@ get_and_impute_one_sample <- function(
     minGLValue,
     minimum_number_of_sample_reads,
     print_extra_timing_information,
-    n_gibbs_burn_in_its,
-    block_gibbs_iterations,
+    small_ref_panel_gibbs_iterations,
+    small_ref_panel_block_gibbs_iterations,
     plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc,
     output_gt_phased_genotypes,
     ff_values,
-    method
+    method,
+    mspbwtB,
+    mspbwtL,
+    mspbwtM,
+    zilong,
+    msp,
+    use_mspbwt,
+    ms_indices,
+    use_splitreadgl,
+    use_sample_is_diploid,
+    plot_p1,
+    small_ref_panel_skip_equally_likely_reads,
+    small_ref_panel_equally_likely_reads_update_iterations,
+    ff0_shard_check_every_pair,
+    use_eigen,
+    pos_all,
+    special_rare_common_objects,
+    special_rare_common_objects_per_core,    
+    impute_rare_common,
+    make_heuristic_plot,
+    heuristic_approach,
+    calculate_gamma_on_the_fly
 ) {
-
 
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
-    nGrids <- length(grid)    
-    suppressOutput <- !print_extra_timing_information    
+    nGrids <- ncol(distinctHapsB)
+    K <- nrow(hapMatcher)
+    suppressOutput <- !print_extra_timing_information
+
+    if (impute_rare_common) {
+
+        loadBamAndConvert(
+            iBam = iSample,
+            L = pos_all[, 2],
+            pos = pos_all,
+            nSNPs = nrow(pos_all),
+            bam_files = bam_files,
+            iSizeUpperLimit = iSizeUpperLimit,
+            bqFilter = bqFilter,
+            chr = chr,
+            N = length(sampleNames),
+            downsampleToCov = downsampleToCov,
+            sampleNames = sampleNames,
+            inputdir = tempdir,
+            regionName = regionName,
+            tempdir = tempdir,
+            chrStart = chrStart,
+            chrEnd = chrEnd,
+            chrLength = NA,
+            save_sampleReadsInfo = TRUE,
+            use_bx_tag = use_bx_tag,
+            bxTagUpperLimit = bxTagUpperLimit,
+            default_sample_no_read_behaviour = "return_null"
+        )
+
+        load(file_sampleReads(tempdir, iSample, regionName))
+        load(file_sampleReadsInfo(tempdir, iSample, regionName))
+        allSNP_sampleReads <- sampleReads
+        allSNP_sampleReadsInfo <- sampleReadsInfo
+        rm(sampleReads, sampleReadsInfo)
+
+        allSNP_sampleReads <- snap_sampleReads_to_grid(
+            sampleReads = allSNP_sampleReads,
+            grid = special_rare_common_objects[["grid"]]
+        )
+
+        nGrids_all <- length(special_rare_common_objects$L_grid)
+        allSNP_wif0 <- as.integer(sapply(allSNP_sampleReads, function(x) x[[2]]))
+        allSNP_grid_has_read <- rep(FALSE, nGrids_all)
+        allSNP_grid_has_read[unique(allSNP_wif0) + 1] <- TRUE
+
+        if (have_truth_haplotypes) {
+            s <- sampleNames[iSample]
+            if (!(s %in% dimnames(phase_all)[[2]])) {
+                stop("Something went wrong with phase naming")
+            }
+            truth_haps_all <- cbind(phase_all[, s, 1], phase_all[, s, 2])
+        } else {
+            truth_haps_all <- NULL
+        }
+
+        if (have_truth_genotypes) {
+            s <- sampleNames[iSample]
+            if (!(s %in% colnames(gen))) {
+                stop("Something went wrong with gen naming")
+            }
+            truth_gen_all <- gen_all[, s, drop = FALSE]
+        } else {
+            truth_gen_all <- NULL
+        }
+
+        if (!is.null(truth_haps_all)) {
+            truth_label_set <- determine_a_set_of_truth_labels(
+                sampleReads = allSNP_sampleReads,
+                truth_hap1 = truth_haps_all[, 1],
+                truth_hap2 = truth_haps_all[, 2],
+                maxDifferenceBetweenReads = maxDifferenceBetweenReads
+            )
+            truth_labels_all <- truth_label_set[["truth_labels"]]
+            uncertain_truth_labels_all <- truth_label_set[["uncertain_truth_labels"]]
+            rm(truth_label_set)
+        } else {
+            truth_labels_all <- NULL
+            uncertain_truth_labels_all <- NULL
+        }
+        
+        nSNPs_all <- nrow(pos_all)        
+        dosage_all <- numeric(nSNPs_all)
+        gp_t_all <- array(0, c(3, nSNPs_all))
+
+
+    }
 
     ff <- ff_values[iSample]
     
@@ -140,11 +430,11 @@ get_and_impute_one_sample <- function(
         )
         return(to_return)
     }
-    
+
     sample_alleleCount <- get_alleleCount(sampleReads, nrow(pos))
     print_message(paste0("The average depth of this sample is:", mean(sample_alleleCount[, 2])))
     print_message(paste0("There are ", length(sampleReads), " reads under consideration"))
-    
+
     sampleReads <- snap_sampleReads_to_grid(
         sampleReads = sampleReads,
         grid = grid
@@ -161,20 +451,21 @@ get_and_impute_one_sample <- function(
         dosage <- numeric(nSNPs)        
         gp_t <- array(0, c(3, nSNPs))
     }
+    nDosage <- 0
 
     wif0 <- as.integer(sapply(sampleReads, function(x) x[[2]]))
     grid_has_read <- rep(FALSE, nGrids)
     grid_has_read[wif0 + 1] <- TRUE
-    
+
     nReads <- length(sampleReads)
     super_out_hap_dosages <- as.list(1:nGibbsSamples)
     super_out_read_labels <- as.list(1:nGibbsSamples)
-    super_out_dosage_matrix <- as.list(1:nGibbsSamples)    
+    super_out_dosage_matrix <- as.list(1:nGibbsSamples)
     read_label_matrix_all <- array(NA, c(nReads, nGibbsSamples)) ## need this for phasing - store final read labels in it
     read_label_matrix_conf <- array(FALSE, c(nReads, nGibbsSamples)) ## need this for phasing - store whether these are confident reads
 
     return_gamma_t <- FALSE ## can turn on later, if required
-    
+
     phasing_read_labels <- NULL
     phasing_haps <- NULL
     phasing_dosage <- NULL
@@ -196,12 +487,23 @@ get_and_impute_one_sample <- function(
         truth_haps <- NULL
     }
 
-    if (hla_run) {                
-        ## print_message("SPECIAL HLA CODE SIMON")
-        gamma_total <- array(0, nrow(rhb_t))
-        list_of_gammas <- as.list(1:nGibbsSamples)
+    if (have_truth_genotypes) {
+        s <- sampleNames[iSample]
+        if (!(s %in% colnames(gen))) {
+            stop("Something went wrong with gen naming")
+        }
+        truth_gen <- gen[, s, drop = FALSE]
+    } else {
+        truth_gen <- NULL
     }
     
+
+    if (hla_run) {
+        ## print_message("SPECIAL HLA CODE SIMON")
+        gamma_total <- array(0, nrow(hapMatcher))
+        list_of_gammas <- as.list(1:nGibbsSamples)
+    }
+
     ## can just set this here
     if (is.null(phase) & !is.null(gen)) {
         have_truth_genotypes <- TRUE ## make UNIQUE to genotype having
@@ -213,10 +515,29 @@ get_and_impute_one_sample <- function(
     if (plot_per_sample_likelihoods) {
         for_likelihood_plotting <- as.list(1:(nGibbsSamples + 1))
     }
+
+    if (plot_p1) {
+        record_read_label_usage <- TRUE ## check this too
+        p1_store <- lapply(1:(nGibbsSamples + 1), function(x) {
+            as.list(1:n_seek_its)
+        })
+        read_store <- p1_store
+        return_p1 <- TRUE
+    } else {
+        return_p1 <- FALSE
+    }
+
+    ## want this off for real usage (should be OK!)
+    ## testing might want this off for consistency
+    disable_read_category_usage <- FALSE
     
     ## don't need this for routine use - or do better matching!
     ## truth_g <- as.integer(truth_gen[, sampleNames[iSample]])
     for(i_gibbs_sample in 1:(nGibbsSamples + 1)) {
+
+        if (K >100000) {
+            gc(reset = TRUE);            gc(reset = TRUE);
+        }
 
         if (i_gibbs_sample == (nGibbsSamples + 1)) {
             print_message("Phasing it")
@@ -238,11 +559,11 @@ get_and_impute_one_sample <- function(
             read_label_matrix[, "minp"] <- x[, 1]
             read_label_matrix[, "maxp"] <- x[, 2]
         }
-        
-        
+
+
         ##
         ## possibly do truth
-        ## 
+        ## note: ignore this
         if (have_truth_haplotypes) {
 
             if (verbose) {
@@ -274,12 +595,15 @@ get_and_impute_one_sample <- function(
 
             ## potentially for plotting
             previously_selected_haplotypes <- NULL
-            
+
             truth_all <- impute_using_everything(
+                eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                eMatDH_special_matrix = eMatDH_special_matrix,
+                use_eMatDH_special_symbols = use_eMatDH_special_symbols,
                 H = truth_labels,
                 sampleReads = sampleReads,
                 rhb_t = rhb_t,
-                nSNPs = nSNPs,                
+                nSNPs = nSNPs,
                 full_alphaHat_t = full_alphaHat_t,
                 full_betaHat_t = full_betaHat_t,
                 full_gamma_t = full_gamma_t,
@@ -287,19 +611,23 @@ get_and_impute_one_sample <- function(
                 distinctHapsB = distinctHapsB,
                 distinctHapsIE = distinctHapsIE,
                 hapMatcher = hapMatcher,
+                hapMatcherR = hapMatcherR,
+                use_hapMatcherR = use_hapMatcherR,
                 eMatDH_special_grid_which = eMatDH_special_grid_which,
                 eMatDH_special_values_list = eMatDH_special_values_list,
                 ref_error = ref_error,
                 make_plots = make_plots,
                 outplotprefix = outplotprefix,
                 have_truth_haplotypes = have_truth_haplotypes,
+                have_truth_genotypes = have_truth_genotypes,
                 truth_haps = truth_haps,
+                truth_gen = truth_gen,
                 truth_labels = truth_labels,
                 uncertain_truth_labels = uncertain_truth_labels,
                 L_grid = L_grid,
                 L = L,
                 inRegion2 = inRegion2,
-                cM_grid = cM_grid,                
+                cM_grid = cM_grid,
                 ancAlleleFreqAll = ancAlleleFreqAll,
                 full_gammaSmall_t = full_gammaSmall_t,
                 full_gammaSmall_cols_to_get = full_gammaSmall_cols_to_get,
@@ -315,6 +643,7 @@ get_and_impute_one_sample <- function(
                 method = method,
                 Knew = Knew,
                 previously_selected_haplotypes = previously_selected_haplotypes
+                use_eigen = use_eigen
             )
 
             if (verbose) {
@@ -353,7 +682,8 @@ get_and_impute_one_sample <- function(
                 read_label_matrix[, "uncertain"] <- as.numeric(uncertain_truth_labels)
             }
         }
-        
+        i_it <- 1
+
         ##
         ## now loop, first on subset, then on all
         ##
@@ -362,7 +692,7 @@ get_and_impute_one_sample <- function(
             ## here it is 1
             n_gibbs_starts <- 1
             if (i_it == 1 & !phasing_it) {
-                which_haps_to_use <- sort(sample(1:nrow(rhb_t), Ksubset))
+                which_haps_to_use <- sort(sample(1:K, Ksubset))
                 double_list_of_starting_read_labels <- list(
                     lapply(1:n_gibbs_starts, function(i) {
                         if (method == "diploid") {
@@ -384,7 +714,7 @@ get_and_impute_one_sample <- function(
             if (i_it == 1 & record_read_label_usage) {
                 read_label_matrix[, "init"] <- double_list_of_starting_read_labels[[1]][[1]]
             }
-            
+
             if (verbose) {
                 print_message(paste0("i_gibbs=", i_gibbs_sample, ", i_it = ", i_it, " small gibbs"))
             }
@@ -397,9 +727,20 @@ get_and_impute_one_sample <- function(
                 return_hapProbs <- FALSE
             }
             
+            ## print_message(paste0("i_gibbs, which_haps_to_use = ", paste(which_haps_to_use, collapse = ",")))
+            if (zilong | use_mspbwt) {
+                return_hapProbs <- TRUE
+            }
+
             gibbs_iterate <- impute_one_sample(
+                eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                eMatDH_special_matrix = eMatDH_special_matrix,
+                use_eMatDH_special_symbols = use_eMatDH_special_symbols,
+                distinctHapsB = distinctHapsB,
                 distinctHapsIE = distinctHapsIE,
                 hapMatcher = hapMatcher,
+                hapMatcherR = hapMatcherR,
+                use_hapMatcherR = use_hapMatcherR,
                 rhb_t = rhb_t,
                 ref_error = ref_error,
                 nSNPs = nSNPs,
@@ -409,7 +750,7 @@ get_and_impute_one_sample <- function(
                 small_transMatRate_tc_H = small_transMatRate_tc_H,
                 alphaHat_t1 = alphaHat_t1,
                 betaHat_t1 = betaHat_t1,
-                eMatGrid_t1 = eMatGrid_t1,                
+                eMatGrid_t1 = eMatGrid_t1,
                 alphaHat_t2 = alphaHat_t2,
                 betaHat_t2 = betaHat_t2,
                 eMatGrid_t2 = eMatGrid_t2,
@@ -424,14 +765,14 @@ get_and_impute_one_sample <- function(
                 smooth_cm = smooth_cm,
                 which_haps_to_use = which_haps_to_use,
                 n_gibbs_starts = n_gibbs_starts,
-                n_gibbs_burn_in_its = n_gibbs_burn_in_its,
+                small_ref_panel_gibbs_iterations = small_ref_panel_gibbs_iterations,
                 n_gibbs_sample_its = 1,
                 double_list_of_starting_read_labels = double_list_of_starting_read_labels,
-                block_gibbs_iterations = block_gibbs_iterations,
+                small_ref_panel_block_gibbs_iterations = small_ref_panel_block_gibbs_iterations,
                 perform_block_gibbs = TRUE,
                 make_plots = make_plots,
                 wif0 = wif0,
-                grid_has_read = grid_has_read,                              
+                grid_has_read = grid_has_read,
                 plot_description = paste0("it", i_it, ".gibbs"),
                 ancAlleleFreqAll = ancAlleleFreqAll,
                 grid = grid,
@@ -442,11 +783,14 @@ get_and_impute_one_sample <- function(
                 outplotprefix = outplotprefix,
                 have_truth_haplotypes = have_truth_haplotypes,
                 truth_haps = truth_haps,
+                have_truth_genotypes = have_truth_genotypes,
+                truth_gen = truth_gen,
                 truth_labels = truth_labels,
-                uncertain_truth_labels = uncertain_truth_labels,    
+                uncertain_truth_labels = uncertain_truth_labels,
                 verbose = FALSE,
                 maxEmissionMatrixDifference = 1e100,
                 return_p_store = FALSE,
+                return_p1 = return_p1,
                 return_extra = FALSE,
                 return_genProbs = return_genProbs,
                 return_hapProbs = return_hapProbs,
@@ -465,17 +809,31 @@ get_and_impute_one_sample <- function(
                 regionEnd = regionEnd,
                 buffer = buffer,
                 use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
-                method = method
+                method = method,
+                use_sample_is_diploid = use_sample_is_diploid,
+                small_ref_panel_skip_equally_likely_reads = small_ref_panel_skip_equally_likely_reads,
+                small_ref_panel_equally_likely_reads_update_iterations = small_ref_panel_equally_likely_reads_update_iterations,
+                i_it = i_it,
+                i_gibbs_sample = i_gibbs_sample,
+                ff0_shard_check_every_pair = ff0_shard_check_every_pair,
+                zilong = zilong,
+                calculate_gamma_on_the_fly = calculate_gamma_on_the_fly,
+                disable_read_category_usage = disable_read_category_usage
             )
 
-            if (hla_run) {            
+            if (plot_p1) {
+                p1_store[[i_gibbs_sample]][[i_it]] <- gibbs_iterate[["p1"]]
+                read_store[[i_gibbs_sample]][[i_it]] <- gibbs_iterate[["pH"]]
+            }
+
+            if (hla_run) {
                 ## final phasing it, save gamma
                 if (
                 (i_it == n_seek_its)
                 ) {
                     ## print_message("HLA SPECIAL CODE SIMON")
                     return_gamma_t <- TRUE
-                    full_gamma_t <- array(0, c(nrow(rhb_t), ncol(rhb_t)))
+                    full_gamma_t <- array(0, c(K, nGrids))
                 } else {
                     return_gamma_t <- FALSE
                 }
@@ -487,7 +845,7 @@ get_and_impute_one_sample <- function(
                 }
                 for_likelihood_plotting[[i_gibbs_sample]][[i_it]] <- gibbs_iterate$per_it_likelihoods
             }
-            
+
             ## continue to work on this. weird error below hmm...
             if (verbose) {
                 print_message(paste0("i_gibbs=", i_gibbs_sample, ", i_it = ", i_it, " full"))
@@ -502,102 +860,377 @@ get_and_impute_one_sample <- function(
 
             read_labels <- gibbs_iterate$double_list_of_ending_read_labels[[1]][[1]]
             previously_selected_haplotypes <- sample(which_haps_to_use, Ksubset - Knew)
-            return_dosage <- (have_truth_haplotypes | record_interim_dosages | (i_it == n_seek_its))
+            # is equavaliant to hapProbs_t
+            return_dosage <- (have_truth_haplotypes | record_interim_dosages | (i_it > n_burn_in_seek_its))
 
-            impute_all <- impute_using_everything(
-                H = read_labels,
-                sampleReads = sampleReads,
-                rhb_t = rhb_t,
-                nSNPs = nSNPs,
-                full_alphaHat_t = full_alphaHat_t,
-                full_betaHat_t = full_betaHat_t,
-                full_gamma_t = full_gamma_t,
-                full_gammaSmall_t = full_gammaSmall_t,
-                full_gammaSmall_cols_to_get = full_gammaSmall_cols_to_get,    
-                full_transMatRate_t_H = full_transMatRate_t_H,
-                distinctHapsB =distinctHapsB,
-                distinctHapsIE = distinctHapsIE,
-                hapMatcher = hapMatcher,
-                eMatDH_special_grid_which = eMatDH_special_grid_which,
-                eMatDH_special_values_list = eMatDH_special_values_list,
-                ref_error = ref_error,
-                make_plots = make_plots, 
-                outplotprefix = outplotprefix,
-                have_truth_haplotypes = have_truth_haplotypes,
-                truth_haps = truth_haps,
-                truth_labels = truth_labels,
-                uncertain_truth_labels = uncertain_truth_labels,
-                L_grid = L_grid,
-                L = L,
-                inRegion2 = inRegion2,
-                cM_grid = cM_grid,                
-                ancAlleleFreqAll = ancAlleleFreqAll,
-                plot_description = paste0("it", i_it, ".full"),  
-                return_good_haps = return_good_haps,
-                Knew = Knew,
-                return_dosage  = return_dosage,
-                previously_selected_haplotypes = previously_selected_haplotypes,
-                K_top_matches = K_top_matches,
-                heuristic_match_thin = heuristic_match_thin,
-                return_gamma_t = return_gamma_t,
-                sample_name = sample_name,
-                smooth_cm = smooth_cm ,
-                regionStart = regionStart,
-                regionEnd = regionEnd,
-                buffer = buffer,
-                minGLValue = minGLValue,
-                suppressOutput = suppressOutput,
-                method = method
-            )
+            igibbs <- (i_gibbs_sample - 1) * n_seek_its + i_it ## 1-based
 
-            ## for next time
+            which_haps_to_use_zilong_A <- NULL
+            which_haps_to_use_zilong_B <- NULL
+            which_haps_to_use_zilong_mspbwt <- NULL
+            which_haps_to_use_quilt1 <- NULL
             
-            which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
-            hap1 <- impute_all[["dosage1"]]
-            hap2 <- impute_all[["dosage2"]]
-            hap3 <- impute_all[["dosage3"]]
+            if (zilong | (!use_mspbwt && make_heuristic_plot)) {
+
+                ##print(paste0("zilong = ", zilong))
+                ##print(paste0("(!use_mspbwt && make_heuristic_plot) = ", (!use_mspbwt && make_heuristic_plot)))
+
+                Kfull <- nrow(hapMatcher)
+                hap1 <- gibbs_iterate$hapProbs_t[1, ]
+                hap2 <- gibbs_iterate$hapProbs_t[2, ]
+                
+                if (heuristic_approach == "A" | make_heuristic_plot) {
+
+                    which_haps_to_use <- select_new_haps_zilong_msp(
+                        gibbs_iterate$hapProbs_t,
+                        igibbs = igibbs,
+                        outputdir = outputdir,
+                        Kfull = Kfull,
+                        Knew = Knew,
+                        msp = msp,
+                        mspbwtB = mspbwtB,
+                        mspbwtL = mspbwtL,
+                        mspbwtM = mspbwtM,
+                        nGrids = nGrids
+                    )
+                    
+                    which_haps_to_use_zilong_A <- which_haps_to_use
+                    
+                }
+
+                if (heuristic_approach == "B" | make_heuristic_plot) {
+
+                    which_haps_to_use <- select_new_haps_zilong_msp_robbie_version(
+                        gibbs_iterate$hapProbs_t,
+                        igibbs = igibbs,
+                        outputdir = outputdir,
+                        Kfull = Kfull,
+                        Knew = Knew,
+                        msp = msp,
+                        mspbwtB = mspbwtB,
+                        mspbwtL = mspbwtL,
+                        mspbwtM = mspbwtM,
+                        nGrids = nGrids
+                    )
+
+                    which_haps_to_use_zilong_B <- which_haps_to_use
+
+                }
+                
+            }
+
+            if (use_mspbwt | (!zilong && make_heuristic_plot)) {
+
+                ## for testing purposes
+                if (use_splitreadgl) {
+                    impute_all <- impute_using_split_reads_and_small_ref_panel(
+                        H = read_labels,
+                        which_haps_to_use = which_haps_to_use,
+                        sampleReads = sampleReads,
+                        rhb_t = rhb_t,
+                        nSNPs = nSNPs,
+                        full_alphaHat_t = full_alphaHat_t,
+                        full_betaHat_t = full_betaHat_t,
+                        full_gamma_t = full_gamma_t,
+                        full_gammaSmall_t = full_gammaSmall_t,
+                        full_gammaSmall_cols_to_get = full_gammaSmall_cols_to_get,
+                        full_transMatRate_t_H = full_transMatRate_t_H,
+                        distinctHapsB = distinctHapsB,
+                        distinctHapsIE = distinctHapsIE,
+                        hapMatcher = hapMatcher,
+                        eMatDH_special_grid_which = eMatDH_special_grid_which,
+                        eMatDH_special_values_list = eMatDH_special_values_list,
+                        ref_error = ref_error,
+                        make_plots = FALSE, ## these plots are pretty useless? as plots?
+                        outplotprefix = outplotprefix,
+                        have_truth_haplotypes = have_truth_haplotypes,
+                        truth_haps = truth_haps,
+                        truth_labels = truth_labels,
+                        uncertain_truth_labels = uncertain_truth_labels,
+                        L_grid = L_grid,
+                        L = L,
+                        inRegion2 = inRegion2,
+                        cM_grid = cM_grid,
+                        ancAlleleFreqAll = ancAlleleFreqAll,
+                        plot_description = paste0("it", i_it, ".full"),
+                        return_good_haps = return_good_haps,
+                        Knew = Knew,
+                        return_dosage  = return_dosage,
+                        previously_selected_haplotypes = previously_selected_haplotypes,
+                        K_top_matches = K_top_matches,
+                        heuristic_match_thin = heuristic_match_thin,
+                        return_gamma_t = return_gamma_t,
+                        sample_name = sample_name,
+                        smooth_cm = smooth_cm ,
+                        regionStart = regionStart,
+                        regionEnd = regionEnd,
+                        buffer = buffer,
+                        minGLValue = minGLValue,
+                        suppressOutput = suppressOutput
+                    )
+                    hap1 <- impute_all[["dosage1"]]
+                    hap2 <- impute_all[["dosage2"]]
+                } else {
+                    hap1 <- gibbs_iterate$hapProbs_t[1, ]
+                    hap2 <- gibbs_iterate$hapProbs_t[2, ]
+                }
+
+                ## this version here
+                hapProbs_t <- rbind(hap1, hap2)
+                Kfull <- nrow(hapMatcher)
+
+                ## file <- paste0("~/temp.", i_gibbs_sample, ".", i_it, ".RData")
+                ## print(paste0("saving to file:", file))
+                ## save(
+                ##     hapProbs_t,
+                ##     use_hapMatcherR,
+                ##     Knew,
+                ##     Kfull,
+                ##     mspbwtL,
+                ##     mspbwtM,
+                ##     file = file
+                ## )
+
+                if (heuristic_approach == "A" | make_heuristic_plot) {
+
+                    which_haps_to_use <- select_new_haps_mspbwt_v3(
+                        hapProbs_t = hapProbs_t,
+                        hapMatcher = hapMatcher,
+                        hapMatcherR = hapMatcherR,
+                        use_hapMatcherR = use_hapMatcherR,
+                        ms_indices = ms_indices,
+                        Knew = Knew,
+                        Kfull = Kfull,
+                        mspbwtL = mspbwtL,
+                        mspbwtM = mspbwtM,
+                        heuristic_approach = "A"
+                    )
+                    which_haps_to_use_mspbwt_A <- which_haps_to_use
+
+                }
+
+                if (heuristic_approach == "B" | make_heuristic_plot) {
+
+                    which_haps_to_use <- select_new_haps_mspbwt_v3(
+                        hapProbs_t = hapProbs_t,
+                        hapMatcher = hapMatcher,
+                        hapMatcherR = hapMatcherR,
+                        use_hapMatcherR = use_hapMatcherR,
+                        ms_indices = ms_indices,
+                        Knew = Knew,
+                        Kfull = Kfull,
+                        mspbwtL = mspbwtL,
+                        mspbwtM = mspbwtM,
+                        heuristic_approach = "B"
+                    )
+                    which_haps_to_use_mspbwt_B <- which_haps_to_use
+
+                }
+                
+                
+
+            }
+
+            if ((!zilong && !use_mspbwt) | make_heuristic_plot) {
+                
+                impute_all <- impute_using_everything(
+                    eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                    eMatDH_special_matrix = eMatDH_special_matrix,
+                    use_eMatDH_special_symbols = use_eMatDH_special_symbols,
+                    H = read_labels,
+                    sampleReads = sampleReads,
+                    rhb_t = rhb_t,
+                    nSNPs = nSNPs,
+                    full_alphaHat_t = full_alphaHat_t,
+                    full_betaHat_t = full_betaHat_t,
+                    full_gamma_t = full_gamma_t,
+                    full_gammaSmall_t = full_gammaSmall_t,
+                    full_gammaSmall_cols_to_get = full_gammaSmall_cols_to_get,
+                    full_transMatRate_t_H = full_transMatRate_t_H,
+                    distinctHapsB = distinctHapsB,
+                    distinctHapsIE = distinctHapsIE,
+                    hapMatcher = hapMatcher,
+                    hapMatcherR = hapMatcherR,
+                    use_hapMatcherR = use_hapMatcherR,
+                    eMatDH_special_grid_which = eMatDH_special_grid_which,
+                    eMatDH_special_values_list = eMatDH_special_values_list,
+                    ref_error = ref_error,
+                    make_plots = FALSE, ## these plots are pretty useless? as plots?
+                    outplotprefix = outplotprefix,
+                    have_truth_haplotypes = have_truth_haplotypes,
+                    have_truth_genotypes = have_truth_genotypes,
+                    truth_haps = truth_haps,
+                    truth_gen = truth_gen,
+                    truth_labels = truth_labels,
+                    uncertain_truth_labels = uncertain_truth_labels,
+                    L_grid = L_grid,
+                    L = L,
+                    inRegion2 = inRegion2,
+                    cM_grid = cM_grid,
+                    ancAlleleFreqAll = ancAlleleFreqAll,
+                    plot_description = paste0("it", i_it, ".full"),
+                    return_good_haps = return_good_haps,
+                    Knew = Knew,
+                    return_dosage  = return_dosage,
+                    previously_selected_haplotypes = previously_selected_haplotypes,
+                    K_top_matches = K_top_matches,
+                    heuristic_match_thin = heuristic_match_thin,
+                    return_gamma_t = return_gamma_t,
+                    sample_name = sample_name,
+                    smooth_cm = smooth_cm ,
+                    regionStart = regionStart,
+                    regionEnd = regionEnd,
+                    buffer = buffer,
+                    minGLValue = minGLValue,
+                    suppressOutput = suppressOutput,
+                    use_eigen = use_eigen
+                )
+                which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
+                hap1 <- impute_all[["dosage1"]]
+                hap2 <- impute_all[["dosage2"]]
+
+                which_haps_to_use_quilt1 <- which_haps_to_use
+            }
+
+            if (make_heuristic_plot) {
+
+                hapProbs_t <- gibbs_iterate$hapProbs_t 
+                
+                compare_heuristic_approaches(
+                    hapProbs_t = hapProbs_t,
+                    which_haps_to_use_quilt1 = which_haps_to_use_quilt1,
+                    which_haps_to_use_zilong_A = which_haps_to_use_zilong_A,
+                    which_haps_to_use_zilong_B = which_haps_to_use_zilong_B,
+                    which_haps_to_use_mspbwt_A = which_haps_to_use_mspbwt_A,
+                    which_haps_to_use_mspbwt_B = which_haps_to_use_mspbwt_B,                    
+                    hapMatcherR = hapMatcherR,
+                    hapMatcher = hapMatcher,
+                    use_hapMatcherR = use_hapMatcherR,
+                    distinctHapsB = distinctHapsB,
+                    eMatDH_special_matrix = eMatDH_special_matrix,
+                    eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                    outputdir = outputdir,
+                    sample_name = sample_name,
+                    regionName = regionName,
+                    i_gibbs_sample = i_gibbs_sample,
+                    i_it = i_it,
+                    nGrids = nGrids
+                )
+
+            }
+
             
             if (record_interim_dosages) {
                 dosage_matrix[, paste0("gibbs", i_it)] <- get_dosages_from_fbsoL(gibbs_iterate)
                 dosage_matrix[, paste0("all", i_it)] <- hap1 + hap2
             }
-            
+
             if (record_read_label_usage) {
                 read_label_matrix[, paste0("gibbs", i_it)] <- read_labels
             }
 
-            if (have_truth_haplotypes) {
-                w <- i_it + n_seek_its * (i_gibbs_sample - 1)
-                if (method == "diploid") {
-                    x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose)
-                    pse_mat[w, ] <- c(i_gibbs_sample, i_it, as.integer(phasing_it), x)
-                } else {
-
-                    hap1 <- impute_all[["dosage1"]]
-                    hap2 <- impute_all[["dosage2"]]
-                    hap3 <- impute_all[["dosage3"]]
-
-                    x <- calculate_pse_and_r2_during_gibbs_nipt(inRegion2, hap1, hap2, hap3, truth_haps, af, verbose = verbose)
-                    
-                }
-            }
-
-        } ## -- ## 
-        
-        if (!phasing_it) {
-            if (method == "diploid") {
-                ## for phasing bit
+            ## if not a phasing iteration, and past burn in, store!
+            if (!phasing_it && (i_it > n_burn_in_seek_its)) {
+                ## print(paste0("temptemp - ", i_gibbs_sample, " ", i_it, " ", n_seek_its, " ", n_burn_in_seek_its))
                 dosage <- dosage + hap1 + hap2
-                gp_t <- gp_t + 
+                gp_t <- gp_t +
                     rbind((1 - hap1) * (1 - hap2), (1 - hap1) * hap2 + hap1 * (1 - hap2), hap1 * hap2)
-            } else {
-                mat_dosage <- mat_dosage + hap1 + hap2
-                fet_dosage <- fet_dosage + hap1 + hap2                
-                mat_gp_t <- mat_gp_t + 
-                    rbind((1 - hap1) * (1 - hap2), (1 - hap1) * hap2 + hap1 * (1 - hap2), hap1 * hap2)
-                fet_gp_t <- fet_gp_t + 
-                    rbind((1 - hap1) * (1 - hap3), (1 - hap1) * hap3 + hap1 * (1 - hap3), hap1 * hap3)
+                nDosage <- nDosage + 1
+
+                if (have_truth_haplotypes) {
+                    w <- i_it + n_seek_its * (i_gibbs_sample - 1)
+                    x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose, impute_rare_common = impute_rare_common, all_snps = FALSE)
+                    pse_mat[w, ] <- c(i_gibbs_sample, i_it, as.integer(phasing_it), x)
+                } else if (have_truth_genotypes) {
+                    r2 <-  round(cor((dosage / nDosage)[inRegion2] - 2 * af[inRegion2], gen[inRegion2, sample_name] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
+                    print_message(paste0("Current accuracy for this gibbs sample for ", sample_name, ", r2:", r2))
+                }
+
             }
+
+        }
+
+
+        if (impute_rare_common) {
+
+            if (verbose) {
+                print_message(paste0("i_gibbs=", i_gibbs_sample, ", i_it = ", i_it, " small gibbs (all SNPs)"))
+            }
+
+            out_rare_common <- impute_final_gibbs_with_rare_common(
+                special_rare_common_objects = special_rare_common_objects,
+                special_rare_common_objects_per_core = special_rare_common_objects_per_core,
+                allSNP_sampleReads = allSNP_sampleReads,
+                hap1 = hap1,
+                hap2 = hap2,
+                pos_all = pos_all,
+                maxDifferenceBetweenReads = maxDifferenceBetweenReads,
+                hapMatcher = hapMatcher,                
+                hapMatcherR = hapMatcherR,
+                use_hapMatcherR = use_hapMatcherR,
+                distinctHapsIE = distinctHapsIE,
+                eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+                eMatDH_special_matrix = eMatDH_special_matrix,
+                Ksubset = Ksubset,
+                ref_error = ref_error,
+                which_haps_to_use = which_haps_to_use,
+                small_ref_panel_gibbs_iterations = small_ref_panel_gibbs_iterations,
+                small_ref_panel_block_gibbs_iterations = small_ref_panel_block_gibbs_iterations,
+                allSNP_wif0 = allSNP_wif0,
+                allSNP_grid_has_read = allSNP_grid_has_read,
+                make_plots = make_plots,
+                outplotprefix = outplotprefix,
+                have_truth_haplotypes = have_truth_haplotypes,
+                truth_haps_all = truth_haps_all,
+                have_truth_genotypes = have_truth_genotypes,
+                truth_gen_all = truth_gen_all,
+                truth_labels_all = truth_labels_all,
+                uncertain_truth_labels_all = uncertain_truth_labels_all,
+                shuffle_bin_radius = shuffle_bin_radius,
+                make_plots_block_gibbs = make_plots_block_gibbs,
+                sample_name = sample_name,
+                regionStart = regionStart,
+                regionEnd = regionEnd,
+                buffer = buffer,
+                i_it = i_it,
+                i_gibbs_sample = i_gibbs_sample,
+                ff0_shard_check_every_pair = ff0_shard_check_every_pair,
+                sampleNames = sampleNames,
+                iSample = iSample,
+                phase_all = phase_all
+            )
+
+            hap1_all <- out_rare_common[["hap1"]]
+            hap2_all <- out_rare_common[["hap2"]]
+            if (method == "nipt") {
+                hap3_all <- out_rare_common[["hap3"]]
+            }
+
+            if (!phasing_it && (i_it > n_burn_in_seek_its)) {
+
+                dosage_all <- dosage_all + hap1_all + hap2_all
+                gp_t_all <- gp_t_all + rbind(
+                    (1 - hap1_all) * (1 - hap2_all),
+                    (1 - hap1_all) * hap2_all + hap1_all * (1 - hap2_all),
+                    hap1_all * hap2_all
+                )
+                ## nDosage <- nDosage + 1
+
+                calculate_pse_and_r2_rare_common(                
+                    hap1_all = hap1_all,
+                    hap2_all = hap2_all,
+                    have_truth_haplotypes = have_truth_haplotypes,
+                    truth_haps_all = truth_haps_all,
+                    have_truth_genotypes = have_truth_genotypes,
+                    truth_gen_all = truth_gen_all,
+                    special_rare_common_objects = special_rare_common_objects,
+                    verbose = verbose
+                )
+                
+        }
+
+        if (!phasing_it) {
+            ## for phasing bit
             read_label_matrix_all[, i_gibbs_sample] <- read_labels
             read_label_matrix_conf[, i_gibbs_sample] <- assess_ability_of_reads_to_be_confident(
                 hap1 = hap1,
@@ -609,8 +1242,7 @@ get_and_impute_one_sample <- function(
                 minmp = 0.95,
                 method = method
             )
-            ##super_out_hap_dosages[[i_gibbs_sample]] <- cbind(impute_all[["dosage1"]], impute_all[["dosage2"]])
-            if (record_read_label_usage) {            
+            if (record_read_label_usage) {
                 super_out_read_labels[[i_gibbs_sample]] <- read_label_matrix
             }
             if (record_interim_dosages) {
@@ -620,7 +1252,6 @@ get_and_impute_one_sample <- function(
 
         ## save last
         if (i_gibbs_sample == nGibbsSamples) {
-
             can_hap <- nGibbsSamples
             nReads <- length(sampleReads)
             if (method == "diploid") {
@@ -640,20 +1271,42 @@ get_and_impute_one_sample <- function(
                     }
                 }
             } else {
-                print_message("WARNING - haven't written in proper phasing read aggregator, taking forward last read labels for final phasing run")
+                print_message("niptwerwer - haven't written in proper phasing read aggregator, taking forward last read labels for final phasing run")
             }
         }
 
         if (phasing_it) {
-            if (method == "diploid") {
-                ## just save relevant stuff here
-                phasing_haps <- cbind(hap1, hap2)
-                phasing_dosage <- hap1 + hap2
-                phasing_read_labels <- read_labels
+            if (!impute_rare_common) {
+                if (method == "diploid") {                    
+                    ## just save relevant stuff here
+                    out <- recast_haps(hd1 = hap1, hd2 = hap2, gp = t(gp_t))
+                    ## over-write here
+                    hap1 <- out$hd1
+                    hap2 <- out$hd2
+                    ## 
+                    phasing_haps <- cbind(hap1, hap2)
+                    phasing_dosage <- hap1 + hap2
+                } else {
+                    print_message("niptwerwer TO WRITE RECAST_HAPS FOR NIPT")
+                    phasing_haps <- cbind(hap1, hap2, hap3)
+                    phasing_mat_dosage <- hap1 + hap2
+                    phasing_fet_dosage <- hap1 + hap3
+                }
             } else {
-                phasing_haps <- cbind(hap1, hap2, hap3)
-                phasing_mat_dosage <- hap1 + hap2
-                phasing_fet_dosage <- hap1 + hap3
+                if (method == "diploid") {                
+                    ## just save relevant stuff here
+                    out <- recast_haps(hd1 = hap1_all, hd2 = hap2_all, gp = t(gp_t_all))
+                    ## over-write here
+                    hap1_all <- out$hd1
+                    hap2_all <- out$hd2
+                    phasing_haps_all <- cbind(hap1_all, hap2_all)
+                } else {
+                    print_message("niptwerwer NEED TO WRITE RECAST_HAPS FOR NIPT")                    
+                    phasing_haps <- cbind(hap1_all, hap2_all, hap3_all)
+                    phasing_mat_dosage <- hap1_all + hap2_all
+                    phasing_fet_dosage <- hap1_all + hap3_all
+
+                }
             }
         }
 
@@ -663,7 +1316,7 @@ get_and_impute_one_sample <- function(
             if (is.na(gamma_physically_closest_to)) {
                 iGrid <- round(nGrids / 2)
             } else {
-                iGrid <- grid[which.min(abs(L - gamma_physically_closest_to))] + 1
+
             }
             gamma1 <- gamma1[, iGrid]
             gamma2 <- gamma2[, iGrid]
@@ -674,7 +1327,16 @@ get_and_impute_one_sample <- function(
                 list_of_gammas[[i_gibbs_sample]] <- list(gamma1, gamma2)
             }
         }
-         
+
+    }
+
+    if (plot_p1) {
+        ##save(p1_store, read_store, super_out_read_labels, file = "~/temp.RData")
+        p1 <- p1_store[[1]][[1]]
+        print(paste0(sum(p1 == 0) / (prod(dim(p1)))))
+        if (small_ref_panel_skip_equally_likely_reads) {
+            save(p1_store, file = "~/temp.RData")
+        }
     }
     
 
@@ -684,37 +1346,68 @@ get_and_impute_one_sample <- function(
         imputed_truth_haplotypes <- NULL
     }
 
+
     if (method == "diploid") {
-        dosage <- dosage / nGibbsSamples
-        gp_t <- gp_t / nGibbsSamples
+        dosage <- dosage / nDosage
+        gp_t <- gp_t / nDosage
+        if (impute_rare_common) {
+            dosage_all <- dosage_all / nDosage
+            gp_t_all <- gp_t_all / nDosage
+        }
     } else {
-        mat_dosage <- mat_dosage / nGibbsSamples        
-        fet_dosage <- fet_dosage / nGibbsSamples
-        mat_gp_t <- mat_gp_t / nGibbsSamples
-        fet_gp_t <- fet_gp_t / nGibbsSamples        
-        
-    }
-
-    ##
-    ## print final accuracies
-    ##
-
-    if (have_truth_haplotypes) {
-        print_message("Final accuracies using final phasing and overall dosages")
-        if (method == "diploid") {
-            hap1 <- phasing_haps[, 1]
-            hap2 <- phasing_haps[, 2]
-            x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose, dosage = dosage)
-        } else {
-            hap1 <- phasing_haps[, 1]
-            hap2 <- phasing_haps[, 2]
-            hap3 <- phasing_haps[, 3]
-            x <- calculate_pse_and_r2_during_gibbs_nipt(inRegion2, hap1, hap2, hap3, truth_haps, af, verbose = verbose, mat_dosage = mat_dosage, fet_dosage = fet_dosage)
+        mat_dosage <- mat_dosage / nDosage
+        fet_dosage <- fet_dosage / nDosage
+        mat_gp_t <- mat_gp_t / nDosage
+        fet_gp_t <- fet_gp_t / nDosage
+        if (impute_rare_common) {
+            mat_dosage_all <- mat_dosage_all / nDosage
+            fet_dosage_all <- fet_dosage_all / nDosage
+            mat_gp_t_all <- mat_gp_t_all / nDosage
+            fet_gp_t_all <- fet_gp_t_all / nDosage
         }
     }
+        
 
 
     
+    ##
+    ## print final accuracies
+    ##
+    if (impute_rare_common) {
+        final_phasing_accuracy_calculation_rare_common(
+            have_truth_haplotypes = have_truth_haplotypes,
+            have_truth_genotypes = have_truth_genotypes,
+            truth_haps_all = truth_haps_all,
+            dosage_all = dosage_all,
+            hap1_all = hap1_all,
+            hap2_all = hap2_all,
+            gen_all = gen_all,
+            sampleNames = sampleNames,
+            iSample = iSample,
+            special_rare_common_objects = special_rare_common_objects,
+            sample_name = sample_name
+        )     
+    } else {
+        print_message("FIX ME potentially")
+        if (have_truth_haplotypes) {
+            print_message("Final accuracies using final phasing and overall dosages")
+            if (method == "diploid") {
+                hap1 <- phasing_haps[, 1]
+                hap2 <- phasing_haps[, 2]
+                x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose, dosage = dosage)
+            } else {
+                hap1 <- phasing_haps[, 1]
+                hap2 <- phasing_haps[, 2]
+                hap3 <- phasing_haps[, 3]
+                x <- calculate_pse_and_r2_during_gibbs_nipt(inRegion2, hap1, hap2, hap3, truth_haps, af, verbose = verbose, mat_dosage = mat_dosage, fet_dosage = fet_dosage)
+            }
+        }
+        ## possibly this?
+        final_phasing_accuracy_calculation(have_truth_haplotypes = have_truth_haplotypes, have_truth_genotypes = have_truth_genotypes, truth_haps = truth_haps, inRegion2 = inRegion2, dosage = dosage, af = af, phasing_haps = phasing_haps, gen = gen, sample_name = sample_name)
+    }
+
+        
+
     ## optionally plot here
     if (plot_per_sample_likelihoods) {
         plot_of_likelihoods_across_samplings_and_seek_its(
@@ -729,6 +1422,16 @@ get_and_impute_one_sample <- function(
             truth_likelihoods = NULL,
             ylab = "p_H_given_O_L_up_to_C"
         )
+    }
+
+    ## perform switch over here
+    if (impute_rare_common) {
+
+        gp_t <- gp_t_all
+        phasing_haps <- phasing_haps_all
+        sampleReads <- allSNP_sampleReads
+        nSNPs <- ncol(gp_t)
+
     }
 
     ##
@@ -751,6 +1454,7 @@ get_and_impute_one_sample <- function(
         xT = as.integer(nSNPs - 1)
     )
     per_sample_alleleCount <- cbind(c2, c1 + c2)
+
 
     ## make vcf character thing - NOTE - this is a HACK of previous one - but works OK here!
     ##
@@ -813,7 +1517,7 @@ get_and_impute_one_sample <- function(
         )
         
     }
-    
+
     ## what to return
     to_return <- list(
         sample_was_imputed = TRUE,
@@ -835,8 +1539,8 @@ get_and_impute_one_sample <- function(
     ## phasing_haps = phasing_haps,
     ## phasing_dosage = phasing_dosage,
     ## gp_t = gp_t,
-    ## 
-    
+    ##
+
     if (hla_run) {
         ## print_message("More HLA SIMON code")
         to_return[["gamma1"]] <- gamma1
@@ -844,9 +1548,9 @@ get_and_impute_one_sample <- function(
         to_return[["gamma_total"]] <- gamma_total
         to_return[["list_of_gammas"]] <- list_of_gammas
     }
-    
+
     return(to_return)
-    
+
 
 }
 
@@ -872,7 +1576,7 @@ modified_calculate_pse <- function(
         return(NA)
     ## as these sites, discrepency as well
     disc <- sum(round(rowSums(test)) != 1)
-    test <- round(test) 
+    test <- round(test)
     ## round test data for now. choose hets at random
     ## for homs
     test[, 1] <- as.integer(round(test[, 1]))
@@ -900,7 +1604,7 @@ modified_calculate_pse <- function(
             test <- test[-to_remove, ]
             truth <- truth[-to_remove, ]
         }
-        ## 
+        ##
         if (i_option == 1) {
             ## only consider non-discrepent sites
             ## chose best start
@@ -941,7 +1645,7 @@ modified_calculate_pse <- function(
             phase_sites_def2 <- nrow(test) - 1
         }
     }
-    ## 
+    ##
     return(
         list(
             values = c(
@@ -958,7 +1662,7 @@ modified_calculate_pse <- function(
 }
 
 
-calculate_pse_and_r2_during_gibbs <- function(inRegion2, hap1, hap2, truth_haps, af, verbose = FALSE, dosage = NULL) {
+calculate_pse_and_r2_during_gibbs <- function(inRegion2, hap1, hap2, truth_haps, af, verbose = FALSE, impute_rare_common = FALSE, all_snps = FALSE) {
     ## wow, confident
     w <- (inRegion2)
     g <- truth_haps[inRegion2, 1] + truth_haps[inRegion2, 2]
@@ -975,8 +1679,16 @@ calculate_pse_and_r2_during_gibbs <- function(inRegion2, hap1, hap2, truth_haps,
     pse <- values["phase_errors_def1"] / values["phase_sites_def1"]
     pse <- round(100 * pse, 1)
     disc <- round(100 * values["disc_errors"] / values["dist_n"], 1)
-    if (verbose) {
-        print_message(paste0("r2:", r2, ", PSE:", pse, "%, disc:", disc, "%"))
+    if (impute_rare_common) {
+        if (all_snps && verbose) {
+            print_message(paste0("r2:", r2, ", PSE:", pse, "%, disc:", disc, "% (all SNPs)"))
+        } else {
+            print_message(paste0("r2:", r2, ", PSE:", pse, "%, disc:", disc, "% (common SNPs only)"))
+        }
+    } else {
+        if (verbose) {
+            print_message(paste0("r2:", r2, ", PSE:", pse, "%, disc:", disc, "%"))
+        }
     }
     return(c(r2 = r2, pse = as.numeric(pse), disc = as.numeric(disc)))
 }
@@ -1043,6 +1755,7 @@ calculate_pse_and_r2_during_gibbs_nipt <- function(
     }
     return(to_return)
 }
+
 
 
 
@@ -1122,7 +1835,7 @@ determine_best_read_label_so_far <- function(
     ##
     ## for default
     read_labels <- as.integer(read_label_matrix_all[, can_hap])
-    flip_matrix <- array(FALSE, c(0, nGibbsSamples)) ## 
+    flip_matrix <- array(FALSE, c(0, nGibbsSamples)) ##
     default_out <- list(
         read_labels = read_labels,
         flip_matrix = flip_matrix
@@ -1152,12 +1865,12 @@ determine_best_read_label_so_far <- function(
         ## }
         return(default_out)
     }
-    ## so, e.g, want majority vote in each? 
+    ## so, e.g, want majority vote in each?
     ## what if I do a majority vote option
     ##
     s1 <- c(1, s + 1) #[-(length(s) + 1)]
     e1 <- c(s1[-1] - 1, nrow(a))
-    ## 
+    ##
     flip_matrix <- array(FALSE, c(length(s1), nGibbsSamples))
     a2 <- a
     a2[] <- NA
@@ -1181,7 +1894,7 @@ determine_best_read_label_so_far <- function(
             } else {
                 ## here we change canonical, then any others identified
                 changed <- which(cur == 0)
-                stopifnot((can_hap %in% changed))            
+                stopifnot((can_hap %in% changed))
                 for(c1 in changed) {
                     reverted <- a[w, c1] + can[w]
                     reverted <- 3 - reverted
@@ -1191,7 +1904,7 @@ determine_best_read_label_so_far <- function(
                 ## now change canonical
                 can[w] <- 3 - can[w]
                 ## now re-set all of a
-                a[w, ] <- reverted - can[w]            
+                a[w, ] <- reverted - can[w]
             }
         }
         flip_matrix[i, changed] <- TRUE
@@ -1219,7 +1932,7 @@ determine_best_read_label_so_far <- function(
 if (1 == 0) {
 
     head(out$dosage_matrix)
-    
+
     breaks2 <- sort(unique(c(
         c(0, 0.01 / 100, 0.02 / 100, 0.05 / 100),
         c(0, 0.01 / 10, 0.02 / 10, 0.05 / 10),
@@ -1231,7 +1944,7 @@ if (1 == 0) {
     d <- hap1 + hap2
     d <- dosage_matrix[, "truth"]
     r2_by_freq(breaks2, af, truth_g, d, flip = FALSE)
-    
+
 
     dosage_matrix[, "gibbs0"]
     m <- round(cbind(
@@ -1263,7 +1976,7 @@ determine_a_set_of_truth_labels <- function(sampleReads, truth_hap1, truth_hap2,
     weird <- (colSums(is.na(eMatRead_truth_t)) > 0) | (colSums(eMatRead_truth_t == Inf) > 0) | (colSums(eMatRead_truth_t == -Inf) > 0)
     ## if both 0, set to 1 for both
     if (sum(p1 == 0 | p2 == 0) > 0) {
-        ## 
+        ##
         w <- (p1 == 0) & (p2 == 0) & (!weird)
         p1[w] <- 1
         p2[w] <- 1
@@ -1274,7 +1987,7 @@ determine_a_set_of_truth_labels <- function(sampleReads, truth_hap1, truth_hap2,
         p2[w] <- 1e-100
         p1[w][p1[w] < p2[w]] <- 1e-90
     }
-    ## 
+    ##
     nReads <- length(sampleReads)
     H <- as.integer(runif(nReads) < (p2 / (p1 + p2))) + 1
     H[is.na(H)] <- sample(1:2, sum(is.na(H)), replace = TRUE)
@@ -1290,10 +2003,13 @@ determine_a_set_of_truth_labels <- function(sampleReads, truth_hap1, truth_hap2,
         )
     )
 }
-            
+
 
 
 impute_using_everything <- function(
+    eMatDH_special_matrix_helper,
+    eMatDH_special_matrix,
+    use_eMatDH_special_symbols,
     H,
     sampleReads,
     rhb_t,
@@ -1307,19 +2023,23 @@ impute_using_everything <- function(
     distinctHapsB,
     distinctHapsIE,
     hapMatcher,
+    hapMatcherR,
+    use_hapMatcherR,
     eMatDH_special_grid_which,
     eMatDH_special_values_list,
     ref_error,
     make_plots,
     outplotprefix,
     have_truth_haplotypes,
+    have_truth_genotypes,
     truth_haps,
+    truth_gen,
     truth_labels,
     uncertain_truth_labels,
     L_grid,
     L,
     inRegion2,
-    cM_grid,    
+    cM_grid,
     ancAlleleFreqAll,
     return_good_haps = FALSE,
     plot_description,
@@ -1337,15 +2057,23 @@ impute_using_everything <- function(
     K_top_matches = 5,
     heuristic_match_thin = 0.01,
     suppressOutput = 1,
-    method = "diploid"
+    method = "diploid",
+    use_eigen = FALSE    
 ) {
 
     ##
-    K <- nrow(rhb_t)
     dosage <- numeric(nSNPs)
     nGrids <- ncol(rhb_t)
     n <- c(diploid = 2, nipt = 3)[method]        
     
+    if (use_hapMatcherR) {
+        K <- nrow(hapMatcherR)
+    } else {
+        K <- nrow(hapMatcher)
+    }
+    
+    dosage <- numeric(nSNPs)
+    nGrids <- ncol(distinctHapsB)
     if (return_good_haps) {
         return_gammaSmall_t <- FALSE
         get_best_haps_from_thinned_sites <- TRUE
@@ -1383,9 +2111,17 @@ impute_using_everything <- function(
         gl <- make_gl_from_u_bq(u, bq, nSNPs, minGLValue = minGLValue)
         use_eMatDH <- TRUE
         c <-  array(1, c(nGrids))  ## more useful for debugging
+        if (use_eigen) {
+            arma_alphaHat_t <- array(0, c(1, 1))
+            eigen_alphaHat_t <- full_alphaHat_t
+        } else {
+            arma_alphaHat_t <- full_alphaHat_t
+            eigen_alphaHat_t <- array(0, c(1, 1))
+        }
         Rcpp_haploid_dosage_versus_refs(
             gl = gl,
-            alphaHat_t = full_alphaHat_t,
+            arma_alphaHat_t = arma_alphaHat_t,
+            eigen_alphaHat_t = eigen_alphaHat_t,
             betaHat_t = full_betaHat_t,
             c = c,
             gamma_t = full_gamma_t,
@@ -1397,8 +2133,13 @@ impute_using_everything <- function(
             distinctHapsB = distinctHapsB,
             distinctHapsIE = distinctHapsIE,
             hapMatcher = hapMatcher,
+            hapMatcherR = hapMatcherR,
+            use_hapMatcherR = use_hapMatcherR,
             eMatDH_special_grid_which = eMatDH_special_grid_which,
             eMatDH_special_values_list = eMatDH_special_values_list,
+            eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+            eMatDH_special_matrix = eMatDH_special_matrix,
+            use_eMatDH_special_symbols = use_eMatDH_special_symbols,
             suppressOutput = suppressOutput,
             return_dosage = return_dosage,
             return_betaHat_t = return_betaHat_t,
@@ -1410,8 +2151,9 @@ impute_using_everything <- function(
             best_haps_stuff_list = best_haps_stuff_list,
             K_top_matches = K_top_matches,
             always_normalize = FALSE,
-            is_version_2 = TRUE,
-            normalize_emissions = TRUE
+            is_version_2 = !use_eigen, 
+            normalize_emissions = TRUE,
+            use_eigen = use_eigen
         )
         ## do some checks here
         if ((min(dosage) < -1e-5) | (1 + 1e-5) < max(dosage)) {
@@ -1435,7 +2177,7 @@ impute_using_everything <- function(
         if (return_good_haps) {
             new_haps[[i_hap]] <- everything_per_hap_rejig_haps(best_haps_stuff_list)
         }
-        if (return_gamma_t | make_plots) {
+        if ( return_gamma_t | make_plots) {
             ## requires gamma
             fbsoL$hapProbs_t[i_hap, ] <- dosageNew
             gamma_tNew <- array(0, c(K, nGrids))
@@ -1446,7 +2188,7 @@ impute_using_everything <- function(
             rm(gamma_tNew)
         }
     }
-    
+
     if (return_good_haps) {
         ## select some new haplotypes if possible!
         ## try all the depth-up-to-5 ones first, then go on
@@ -1466,7 +2208,7 @@ impute_using_everything <- function(
         new_haps = new_haps,
         fbsoL = fbsoL
     )
-    
+
     if (make_plots) {
         
         plot_single_gamma_dosage(
@@ -1479,8 +2221,10 @@ impute_using_everything <- function(
             ancAlleleFreqAll = ancAlleleFreqAll,
             outname = paste0(outplotprefix, plot_description, ".png"),
             haps = truth_haps,
+            truth_gen = truth_gen,
             truth_labels = truth_labels,
             have_truth_haplotypes = have_truth_haplotypes,
+            have_truth_genotypes = have_truth_genotypes,
             uncertain_truth_labels = uncertain_truth_labels,
             sample_name = sample_name,
             smooth_cm = smooth_cm,
@@ -1490,7 +2234,9 @@ impute_using_everything <- function(
             method = method,
             new_haps = c(new_haps, previously_selected_haplotypes)
         )
-        
+
+    if (1 == 0) {
+        check_accuracy_from_all(cheat_all)
     }
     return(to_return)
 }
@@ -1522,7 +2268,7 @@ everything_per_hap_prepare_haps <- function(
     ## OK, so this is slow, the quantile bit argh
     ## how can I make this fast?
     ## can I write c++ to do two passes over this
-    ## otherwise 
+    ## otherwise
     n <- ncol(full_gammaSmall_t)
     to_out <- as.list(1:n)
     for(i in 1:n) {
@@ -1531,7 +2277,7 @@ everything_per_hap_prepare_haps <- function(
         y <- R_get_top_K_or_more_matches(x, K_top_matches)
         to_out[[i]] <- y
     }
-    ## now choose 
+    ## now choose
     new_haps[[i_hap]] <- to_out
     return(new_haps)
 }
@@ -1551,7 +2297,7 @@ R_get_top_K_or_more_matches_while_building_gamma <- function(
     K,
     K_top_matches
 ) {
-    ## 
+    ##
     top_K_values <- numeric(K_top_matches)
     beats_value <- 0;
     num_top_K <- 1
@@ -1560,7 +2306,7 @@ R_get_top_K_or_more_matches_while_building_gamma <- function(
         if (gamma_t_col[k + 1] == top_K_values[0 + 1]) {
             num_top_K <- num_top_K + 1;
         } else if (gamma_t_col[k + 1] > top_K_values[0 + 1]) {
-            num_top_K <- num_top_K + 1;            
+            num_top_K <- num_top_K + 1;
             beats_value <- 0;
             for(j in 0:(K_top_matches - 1)) {
                 if (gamma_t_col[k + 1] > top_K_values[j + 1]) {
@@ -1575,7 +2321,7 @@ R_get_top_K_or_more_matches_while_building_gamma <- function(
             top_K_values[beats_value + 1] <- gamma_t_col[k + 1]
         }
     }
-    ## 
+    ##
     top_matches <- integer(num_top_K)
     top_matches_values <- numeric(num_top_K)
     count <- 0
@@ -1593,9 +2339,9 @@ R_get_top_K_or_more_matches_while_building_gamma <- function(
             top_matches_values = top_matches_values[1:count]
         )
     )
-    ##top_matches[order(top_matches_values , decreasing = TRUE)])   
+    ##top_matches[order(top_matches_values , decreasing = TRUE)])
 }
-                
+
 
 
 everything_select_good_haps <- function(
@@ -1650,21 +2396,27 @@ everything_select_good_haps <- function(
 
 
 impute_one_sample <- function(
-    distinctHapsIE,
-    hapMatcher,
-    rhb_t,
-    ref_error,    
+    eMatDH_special_matrix_helper = array(0, c(1, 1)),
+    eMatDH_special_matrix = array(0,c(1, 1)),
+    use_eMatDH_special_symbols = FALSE,
+    distinctHapsB = array(0L, c(1, 1)),
+    distinctHapsIE = array(0, c(1, 1)),
+    hapMatcher = array(0L, c(1, 1)),
+    hapMatcherR = array(as.raw(0), c(1, 1)),
+    use_hapMatcherR = FALSE,
+    rhb_t = array(0L, c(1, 1)),
+    ref_error = 0.001,
     nSNPs,
     sampleReads,
     ff,
-    small_eHapsCurrent_tc,
+    small_eHapsCurrent_tc = array(0, c(1, 1, 1)),
     small_transMatRate_tc_H,
     alphaHat_t1,
     betaHat_t1,
     eMatGrid_t1,
     alphaHat_t2,
     betaHat_t2,
-    eMatGrid_t2,    
+    eMatGrid_t2,
     alphaHat_t3,
     betaHat_t3,
     eMatGrid_t3,
@@ -1675,17 +2427,17 @@ impute_one_sample <- function(
     small_priorCurrent_m,
     smooth_cm,
     which_haps_to_use,
-    n_gibbs_starts,
-    n_gibbs_burn_in_its,
-    n_gibbs_sample_its,
+    n_gibbs_starts = 1,
+    small_ref_panel_gibbs_iterations,
+    n_gibbs_sample_its = 1,
     double_list_of_starting_read_labels,
-    block_gibbs_iterations,
-    perform_block_gibbs,
+    small_ref_panel_block_gibbs_iterations,
+    perform_block_gibbs = TRUE,
     make_plots,
     maxDifferenceBetweenReads,
     wif0,
     grid_has_read,
-    verbose,
+    verbose = FALSE,
     shuffle_bin_radius,
     outplotprefix,
     plot_description,
@@ -1697,13 +2449,18 @@ impute_one_sample <- function(
     cM_grid,
     have_truth_haplotypes,
     truth_haps,
+    have_truth_genotypes,
+    truth_gen,
     truth_labels,
     sample_name,
     regionStart,
     regionEnd,
     buffer,
     uncertain_truth_labels,
+    small_ref_panel_skip_equally_likely_reads = FALSE,
+    small_ref_panel_equally_likely_reads_update_iterations = c(1,2,3,6,9,15),
     return_p_store = FALSE,
+    return_p1 = FALSE,
     return_extra = FALSE,
     return_genProbs = TRUE,
     return_hapProbs = TRUE,
@@ -1721,13 +2478,27 @@ impute_one_sample <- function(
     block_gibbs_quantile_prob = 0.95,
     make_plots_block_gibbs = FALSE,
     use_small_eHapsCurrent_tc = TRUE,
-    method = "diploid"
+    method = "diploid",
+    use_provided_small_eHapsCurrent_tc = FALSE,
+    use_sample_is_diploid = FALSE,
+    i_it = NA,
+    i_gibbs_sample = NA,
+    ff0_shard_check_every_pair = FALSE,
+    zilong = FALSE,
+    calculate_gamma_on_the_fly = FALSE,
+    eMatRead_t = NULL,
+    make_eMatRead_t_rare_common = FALSE,
+    common_snp_index = integer(1),
+    snp_is_common = logical(1),
+    rare_per_hap_info = vector("list", 1),
+    rare_per_snp_info = vector("list", 1),
+    disable_read_category_usage = TRUE
 ) {
     ##
     K <- length(which_haps_to_use)
     S <- 1
     ## print(paste0("start = ", Sys.time()))
-    if (use_small_eHapsCurrent_tc) {
+    if (use_small_eHapsCurrent_tc & !use_provided_small_eHapsCurrent_tc) {
         inflate_fhb_t_in_place(
             rhb_t,
             small_eHapsCurrent_tc,
@@ -1746,7 +2517,7 @@ impute_one_sample <- function(
     ## param_list <- list(
     ##     return_alpha = FALSE,
     ##     return_p_store = FALSE,
-    ##     return_extra = FALSE,        
+    ##     return_extra = FALSE,
     ##     return_genProbs = TRUE,
     ##     return_hapProbs = TRUE,
     ##     return_gamma = TRUE,
@@ -1756,42 +2527,89 @@ impute_one_sample <- function(
     ##     verbose = FALSE,
     ##     run_fb_subset = FALSE
     ## )
+    if (use_sample_is_diploid) {
+        sample_is_diploid <- TRUE
+    }else {
+        sample_is_diploid <- FALSE
+    }
+    ## I dunno, could clearly be fixed
+    if (is.null(eMatRead_t)) {
+        pass_in_eMatRead_t <- FALSE
+        eMatRead_t <- array(0, c(1, 1))
+    } else {
+        pass_in_eMatRead_t <- TRUE
+    }
     param_list <- list(
         return_alpha = FALSE,
-        return_extra = FALSE,
+        return_extra = return_extra,
         return_genProbs = return_genProbs,
         return_gamma = as.logical(return_gamma | make_plots),
         return_hapProbs = as.logical(return_hapProbs | make_plots),
         return_p_store = return_p_store,
+        return_p1 = return_p1,
         return_gibbs_block_output = return_gibbs_block_output,
         return_advanced_gibbs_block_output = return_advanced_gibbs_block_output,
         use_starting_read_labels = TRUE,
         verbose = verbose,
-        run_fb_subset = FALSE
+        run_fb_subset = FALSE,
+        haploid_gibbs_equal_weighting = TRUE,
+        gibbs_initialize_iteratively = gibbs_initialize_iteratively,
+        gibbs_initialize_at_first_read = gibbs_initialize_at_first_read,
+        use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
+        use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
+        sample_is_diploid = sample_is_diploid,
+        update_in_place = FALSE,
+        do_shard_ff0_block_gibbs = TRUE,
+        force_reset_read_category_zero = FALSE,
+        disable_read_category_usage = disable_read_category_usage,
+        calculate_gamma_on_the_fly = calculate_gamma_on_the_fly,
+        rescale_eMatRead_t = rescale_eMatRead_t,
+        pass_in_eMatRead_t = pass_in_eMatRead_t,
+        make_eMatRead_t_rare_common = make_eMatRead_t_rare_common,
+        pass_in_alphaBeta = TRUE,
+        update_hapSum = FALSE,
+        record_read_set = TRUE,
+        perform_block_gibbs = perform_block_gibbs,
+        use_eMatDH_special_symbols = use_eMatDH_special_symbols
     )
+    ## use_provided_small_eHapsCurrent_tc = use_provided_small_eHapsCurrent_tc
     ## this should catch hopefully rare underflow problems and re-run the samples
     done_imputing <- FALSE
     n_imputing <- 0
+    n_gibbs_burn_in_its <- small_ref_panel_gibbs_iterations
+    n_gibbs_full_its <- n_gibbs_burn_in_its + n_gibbs_sample_its
+    skip_read_iteration <- rep(FALSE, n_gibbs_full_its)
+    if (small_ref_panel_skip_equally_likely_reads) {
+        skip_read_iteration <- rep(TRUE, n_gibbs_full_its)
+        skip_read_iteration[small_ref_panel_equally_likely_reads_update_iterations] <- FALSE
+    }
     while(!done_imputing) {
+        
         out <- rcpp_forwardBackwardGibbsNIPT(
             sampleReads = sampleReads,
-            priorCurrent_m = small_priorCurrent_m,        
+            eMatRead_t = eMatRead_t,
+            priorCurrent_m = small_priorCurrent_m,
             alphaMatCurrent_tc = small_alphaMatCurrent_tc,
             eHapsCurrent_tc = small_eHapsCurrent_tc,
             transMatRate_tc_H = small_transMatRate_tc_H,
             hapMatcher = hapMatcher,
+            hapMatcherR = hapMatcherR,
+            use_hapMatcherR = use_hapMatcherR,
+            distinctHapsB =distinctHapsB,
             distinctHapsIE = distinctHapsIE,
+            eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
+            eMatDH_special_matrix = eMatDH_special_matrix,
             rhb_t = rhb_t,
             ref_error = ref_error,
             which_haps_to_use = which_haps_to_use,
             ff = ff,
             maxDifferenceBetweenReads = maxDifferenceBetweenReads,
-            Jmax = Jmax,
+            Jmax_local = Jmax,
             maxEmissionMatrixDifference = maxEmissionMatrixDifference,
             run_fb_grid_offset = FALSE,
             blocks_for_output = array(0, c(1, 1)),
             grid = grid,
-            pass_in_alphaBeta = TRUE,
+            skip_read_iteration = skip_read_iteration,
             alphaHat_t1 = alphaHat_t1,
             alphaHat_t2 = alphaHat_t2,
             alphaHat_t3 = alphaHat_t3,
@@ -1810,35 +2628,32 @@ impute_one_sample <- function(
             generate_fb_snp_offsets = FALSE,
             suppressOutput = suppressOutput,
             n_gibbs_burn_in_its = n_gibbs_burn_in_its,
-            n_gibbs_sample_its = n_gibbs_sample_its,            
+            n_gibbs_sample_its = n_gibbs_sample_its,
             n_gibbs_starts = n_gibbs_starts,
             double_list_of_starting_read_labels = double_list_of_starting_read_labels,
             prev_list_of_alphaBetaBlocks = as.list(c(1, 2)),
             i_snp_block_for_alpha_beta = -1,
-            haploid_gibbs_equal_weighting = TRUE,
-            gibbs_initialize_iteratively = gibbs_initialize_iteratively,
-            gibbs_initialize_at_first_read = gibbs_initialize_at_first_read, ## experiment with
             do_block_resampling = FALSE, ## turn off for now
-            perform_block_gibbs = perform_block_gibbs,
             seed_vector = 0,
-            update_hapSum = FALSE, ## do not bother for now
             class_sum_cutoff = 0.06, ## what is this
-            record_read_set = TRUE, ## needed for block gibbs
             wif0 = wif0,
             grid_has_read = grid_has_read,
             shuffle_bin_radius = shuffle_bin_radius,
             L_grid = L_grid,
-            block_gibbs_iterations = block_gibbs_iterations,
-            rescale_eMatRead_t = rescale_eMatRead_t,
+            block_gibbs_iterations = small_ref_panel_block_gibbs_iterations,
             smooth_cm = smooth_cm,
             param_list = param_list,
-            use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
             block_gibbs_quantile_prob = block_gibbs_quantile_prob,
-            use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc
+            artificial_relabel = -1,
+            ff0_shard_check_every_pair = ff0_shard_check_every_pair,
+            common_snp_index = common_snp_index,
+            snp_is_common = snp_is_common,
+            rare_per_hap_info = rare_per_hap_info,
+            rare_per_snp_info = rare_per_snp_info
         )
         
         if (out[["underflow_problem"]]) {
-            new_maxDifferenceBetweenReads <- max(1, maxDifferenceBetweenReads / 10)        
+            new_maxDifferenceBetweenReads <- max(1, maxDifferenceBetweenReads / 10)
             print_message(paste0("Underflow problem observed for sample ", sample_name, ". Re-setting maxDifferenceBetweenReads from ", maxDifferenceBetweenReads, " (log10 of ", log10(maxDifferenceBetweenReads), ") to ", new_maxDifferenceBetweenReads, " (log10 of ", log10(new_maxDifferenceBetweenReads), "). If this problem persists please reset maxDifferenceBetweenReads or downsampleToCov to lower coverage and/or reduce the impact of individual reads"))
             maxDifferenceBetweenReads <- new_maxDifferenceBetweenReads
             n_imputing <- n_imputing + 1
@@ -1869,34 +2684,30 @@ impute_one_sample <- function(
             haps = truth_haps,
             truth_labels = truth_labels,
             have_truth_haplotypes = have_truth_haplotypes,
+            have_truth_genotypes = have_truth_genotypes,
+            truth_gen = truth_gen,
             uncertain_truth_labels = uncertain_truth_labels,
             sample_name = sample_name,
             smooth_cm = smooth_cm,
             regionStart = regionStart,
             regionEnd = regionEnd,
-            buffer = buffer
+            buffer = buffer,
+            which_haps_to_use = which_haps_to_use
         )
         ## would like a plot here
     }
     if (make_plots_block_gibbs) {
         nGrids <- ncol(alphaHat_t1)
-        for(n_block_it_to_plot in 1:length(block_gibbs_iterations)) {
-            outname <- paste0(outplotprefix, "block", plot_description, ".n", n_block_it_to_plot, ".png")            
+        for(n_block_it_to_plot in 1:length(small_ref_panel_block_gibbs_iterations)) {
+            outname <- paste0(outplotprefix, "block", plot_description, ".n", n_block_it_to_plot, ".png")
             n_block_it_to_plot = n_block_it_to_plot
             plot_attempt_to_reblock_snps(
                 out = out,
                 nGrids = nGrids,
-                block_gibbs_iterations = block_gibbs_iterations,
+                block_gibbs_iterations = small_ref_panel_block_gibbs_iterations,
                 outname = outname,
-                break_thresh = break_thresh,
-                considers = considers,
-                grid_distances = grid_distances,
                 L_grid = L_grid,
-                gibbs_block_output_list = gibbs_block_output_list,
-                smoothed_rate = smoothed_rate,
                 L = L,
-                block_results = block_results,
-                shard_block_results = shard_block_results,        
                 uncertain_truth_labels = uncertain_truth_labels,
                 truth_labels = truth_labels,
                 have_truth_haplotypes = have_truth_haplotypes,
@@ -1957,7 +2768,7 @@ r2_by_freq <- function(breaks, af, truthG, testDS, which_snps = NULL, flip = FAL
             n = length(w),
             nA = sum(truthG[w], na.rm = TRUE),
             simple = cor(truthG[w], testDS[w], use = 'pairwise.complete') ** 2,
-            norm = cor(truthG[w] - 2 * af[w], testDS[w] - 2 * af[w], use = 'pairwise.complete') ** 2            
+            norm = cor(truthG[w] - 2 * af[w], testDS[w] - 2 * af[w], use = 'pairwise.complete') ** 2
         )
     })
     cors_per_af <- t(sapply(cors_per_af[!sapply(cors_per_af, is.null)], I))
@@ -2022,7 +2833,7 @@ calculate_eMatRead_t_usig_rhb_t <- function(
     s <- 0
     ## slow but whatevs, will fix
     n <- 5000
-    eMatRead_t_full  <- array(1, c(K, nReads))    
+    eMatRead_t_full  <- array(1, c(K, nReads))
     for(i in 1:ceiling(K / n)) {
         print(paste0(i, " / ", ceiling(K / n)))
         s <- n * (i - 1) + 1
@@ -2035,9 +2846,9 @@ calculate_eMatRead_t_usig_rhb_t <- function(
             haps_to_get = s:e - 1,
             nSNPs
         )
-        eMatRead_t_partial  <- array(1, c(KL, nReads))            
+        eMatRead_t_partial  <- array(1, c(KL, nReads))
         gc(reset = TRUE); gc(reset = TRUE);
-        ## 
+        ##
         rcpp_make_eMatRead_t(
             eMatRead_t = eMatRead_t_partial,
             sampleReads = sampleReads,
@@ -2045,7 +2856,7 @@ calculate_eMatRead_t_usig_rhb_t <- function(
             s = 0,
             maxDifferenceBetweenReads = maxDifferenceBetweenReads,
             Jmax = 10000,
-            eMatHapOri_t = array(0, c(1, 1)), ## ugh                                                      
+            eMatHapOri_t = array(0, c(1, 1)), ## ugh
             pRgivenH1 = array(0),
             pRgivenH2 = array(0),
             run_pseudo_haploid = FALSE,
@@ -2079,7 +2890,7 @@ calculate_eMatRead_t_some_haplotypes <- function(
     s <- 0
     ## slow but whatevs, will fix
     n <- 1000
-    eMatRead_t  <- array(1, c(K, nReads))    
+    eMatRead_t  <- array(1, c(K, nReads))
     ehc <- array(0, c(K, nSNPs, 1))
     ## do it in parts
     ehc[, , 1] <- inflate_fhb_t(
@@ -2088,7 +2899,7 @@ calculate_eMatRead_t_some_haplotypes <- function(
         nSNPs
     )
     gc(reset = TRUE); gc(reset = TRUE);
-    ## 
+    ##
     rcpp_make_eMatRead_t(
         eMatRead_t = eMatRead_t,
         sampleReads = sampleReads,
@@ -2096,7 +2907,7 @@ calculate_eMatRead_t_some_haplotypes <- function(
         s = 0,
         maxDifferenceBetweenReads = maxDifferenceBetweenReads,
         Jmax = 1000,
-        eMatHapOri_t = array(0, c(1, 1)), ## ugh                                                      
+        eMatHapOri_t = array(0, c(1, 1)), ## ugh
         pRgivenH1 = array(0),
         pRgivenH2 = array(0),
         run_pseudo_haploid = FALSE,
@@ -2107,7 +2918,7 @@ calculate_eMatRead_t_some_haplotypes <- function(
         rescale_eMatRead_t = rescale_eMatRead_t
     )
     gc(reset = TRUE);    gc(reset = TRUE);
-    gc(reset = TRUE);    gc(reset = TRUE);    
+    gc(reset = TRUE);    gc(reset = TRUE);
     return(eMatRead_t)
 }
 
@@ -2143,7 +2954,7 @@ calculate_eMatRead_t_vs_two_haplotypes <- function(
         s = s,
         maxDifferenceBetweenReads = maxDifferenceBetweenReads,
         Jmax = 1000,
-        eMatHapOri_t = array(0, c(1, 1)), ## ugh                                                      
+        eMatHapOri_t = array(0, c(1, 1)), ## ugh
         pRgivenH1 = array(0),
         pRgivenH2 = array(0),
         run_pseudo_haploid = FALSE,
@@ -2154,7 +2965,7 @@ calculate_eMatRead_t_vs_two_haplotypes <- function(
         rescale_eMatRead_t = rescale_eMatRead_t
     )
     rm(ehc)
-    gc(reset = TRUE);    gc(reset = TRUE);
+    ## gc(reset = TRUE);    gc(reset = TRUE);
     return(eMatRead_t)
 }
 
@@ -2165,7 +2976,7 @@ calculate_eMatRead_t_vs_two_haplotypes <- function(
 
 ##
 ## check accuracy quickly
-## 
+##
 check_accuracy_from_all <- function(all) {
     dosage1 <- all$dosage1
     dosage2 <- all$dosage2
@@ -2208,7 +3019,7 @@ check_accuracy_from_all <- function(all) {
         r2sb = r2sb,
         r2sc = r2sc,
         r2sm = r2sm,
-        r2sm2 = r2sm2,        
+        r2sm2 = r2sm2,
         r2sn = r2sn
     )
     to_return
@@ -2248,12 +3059,12 @@ if (1 == 0) {
             t(r2_by_freq(breaks, af, truth_g, (d1 + d2 + d3 + d4) / 4))[, "simple"]
         )
     }
-    
+
     100 * f("cheat_all")
     100 * f("impute_all1")
     100 * f("impute_all2")
     100 * f("impute_all3")
-    
+
     100 * f("cheat_all")
     100 * f("impute_all1")
     100 * f("impute_all2")
@@ -2264,7 +3075,7 @@ if (1 == 0) {
     ## can try the above, but initialize differently somehow?
     ## 400 haplotypes at random?
     ## hopefully OK?
-    
+
 
 
 }
@@ -2300,7 +3111,7 @@ estimate_bq <- function(truth_labels, sampleReads, truth_haps) {
         phred_stated <- round(exp(1 / sum(w) * sum(sum(log(abs(bqs[w]))))), 1)
         return(c(sum(w0), sum(w1), phred_stated))
     }))
-    colnames(results)[1:3] <- c("N_ref", "N_alt", "phred_stated")    
+    colnames(results)[1:3] <- c("N_ref", "N_alt", "phred_stated")
     rownames(results) <- c("(-Inf,-30]", "[-29,-20]", "[-19, 1]", "[1, 19]", "[20, 29]", "[30, Inf)")
     results <- cbind(results, accuracy = c(results[1:3, 1] / rowSums(results[1:3, 1:2]), results[4:6, 2] / rowSums(results[4:6, 1:2])))
     results <- cbind(results, phred_obs = -round(log10(1 - results[, "accuracy"]) * 10, 1))
@@ -2308,10 +3119,11 @@ estimate_bq <- function(truth_labels, sampleReads, truth_haps) {
     return(results)
 }
 
-    
 
 
-recast_haps <- function(hd1, hd2, gp, err = 0.001) {
+
+## force phased haplotypes to agree with genotype posterior
+recast_haps <- function(hd1, hd2, gp) {
     gt1 <- round(hd1) + round(hd2)
     max_val <- gp[, 1]
     gt3 <- rep(0, nrow(gp))
@@ -2320,7 +3132,8 @@ recast_haps <- function(hd1, hd2, gp, err = 0.001) {
         gt3[w] <- i - 1
         max_val[w] <- gp[w, i]
     }
-    ## 
+    
+    ##
     to_change <- which(gt3 != gt1)
     ## easy one
     hd1[to_change][gt3[to_change] == 0] <- 0
@@ -2328,7 +3141,7 @@ recast_haps <- function(hd1, hd2, gp, err = 0.001) {
     hd1[to_change][gt3[to_change] == 2] <- 1
     hd2[to_change][gt3[to_change] == 2] <- 1
     ## hard one
-    a1 <- hd1[to_change][gt3[to_change] == 1]    
+    a1 <- hd1[to_change][gt3[to_change] == 1]
     a2 <- hd2[to_change][gt3[to_change] == 1]
     hd1[to_change][gt3[to_change] == 1][a1 > a2] <- 1
     hd2[to_change][gt3[to_change] == 1][a1 > a2] <- 0
@@ -2336,3 +3149,31 @@ recast_haps <- function(hd1, hd2, gp, err = 0.001) {
     hd2[to_change][gt3[to_change] == 1][a1 <= a2] <- 1
     return(list(hd1 = hd1, hd2 = hd2))
 }
+
+
+
+final_phasing_accuracy_calculation <- function(
+    have_truth_haplotypes,
+    have_truth_genotypes,
+    truth_haps,
+    inRegion2,
+    dosage,
+    af,
+    phasing_haps,
+    gen,
+    sample_name
+) {
+    if (have_truth_haplotypes) {    
+        w <- (inRegion2)
+        g <- truth_haps[inRegion2, 1] + truth_haps[inRegion2, 2]
+        r2 <-  round(cor((dosage)[inRegion2] - 2 * af[inRegion2], g - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
+        ##
+        x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = phasing_haps[, 1], hap2 = phasing_haps[, 2], truth_haps = truth_haps, af = af, verbose = FALSE)
+        print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
+        print_message(paste0("Final phasing accuracy for sample ", sample_name, ", pse:", x["pse"], ", disc(%):", x["disc"], "%"))
+    } else if (have_truth_genotypes) {
+        r2 <-  round(cor((dosage)[inRegion2] - 2 * af[inRegion2], gen[inRegion2, sample_name] - 2 * af[inRegion2], use = "pairwise.complete.obs") ** 2, 3)
+        print_message(paste0("Final imputation dosage accuracy for sample ", sample_name, ", r2:", r2))
+    }
+}
+

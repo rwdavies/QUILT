@@ -77,6 +77,8 @@ plot_single_gamma_dosage <- function(
     method,
     truth_labels,
     have_truth_haplotypes,
+    have_truth_genotypes,
+    truth_gen,
     uncertain_truth_labels,
     sample_name,
     smooth_cm,
@@ -84,6 +86,7 @@ plot_single_gamma_dosage <- function(
     regionEnd,
     buffer,
     new_haps = NULL,
+    which_haps_to_use = NULL,
     output_plot = TRUE
 ) {
     ##
@@ -143,6 +146,9 @@ plot_single_gamma_dosage <- function(
             m[, i + 1] <- m[, i] + gammaK_t[i, ]
         }
         ##
+        if (is.null(which_haps_to_use)) {
+            which_haps_to_use <- 1:K
+        }
         for(j in 1:2) {
             for(i in K:1) {
                 ## can I o
@@ -159,7 +165,8 @@ plot_single_gamma_dosage <- function(
                             col = colStore[(i %% nCols) + 1]
                         )
                     } else {
-                        add_numbers(ytop, ybottom, x, i, col = letter_col[i])
+                        ## add_numbers(ytop, ybottom, x, i, col = letter_col[i])
+                        add_numbers(ytop, ybottom, x, which_haps_to_use[i]) ## make global
                     }
                 }
             }
@@ -167,18 +174,19 @@ plot_single_gamma_dosage <- function(
         ## distance to hap 1 and distance to hap2, same time?
         dosage <- fbsoL[["hapProbs_t"]][i_which, ]
         ## dosage2 <- fbsoL[["hapProbs_t"]][
-        truth1 <- haps[, 1]
-        truth2 <- haps[, 2]
-        ## ##
-        if (method == "nipt") {
-            truth3 <- haps[, 3]
-            r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth3, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1, scale = scale_dosage, col = "red", label = "Rolling accuracy versus truth haplotype 3"))
-            offset <- scale_dosage
-        } else {
-            offset <- 0
+        if (have_truth_haplotypes) {
+            if (method == "nipt") {
+                truth3 <- haps[, 3]
+                r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth3, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1, scale = scale_dosage, col = "red", label = "Rolling accuracy versus truth haplotype 3"))
+                offset <- scale_dosage
+            } else {
+                offset <- 0
+            }
+            truth1 <- haps[, 1]
+            truth2 <- haps[, 2]
+            r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth2, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1 + offset, scale = scale_dosage, col = "red", label = "Rolling accuracy versus truth haplotype 2"))
+            r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth1, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1 + offset + scale_dosage, scale = scale_dosage, col = "green", label = "Rolling accuracy versus truth haplotype 1"))
         }
-        r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth2, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1 + offset, scale = scale_dosage, col = "red", label = "Rolling accuracy versus truth haplotype 2"))
-        r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth1, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1 + offset + scale_dosage, scale = scale_dosage, col = "green", label = "Rolling accuracy versus truth haplotype 1"))
         ## add cor!
     }
     ##
@@ -250,12 +258,26 @@ plot_single_gamma_dosage <- function(
     ##
     ## abline(h = (1 - frac_reads))
     text(x = mean(xlim), y = (1 - frac_reads) * 0.85, labels = "Imputed genotypes", cex = 1.5, font = 2)
+        
+#<<<<<<< HEAD
     if (method == "nipt") {
         r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = rowSums(haps[, 1:2]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = (1 - frac_reads) / 2, scale = (1 - frac_reads) / 2, col = "green", label = "Rolling accuracy of maternal genotypes versus truth"))
         r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][c(1, 3), ]), truth = rowSums(haps[, c(1, 3)]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads) / 2, col = "orange", label = "Rolling accuracy of fetal genotypes versus truth"))
     } else {
         r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = rowSums(haps[, 1:2]), ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads), col = "green", label = "Rolling accuracy versus truth genotypes"))        
+#=======
+    if (have_truth_haplotypes | have_truth_genotypes) {
+        if (have_truth_genotypes & !have_truth_haplotypes) {
+            truthH <- c(truth_gen)
+        } else {
+            truthH <- rowSums(haps[, 1:2])
+        }
+        ## could re-do with truth genotypes
+        r2s <- c(r2s, plot_2_dosage_vs_truth(dosage = colSums(fbsoL[["hapProbs_t"]][1:2, ]), truth = truthH, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 0, scale = (1 - frac_reads), col = "green", label = "Rolling accuracy versus truth genotypes"))
+>>>>>>> origin/zilong
     }
+
+        
     ##
     ## plot section 4 - recombination rate (need real thing!), and x-axis with locations
     ##
@@ -518,3 +540,121 @@ plot_of_likelihoods_across_samplings_and_seek_its <- function(
     ## system(paste("rsync -av ", filename, " rescompNew2:~/"))
 }
 
+
+
+
+plot_prob_of_flipping_to_first_hap <- function(
+    p_store,
+    filename
+) {
+
+    filename <- "~/temp.png"
+    load(file = "~/temp.RData")    
+    
+    nReads <- ncol(p1_store[[1]][[1]])
+    n_sampling_its <- nrow(p1_store[[1]][[1]])
+
+    n_seek_its <- length(p1_store[[1]])
+    nGibbsSamples <- length(p1_store) - 1
+
+    ## 
+    size <- round(nReads / 1000)
+    size <- min(max(size, 5), 20)
+
+    ##
+    ## here look at how probabilities of sampling change
+    ##
+    for(i_what in 1:2) {
+        if (i_what == 1) {
+            filename <- "~/temp.readprobs.png"
+        } else {
+            filename <- "~/temp.reads.png"
+        }
+        png(filename, height = size, width = size, units = "in", res = 300)
+        xlim <- c(1, n_seek_its + 1)
+        ylim <- c(1, nGibbsSamples + 1 + 1)
+        plot(x = 0, y = 0, col = "white", xlim = xlim, ylim = ylim, axes = TRUE, xlab = "", ylab = "")
+        ybottom <- (0:(nReads - 1)) / nReads
+        ytop <- ybottom + 1 / nReads
+        xleft <- 0:(n_sampling_its - 1) / n_sampling_its
+        xright <- xleft + 1 / n_sampling_its
+        ## now rep them
+        ybottom <- rep(ybottom, each = n_sampling_its)
+        ytop <- rep(ytop, each = n_sampling_its)
+        ##
+        xleft <- rep(xleft, nReads)
+        xright <- rep(xright, nReads)
+        ## 
+        cols <- colorRampPalette(c("#FFFFFF", "#56B4E9"))(51)
+        for(i_it in 1:n_seek_its) {
+            for(iGibbs in 1:(nGibbsSamples + 1)) {
+                if (i_what == 1) {  p1 <- p1_store[[iGibbs]][[i_it]] }
+                if (i_what == 2) {  p1 <- read_store[[iGibbs]][[i_it]] }                
+                rect(i_it + xleft, iGibbs + ybottom, i_it + xright, iGibbs + ytop, col = cols[round(100 * abs(p1 - 0.5)) + 1], border = NA)
+                rect(i_it, iGibbs, i_it + 1, iGibbs + 1)
+            }
+        }
+        dev.off()
+    }
+
+
+    ##
+    ## here plot the reads themselves
+    ##
+    table(round(colMeans(abs(x - 0.5)), 1))
+    
+    ## plot reads used as well
+    filename <- "temp.reads.png"
+    png(filename, height = size, width = size, units = "in", res = 300)
+
+    ## argh, not yet recorded
+    f <- function(i, j) {
+        x <- p1_store[[i]][[j]]
+        y <- round(apply(x, 2, function(x) max(abs(x - 0.5))), 1)
+        y
+    }
+
+    table(f(1, 1), f(1, 3))
+    table(f(2, 3), f(1, 3)) ## mostly the same
+    
+
+    ##
+    ## here compare the read probs at the start and end of each run
+    ##
+    o <- lapply(p1_store, function(p1) {
+        m <- nrow(p1_store[[1]][[1]])
+        m <- cbind(
+            t(p1[[1]][c(1, m), ]),
+            t(p1[[2]][c(1, m), ]),
+            t(p1[[3]][c(1, m), ])
+        )
+        m
+    })
+    a <- cbind(o[[1]], o[[2]])
+    for(j in 3:length(o)) {
+        a <- cbind(a, o[[j]])
+    }
+    a <- t(a)
+    
+    pdf("~/temp.pdf", height = 10, width = 30)
+    xlim <- c(0, 1)
+    ylim <- c(0, 1)
+    plot(x = 0, y = 0, col = "white", xlim = xlim, ylim = ylim, axes = TRUE, xlab = "", ylab = "")
+    ## 
+    ybottom <- (0:(nReads - 1)) / nReads
+    ytop <- ybottom + 1 / nReads
+    n_sampling_its <- nrow(a)
+    xleft <- 0:(n_sampling_its - 1) / n_sampling_its
+    xright <- xleft + 1 / n_sampling_its
+    ## now rep them
+    ybottom <- rep(ybottom, each = n_sampling_its)
+    ytop <- rep(ytop, each = n_sampling_its)
+    xleft <- rep(xleft, nReads)
+    xright <- rep(xright, nReads)
+    ## 
+    rect(ybottom, xleft, ytop, xright, col = cols[round(100 * abs(a - 0.5)) + 1], border = NA)
+    ## add some lines
+    abline(h = seq(0, n_sampling_its - 1, 6) / n_sampling_its)
+    dev.off()
+    
+}

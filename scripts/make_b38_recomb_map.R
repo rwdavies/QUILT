@@ -9,6 +9,7 @@ if (1 == 0) {
 
     ## e.g.
     recomb_dir <- "/data/smew1/rdavies/external/"
+    recomb_dir <- "/well/davies/shared/recomb/"
     panel <- "CEU"
     chr <- "6"
 
