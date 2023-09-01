@@ -572,9 +572,10 @@ get_and_impute_one_sample <- function(
             if (method == "diploid") {
                 truth_label_set <- determine_a_set_of_truth_labels(
                     sampleReads = sampleReads,
-                    maxDifferenceBetweenReads = maxDifferenceBetweenReads,
-                    method = method
-                )
+                    truth_hap1 = truth_haps[, 1],
+                    truth_hap2 = truth_haps[, 2],
+                    maxDifferenceBetweenReads = maxDifferenceBetweenReads
+		)
                 truth_labels <- truth_label_set[["truth_labels"]]
                 uncertain_truth_labels <- truth_label_set[["uncertain_truth_labels"]]
             } else {
@@ -647,11 +648,19 @@ get_and_impute_one_sample <- function(
             )
 
             if (verbose) {
-                
-                hap1 <- truth_all[["dosage1"]]
-                hap2 <- truth_all[["dosage2"]]
-                hap3 <- truth_all[["dosage3"]]
-                x <- calculate_pse_and_r2_during_gibbs_nipt(inRegion2, hap1, hap2, hap3, truth_haps, af, verbose = verbose)
+
+                if (method == "diploid") {
+                    hap1 <- truth_all[["dosage1"]]
+                    hap2 <- truth_all[["dosage2"]]
+                    x <- calculate_pse_and_r2_during_gibbs(inRegion2, hap1, hap2, truth_haps, af, verbose = verbose)
+
+                } else {
+                    hap1 <- truth_all[["dosage1"]]
+                    hap2 <- truth_all[["dosage2"]]
+                    hap3 <- truth_all[["dosage3"]]
+                    x <- calculate_pse_and_r2_during_gibbs_nipt(inRegion2, hap1, hap2, hap3, truth_haps, af, verbose = verbose)
+
+                }
                 
             }
 
@@ -980,7 +989,7 @@ get_and_impute_one_sample <- function(
                 Kfull <- nrow(hapMatcher)
 
                 ## file <- paste0("~/temp.", i_gibbs_sample, ".", i_it, ".RData")
-                ## print(paste0("saving to file:", file))
+                ## print(paste0("savingto file:", file))
                 ## save(
                 ##     hapProbs_t,
                 ##     use_hapMatcherR,
@@ -1206,33 +1215,33 @@ get_and_impute_one_sample <- function(
                 hap3_all <- out_rare_common[["hap3"]]
             }
 
-        }
-
-        if (!phasing_it && (i_it > n_burn_in_seek_its)) {
-
-            if (method == "diploid") {
-                dosage_all <- dosage_all + hap1_all + hap2_all
-                gp_t_all <- gp_t_all + rbind(
+            if (!phasing_it && (i_it > n_burn_in_seek_its)) {
+                
+                if (method == "diploid") {
+                    dosage_all <- dosage_all + hap1_all + hap2_all
+                    gp_t_all <- gp_t_all + rbind(
                     (1 - hap1_all) * (1 - hap2_all),
                     (1 - hap1_all) * hap2_all + hap1_all * (1 - hap2_all),
                     hap1_all * hap2_all
-                )
-                ## nDosage <- nDosage + 1
-            
-                calculate_pse_and_r2_rare_common(                
-                    hap1_all = hap1_all,
-                    hap2_all = hap2_all,
-                    have_truth_haplotypes = have_truth_haplotypes,
-                    truth_haps_all = truth_haps_all,
-                    have_truth_genotypes = have_truth_genotypes,
-                    truth_gen_all = truth_gen_all,
-                    special_rare_common_objects = special_rare_common_objects,
-                    verbose = verbose
-                )
-
-            } else {
-
-                stop("write in this part of NIPT later")
+                    )
+                    ## nDosage <- nDosage + 1
+                    
+                    calculate_pse_and_r2_rare_common(                
+                        hap1_all = hap1_all,
+                        hap2_all = hap2_all,
+                        have_truth_haplotypes = have_truth_haplotypes,
+                        truth_haps_all = truth_haps_all,
+                        have_truth_genotypes = have_truth_genotypes,
+                        truth_gen_all = truth_gen_all,
+                        special_rare_common_objects = special_rare_common_objects,
+                        verbose = verbose
+                    )
+                    
+                } else {
+                    
+                    stop("write in this part of NIPT later")
+                    
+                }
                 
             }
             
@@ -1382,28 +1391,44 @@ get_and_impute_one_sample <- function(
     ##
     ## print final accuracies
     ##
+    ## NOTE I should re-write this to more easily handle all 4 cases using one function
+    ##
     if (impute_rare_common) {
-        final_phasing_accuracy_calculation_rare_common(
-            have_truth_haplotypes = have_truth_haplotypes,
-            have_truth_genotypes = have_truth_genotypes,
-            truth_haps_all = truth_haps_all,
-            dosage_all = dosage_all,
-            hap1_all = hap1_all,
-            hap2_all = hap2_all,
-            gen_all = gen_all,
-            sampleNames = sampleNames,
-            iSample = iSample,
-            special_rare_common_objects = special_rare_common_objects,
-            sample_name = sample_name
-        )     
+        if (method == "diploid") {
+            final_phasing_accuracy_calculation_rare_common(
+                have_truth_haplotypes = have_truth_haplotypes,
+                have_truth_genotypes = have_truth_genotypes,
+                truth_haps_all = truth_haps_all,
+                dosage_all = dosage_all,
+                hap1_all = hap1_all,
+                hap2_all = hap2_all,
+                gen_all = gen_all,
+                sampleNames = sampleNames,
+                iSample = iSample,
+                special_rare_common_objects = special_rare_common_objects,
+                sample_name = sample_name
+            )
+        } else {
+            stop("write me")
+        }
     } else {
-        print_message("FIX ME potentially")
         if (have_truth_haplotypes) {
             print_message("Final accuracies using final phasing and overall dosages")
             if (method == "diploid") {
-                hap1 <- phasing_haps[, 1]
-                hap2 <- phasing_haps[, 2]
-                x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose, dosage = dosage)
+                final_phasing_accuracy_calculation(
+                    have_truth_haplotypes = have_truth_haplotypes,
+                    have_truth_genotypes = have_truth_genotypes,
+                    truth_haps = truth_haps,
+                    inRegion2 = inRegion2,
+                    dosage = dosage,
+                    af = af,
+                    phasing_haps = phasing_haps,
+                    gen = gen,
+                    sample_name = sample_name
+                )
+                ## hap1 <- phasing_haps[, 1]
+                ## hap2 <- phasing_haps[, 2]
+                ## x <- calculate_pse_and_r2_during_gibbs(inRegion2 = inRegion2, hap1 = hap1, hap2 = hap2, truth_haps = truth_haps, af = af, verbose = verbose, dosage = dosage)
             } else {
                 hap1 <- phasing_haps[, 1]
                 hap2 <- phasing_haps[, 2]
@@ -1411,8 +1436,6 @@ get_and_impute_one_sample <- function(
                 x <- calculate_pse_and_r2_during_gibbs_nipt(inRegion2, hap1, hap2, hap3, truth_haps, af, verbose = verbose, mat_dosage = mat_dosage, fet_dosage = fet_dosage)
             }
         }
-        ## possibly this?
-        final_phasing_accuracy_calculation(have_truth_haplotypes = have_truth_haplotypes, have_truth_genotypes = have_truth_genotypes, truth_haps = truth_haps, inRegion2 = inRegion2, dosage = dosage, af = af, phasing_haps = phasing_haps, gen = gen, sample_name = sample_name)
     }
 
         
@@ -1671,7 +1694,17 @@ modified_calculate_pse <- function(
 }
 
 
-calculate_pse_and_r2_during_gibbs <- function(inRegion2, hap1, hap2, truth_haps, af, verbose = FALSE, impute_rare_common = FALSE, all_snps = FALSE) {
+calculate_pse_and_r2_during_gibbs <- function(
+    inRegion2,
+    hap1,
+    hap2,
+    truth_haps,
+    af,
+    verbose = FALSE,
+    impute_rare_common = FALSE,
+    all_snps = FALSE,
+    dosage = NULL
+) {
     ## wow, confident
     w <- (inRegion2)
     g <- truth_haps[inRegion2, 1] + truth_haps[inRegion2, 2]
@@ -1968,7 +2001,12 @@ if (1 == 0) {
 
 }
 
-determine_a_set_of_truth_labels <- function(sampleReads, truth_hap1, truth_hap2, maxDifferenceBetweenReads ) {
+determine_a_set_of_truth_labels <- function(
+    sampleReads,
+    truth_hap1,
+    truth_hap2,
+    maxDifferenceBetweenReads
+) {
     ## do not count where both sites missing
     w <- is.na(truth_hap1) & is.na(truth_hap2)
     truth_hap1[w] <- 0.5
@@ -2505,6 +2543,114 @@ impute_one_sample <- function(
     rare_per_snp_info = vector("list", 1),
     disable_read_category_usage = TRUE
 ) {
+
+
+
+
+
+
+    ## save(
+    ## eMatDH_special_matrix_helper,
+    ## eMatDH_special_matrix,
+    ## use_eMatDH_special_symbols,
+    ## distinctHapsB ,
+    ## distinctHapsIE,
+    ## hapMatcher ,
+    ## hapMatcherR,
+    ## use_hapMatcherR ,
+    ## rhb_t,
+    ## ref_error,
+    ## nSNPs,
+    ## sampleReads,
+    ## ff,
+    ## small_eHapsCurrent_tc,
+    ## small_transMatRate_tc_H,
+    ## alphaHat_t1,
+    ## betaHat_t1,
+    ## eMatGrid_t1,
+    ## alphaHat_t2,
+    ## betaHat_t2,
+    ## eMatGrid_t2,
+    ## alphaHat_t3,
+    ## betaHat_t3,
+    ## eMatGrid_t3,
+    ## gammaMT_t_local,
+    ## gammaMU_t_local,
+    ## gammaP_t_local,
+    ## small_alphaMatCurrent_tc,
+    ## small_priorCurrent_m,
+    ## smooth_cm,
+    ## which_haps_to_use,
+    ## n_gibbs_starts,
+    ## small_ref_panel_gibbs_iterations,
+    ## n_gibbs_sample_its,
+    ## double_list_of_starting_read_labels,
+    ## small_ref_panel_block_gibbs_iterations,
+    ## perform_block_gibbs,
+    ## make_plots,
+    ## maxDifferenceBetweenReads,
+    ## wif0,
+    ## grid_has_read,
+    ## verbose,
+    ## shuffle_bin_radius,
+    ## outplotprefix,
+    ## plot_description,
+    ## ancAlleleFreqAll,
+    ## grid,
+    ## L_grid,
+    ## L,
+    ## inRegion2,
+    ## cM_grid,
+    ## have_truth_haplotypes,
+    ## truth_haps,
+    ## have_truth_genotypes,
+    ## truth_gen,
+    ## truth_labels,
+    ## sample_name,
+    ## regionStart,
+    ## regionEnd,
+    ## buffer,
+    ## uncertain_truth_labels,
+    ## small_ref_panel_skip_equally_likely_reads ,
+    ## small_ref_panel_equally_likely_reads_update_iterations,
+    ## return_p_store,
+    ## return_p1,
+    ## return_extra,
+    ## return_genProbs,
+    ## return_hapProbs,
+    ## return_gamma,
+    ## return_gibbs_block_output,
+    ## return_advanced_gibbs_block_output,
+    ## gibbs_initialize_iteratively,
+    ## gibbs_initialize_at_first_read,
+    ## maxEmissionMatrixDifference,
+    ## rescale_eMatRead_t,
+    ## rescale_eMatGrid_t,
+    ## Jmax,
+    ## suppressOutput,
+    ## use_smooth_cm_in_block_gibbs,
+    ## block_gibbs_quantile_prob,
+    ## make_plots_block_gibbs,
+    ## use_small_eHapsCurrent_tc,
+    ## method,
+    ## use_provided_small_eHapsCurrent_tc,
+    ## use_sample_is_diploid,
+    ## i_it,
+    ## i_gibbs_sample,
+    ## ff0_shard_check_every_pair,
+    ## zilong,
+    ## calculate_gamma_on_the_fly,
+    ## eMatRead_t,
+    ## make_eMatRead_t_rare_common,
+    ## common_snp_index,
+    ## snp_is_common,
+    ## rare_per_hap_info,
+    ## rare_per_snp_info,
+    ## disable_read_category_usage,
+    ## file = "~/temp.RData")
+
+    ## print("SAVING")
+
     ##
     K <- length(which_haps_to_use)
     S <- 1

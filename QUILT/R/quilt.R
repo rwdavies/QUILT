@@ -205,8 +205,8 @@ QUILT <- function(
     plot_p1 = FALSE
 
     ## turn this off as well
-    ##small_ref_panel_skip_equally_likely_reads <- FALSE
-    ## smll_ref_panel_equally_likely_reads_update_iterations <- c(1,2,3,6,9,15)
+    small_ref_panel_skip_equally_likely_reads <- FALSE
+    small_ref_panel_equally_likely_reads_update_iterations <- c(1,2,3,6,9,15)
 
     ## re-label these internally
     ## n_gibbs_burn_in_its <- small_ref_panel_gibbs_iterations
@@ -583,7 +583,7 @@ QUILT <- function(
     if (method == "nipt") {
         ff_values <- as.numeric(read.table(fflist)[, 1])
     } else {
-        ff_values <- NULL
+        ff_values <- rep(0, N)
     }
 
     ##
