@@ -290,7 +290,7 @@ get_and_impute_one_sample <- function(
     make_heuristic_plot,
     heuristic_approach,
     calculate_gamma_on_the_fly
-) {
+) { ## end of function def
 
     sample_name <- sampleNames[iSample]
     nSNPs <- nrow(pos)
@@ -383,7 +383,7 @@ get_and_impute_one_sample <- function(
     }
 
     ff <- ff_values[iSample]
-    
+
     ##
     ## sample read stuff - work off bam file!
     ##
@@ -530,7 +530,7 @@ get_and_impute_one_sample <- function(
     ## want this off for real usage (should be OK!)
     ## testing might want this off for consistency
     disable_read_category_usage <- FALSE
-    
+
     ## don't need this for routine use - or do better matching!
     ## truth_g <- as.integer(truth_gen[, sampleNames[iSample]])
     for(i_gibbs_sample in 1:(nGibbsSamples + 1)) {
@@ -642,7 +642,7 @@ get_and_impute_one_sample <- function(
                 suppressOutput = suppressOutput,
                 method = method,
                 Knew = Knew,
-                previously_selected_haplotypes = previously_selected_haplotypes
+                previously_selected_haplotypes = previously_selected_haplotypes,
                 use_eigen = use_eigen
             )
 
@@ -1206,8 +1206,11 @@ get_and_impute_one_sample <- function(
                 hap3_all <- out_rare_common[["hap3"]]
             }
 
-            if (!phasing_it && (i_it > n_burn_in_seek_its)) {
+        }
 
+        if (!phasing_it && (i_it > n_burn_in_seek_its)) {
+
+            if (method == "diploid") {
                 dosage_all <- dosage_all + hap1_all + hap2_all
                 gp_t_all <- gp_t_all + rbind(
                     (1 - hap1_all) * (1 - hap2_all),
@@ -1215,7 +1218,7 @@ get_and_impute_one_sample <- function(
                     hap1_all * hap2_all
                 )
                 ## nDosage <- nDosage + 1
-
+            
                 calculate_pse_and_r2_rare_common(                
                     hap1_all = hap1_all,
                     hap2_all = hap2_all,
@@ -1226,7 +1229,13 @@ get_and_impute_one_sample <- function(
                     special_rare_common_objects = special_rare_common_objects,
                     verbose = verbose
                 )
+
+            } else {
+
+                stop("write in this part of NIPT later")
                 
+            }
+            
         }
 
         if (!phasing_it) {
@@ -2234,6 +2243,8 @@ impute_using_everything <- function(
             method = method,
             new_haps = c(new_haps, previously_selected_haplotypes)
         )
+
+    }
 
     if (1 == 0) {
         check_accuracy_from_all(cheat_all)

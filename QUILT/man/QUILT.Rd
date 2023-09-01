@@ -160,15 +160,9 @@ QUILT(
 
 \item{maxDifferenceBetweenReads}{How much of a difference to allow the reads to make in the forward backward probability calculation. For example, if P(read | state 1)=1 and P(read | state 2)=1e-6, re-scale so that their ratio is this value. This helps prevent any individual read as having too much of an influence on state changes, helping prevent against influence by false positive SNPs}
 
-\item{make_plots}{Whether to make some plots of per-sample
-  imputation. Especially nice when truth data. This is pretty slow
-  though so useful more for debugging and understanding and visualizing
-  performance}
+\item{make_plots}{Whether to make some plots of per-sample imputation. Especially nice when truth data. This is pretty slow though so useful more for debugging and understanding and visualizing performance}
 
-\item{make_plots_block_gibbs}{Whether to make some plots of per-sample
-  imputation looking at how the block Gibbs is performing. This can be
-  extremely slow so use for debugging or visualizing performance on
-  one-off situations not for general runs}
+\item{make_plots_block_gibbs}{Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs}
 
 \item{verbose}{whether to be more verbose when running}
 
