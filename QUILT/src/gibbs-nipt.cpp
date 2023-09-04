@@ -798,7 +798,7 @@ void sample_reads_in_grid(
         //
         // do not bother if read is unavoidable (ONLY do for sample_is_diploid)
         //
-        if (sample_is_diploid && read_category(iRead) != 1) {
+        if (!sample_is_diploid || (sample_is_diploid && read_category(iRead) != 1)) {
             //
             // determine type of iteration
             //

@@ -11,7 +11,6 @@ print_message <- function(x, include_mem = FALSE) {
         } else {
             mem <- ""
         }
-        
     } else {
         mem <- ""
     }

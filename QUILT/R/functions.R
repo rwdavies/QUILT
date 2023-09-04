@@ -2496,6 +2496,11 @@ impute_one_sample <- function(
 ) {
 
 
+    ## file <- "~/temp.RData"
+    ## exit_after <- FALSE
+    ## if (file.exists(file)) {
+    ##     exit_after <- TRUE
+    ## }
     ## save(
     ## eMatDH_special_matrix_helper,
     ## eMatDH_special_matrix,
@@ -2594,10 +2599,13 @@ impute_one_sample <- function(
     ## rare_per_hap_info,
     ## rare_per_snp_info,
     ## disable_read_category_usage,
-    ## file = "~/temp.RData")
+    ## file = file)
 
     ## print("SAVING")
+    ## if (exit_after) {
     ## stop("WER")
+    ## }
+
     
 
     ##
@@ -2675,7 +2683,7 @@ impute_one_sample <- function(
         skip_read_iteration[small_ref_panel_equally_likely_reads_update_iterations] <- FALSE
     }
     while(!done_imputing) {
-        
+
         out <- rcpp_forwardBackwardGibbsNIPT(
             sampleReads = sampleReads,
             eMatRead_t = eMatRead_t,
@@ -2742,7 +2750,7 @@ impute_one_sample <- function(
             rare_per_hap_info = rare_per_hap_info,
             rare_per_snp_info = rare_per_snp_info
         )
-        
+
         if (out[["underflow_problem"]]) {
             new_maxDifferenceBetweenReads <- max(1, maxDifferenceBetweenReads / 10)
             print_message(paste0("Underflow problem observed for sample ", sample_name, ". Re-setting maxDifferenceBetweenReads from ", maxDifferenceBetweenReads, " (log10 of ", log10(maxDifferenceBetweenReads), ") to ", new_maxDifferenceBetweenReads, " (log10 of ", log10(new_maxDifferenceBetweenReads), "). If this problem persists please reset maxDifferenceBetweenReads or downsampleToCov to lower coverage and/or reduce the impact of individual reads"))
