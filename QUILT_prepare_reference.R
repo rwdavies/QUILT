@@ -172,8 +172,8 @@ option_list <- list(
     make_option(
         "--mspbwtB",
         type = "integer",
-        help = "How many SNPs will be encoded as one grid [default 64L] ",
-        default = 64L
+        help = "How many SNPs will be encoded as one grid [default 32L] ",
+        default = 32L
     ), 
     make_option(
         "--impute_rare_common",

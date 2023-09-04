@@ -27,7 +27,7 @@ if ( 1 == 0 ) {
 ## - subsetting of reads in simulation doesn't account for single vs paired end properly
 
 ## important global variables
-ANALYSIS_DIR <- "/well/davies/users/dcc832/nipt_test_2023_08_30/"
+ANALYSIS_DIR <- "/well/davies/users/dcc832/nipt_test_2023_09_04/"
 REF_PREFIX <- "HRC" ## or use ONEKG for 1000 Genomes, should work I think
 ## REF_PREFIX <- "ONEKG"
 CHR <- "chr20"
@@ -414,6 +414,7 @@ QUILT(
 ## 
 
 
+## have done, merge code bases
 ## things to look at
 ## - fix final phasing read label aggregation (maybe?)
 ## - really doesn't look like block gibbs is working properly
