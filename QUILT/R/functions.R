@@ -1385,7 +1385,17 @@ get_and_impute_one_sample <- function(
                     }
                 }
             } else {
-                print_message("niptwerwer - haven't written in proper phasing read aggregator, taking forward last read labels for final phasing run")
+                ## this is not ideal
+                ## ideally re-visit once I've written a bit more code
+                out_best_labels <- determine_best_read_label_so_far_nipt(
+                    read_label_matrix_all = read_label_matrix_all,
+                    read_label_matrix_conf = read_label_matrix_conf,                
+                    nReads = nReads,
+                    nGibbsSamples = nGibbsSamples,
+                    verbose = verbose,
+                    can_hap = can_hap
+                )
+                read_labels <- out_best_labels$read_labels
             }
         }
 
@@ -1853,7 +1863,8 @@ determine_best_read_label_so_far <- function(
     flip_matrix <- array(FALSE, c(0, nGibbsSamples)) ##
     default_out <- list(
         read_labels = read_labels,
-        flip_matrix = flip_matrix
+        flip_matrix = flip_matrix,
+        read_label_matrix_all = read_label_matrix_all
     )
     ## how to assess "switch error rate"?
     ## do the reads partition themselves nicely
@@ -1925,19 +1936,71 @@ determine_best_read_label_so_far <- function(
         flip_matrix[i, changed] <- TRUE
     }
     ## now - try using one of these and re-run and check phase
-    read_labels <- as.integer(read_label_matrix_all[, can_hap])
-    to_flip <- which(flip_matrix[, can_hap])
-    if (length(to_flip) > 0) {
-        for(i in to_flip) {
-            read_labels[s1[i]:nReads] <- 3 - read_labels[s1[i]:nReads]
+    ##
+    ## now perform this flipping
+    for(i_col in 1:ncol(flip_matrix)) {
+        to_flip <- which(flip_matrix[, i_col])
+        if (length(to_flip) > 0) {
+            w <- s1[i]:nReads
+            read_label_matrix_all[w, i_col] <- 3 - read_label_matrix_all[w, i_col]
         }
     }
+    read_labels <- as.integer(read_label_matrix_all[, can_hap])
     return(
         list(
             read_labels = read_labels,
-            flip_matrix = flip_matrix
+            flip_matrix = flip_matrix,
+            read_label_matrix_all = read_label_matrix_all
         )
     )
+}
+
+
+
+determine_best_read_label_so_far_nipt <- function(
+    read_label_matrix_all,
+    read_label_matrix_conf,
+    nReads,
+    nGibbsSamples,
+    verbose,
+    can_hap = 1
+) {
+    ## pretend
+    i_it <- 1 ## ideally do three of these iterations?
+    ## can_hap <- 3
+    ## method <- "nipt"
+    read_label_matrix_all_ori <- read_label_matrix_all
+    read_label_matrix_conf_ori <- read_label_matrix_conf
+    ## put 3 into 2 but call them not confident
+    if (i_it == 1) {
+        read_label_matrix_conf[read_label_matrix_all == 3] <- FALSE
+        read_label_matrix_all[read_label_matrix_all == 3] <- 2
+    }
+    ##
+    out_best_labels <- determine_best_read_label_so_far(
+        read_label_matrix_all = read_label_matrix_all,
+        read_label_matrix_conf = read_label_matrix_conf,                
+        nReads = nReads,
+        nGibbsSamples = nGibbsSamples,
+        verbose = verbose,
+        can_hap = can_hap
+    )
+    read_label_matrix_all <- out_best_labels[["read_label_matrix_all"]]
+    flip_matrix <- out_best_labels[["flip_matrix"]]
+    if (i_it == 1) {
+        ## now re-set the 3 values
+        read_label_matrix_all[read_label_matrix_all_ori == 3] <- 3
+    }
+    if (verbose) {
+        x <- out_best_labels$flip_matrix[, can_hap]
+        if (length(x) > 0) {
+            print_message(paste0("There are ", sum(x), " out of ", length(x), " regions that have been flipped by consensus"))
+        }
+    }
+    read_labels <- read_label_matrix_all[, can_hap]
+    list(read_labels = read_labels)
+    ##  w <- rowSums(read_label_matrix_conf_ori) == 3
+    ## cbind(read_label_matrix_all[w, ], NA,     read_label_matrix_all_ori[w, ])
 }
 
 

@@ -372,7 +372,8 @@ QUILT_prepare_reference(
     genetic_map_file = file.path(ANALYSIS_DIR, "CEU", paste0("CEU-", CHR, "-final.b38.txt.gz")),
     regionStart= REGIONSTART,
     regionEnd = REGIONEND,
-    buffer = BUFFER
+    buffer = BUFFER,
+    impute_rare_common = TRUE
 )
 
 ## can either do full or downsampled versions
