@@ -3113,6 +3113,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
             }
         }
         if (return_gamma) {
+            next_section="Work on gammas";
+            prev=print_times(prev, suppressOutput, prev_section, next_section);
+            prev_section=next_section;
             //
             if (gamma_temp != 1) {
                 gammaMT_t *= gamma_temp;
@@ -3121,9 +3124,12 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
             }
             gammaMT_t_master += gammaMT_t;
             gammaMU_t_master += gammaMU_t;
-            gammaP_t_master += gammaP_t;            
+            gammaP_t_master += gammaP_t;
         }
         if (return_genProbs) {
+            next_section="Work on genProbs";
+            prev=print_times(prev, suppressOutput, prev_section, next_section);
+            prev_section=next_section;
             if (gamma_temp != 1) {
                 genProbsM_t *= gamma_temp;
                 genProbsF_t *= gamma_temp;
@@ -3132,6 +3138,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
             genProbsF_t_master += genProbsF_t;
         }
         if (return_hapProbs) {
+            next_section="Work on hapProbs";
+            prev=print_times(prev, suppressOutput, prev_section, next_section);
+            prev_section=next_section;
             if (gamma_temp != 1) {
                 hapProbs_t *= gamma_temp;
             }

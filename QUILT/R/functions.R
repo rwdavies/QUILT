@@ -2583,11 +2583,8 @@ impute_one_sample <- function(
 ) {
 
 
-    ## file <- "~/temp.RData"
-    ## exit_after <- FALSE
-    ## if (file.exists(file)) {
-    ##     exit_after <- TRUE
-    ## }
+    ## file <- "/well/davies/users/dcc832/werAwerBwerC.RData"
+    ## print(paste0("saving to ", file))
     ## save(
     ## eMatDH_special_matrix_helper,
     ## eMatDH_special_matrix,
@@ -2686,7 +2683,9 @@ impute_one_sample <- function(
     ## rare_per_hap_info,
     ## rare_per_snp_info,
     ## disable_read_category_usage,
+    ## compress = FALSE,
     ## file = file)
+    ## stop("WER")
 
     ## print("SAVING")
     ## if (exit_after) {

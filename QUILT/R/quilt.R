@@ -766,7 +766,7 @@ QUILT <- function(
 
             ## determine if need gamma here
             ## not sure what would need it later on?
-            if (!calculate_gamma_on_the_fly) {
+            if (!calculate_gamma_on_the_fly | make_plots) {
                 gammaMT_t_local <- array(0, c(Ksubset, nGrids))
                 gammaMU_t_local <- array(0, c(Ksubset, nGrids))
                 gammaP_t_local <- array(0, c(Ksubset, nGrids))

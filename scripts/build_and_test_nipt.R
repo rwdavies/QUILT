@@ -1,3 +1,17 @@
+#!/usr/bin/env Rscript
+
+## change directory to one up from scripts, no matter how this was called
+args <- commandArgs(trailingOnly = FALSE)
+for(key in c("--file=", "--f=")) {
+    i <- substr(args, 1, nchar(key)) == key
+    if (sum(i) == 1) {
+        script_dir <- dirname(substr(args[i], nchar(key) + 1, 1000))
+        setwd(file.path(script_dir, "../"))
+    }
+}
+Sys.setenv(PATH = paste0(Sys.getenv("PATH"), ":", getwd()))
+
+
 if ( 1 == 0 ) {
 
     curdir <- getwd()
@@ -97,10 +111,10 @@ filter_and_convert_ref_vcf <- function(input_vcf, ref_vcf_prefix) {
     run(
         "gunzip -c ", ref_vcf_prefix, ".temp.vcf.gz | ",
         "awk '{if(NR==1 || substr($0, 1, -1) == \"#\" || a != $2) {print $0}; a=$2}' | bgzip",
-        " > ", ref_vcf_prefix, ".temp2.vcf.gz"
+        " > ", ref_vcf_prefix, ".ready.vcf.gz"
     )
-    system(paste0("tabix -f ", ref_vcf_prefix, ".temp2.vcf.gz"))
-    system(paste0("bcftools convert --haplegendsample ", ref_vcf_prefix, " ", ref_vcf_prefix, ".temp2.vcf.gz"))
+    system(paste0("tabix -f ", ref_vcf_prefix, ".ready.vcf.gz"))
+    system(paste0("bcftools convert --haplegendsample ", ref_vcf_prefix, " ", ref_vcf_prefix, ".ready.vcf.gz"))
 }
     
 get_random_samples_and_haps <- function() {
@@ -137,6 +151,7 @@ if (REF_PREFIX == "HRC") {
     REF_VCF_FILE_TO_USE <- file.path(HRC_DIR, paste0("hg38_liftover_", CHR, ".vcf.gz"))
     REF_SAMPLE_FILE <- file.path(HRC_DIR, paste0("hg38_liftover_", CHR, ".samples"))
     filter_and_convert_ref_vcf(REF_VCF_FILE_TO_USE, REF_PREFIX)
+    
 } else {
     ## download 1000G for chr
     oneKG_vcf_name <- paste0("CCDG_14151_B01_GRM_WGS_2020-08-05_", CHR, ".filtered.shapeit2-duohmm-phased.vcf.gz")
@@ -165,13 +180,12 @@ wget_or_rsync(old_path("hg19ToHg38.over.chain.gz"), "http://hgdownload.cse.ucsc.
 run("R -f ~/proj/QUILT/scripts/make_b38_recomb_map.R --args ", ANALYSIS_DIR, " CEU ", gsub("chr", "", CHR))
 
 
-
-
 ## prepare a region to analyse
 QUILT_prepare_reference(
     outputdir = outputdir,
     chr = CHR, 
     nGen = 100,
+    reference_vcf_file = paste0(REF_PREFIX, ".ready.vcf.gz"),
     reference_haplotype_file = reference_haplotype_file,
     reference_legend_file = reference_legend_file,
     reference_sample_file = reference_sample_file,
@@ -365,7 +379,7 @@ QUILT_prepare_reference(
     outputdir = outputdir2,
     chr = CHR, 
     nGen = 100,
-    reference_haplotype_file = reference_haplotype_file,
+    reference_vcf_file = paste0(REF_PREFIX, ".ready.vcf.gz"),
     reference_legend_file = reference_legend_file,
     reference_sample_file = reference_sample_file,
     reference_exclude_samplelist_file = "ref.samples.exclude.specific.txt",
@@ -373,8 +387,11 @@ QUILT_prepare_reference(
     regionStart= REGIONSTART,
     regionEnd = REGIONEND,
     buffer = BUFFER,
-    impute_rare_common = TRUE
+    impute_rare_common = TRUE,
+    rare_af_threshold = 0.01,
+    use_mspbwt = TRUE
 )
+
 
 ## can either do full or downsampled versions
 ## not entirely sure 
@@ -409,12 +426,17 @@ QUILT(
     phasefile = "phasefile.txt",   
     n_seek_its = n_seek_its,
     make_plots = TRUE,
-    make_plots_block_gibbs = TRUE
+    make_plots_block_gibbs = TRUE,
+    impute_rare_common = TRUE,
+    use_mspbwt = TRUE
 )
 ## 
 
 
 ## have done, merge code bases
+## now, try it again, then look at block gibbs
+
+
 ## things to look at
 ## - fix final phasing read label aggregation (maybe?)
 ## - really doesn't look like block gibbs is working properly
