@@ -60,7 +60,9 @@ calculate_pse_and_r2_master <- function(
                 verbose = verbose,
                 mat_dosage = mat_dosage,
                 fet_dosage = fet_dosage,
-                prefix = prefix
+                prefix = prefix,
+                impute_rare_common = impute_rare_common,
+                checking_all_snps = checking_all_snps
             )
         }
 
@@ -183,8 +185,19 @@ calculate_pse_and_r2_during_gibbs_nipt <- function(
     verbose = FALSE,
     mat_dosage = NULL,
     fet_dosage = NULL,
-    prefix = ""
+    prefix = "",
+    impute_rare_common = FALSE,
+    checking_all_snps = FALSE
 ) {
+    if (impute_rare_common) {
+        if (checking_all_snps) {
+            suffix <- " (all SNPs)"
+        } else {
+            suffix <- " (common SNPs only)"
+        }
+    } else {
+        suffix <- ""
+    }
     to_return <- NULL
     ## wow, confident
     w <- (inRegion2)
@@ -220,7 +233,7 @@ calculate_pse_and_r2_during_gibbs_nipt <- function(
         pse <- round(100 * values["phase_errors_def1"] / values["phase_sites_def1"], 1)
         disc <- round(100 * values["disc_errors"] / values["dist_n"], 1)
         if (verbose) {
-            print_message(paste0(prefix, who, "r2:", r2, ", PSE:", pse, "%, disc:", disc, "%"))
+            print_message(paste0(prefix, who, "r2:", r2, ", PSE:", pse, "%, disc:", disc, "%", suffix))
         }
         to_return[paste0("r2_", who)] <- r2
         to_return[paste0("pse_", who)] <- pse
@@ -230,8 +243,8 @@ calculate_pse_and_r2_during_gibbs_nipt <- function(
         ##
         r2_1 <- round(cor(hap1[inRegion2] - af[inRegion2], truth_haps[inRegion2, 1] - af[inRegion2]) ** 2, 3)
         r2_2 <- round(cor(hap2[inRegion2] - af[inRegion2], truth_haps[inRegion2, 2] - af[inRegion2]) ** 2, 3)
-        r2_3 <- round(cor(hap3[inRegion2] - af[inRegion2], truth_haps[inRegion2, 3] - af[inRegion2]) ** 2, 3)            
-        print_message(paste0(prefix, "hap r2 mt:", r2_1, ", mu:", r2_2, ", pt:", r2_3))
+        r2_3 <- round(cor(hap3[inRegion2] - af[inRegion2], truth_haps[inRegion2, 3] - af[inRegion2]) ** 2, 3) 
+        print_message(paste0(prefix, "hap r2 mt:", r2_1, ", mu:", r2_2, ", pt:", r2_3, suffix))
     }
     return(to_return)
 }

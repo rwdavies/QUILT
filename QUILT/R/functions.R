@@ -10,77 +10,92 @@ select_new_haps_zilong_msp <- function(
     mspbwtB,
     mspbwtL,
     mspbwtM,
-    nGrids
+    nGrids,
+    method
 ) {
-  ##
-  out <- lapply(1:2, function(x) {
-    hap <- round(hapProbs_t[x, ])
-    res <- as.data.frame(mspbwt_report(msp, mspbwtB, hap, mspbwtL, mspbwtM))
-    res <- res[order(-res$lens),]
-    res <- res[!duplicated(res[,c("haps")]),]
-    res$starts <- res$ends - res$lens + 1
-    res$keys <- res$starts * nGrids + res$ends
-    res$haps <- res$haps + 1
-    res
-  })
-  ## res <- do.call(rbind.data.frame, res)
-  unique_haps <- unique(c(out[[1]][, "haps"], out[[2]][, "haps"]))
-  ## interhaps <- intersect(res[res$ihap == 1, "haps"], res[res$ihap == 2, "haps"])
-  ## saveRDS(res, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
-  print_message(paste("select", length(unique_haps), " unique haps by mpbwt query before post-selection"))
-  ## return(unique_haps[1:Knew])
-  if (length(unique_haps) == 0) {
-    new_haps <- sample(1:Kfull, Knew)
-    return(new_haps)
-  } else if (length(unique_haps) <= Knew) {
-    ## cannot take a sample larger than the population when 'replace = FALSE'
-    new_haps <- unique(c(
-      unique_haps,
-      sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
-    ))[1:Knew]
-    print_message(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
-    return(new_haps)
-  } else {
     ##
-    ## heuristically, prioritize based on length and new-ness
-    ## do this for each of the two haps
-    ##
-    results <- lapply(out, function(mtm) {
-      m <- max(mtm[, "ends"])
-      weight <- numeric(m)
-      cur_sum <- numeric(m)
-      cur_sum[] <- 1
-      for(i in 1:nrow(mtm)) {
-        s <- mtm[i, "starts"]
-        e <- mtm[i, "ends"]
-        weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
-        cur_sum[s:e] <- cur_sum[s:e] + 1
-      }
-      ##
-      o <- order(-weight)
-      mtm <- mtm[o, ]
-      mtm[, "haps"]
+    out <- lapply(1:nrow(hapProbs_t), function(x) {
+        hap <- round(hapProbs_t[x, ])
+        res <- as.data.frame(mspbwt_report(msp, mspbwtB, hap, mspbwtL, mspbwtM))
+        res <- res[order(-res$lens),]
+        res <- res[!duplicated(res[,c("haps")]),]
+        res$starts <- res$ends - res$lens + 1
+        res$keys <- res$starts * nGrids + res$ends
+        res$haps <- res$haps + 1
+        res
     })
-    ## pad out one of them
-    x <- results[[1]]
-    y <- results[[2]]
-    if (length(x) > length(y)) {
-      y <- c(y, rep(NA, length(x) - length(y)))
+    ## res <- do.call(rbind.data.frame, res)
+    if (method == "diploid") {
+        unique_haps <- unique(c(out[[1]][, "haps"], out[[2]][, "haps"]))
     } else {
-      x <- c(x, rep(NA, length(y) - length(x)))
+        unique_haps <- unique(c(out[[1]][, "haps"], out[[2]][, "haps"], out[[3]][, "haps"]))
     }
-    unique_ordered_haps <- unique(c(t(cbind(x, y))))
-    unique_ordered_haps <- unique_ordered_haps[!is.na(unique_ordered_haps)]
-    print_message(paste("select", length(unique(unique_ordered_haps)), " unique haps after post-selection 2"))
-    if (length(unique_ordered_haps) >= Knew) {
-      return(unique_ordered_haps[1:Knew])
+    ## interhaps <- intersect(res[res$ihap == 1, "haps"], res[res$ihap == 2, "haps"])
+    ## saveRDS(res, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
+    print_message(paste("select", length(unique_haps), " unique haps by mpbwt query before post-selection"))
+    ## return(unique_haps[1:Knew])
+    if (length(unique_haps) == 0) {
+        new_haps <- sample(1:Kfull, Knew)
+        return(new_haps)
+    } else if (length(unique_haps) <= Knew) {
+        ## cannot take a sample larger than the population when 'replace = FALSE'
+        new_haps <- unique(c(
+            unique_haps,
+            sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
+        ))[1:Knew]
+        print_message(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
+        return(new_haps)
     } else {
-      ## add in some other (potentially) duplicated haps
-      new_haps <- c(setdiff(unique_ordered_haps, unique_haps), unique_haps)[1:Knew]
-      print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
-      return(new_haps)
+        ##
+        ## heuristically, prioritize based on length and new-ness
+        ## do this for each of the two haps
+        ##
+        results <- lapply(out, function(mtm) {
+            m <- max(mtm[, "ends"])
+            weight <- numeric(m)
+            cur_sum <- numeric(m)
+            cur_sum[] <- 1
+            for(i in 1:nrow(mtm)) {
+                s <- mtm[i, "starts"]
+                e <- mtm[i, "ends"]
+                weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
+                cur_sum[s:e] <- cur_sum[s:e] + 1
+            }
+            ##
+            o <- order(-weight)
+            mtm <- mtm[o, ]
+            mtm[, "haps"]
+        })
+        ## pad out one of them
+        x <- results[[1]]
+        y <- results[[2]]
+        if (method == "nipt") {
+            z <- results[[3]]
+        } else {
+            z <- NULL
+        }
+        a <- max(c(length(x), length(y), length(z)))
+        x <- c(x, rep(NA, a - length(x)))
+        y <- c(y, rep(NA, a - length(y)))
+        if (method == "nipt") {
+            z <- c(z, rep(NA, a - length(z)))
+        }
+        if (method == "diploid") {
+            unique_ordered_haps <- unique(c(t(cbind(x, y))))
+        } else {
+            unique_ordered_haps <- unique(c(t(cbind(x, y, z))))
+        }
+        unique_ordered_haps <- unique_ordered_haps[!is.na(unique_ordered_haps)]
+        print_message(paste("select", length(unique(unique_ordered_haps)), " unique haps after post-selection 2"))
+        if (length(unique_ordered_haps) >= Knew) {
+            return(unique_ordered_haps[1:Knew])
+        } else {
+            ## add in some other (potentially) duplicated haps
+            new_haps <- c(setdiff(unique_ordered_haps, unique_haps), unique_haps)[1:Knew]
+            print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
+            return(new_haps)
+        }
     }
-  }
 }
 
 
@@ -97,22 +112,32 @@ select_new_haps_zilong_msp_robbie_version <- function(
     mspbwtL,
     mspbwtM,
     nGrids,
-    aggregated = FALSE
+    aggregated = FALSE,
+    method = "diploid"
 ) {
-    res <- lapply(1:2, function(x) {
+    res <- lapply(1:nrow(hapProbs_t), function(x) {
         hap <- round(hapProbs_t[x, ])
         res <- mspbwt_report(msp, hap, mspbwtL, mspbwtB, aggregated = aggregated)
         return(res)
     })
-    ## merge, filter, order
-    ends <- c(res[[1]][["ends"]], res[[2]][["ends"]])
-    lens <- c(res[[1]][["lens"]], res[[2]][["lens"]])
+    if (method == "diploid") {
+        ## merge, filter, order
+        ends <- c(res[[1]][["ends"]], res[[2]][["ends"]])
+        lens <- c(res[[1]][["lens"]], res[[2]][["lens"]])
+        haps <- c(res[[1]][["haps"]], res[[2]][["haps"]])
+        n <- c(res[[1]][["n"]], res[[2]][["n"]])
+    } else {
+        ends <- c(res[[1]][["ends"]], res[[2]][["ends"]], res[[3]][["ends"]])
+        lens <- c(res[[1]][["lens"]], res[[2]][["lens"]], res[[3]][["lens"]])
+        haps <- c(res[[1]][["haps"]], res[[2]][["haps"]], res[[3]][["haps"]])
+        n <- c(res[[1]][["n"]], res[[2]][["n"]], res[[3]][["n"]])        
+    }
     res <- cbind(
-        haps = c(res[[1]][["haps"]], res[[2]][["haps"]]),
+        haps = haps,
         starts = ends - lens + 1,
         ends = ends,
         lens = lens,
-        n = c(res[[1]][["n"]], res[[2]][["n"]])
+        n = n
     )
     res <- res[res[, "lens"] >= max(mspbwtM, 0), , drop = FALSE]
     res <- cbind(res, keys = res[, "starts"] * nGrids + res[, "ends"])
@@ -345,7 +370,11 @@ get_and_impute_one_sample <- function(
             if (!(s %in% dimnames(phase_all)[[2]])) {
                 stop("Something went wrong with phase naming")
             }
-            truth_haps_all <- cbind(phase_all[, s, 1], phase_all[, s, 2])
+            if (method == "diploid") {
+                truth_haps_all <- cbind(phase_all[, s, 1], phase_all[, s, 2])
+            } else {
+                truth_haps_all <- cbind(phase_all[, s, 1], phase_all[, s, 2], phase_all[, s, 3])
+            }
         } else {
             truth_haps_all <- NULL
         }
@@ -915,7 +944,7 @@ get_and_impute_one_sample <- function(
                 if (heuristic_approach == "A" | make_heuristic_plot) {
 
                     which_haps_to_use <- select_new_haps_zilong_msp(
-                        gibbs_iterate$hapProbs_t,
+                        hapProbs_t = gibbs_iterate$hapProbs_t,
                         igibbs = igibbs,
                         outputdir = outputdir,
                         Kfull = Kfull,
@@ -924,7 +953,8 @@ get_and_impute_one_sample <- function(
                         mspbwtB = mspbwtB,
                         mspbwtL = mspbwtL,
                         mspbwtM = mspbwtM,
-                        nGrids = nGrids
+                        nGrids = nGrids,
+                        method = method
                     )
                     
                     which_haps_to_use_zilong_A <- which_haps_to_use
@@ -934,7 +964,7 @@ get_and_impute_one_sample <- function(
                 if (heuristic_approach == "B" | make_heuristic_plot) {
 
                     which_haps_to_use <- select_new_haps_zilong_msp_robbie_version(
-                        gibbs_iterate$hapProbs_t,
+                        hapProbs_t = gibbs_iterate$hapProbs_t,
                         igibbs = igibbs,
                         outputdir = outputdir,
                         Kfull = Kfull,
@@ -943,7 +973,8 @@ get_and_impute_one_sample <- function(
                         mspbwtB = mspbwtB,
                         mspbwtL = mspbwtL,
                         mspbwtM = mspbwtM,
-                        nGrids = nGrids
+                        nGrids = nGrids,
+                        method = method
                     )
 
                     which_haps_to_use_zilong_B <- which_haps_to_use
@@ -1023,18 +1054,6 @@ get_and_impute_one_sample <- function(
                 }
                 Kfull <- nrow(hapMatcher)
 
-                ## file <- paste0("~/temp.", i_gibbs_sample, ".", i_it, ".RData")
-                ## print(paste0("savingto file:", file))
-                ## save(
-                ##     hapProbs_t,
-                ##     use_hapMatcherR,
-                ##     Knew,
-                ##     Kfull,
-                ##     mspbwtL,
-                ##     mspbwtM,
-                ##     file = file
-                ## )
-
                 if (heuristic_approach == "A" | make_heuristic_plot) {
 
                     which_haps_to_use <- select_new_haps_mspbwt_v3(
@@ -1047,7 +1066,8 @@ get_and_impute_one_sample <- function(
                         Kfull = Kfull,
                         mspbwtL = mspbwtL,
                         mspbwtM = mspbwtM,
-                        heuristic_approach = "A"
+                        heuristic_approach = "A",
+                        method = method
                     )
                     which_haps_to_use_mspbwt_A <- which_haps_to_use
 
@@ -1065,7 +1085,8 @@ get_and_impute_one_sample <- function(
                         Kfull = Kfull,
                         mspbwtL = mspbwtL,
                         mspbwtM = mspbwtM,
-                        heuristic_approach = "B"
+                        heuristic_approach = "B",
+                        method = method                        
                     )
                     which_haps_to_use_mspbwt_B <- which_haps_to_use
 
@@ -1268,7 +1289,8 @@ get_and_impute_one_sample <- function(
                 sampleNames = sampleNames,
                 iSample = iSample,
                 phase_all = phase_all,
-                ff = ff
+                ff = ff,
+                method = method
             )
 
             hap1_all <- out_rare_common[["hap1"]]
@@ -1297,6 +1319,7 @@ get_and_impute_one_sample <- function(
                         rbind((1 - hap1_all) * (1 - hap2_all), (1 - hap1_all) * hap2_all + hap1_all * (1 - hap2_all), hap1_all * hap2_all)
                     fet_gp_t_all <- fet_gp_t_all + 
                         rbind((1 - hap1_all) * (1 - hap3_all), (1 - hap1_all) * hap3_all + hap1_all * (1 - hap3_all), hap1_all * hap3_all)
+                    nDosage_all <- nDosage_all + 1
 
                 }
 
@@ -1304,11 +1327,11 @@ get_and_impute_one_sample <- function(
                     method = method,
                     have_truth_haplotypes = have_truth_haplotypes,
                     have_truth_genotypes = have_truth_genotypes,                    
-                    truth_haps = truth_haps,
-                    truth_gen = truth_gen,
-                    hap1 = hap1,
-                    hap2 = hap2,
-                    hap3 = hap3,
+                    truth_haps = truth_haps_all,
+                    truth_gen = truth_gen_all,
+                    hap1 = hap1_all,
+                    hap2 = hap2_all,
+                    hap3 = hap3_all,
                     impute_rare_common = TRUE, ## has to be true here!
                     checking_all_snps = TRUE,
                     verbose = verbose,
@@ -1380,8 +1403,8 @@ get_and_impute_one_sample <- function(
                 } else {
                     print_message("niptwerwer TO WRITE RECAST_HAPS FOR NIPT")
                     phasing_haps <- cbind(hap1, hap2, hap3)
-                    phasing_mat_dosage <- hap1 + hap2
-                    phasing_fet_dosage <- hap1 + hap3
+                    ##phasing_mat_dosage <- hap1 + hap2
+                    ##phasing_fet_dosage <- hap1 + hap3
                 }
             } else {
                 if (method == "diploid") {                
@@ -1393,10 +1416,10 @@ get_and_impute_one_sample <- function(
                     phasing_haps_all <- cbind(hap1_all, hap2_all)
                 } else {
                     print_message("niptwerwer NEED TO WRITE RECAST_HAPS FOR NIPT")                    
-                    phasing_haps <- cbind(hap1_all, hap2_all, hap3_all)
-                    phasing_mat_dosage <- hap1_all + hap2_all
-                    phasing_fet_dosage <- hap1_all + hap3_all
-
+                    ## phasing_haps <- cbind(hap1_all, hap2_all, hap3_all)
+                    ##phasing_mat_dosage <- hap1_all + hap2_all
+                    ##phasing_fet_dosage <- hap1_all + hap3_all
+                    phasing_haps_all <- cbind(hap1_all, hap2_all, hap3_all)
                 }
             }
         }
@@ -1450,11 +1473,12 @@ get_and_impute_one_sample <- function(
             gp_t <- gp_t / nDosage
         }
     } else {
-        if (impute_rare_common) {        
-            mat_dosage <- mat_dosage_all / nDosage
-            fet_dosage <- fet_dosage_all / nDosage
+        if (impute_rare_common) {
+            mat_dosage <- mat_dosage_all / nDosage_all
+            fet_dosage <- fet_dosage_all / nDosage_all
             mat_gp_t <- mat_gp_t_all / nDosage_all
             fet_gp_t <- fet_gp_t_all / nDosage_all
+            
         } else {
             mat_dosage <- mat_dosage / nDosage
             fet_dosage <- fet_dosage / nDosage
@@ -1464,10 +1488,12 @@ get_and_impute_one_sample <- function(
     }
     if (impute_rare_common) {
         phasing_haps <- phasing_haps_all    
-        sampleReads <- allSNP_sampleReads    
-        nSNPs <- ncol(gp_t)
+        sampleReads <- allSNP_sampleReads
+        nSNPs <- nrow(phasing_haps)
         af <- special_rare_common_objects[["ref_alleleCount_all"]][, 3]
         inRegion2 <- special_rare_common_objects[["inRegion2"]]
+        truth_haps <- truth_haps_all
+        truth_gen <- truth_gen_all
     }
 
     
@@ -1498,7 +1524,6 @@ get_and_impute_one_sample <- function(
         fet_dosage = fet_dosage,
         prefix = paste0("Final imputation accuracy for sample ", sample_name, " ")
     )
-        
 
     ## optionally plot here
     if (plot_per_sample_likelihoods) {
@@ -1553,7 +1578,6 @@ get_and_impute_one_sample <- function(
         fij <- round(mat_gp_t[2, ] + 4 * mat_gp_t[3, ], 3) ##
         max_gen <- get_max_gen_rapid(mat_gp_t)
     }
-
     if (method == "diploid") {
         if (addOptimalHapsToVCF & have_truth_haplotypes) {
             add_x_2_cols <- TRUE

@@ -237,10 +237,10 @@ select_new_haps_mspbwt_v3 <- function(
     Kfull,
     mspbwtL,
     mspbwtM,
-    heuristic_approach
+    heuristic_approach,
+    method
 ) {    
 
-    ## print("SAIHOIH")
     ## save(
     ## hapProbs_t,
     ## hapMatcher,
@@ -252,10 +252,9 @@ select_new_haps_mspbwt_v3 <- function(
     ## mspbwtL,
     ## mspbwtM,
     ## heuristic_approach,
-    ## file = "/data/smew1/rdavies/werAwerTwerA.RData", compress = FALSE)
-    ## stop("wer")
-    
-    ## load("/data/smew1/rdavies/werAwerTwerA.RData")
+    ## method,
+    ## file = "~/temp.RData")
+    ## stop("WER - werwer")
     
     iIndex <- 1
     ihap <- 1
@@ -273,7 +272,7 @@ select_new_haps_mspbwt_v3 <- function(
         use_list_of_columns_of_A <- FALSE
     }
     
-    out <- lapply(1:2, function(ihap) {
+    out <- lapply(1:nrow(hapProbs_t), function(ihap) {
         
         hap <- round(hapProbs_t[ihap, ])
         Zs <- rcpp_int_contract(hap)
@@ -371,10 +370,12 @@ select_new_haps_mspbwt_v3 <- function(
         mtm <- mtm[order(-mtm[, "len1"]), ]
         mtm
     })
-
-    
     ## check max number
-    unique_haps <- unique(c(out[[1]][, 1], out[[2]][, 1]))
+    if (method == "diploid") {
+        unique_haps <- unique(c(out[[1]][, 1], out[[2]][, 1]))
+    } else {
+        unique_haps <- unique(c(out[[1]][, 1], out[[2]][, 1], out[[3]][, 1]))
+    }
     if (length(unique_haps) == 0) {
         ## special fluke case
         ## likely driven by very small regions we are trying to impute, with few / no matches above the min length above
@@ -426,16 +427,22 @@ select_new_haps_mspbwt_v3 <- function(
         ## pad out one of them
         x <- results[[1]]
         y <- results[[2]]
-        if (length(x) > length(y)) {
-            y <- c(y, rep(NA, length(x) - length(y)))
+        if (method == "nipt") {
+            z <- results[[3]]
         } else {
-            x <- c(x, rep(NA, length(y) - length(x)))
+            z <- NULL
         }
-        ## if (length(x) > Knew) {
-        ##     x <- x[1:Knew]
-        ##     y <- y[1:Knew]
-        ## }
-        unique_ordered_haps <- unique(c(t(cbind(x, y))))
+        a <- max(c(length(x), length(y), length(z)))
+        x <- c(x, rep(NA, a - length(x)))
+        y <- c(y, rep(NA, a - length(y)))
+        if (method == "nipt") {
+            z <- c(z, rep(NA, a - length(z)))
+        }
+        if (method == "diploid") {
+            unique_ordered_haps <- unique(c(t(cbind(x, y))))
+        } else {
+            unique_ordered_haps <- unique(c(t(cbind(x, y, z))))
+        }
         unique_ordered_haps <- unique_ordered_haps[!is.na(unique_ordered_haps)]
         ## want to interleave, then make unique, then take first Knew
         ## print(paste("select", length(unique_ordered_haps), " unique haps after post-selection 2"))

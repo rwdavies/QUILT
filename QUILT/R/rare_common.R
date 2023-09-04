@@ -133,7 +133,8 @@ impute_final_gibbs_with_rare_common <- function(
     sampleNames,
     iSample,
     phase_all,
-    ff 
+    ff,
+    method
 ) {
 
 
@@ -178,6 +179,7 @@ impute_final_gibbs_with_rare_common <- function(
     ## sampleNames,
     ## iSample,
     ## phase_all,
+    ## method,
     ## file = "/data/smew1/rdavies/temp/123.RData", compress = FALSE)
     ## stop("WER")
 
@@ -365,11 +367,16 @@ impute_final_gibbs_with_rare_common <- function(
     hapProbs_t <- gibbs_iterate$hapProbs_t
     hap1 <- hapProbs_t[1, ]
     hap2 <- hapProbs_t[2, ]
+    hap3 <- NULL
+    if (method == "nipt") {
+        hap3 <- hapProbs_t[3, ]
+    }
 
     return(
         list(
             hap1 = hap1,
-            hap2 = hap2
+            hap2 = hap2,
+            hap3 = hap3
         )
     )
 

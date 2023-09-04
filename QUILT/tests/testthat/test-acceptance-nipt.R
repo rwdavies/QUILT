@@ -153,9 +153,9 @@ test_that("QUILT can impute a few samples with NIPT, w/wo IRC, w/wo regular vs m
             
         }
         
-        for(impute_rare_common in c(FALSE)) {
+        for(impute_rare_common in c(TRUE, FALSE)) {
             
-            for(i_method in 1) {
+            for(i_method in 1:2) {
 
                 if (i_method == 1) {
                     zilong <- FALSE
@@ -168,20 +168,10 @@ test_that("QUILT can impute a few samples with NIPT, w/wo IRC, w/wo regular vs m
                     use_mspbwt <- FALSE
                 }
 
-                print(paste0("nipt = ", nipt, ", impute_rare_common = ", impute_rare_common, ", method = ", method))
+                print(paste0("nipt = ", nipt, ", impute_rare_common = ", impute_rare_common, ", i_method = ", i_method))
 
                 outputdir <- STITCH::make_unique_tempdir()
 
-    library("testthat")
-    library("QUILT")
-    dir <- "~/proj/QUILT/"
-    setwd(paste0(dir, "/QUILT/R"))
-    a <- dir(pattern = "*.R")
-    b <- grep("~", a)
-    if (length(b) > 0) {
-        a <- a[-b]
-    }
-    o <- sapply(a, source)
                 QUILT(
                     outputdir = outputdir,
                     chr = chr,
@@ -210,6 +200,7 @@ test_that("QUILT can impute a few samples with NIPT, w/wo IRC, w/wo regular vs m
                 ## check it made stuff?
                 regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
                 which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
+                
                 check_quilt_output(
                     file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
                     data_package = data_package,
