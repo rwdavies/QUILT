@@ -81,7 +81,7 @@
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
 #' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
 #' @param use_hapMatcherR Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use
-#' @param ff0_shard_check_every_pair When using shard gibbs sampler, whether to check every pair of SNPs, or not
+#' @param shard_check_every_pair When using shard gibbs sampler, whether to check every pair of SNPs, or not
 #' @param use_eigen Use eigen library for per haploid full li and stephens pass of full haplotype reference panel
 #' @param impute_rare_common Whether to use common SNPs first for imputation, followed by a round of rare imputation
 #' @param rare_af_threshold Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common
@@ -173,7 +173,7 @@ QUILT <- function(
     use_splitreadgl = FALSE,
     override_use_eMatDH_special_symbols = NA,
     use_hapMatcherR = TRUE,
-    ff0_shard_check_every_pair = TRUE,
+    shard_check_every_pair = TRUE,
     use_eigen = TRUE,
     impute_rare_common = FALSE,
     rare_af_threshold = 0.0001,
@@ -910,7 +910,7 @@ QUILT <- function(
                 plot_p1 = plot_p1,
                 small_ref_panel_skip_equally_likely_reads = small_ref_panel_skip_equally_likely_reads,
                 small_ref_panel_equally_likely_reads_update_iterations = small_ref_panel_equally_likely_reads_update_iterations,
-                ff0_shard_check_every_pair = ff0_shard_check_every_pair,
+                shard_check_every_pair = shard_check_every_pair,
                 use_eigen = use_eigen,
                 pos_all = pos_all,
                 special_rare_common_objects = special_rare_common_objects,

@@ -85,7 +85,7 @@ QUILT(
   use_splitreadgl = FALSE,
   override_use_eMatDH_special_symbols = NA,
   use_hapMatcherR = TRUE,
-  ff0_shard_check_every_pair = TRUE,
+  shard_check_every_pair = TRUE,
   use_eigen = TRUE,
   impute_rare_common = FALSE,
   rare_af_threshold = 1e-04,
@@ -256,7 +256,7 @@ QUILT(
 
 \item{use_hapMatcherR}{Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use}
 
-\item{ff0_shard_check_every_pair}{When using shard gibbs sampler, whether to check every pair of SNPs, or not}
+\item{shard_check_every_pair}{When using shard gibbs sampler, whether to check every pair of SNPs, or not}
 
 \item{use_eigen}{Use eigen library for per haploid full li and stephens pass of full haplotype reference panel}
 

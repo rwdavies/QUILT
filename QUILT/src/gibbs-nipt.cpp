@@ -236,7 +236,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
 
 
 
-Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
+Rcpp::List Rcpp_shard_block_gibbs_resampler(
     arma::mat& alphaHat_t1,
     arma::mat& alphaHat_t2,
     arma::mat& alphaHat_t3,
@@ -250,6 +250,7 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
     arma::mat& eMatGrid_t2,
     arma::mat& eMatGrid_t3,
     Rcpp::IntegerVector& H,
+    double ff,    
     const arma::mat& eMatRead_t,
     Rcpp::IntegerVector& blocked_snps,
     const Rcpp::IntegerVector& grid,
@@ -262,7 +263,7 @@ Rcpp::List Rcpp_ff0_shard_block_gibbs_resampler(
     Rcpp::List initial_package = R_NilValue,
     bool verbose = false,
     Rcpp::List fpp_stuff = R_NilValue,
-    bool ff0_shard_check_every_pair = false    
+    bool shard_check_every_pair = false    
 );
 
 
@@ -2418,7 +2419,6 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const int i_snp_block_for_alpha_beta = 1,
     const bool do_block_resampling = false,
     const int artificial_relabel = -1,
-    bool ff0_shard_check_every_pair = false,
     const double class_sum_cutoff = 0.06,
     const int shuffle_bin_radius = 5000,
     const Rcpp::IntegerVector block_gibbs_iterations = Rcpp::IntegerVector::create(0),
@@ -2492,7 +2492,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool use_small_eHapsCurrent_tc = as<bool>(param_list["use_small_eHapsCurrent_tc"]);
     const bool sample_is_diploid = as<bool>(param_list["sample_is_diploid"]);        
     const bool update_in_place = as<bool>(param_list["update_in_place"]);
-    const bool do_shard_ff0_block_gibbs = as<bool>(param_list["do_shard_ff0_block_gibbs"]);
+    const bool do_shard_block_gibbs = as<bool>(param_list["do_shard_block_gibbs"]);
+    const bool shard_check_every_pair = as<bool>(param_list["shard_check_every_pair"]);
     const bool force_reset_read_category_zero = as<bool>(param_list["force_reset_read_category_zero"]);
     const bool disable_read_category_usage = as<bool>(param_list["disable_read_category_usage"]);
     const bool calculate_gamma_on_the_fly = as<bool>(param_list["calculate_gamma_on_the_fly"]);
@@ -2997,11 +2998,11 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             gibbs_block_output_local.push_back(Rcpp::clone(H), "after_read_labels");
                         }
                         Rcpp::List out3;
-                        if (do_shard_ff0_block_gibbs & (ff == 0)) {
+                        if (do_shard_block_gibbs & (ff == 0)) {
                             next_section="Block gibbs - ff0 shard resampler";
                             prev=print_times(prev, suppressOutput, prev_section, next_section);
                             prev_section=next_section;
-                            out3 = Rcpp_ff0_shard_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, false, R_NilValue, false, R_NilValue, ff0_shard_check_every_pair);
+                            out3 = Rcpp_shard_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, ff, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, false, R_NilValue, false, R_NilValue, shard_check_every_pair);
                         }
                         //
                         //
@@ -3022,7 +3023,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             //
                             gibbs_block_output_local.push_back(out, "block_defining");
                             gibbs_block_output_local.push_back(out2, "gibbs_block_output");
-                            if (do_shard_ff0_block_gibbs & (ff == 0)) {
+                            if (do_shard_block_gibbs & (ff == 0)) {
                                 gibbs_block_output_local.push_back(out3, "shard_block_output");
                             }
                             gibbs_block_output_list.push_back(gibbs_block_output_local);
