@@ -1137,6 +1137,11 @@ for_testing_get_full_package_probabilities <- function(localH, fpp_stuff, maxEmi
         return(append(out, list(eMatGrid_t = eMatGrid_t, gamma_t = gamma_t)))
     })
     log_p <- -sum(log(package[[1]][["c"]]) + log(package[[2]][["c"]]) + log(package[[3]][["c"]]))
+    ## also get probability of read labels
+    ## if (!is.na(ff)) {
+    ##     log_prior_probs <- log(c(0.5, 0.5 - ff / 2, ff / 2))
+    ##     read_probs <- sum(log_prior_probs[localH])
+    ## }
     package <- append(package, list(log_p = log_p))
     return(package)
 }
@@ -1770,6 +1775,7 @@ plot_attempt_to_reblock_snps <- function(
     wif0,
     grid,
     method,
+    ff,
     only_plot_confident_reads = TRUE
 ) {
     x <- out$gibbs_block_output_list[[n_block_it_to_plot]][["block_defining"]]
@@ -1895,8 +1901,14 @@ plot_attempt_to_reblock_snps <- function(
                 text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.4, labels = round(block_results[iBlock + 1, "p3"], 2))
             } else {
                 if (iBlock > 0) {
-                    text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.25, labels = round(shard_block_results[iBlock + 1 - 1, "p_stay"], 2))
-                    text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.4, labels = round(shard_block_results[iBlock + 1 - 1, "p_flip"], 2))
+                    if (method == "diploid") {
+                        text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.25, labels = round(shard_block_results[iBlock + 1 - 1, "p_stay"], 2))
+                        text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * 0.4, labels = round(shard_block_results[iBlock + 1 - 1, "p_flip"], 2))
+                    } else {
+                        for(i in 1:6) {
+                            text(x = (l + r) / 2, y = ylim[2] - diff(ylim) * (seq(0.25, 0.40, length.out = 6)[i]), labels = round(shard_block_results[iBlock + 1 - 1, paste0("p", i)], 2), cex = 0.5)
+                        }
+                    }
                 }
             }
             ## if have (manual) read labels, add them
@@ -1914,7 +1926,11 @@ plot_attempt_to_reblock_snps <- function(
                 if (iBlock == 0) {
                     col <- "red"
                 } else {
-                    col <- c("red", "green")[as.integer(shard_block_results[iBlock + 1 - 1, "flip_mode"]) + 1]
+                    if (method == "diploid") {
+                        col <- c("red", "green")[as.integer(shard_block_results[iBlock + 1 - 1, "flip_mode"]) + 1]
+                    } else {
+                        col <- c("red", "green")[as.integer(shard_block_results[iBlock + 1 - 1, "ir_chosen"] == 1) + 1]
+                    }
                 }
                 rect(xleft = l, xright = r, ybottom = -1, ytop = 0, col = col)
             }
@@ -2635,6 +2651,7 @@ R_shard_block_gibbs_resampler <- function(
     alphaMatCurrent_tc,
     priorCurrent_m,
     transMatRate_tc_H,
+    H_class,
     do_checks = FALSE,
     initial_package = NULL,
     verbose = FALSE,
@@ -2832,10 +2849,12 @@ R_shard_block_gibbs_resampler <- function(
                             H[iRead + 1] <- 3 - H[iRead + 1]
                             have_flipped_read[iRead + 1] <- TRUE
                         } else {
-                        have_flipped_read[iRead + 1] <- FALSE
+                            have_flipped_read[iRead + 1] <- FALSE
                         }
                     } else {
                         if (ir_applied != 1) {
+                            ## now, according to the class going in, re-choose flipping
+                            
                             H[iRead + 1] <- rx[ir_applied, H[iRead + 1]]
                             have_flipped_read[iRead + 1] <- TRUE                        
                         } else {
@@ -3099,3 +3118,34 @@ R_shard_block_gibbs_resampler <- function(
 }
 
 
+
+
+## semi-experimental code
+## if I had a grid and from then on applied a change (i.e. ir)
+## and I had existing H and H_class
+## how would that influence things
+calculate_proposed_change_to_read_probs <- function() {
+
+
+
+    ## before_read_labels <- out[["double_list_of_ending_read_labels"]][[1]][[1]]
+    initial_package <- for_testing_get_full_package_probabilities(before_read_labels, fpp_stuff)
+    H <- out[["double_list_of_ending_read_labels"]][[1]][[1]]
+    H_class <- out[["H_class"]]
+
+
+    ## now imagine a break at some point
+    split_grid <- 20
+    w1 <- 1:(split_grid + 1)
+    w2 <- (split_grid + 1):nGrids
+
+    ## (I think)
+    before_reads <- wif0 <= split_grid
+    after_reads <- wif0 > split_grid
+
+    ##
+    table(H_class[after_reads])
+    table(truth_class, truth_labels)
+    ## 
+    
+}

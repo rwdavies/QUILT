@@ -1428,7 +1428,7 @@ void rcpp_apply_vec_relabel(
     return;    
 }
 
-Rcpp::NumericVector calculate_rc(Rcpp::IntegerVector& H) {
+Rcpp::NumericVector calculate_rc(Rcpp::IntegerVector& H, bool display = false) {
     Rcpp::NumericVector rc(4); // cheeky - ignore 0th entry
     rc.fill(0);
     for(int iRead = 0; iRead < H.length(); iRead++) {
@@ -1437,7 +1437,10 @@ Rcpp::NumericVector calculate_rc(Rcpp::IntegerVector& H) {
     Rcpp::NumericVector rc_better(3);
     rc_better(0) = rc(1);
     rc_better(1) = rc(2);
-    rc_better(2) = rc(3);    
+    rc_better(2) = rc(3);
+    if (display) {
+        std::cout << "The read counts are:" << rc(1) << ", " << rc(2) << ", " <<  rc(3) << std::endl;
+    }
     return(rc_better);
 }
 
@@ -1488,15 +1491,16 @@ Rcpp::NumericVector calculate_likelihoods_values(
         dH += std::log(prior_probs(H(iRead) - 1));
     }
     //
-    to_out(0) = d1;
-    to_out(1) = d2;
-    to_out(2) = d3;
-    to_out(3) = d1 + d2 + d3;
-    //
-    to_out(4) = dH;
-    to_out(5) = to_out(3) + to_out(4);
-    Rcpp::NumericVector rc = calculate_rc(H);
-    to_out(6) = rcpp_calc_prob_of_set_of_reads(ff, rc);
+    // 
+    //    
+    to_out(0) = d1; // p_O1_given_H1_L
+    to_out(1) = d2; // p_O2_given_H2_L
+    to_out(2) = d3; // p_O3_given_H3_L
+    to_out(3) = d1 + d2 + d3; // p_O_given_H_L
+    to_out(4) = dH; // p_H_given_L
+    to_out(5) = to_out(3) + to_out(4); // p_O_H_given_L_up_to_C (by Bayes theorem, as P(H|O) (what we want) propto P(O|H)P(H)
+    Rcpp::NumericVector rc = calculate_rc(H); // read counts
+    to_out(6) = rcpp_calc_prob_of_set_of_reads(ff, rc); // p_set_H_given_L (why is this not the same as above)
     return(to_out);
 }
 
@@ -1587,6 +1591,7 @@ void add_to_per_it_likelihoods(
     }
     const int nGrids = c1.n_cols;
     Rcpp::NumericVector temp = calculate_likelihoods_values(c1, c2, c3, H, nGrids, prior_probs, ff);
+    //  colnames(per_it_likelihoods) = CharacterVector::create("s", "i_samp", "i_it", "i_result_it", "p_O1_given_H1_L", "p_O2_given_H2_L", "p_O3_given_H3_L", "p_O_given_H_L", "p_H_given_L", "p_H_given_O_L_up_to_C", "p_set_H_given_L", "relabel");
     per_it_likelihoods(i_per_it_likelihoods, 0) = s + 1; // 1-based
     per_it_likelihoods(i_per_it_likelihoods, 1) = i_gibbs_samplings + 1;
     per_it_likelihoods(i_per_it_likelihoods, 2) = iteration + 1;
@@ -2667,6 +2672,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     // }
     //
     //
+    Rcpp::NumericVector rc;
     double gamma_temp;    
     int first_read_for_gibbs_initialization;
     Rcpp::NumericVector runif_reads;
@@ -2735,7 +2741,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     // column names are P(O^1 | \lambda) for (1, 2, 3), then P(H | \lambda), then P(O, H | \lambda) aka the likelihood (for H) ll = log10(P(H | O, \lambda))
     int i_per_it_likelihoods = 0; // easier to just keep counter!
     Rcpp::NumericMatrix per_it_likelihoods = Rcpp::NumericMatrix(n_per_it_likelihoods, 12);
-    colnames(per_it_likelihoods) = CharacterVector::create("s", "i_samp", "i_it", "i_result_it", "p_O1_given_H1_L", "p_O2_given_H2_L", "p_O3_given_H3_L", "p_O_given_H_L", "p_H_given_L", "p_H_given_O_L_up_to_C", "p_set_H_given_L", "relabel");
+    colnames(per_it_likelihoods) = CharacterVector::create("s", "i_samp", "i_it", "i_result_it", "p_O1_given_H1_L", "p_O2_given_H2_L", "p_O3_given_H3_L", "p_O_given_H_L", "p_H_given_L", "p_O_H_given_L_up_to_C", "p_set_H_given_L", "relabel");
     //
     //
     // if (print_temp_stop) {    
@@ -2917,6 +2923,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         gibbs_initialize_iteratively, first_read_for_gibbs_initialization,
                         do_block_resampling, artificial_relabel, sample_is_diploid
                     );
+                    //rc = calculate_rc(H, true); // read counts temptemp
                     //
                     // do check here for underflow/overflow
                     // 
@@ -2983,6 +2990,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         prev=print_times(prev, suppressOutput, prev_section, next_section);
                         prev_section=next_section;
                         Rcpp::List out2 = Rcpp_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax_local, prev_section, next_section, suppressOutput, prev);
+                        //rc = calculate_rc(H, true); // read counts temptemp                        
                         //
                         if (return_gibbs_block_output & return_advanced_gibbs_block_output) {
                             // be super greedy with saving, but who cares, this is not normally run
@@ -2998,11 +3006,12 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             gibbs_block_output_local.push_back(Rcpp::clone(H), "after_read_labels");
                         }
                         Rcpp::List out3;
-                        if (do_shard_block_gibbs & (ff == 0)) {
-                            next_section="Block gibbs - ff0 shard resampler";
+                        if (do_shard_block_gibbs) {
+                            next_section="Block gibbs - shard resampler";
                             prev=print_times(prev, suppressOutput, prev_section, next_section);
                             prev_section=next_section;
                             out3 = Rcpp_shard_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, ff, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, false, R_NilValue, false, R_NilValue, shard_check_every_pair);
+                            //rc = calculate_rc(H, true); // read counts temptemp
                         }
                         //
                         //
@@ -3023,7 +3032,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             //
                             gibbs_block_output_local.push_back(out, "block_defining");
                             gibbs_block_output_local.push_back(out2, "gibbs_block_output");
-                            if (do_shard_block_gibbs & (ff == 0)) {
+                            if (do_shard_block_gibbs) {
                                 gibbs_block_output_local.push_back(out3, "shard_block_output");
                             }
                             gibbs_block_output_list.push_back(gibbs_block_output_local);

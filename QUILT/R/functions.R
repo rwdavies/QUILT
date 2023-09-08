@@ -2533,7 +2533,7 @@ impute_one_sample <- function(
     L_grid,
     L,
     inRegion2,
-    cM_grid,
+    cM_grid = NULL,
     have_truth_haplotypes,
     truth_haps,
     have_truth_genotypes,
@@ -2583,7 +2583,7 @@ impute_one_sample <- function(
 ) {
 
 
-    file <- "/well/davies/users/dcc832/werAwerBwerC.RData"
+    file <- paste0("/well/davies/users/dcc832/werAwerBwerC.", i_it, ".", nSNPs, ".RData")
     print(paste0("saving to ", file))
     save(
     eMatDH_special_matrix_helper,
@@ -2685,14 +2685,11 @@ impute_one_sample <- function(
     disable_read_category_usage,
     compress = FALSE,
     file = file)
-    stop("WER")
-
-    print("SAVING")
-    if (exit_after) {
-    stop("WER")
-    }
-
-    
+    ## stop("WER")
+    ## print("SAVING")
+    ## if (exit_after) {
+    ## stop("WER")
+    ## }
 
     ##
     K <- length(which_haps_to_use)
@@ -2900,7 +2897,8 @@ impute_one_sample <- function(
                 n_block_it_to_plot = n_block_it_to_plot,
                 wif0 = wif0,
                 grid = grid,
-                method = method
+                method = method,
+                ff = ff
             )
         }
     }

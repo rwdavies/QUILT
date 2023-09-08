@@ -129,7 +129,7 @@ impute_final_gibbs_with_rare_common <- function(
     buffer,
     i_it,
     i_gibbs_sample,
-    ff0_shard_check_every_pair,
+    shard_check_every_pair,
     sampleNames,
     iSample,
     phase_all,
@@ -175,7 +175,7 @@ impute_final_gibbs_with_rare_common <- function(
     ## buffer,
     ## i_it,
     ## i_gibbs_sample,
-    ## ff0_shard_check_every_pair,
+    ## shard_check_every_pair,
     ## sampleNames,
     ## iSample,
     ## phase_all,
@@ -330,7 +330,6 @@ impute_final_gibbs_with_rare_common <- function(
         L_grid = L_grid,
         L = L,
         inRegion2 = inRegion2,
-        cM_grid = cM_grid,
         outplotprefix = outplotprefix,
         have_truth_haplotypes = have_truth_haplotypes,
         truth_haps = truth_haps_all,
@@ -349,7 +348,7 @@ impute_final_gibbs_with_rare_common <- function(
         use_sample_is_diploid = TRUE,
         i_it = i_it,
         i_gibbs_sample = i_gibbs_sample,
-        ff0_shard_check_every_pair = ff0_shard_check_every_pair,
+        shard_check_every_pair = shard_check_every_pair,
         suppressOutput = 1,
         verbose = FALSE,
         return_extra = FALSE,
@@ -359,7 +358,8 @@ impute_final_gibbs_with_rare_common <- function(
         snp_is_common = snp_is_common,
         rare_per_hap_info = rare_per_hap_info,
         rare_per_snp_info = rare_per_snp_info,
-        ff = ff
+        ff = ff,
+        method = method
     )
 
     

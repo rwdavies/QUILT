@@ -40,9 +40,9 @@ plot_2_dosage_vs_truth <- function(dosage, truth, ancAlleleFreqAll, inRegion2, s
     text(x = Ls[1], y = ybottom + scale * 0.85, labels = text_labels, pos = 4, cex = 1.25)
     return(r2)
 }
-add_numbers <- function(ytop, ybottom, x, i, col = "black") {
+add_numbers <- function(ytop, ybottom, x, i, col = "black", n = 50) {
     ## accept only if on a grid of every 50 SNPs
-    ok <- unique(round(seq(1, length(x), length.out = 50)))
+    ok <- unique(round(seq(1, length(x), length.out = n)))
     ##q <- diff(range(L_grid)) / 20 ## bins
     w <- which((ytop - ybottom) > 0.001)
     w <- w[w %in% ok]
@@ -658,4 +658,253 @@ plot_prob_of_flipping_to_first_hap <- function(
     abline(h = seq(0, n_sampling_its - 1, 6) / n_sampling_its)
     dev.off()
     
+}
+
+
+
+
+
+
+
+
+
+
+##
+## mostly just for interactive debugging
+## 
+plot_shard_block_output <- function(
+    shard_block_results,
+    before_gamma1_t,
+    before_gamma2_t,
+    before_gamma3_t,
+    after_gamma1_t,
+    after_gamma2_t,
+    after_gamma3_t,
+    before_read_labels,
+    after_read_labels,
+    nGrids,
+    outname,
+    L_grid,
+    L,
+    uncertain_truth_labels,
+    truth_labels,
+    have_truth_haplotypes,
+    sampleReads,
+    wif0,
+    grid,
+    method,
+    ff,
+    only_plot_confident_reads,
+    before_H_class
+) {
+    cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+    cbPalette4 <- sapply(cbPalette, alpha_col, alpha = 0.4)
+    if (method != "nipt") {
+        stop("function is partially adapted, but only for NIPT")
+    }
+    ir_chosen <- shard_block_results[, "ir_chosen"]
+    ##
+    ##
+    ##
+    s <- 1
+    S <- 1
+    ##
+    xlim <- range(L_grid)
+    ##
+    ##
+    ##
+    ##
+    ## width <- min(max(20, (L_grid[length(L_grid)] - L_grid[1]) / 1e6 * 36), 200)
+    height <- 15
+    png(outname, height = height, width = 25, res = 200, units = "in")
+    mfrow <- 10 ## c(diploid = 11, nipt = 15)[method]
+    par(mfrow = c(mfrow, 1))
+    par(oma = c(0, 0, 5, 0))
+    grid_distances <- diff(L_grid)
+    x <- L_grid[-1] - grid_distances
+    xleft <- L_grid[-length(L_grid)]
+    xright <- L_grid[-1]
+    ## for fbdstore
+    midpoints <- L_grid[-1] - grid_distances / 2
+    xleft2 <- c(L_grid[1], midpoints)
+    xright2 <- c(midpoints, L_grid[length(L_grid)])
+    ##
+    ## define (for gamma), xleft and xright as follows
+    ## L_grid will be the middle of the two
+    ## x_left and x_right will average to L_grid
+    ## with a first x_right and the next x_left adding up
+    ## 
+    x <- L_grid
+    a <- (x[-1] + x[-length(x)]) / 2
+    xleft <- c(x[1] - (x[2] - x[1]) / 2, a)
+    xright <- c(a, x[length(x)] + (x[length(x)] - x[length(x) - 1]) / 2)
+    uu <- sapply(sampleReads, function(x) range(x[[4]])) + 1
+    nReads <- length(sampleReads)
+    for(i_type in 1:2) {
+        ##
+        ##
+        ##
+        if (i_type == 1) {
+            read_labels <- before_read_labels
+            gamma1_t <- before_gamma1_t
+            gamma2_t <- before_gamma2_t
+            gamma3_t <- before_gamma3_t
+            what_we_are_plotting <- "before"
+        } else {
+            read_labels <- after_read_labels
+            gamma1_t <- after_gamma1_t
+            gamma2_t <- after_gamma2_t
+            gamma3_t <- after_gamma3_t
+            what_we_are_plotting <- "after"
+        }
+        ##
+        ## if this is the first one, add the H_class results
+        ##
+        if (i_type == 1) {
+            par(mar = c(0, 0, 3, 0))
+            ylim <- c(0, 1)
+            plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, col = "white")
+            y <- 0.1 + (2 - (read_labels - 1)) / 3 + runif(length(read_labels)) / 4
+            col <- cbPalette[before_H_class + 1]
+            segments(x0 = L[uu[1, ]], x1 = L[uu[2, ]], y0 = y, y1 = y, col = col, lwd = 1.5)
+            legend("topright", c("None", "1", "2", "3", "12", "13", "23", "123"), col = cbPalette, lwd = 2, cex = 0.75)
+        }
+        ##
+        ## if this is the second one, add the results in here
+        ##
+        if (i_type == 2) {
+            par(mar = c(0, 0, 3, 0))
+            ylim <- c(0, 1.2)
+            plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, col = "white")
+            col <- cbPalette[ir_chosen]
+            rect(xleft = xleft[-1], xright = xright[-1], ybottom = 1, ytop = 1.2, col = col, border = NA)
+            ## 
+            ybottom <- rep(0, nrow(shard_block_results))
+            ytop <- shard_block_results[, "p1"]
+            for(ir in 1:6) {
+                rect(xleft = xleft[-1], xright = xright[-1], ybottom = ybottom, ytop = ytop, col = cbPalette[ir], border = NA)
+                ybottom <- ytop
+                if (ir < 6) {
+                    ytop <- ytop + shard_block_results[, paste0("p", ir + 1)]
+                }
+            }
+            abline(h = 1, lwd = 2)
+            ## for the rest, add the probs
+            changes <- which(diff(ir_chosen) != 0) + 1
+            xa <- (xleft[-1])[changes]
+            abline(v = xa, col = "black")
+            text(x = xa, y = 1, labels = ir_chosen[changes], col = "black")
+        }
+        ##
+        ## 2) add in reads here
+        ##
+        par(mar = c(0, 0, 3, 0))
+        ylim <- c(0, 1)
+        plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, col = "white")
+        if (have_truth_haplotypes) {
+            truth <- truth_labels
+            truth[uncertain_truth_labels] <- 0
+            if (method == "nipt") {
+                label <- "Orange = truth hap 1, Blue = truth hap 2, Green = truth hap 3"
+            } else {
+                label <- "Orange = truth hap 1, Green = truth hap 2"
+            }
+            text(
+                x = L[1], y = (1),
+                labels = label,
+                pos = 4, cex = 1.25, xpd = NA
+            )
+        }
+        if (method == "nipt") {
+            y <- 0.1 + (2 - (read_labels - 1)) / 3 + runif(length(read_labels)) / 4
+        } else {
+            y <- 0.1 + (read_labels - 1) / 3 + runif(length(read_labels)) / 4
+        }
+        lwd <- 1.5
+        ##
+        ##
+        if (have_truth_haplotypes) {
+            col <- cbPalette[truth + 1]
+        } else {
+            col <- rep(cbPalette[1], nReads)
+        }
+        if (only_plot_confident_reads & have_truth_haplotypes) {
+            w <- truth != 0
+            segments(x0 = L[uu[1, !w]], x1 = L[uu[2, !w]], y0 = y[!w], y1 = y[!w], col = alpha_col("grey", 0.4), lwd = lwd)            
+        } else {
+            w <- rep(TRUE, nReads)
+        }
+        segments(x0 = L[uu[1, w]], x1 = L[uu[2, w]], y0 = y[w], y1 = y[w], col = col[w], lwd = lwd)
+        ##
+        ##
+        ## 3) plot gammas
+        ##
+        ## for now, plot gammas before
+        ##
+        n <- c(diploid = 2, nipt = 3)[method]
+        for(i_which in 1:n) {
+            par(mar = c(0, 0, 3, 0))
+            scale_dosage <- 0
+            colStore <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+            nCols <- length(colStore)
+            if (i_which == 1) { gammaK_t <- gamma1_t;   main <- paste0("Hap 1 - ", what_we_are_plotting)}
+            if (i_which == 2) { gammaK_t <- gamma2_t;   main <- paste0("Hap 2 - ", what_we_are_plotting)}
+            if (i_which == 3) { gammaK_t <- gamma3_t;   main <- paste0("Hap 3 - ", what_we_are_plotting)}
+            ##
+            K <- nrow(gammaK_t)
+            ylim <- c(0, 1 + c(diploid = 2, nipt = 3)[method] * scale_dosage)
+            nGrids <- ncol(gammaK_t)
+            backwards <- nGrids:1
+            ##
+            plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, main = main)
+            x <- L_grid ## c(L_grid[1], L_grid) ## , L_grid[length(L_grid):1])
+            ##xleft <- c(x[1] - (x[2] - x[1]) / 2, x[-length(x)])
+            ##xright <- c(x[-1], x[length(x)] + (x[length(x)] - x[(length(x) - 1)]) / 2)
+            a <- (x[-1] + x[-length(x)]) / 2
+            xleft <- c(x[1] - (x[2] - x[1]) / 2, a)
+            xright <- c(a, x[length(x)] + (x[length(x)] - x[length(x) - 1]) / 2)
+            ## 
+            m <- array(0, c(nGrids, K + 1))
+            ## is this slow...
+            for(i in 1:K) {
+                m[, i + 1] <- m[, i] + gammaK_t[i, ]
+            }
+            ##
+            for(j in 1:2) {
+                for(i in K:1) {
+                    ## can I o
+                    ybottom <- m[, i]
+                    ytop <- m[, i + 1]
+                    if (max(ytop - ybottom) > 0.01) {
+                        if (j == 1) {
+                            rect(
+                                xleft = xleft,
+                                xright = xright,
+                                ybottom = ybottom,
+                                ytop = ytop,
+                                border = NA,
+                                col = colStore[(i %% nCols) + 1]
+                            )
+                        } else {
+                            add_numbers(ytop, ybottom, x, i, n = round(nGrids / 5))
+                        }
+                    }
+                }
+            }
+            ## always add in vertical bars at switch points
+            changes <- which(diff(ir_chosen) != 0) + 1
+            xa <- (xleft[-1])[changes]
+            abline(v = xa, col = "black")
+            text(x = xa, y = 1, labels = ir_chosen[changes], col = "black")
+        }
+    }
+    dev.off()
+}
+
+
+
+
+alpha_col <- function(col, alpha) {
+    x <- col2rgb(col) / 255
+    return(rgb(x["red", 1], x["green", 1], x["blue", 1], alpha = alpha)    )
 }
