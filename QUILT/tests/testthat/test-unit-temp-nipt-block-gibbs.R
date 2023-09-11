@@ -227,13 +227,13 @@ test_that("blarh", {
 
 
     ## make some packages here
-
-    for(iii in 1:2) {
+ 
+   for(iii in 1:2) {
 
         if (iii == 1) {
             ## choose before labels, the ACTUAL ones we're looking at
             H <- out[["double_list_of_ending_read_labels"]][[1]][[1]]
-            file <- "/well/davies/users/dcc832/werAwerBwerC.package.truth.RData"            
+            file <- "/well/davies/users/dcc832/werAwerBwerC.package.real.RData"            
         } else {
             ## choose truth labels, don't really expect a change!
             H <- truth_labels
@@ -242,8 +242,11 @@ test_that("blarh", {
         package <- for_testing_get_full_package_probabilities(H, fpp_stuff, ff = ff)
         print("saving")
         save(
-            package,
-            H, ff, eMatRead_t, grid, wif0,
+            H, ff, nGrids,
+            package, eMatRead_t, wif0,
+            sampleReads,
+            truth_labels, uncertain_truth_labels,
+            L, L_grid, grid, 
             small_alphaMatCurrent_tc,
             small_priorCurrent_m,
             small_transMatRate_tc_H,
