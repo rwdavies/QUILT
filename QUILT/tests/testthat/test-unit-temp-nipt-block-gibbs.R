@@ -225,27 +225,47 @@ test_that("blarh", {
     }
     o <- sapply(a, source)
 
-    ## choose before labels
-    before_read_labels <- truth_labels
-    ## before_read_labels <- out[["double_list_of_ending_read_labels"]][[1]][[1]]
-    initial_package <- for_testing_get_full_package_probabilities(before_read_labels, fpp_stuff)        
+
+    ## make some packages here
+
+    for(iii in 1:2) {
+
+        if (iii == 1) {
+            ## choose before labels, the ACTUAL ones we're looking at
+            H <- out[["double_list_of_ending_read_labels"]][[1]][[1]]
+            file <- "/well/davies/users/dcc832/werAwerBwerC.package.truth.RData"            
+        } else {
+            ## choose truth labels, don't really expect a change!
+            H <- truth_labels
+            file <- "/well/davies/users/dcc832/werAwerBwerC.package.truth.RData"
+        }
+        package <- for_testing_get_full_package_probabilities(H, fpp_stuff, ff = ff)
+        print("saving")
+        save(
+            package,
+            H, ff, eMatRead_t, grid, wif0,
+            small_alphaMatCurrent_tc,
+            small_priorCurrent_m,
+            small_transMatRate_tc_H,
+            file = file
+        )
     
         out_new <- R_shard_block_gibbs_resampler(
-            alphaHat_t1 = initial_package[[1]]$alphaHat_t,
-            alphaHat_t2 = initial_package[[2]]$alphaHat_t,
-            alphaHat_t3 = initial_package[[3]]$alphaHat_t,
-            betaHat_t1 = initial_package[[1]]$betaHat_t,
-            betaHat_t2 = initial_package[[2]]$betaHat_t,
-            betaHat_t3 = initial_package[[3]]$betaHat_t,
-            c1 = initial_package[[1]]$c,
-            c2 = initial_package[[2]]$c,
-            c3 = initial_package[[3]]$c,
-            eMatGrid_t1 = initial_package[[1]]$eMatGrid_t,
-            eMatGrid_t2 = initial_package[[2]]$eMatGrid_t,
-            eMatGrid_t3 = initial_package[[3]]$eMatGrid_t,
-            H = before_read_labels,
+            alphaHat_t1 = package[[1]]$alphaHat_t,
+            alphaHat_t2 = package[[2]]$alphaHat_t,
+            alphaHat_t3 = package[[3]]$alphaHat_t,
+            betaHat_t1 = package[[1]]$betaHat_t,
+            betaHat_t2 = package[[2]]$betaHat_t,
+            betaHat_t3 = package[[3]]$betaHat_t,
+            c1 = package[[1]]$c,
+            c2 = package[[2]]$c,
+            c3 = package[[3]]$c,
+            eMatGrid_t1 = package[[1]]$eMatGrid_t,
+            eMatGrid_t2 = package[[2]]$eMatGrid_t,
+            eMatGrid_t3 = package[[3]]$eMatGrid_t,
+            H = H,
             ff = ff,
-           eMatRead_t = eMatRead_t,
+            eMatRead_t = eMatRead_t,
             grid = grid,
             wif0 = wif0,
             s = 1,
@@ -253,17 +273,21 @@ test_that("blarh", {
             priorCurrent_m = small_priorCurrent_m,
             transMatRate_tc_H = small_transMatRate_tc_H,
             do_checks = FALSE,
-            initial_package = NULL,
             verbose = FALSE,
             fpp_stuff = NULL,
             shard_check_every_pair = TRUE,
-            H_class = out[["H_class"]]
+            H_class = package[["H_class"]]
         )
 
+        print(package$log_p)
+        print(-(sum(log(out_new$c1)) + sum(log(out_new$c2)) + sum(log(out_new$c3))))
+    }
+    
+
         ## VERY similar
-        initial_package$log_p
+
         ## ACTUALLY a bit better!!! 
-        -(sum(log(out_new$c1)) + sum(log(out_new$c2)) + sum(log(out_new$c3)))
+
 
         ## what about the read probabilities, re-sampling, that kind of thing
         

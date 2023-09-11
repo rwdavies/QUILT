@@ -1098,7 +1098,12 @@ R_define_blocked_snps_using_gamma_on_the_fly <- function(
     )
 }
 
-for_testing_get_full_package_probabilities <- function(localH, fpp_stuff, maxEmissionMatrixDifference = 1e6) {
+for_testing_get_full_package_probabilities <- function(
+    localH,
+    fpp_stuff,
+    maxEmissionMatrixDifference = 1e6,
+    ff = NA
+) {
     ## argh - setup
     transMatRate_tc_H <- fpp_stuff[["transMatRate_tc_H"]]
     alphaMatCurrent_tc <- fpp_stuff[["alphaMatCurrent_tc"]]
@@ -1143,6 +1148,25 @@ for_testing_get_full_package_probabilities <- function(localH, fpp_stuff, maxEmi
     ##     read_probs <- sum(log_prior_probs[localH])
     ## }
     package <- append(package, list(log_p = log_p))
+    ## 
+    wif0 <- as.integer(sapply(sampleReads, function(x) x[[2]]))
+    ##
+    if (!is.na(ff)) {
+        H_class <- calculate_H_class(
+            eMatRead_t,
+            alphaHat_t1 = package[[1]]$alphaHat_t,
+            alphaHat_t2 = package[[2]]$alphaHat_t,
+            alphaHat_t3 = package[[3]]$alphaHat_t,
+            betaHat_t1 = package[[1]]$betaHat_t,
+            betaHat_t2 = package[[2]]$betaHat_t,
+            betaHat_t3 = package[[3]]$betaHat_t,
+            ff = ff,
+            wif0 = wif0,
+            H = localH,
+            class_sum_cutoff = 0.06
+        )
+        package <- append(package, list(H_class = H_class))
+    }
     return(package)
 }
 
@@ -2653,7 +2677,6 @@ R_shard_block_gibbs_resampler <- function(
     transMatRate_tc_H,
     H_class,
     do_checks = FALSE,
-    initial_package = NULL,
     verbose = FALSE,
     fpp_stuff = NULL,
     shard_check_every_pair = FALSE
