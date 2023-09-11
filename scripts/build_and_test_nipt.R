@@ -387,7 +387,7 @@ QUILT_prepare_reference(
     regionStart= REGIONSTART,
     regionEnd = REGIONEND,
     buffer = BUFFER,
-    impute_rare_common = TRUE,
+    impute_rare_common = FALSE,
     rare_af_threshold = 0.01,
     use_mspbwt = TRUE
 )
@@ -427,7 +427,7 @@ QUILT(
     n_seek_its = n_seek_its,
     make_plots = TRUE,
     make_plots_block_gibbs = TRUE,
-    impute_rare_common = TRUE,
+    impute_rare_common = FALSE,
     use_mspbwt = TRUE
 )
 ## 

@@ -390,12 +390,22 @@ get_and_impute_one_sample <- function(
         }
 
         if (!is.null(truth_haps_all)) {
-            truth_label_set <- determine_a_set_of_truth_labels(
-                sampleReads = allSNP_sampleReads,
-                truth_hap1 = truth_haps_all[, 1],
-                truth_hap2 = truth_haps_all[, 2],
-                maxDifferenceBetweenReads = maxDifferenceBetweenReads
-            )
+
+            if (method == "diploid") {
+                truth_label_set <- determine_a_set_of_truth_labels(
+                    sampleReads = all_sampleReads,
+                    truth_hap1 = truth_haps_all[, 1],
+                    truth_hap2 = truth_haps_all[, 2],
+                    maxDifferenceBetweenReads = maxDifferenceBetweenReads
+		)
+            } else {
+                truth_label_set <- determine_a_set_of_truth_labels_for_nipt(
+                    sampleReads = all_sampleReads,
+                    truth_haps = truth_haps_all,
+                    phase = phase,
+                    ff = ff
+                )
+            }
             truth_labels_all <- truth_label_set[["truth_labels"]]
             uncertain_truth_labels_all <- truth_label_set[["uncertain_truth_labels"]]
             rm(truth_label_set)
