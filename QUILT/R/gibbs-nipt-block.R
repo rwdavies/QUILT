@@ -46,7 +46,7 @@ helper_block_gibbs_resampler <- function(
             rescale_eMatRead_t = FALSE
         )
     }
-    
+
     ##
     fpp_stuff <- list(
         transMatRate_tc_H = transMatRate_tc_H,
@@ -1138,7 +1138,7 @@ for_testing_get_full_package_probabilities <- function(
         for(iGrid in 1:nGrids) {
             gamma_t[, iGrid] <- gamma_t[, iGrid] / out$c[iGrid]
         }
-        ## 
+        ##
         return(append(out, list(eMatGrid_t = eMatGrid_t, gamma_t = gamma_t)))
     })
     log_p <- -sum(log(package[[1]][["c"]]) + log(package[[2]][["c"]]) + log(package[[3]][["c"]]))
@@ -1148,7 +1148,7 @@ for_testing_get_full_package_probabilities <- function(
     ##     read_probs <- sum(log_prior_probs[localH])
     ## }
     package <- append(package, list(log_p = log_p))
-    ## 
+    ##
     wif0 <- as.integer(sapply(sampleReads, function(x) x[[2]]))
     ##
     if (!is.na(ff)) {
@@ -1250,7 +1250,7 @@ R_consider_block_relabelling <- function(
             choice_log_probs_P[ir] <- choice_log_probs_P[ir] + choice_log_probs_Pm[ir, i]
         }
     }
-    
+
     ## do check
     if (do_checks & (block_approach == 1)) {
         log_package_probs <- sapply(all_packages, function(x) x[["log_p"]])
@@ -1867,7 +1867,7 @@ plot_attempt_to_reblock_snps <- function(
     ## L_grid will be the middle of the two
     ## x_left and x_right will average to L_grid
     ## with a first x_right and the next x_left adding up
-    ## 
+    ##
     x <- L_grid
     a <- (x[-1] + x[-length(x)]) / 2
     xleft <- c(x[1] - (x[2] - x[1]) / 2, a)
@@ -2051,7 +2051,7 @@ plot_attempt_to_reblock_snps <- function(
             a <- (x[-1] + x[-length(x)]) / 2
             xleft <- c(x[1] - (x[2] - x[1]) / 2, a)
             xright <- c(a, x[length(x)] + (x[length(x)] - x[length(x) - 1]) / 2)
-            ## 
+            ##
             m <- array(0, c(nGrids, K + 1))
             ## is this slow...
             for(i in 1:K) {
@@ -2679,7 +2679,8 @@ R_shard_block_gibbs_resampler <- function(
     do_checks = FALSE,
     verbose = FALSE,
     fpp_stuff = NULL,
-    shard_check_every_pair = FALSE
+    shard_check_every_pair = FALSE,
+    use_rcpp = TRUE
 ) {
     ##
     ##
@@ -2753,7 +2754,7 @@ R_shard_block_gibbs_resampler <- function(
     minus_log_c3_sum <- 0
     minus_log_original_c1_sum <- -sum(log(c1))
     minus_log_original_c2_sum <- -sum(log(c2))
-    minus_log_original_c3_sum <- -sum(log(c3))    
+    minus_log_original_c3_sum <- -sum(log(c3))
     original_c1 <- c1 + 1
     original_c1 <- original_c1 - 1
     original_c2 <- c2 + 1
@@ -2822,37 +2823,70 @@ R_shard_block_gibbs_resampler <- function(
                 e3 <- eMatGrid_t3[, iGrid + 1]
                 if (ir_applied == 2) {
                     eMatGrid_t2[, iGrid + 1] <- e3
-                    eMatGrid_t3[, iGrid + 1] <- e2                   
+                    eMatGrid_t3[, iGrid + 1] <- e2
                 } else if (ir_applied == 3) {
                     eMatGrid_t1[, iGrid + 1] <- e2
                     eMatGrid_t2[, iGrid + 1] <- e1
                 } else if (ir_applied == 4) {
                     eMatGrid_t1[, iGrid + 1] <- e2
                     eMatGrid_t2[, iGrid + 1] <- e3
-                    eMatGrid_t3[, iGrid + 1] <- e1                   
+                    eMatGrid_t3[, iGrid + 1] <- e1
                 } else if (ir_applied == 5) {
                     eMatGrid_t1[, iGrid + 1] <- e3
                     eMatGrid_t2[, iGrid + 1] <- e1
-                    eMatGrid_t3[, iGrid + 1] <- e2                   
+                    eMatGrid_t3[, iGrid + 1] <- e2
                 } else if (ir_applied == 6) {
                     eMatGrid_t1[, iGrid + 1] <- e3
                     eMatGrid_t2[, iGrid + 1] <- e2
-                    eMatGrid_t3[, iGrid + 1] <- e1                   
+                    eMatGrid_t3[, iGrid + 1] <- e1
                 }
             }
             ## only thing that changes is eMatGrid_t
-            minus_log_c_sum <- 0
-            rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t1, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t1, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c1, minus_log_c_sum = minus_log_c_sum, normalize = TRUE)
-            minus_log_c1_sum <- minus_log_c1_sum - log(c1[iGrid + 1])
-            ##
-            minus_log_c_sum <- 0            
-            rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t2, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t2, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c2, minus_log_c_sum = minus_log_c_sum, normalize = TRUE)
-            minus_log_c2_sum <- minus_log_c2_sum - log(c2[iGrid + 1])
-            ##
-            if (ff > 0) {
-                minus_log_c_sum <- 0            
-                rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t3, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t3, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c3, minus_log_c_sum = minus_log_c_sum, normalize = TRUE)
-                minus_log_c3_sum <- minus_log_c3_sum - log(c3[iGrid + 1])
+            if (use_rcpp) {
+                ##
+                minus_log_c_sum <- 0
+                rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t1, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t1, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c1, minus_log_c_sum = minus_log_c_sum, normalize = TRUE)
+                minus_log_c1_sum <- minus_log_c1_sum - log(c1[iGrid + 1])
+                ##
+                minus_log_c_sum <- 0
+                rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t2, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t2, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c2, minus_log_c_sum = minus_log_c_sum, normalize = TRUE)
+                minus_log_c2_sum <- minus_log_c2_sum - log(c2[iGrid + 1])
+                ##
+                if (ff > 0) {
+                    minus_log_c_sum <- 0
+                    rcpp_alpha_forward_one(s = 0, iGrid = iGrid, K = K, alphaHat_t = alphaHat_t3, transMatRate_tc_H = transMatRate_tc_H, eMatGrid_t = eMatGrid_t3, alphaMatCurrent_tc = alphaMatCurrent_tc, c = c3, minus_log_c_sum = minus_log_c_sum, normalize = TRUE)
+                    minus_log_c3_sum <- minus_log_c3_sum - log(c3[iGrid + 1])
+                }
+                ##
+            } else {
+                ##
+                ##
+                ##
+                alphaHat_t1 <- alpha_forward_one(iGrid + 1, K, s = 1, alphaHat_t1, transMatRate_tc_H, eMatGrid_t1, alphaMatCurrent_tc)
+                alphaHat_t2 <- alpha_forward_one(iGrid + 1, K, s = 1, alphaHat_t2, transMatRate_tc_H, eMatGrid_t2, alphaMatCurrent_tc)
+                if (ff > 0) {
+                    alphaHat_t3 <- alpha_forward_one(iGrid + 1, K, s = 1, alphaHat_t3, transMatRate_tc_H, eMatGrid_t3, alphaMatCurrent_tc)
+                }
+                ## now, do previous normalization
+                alphaHat_t1[, iGrid + 1] <- alphaHat_t1[, iGrid + 1] * c1[iGrid + 1]
+                a <- 1 / sum(alphaHat_t1[, iGrid + 1])
+                c1[iGrid + 1] <- c1[iGrid + 1] * a
+                alphaHat_t1[, iGrid + 1] <- alphaHat_t1[, iGrid + 1] * a
+                minus_log_c1_sum <- minus_log_c1_sum - log(c1[iGrid + 1])
+                ##
+                alphaHat_t2[, iGrid + 1] <- alphaHat_t2[, iGrid + 1] * c2[iGrid + 1]
+                a <- 1 / sum(alphaHat_t2[, iGrid + 1])
+                c2[iGrid + 1] <- c2[iGrid + 1] * a
+                alphaHat_t2[, iGrid + 1] <- alphaHat_t2[, iGrid + 1] * a
+                minus_log_c2_sum <- minus_log_c2_sum - log(c2[iGrid + 1])
+                ##
+                if (ff > 0) {
+                    alphaHat_t3[, iGrid + 1] <- alphaHat_t3[, iGrid + 1] * c3[iGrid + 1]
+                    a <- 1 / sum(alphaHat_t3[, iGrid + 1])
+                    c3[iGrid + 1] <- c3[iGrid + 1] * a
+                    alphaHat_t3[, iGrid + 1] <- alphaHat_t3[, iGrid + 1] * a
+                    minus_log_c3_sum <- minus_log_c3_sum - log(c3[iGrid + 1])
+                }
             }
         }
         ##
@@ -2877,9 +2911,8 @@ R_shard_block_gibbs_resampler <- function(
                     } else {
                         if (ir_applied != 1) {
                             ## now, according to the class going in, re-choose flipping
-                            
                             H[iRead + 1] <- rx[ir_applied, H[iRead + 1]]
-                            have_flipped_read[iRead + 1] <- TRUE                        
+                            have_flipped_read[iRead + 1] <- TRUE
                         } else {
                             have_flipped_read[iRead + 1] <- FALSE
                         }
@@ -2948,7 +2981,7 @@ R_shard_block_gibbs_resampler <- function(
             ## check these are OK
             if (do_checks) {
                 expect_equal(-sum(log(c1[w1])), minus_log_c1_sum)
-                expect_equal(-sum(log(original_c1[w2])), minus_log_original_c1_sum)                
+                expect_equal(-sum(log(original_c1[w2])), minus_log_original_c1_sum)
                 expect_equal(-sum(log(c2[w1])), minus_log_c2_sum)
                 expect_equal(-sum(log(original_c2[w2])), minus_log_original_c2_sum)
                 if (ff > 0) {
@@ -2978,7 +3011,7 @@ R_shard_block_gibbs_resampler <- function(
                 probs <- probs / sum(probs)
                 ## now sample with respect to these
                 in_flip_mode <- runif(1) > probs[1]
-                ## 
+                ##
                 shard_block_results[iGridConsider + 1, "iBlock"] <- iGridConsider ## 0-based
                 shard_block_results[iGridConsider + 1, "p_stay"] <- probs[1]
                 shard_block_results[iGridConsider + 1, "p_flip"] <- probs[2]
@@ -3036,7 +3069,7 @@ R_shard_block_gibbs_resampler <- function(
                 ir_chosen <- sample(1:6, 1, prob = rr_probs)
                 shard_block_results[iGridConsider + 1, "iBlock"] <- iGridConsider ## 0-based
                 shard_block_results[iGridConsider + 1, "ir_chosen"] <- ir_chosen
-                ir_applied <- ir_chosen                
+                ir_applied <- ir_chosen
                 ## shard_block_results[iGridConsider + 1, "ir_prev_applied"] <- ir_applied
                 ## ng = new global
                 ## ng <- rr[ir_chosen, ][rr[ir_applied, ]]
@@ -3052,7 +3085,7 @@ R_shard_block_gibbs_resampler <- function(
                 shard_block_results[iGridConsider + 1, "p3"] <- rr_probs[3]
                 shard_block_results[iGridConsider + 1, "p4"] <- rr_probs[4]
                 shard_block_results[iGridConsider + 1, "p5"] <- rr_probs[5]
-                shard_block_results[iGridConsider + 1, "p6"] <- rr_probs[6]                
+                shard_block_results[iGridConsider + 1, "p6"] <- rr_probs[6]
             }
             if (verbose) {
                 print(paste0("Remain the same prob is :", probs[1]))
@@ -3086,34 +3119,67 @@ R_shard_block_gibbs_resampler <- function(
     ##
     ## re-run backward
     ##
-    betaHat_t1[, nGrids] <- c1[nGrids]
-    Rcpp_run_backward_haploid(
-        betaHat_t1,
-        c = c1,
-        eMatGrid_t = eMatGrid_t1,
-        alphaMatCurrent_tc = alphaMatCurrent_tc,
-        transMatRate_tc = transMatRate_tc_H,
-        s = s - 1
-    )
-    betaHat_t2[, nGrids] <- c2[nGrids]
-    Rcpp_run_backward_haploid(
-        betaHat_t2,
-        c = c2,
-        eMatGrid_t = eMatGrid_t2,
-        alphaMatCurrent_tc = alphaMatCurrent_tc,
-        transMatRate_tc = transMatRate_tc_H,
-        s = s - 1
-    )
-    if (ff > 0) {
-        betaHat_t3[, nGrids] <- c3[nGrids]
+    alphaMat_t <- small_alphaMatCurrent_tc[, , 1] ## meh
+    transMatRate_t_H <- small_transMatRate_tc_H[, , 1]
+    if (use_rcpp) {
+        betaHat_t1[, nGrids] <- c1[nGrids]
         Rcpp_run_backward_haploid(
-            betaHat_t3,
-            c = c3,
-            eMatGrid_t = eMatGrid_t3,
+            betaHat_t1,
+            c = c1,
+            eMatGrid_t = eMatGrid_t1,
             alphaMatCurrent_tc = alphaMatCurrent_tc,
             transMatRate_tc = transMatRate_tc_H,
             s = s - 1
         )
+        betaHat_t2[, nGrids] <- c2[nGrids]
+        Rcpp_run_backward_haploid(
+            betaHat_t2,
+            c = c2,
+            eMatGrid_t = eMatGrid_t2,
+            alphaMatCurrent_tc = alphaMatCurrent_tc,
+            transMatRate_tc = transMatRate_tc_H,
+            s = s - 1
+        )
+        if (ff > 0) {
+            betaHat_t3[, nGrids] <- c3[nGrids]
+            Rcpp_run_backward_haploid(
+                betaHat_t3,
+                c = c3,
+                eMatGrid_t = eMatGrid_t3,
+                alphaMatCurrent_tc = alphaMatCurrent_tc,
+                transMatRate_tc = transMatRate_tc_H,
+                s = s - 1
+            )
+        }
+    } else {
+        print(dim(betaHat_t1))
+        betaHat_t1[, nGrids] <- c1[nGrids]
+        betaHat_t1 <- R_run_backward_haploid(
+            betaHat_t1,
+            c = c1,
+            eMatGrid_t = eMatGrid_t1,
+            alphaMat_t = alphaMat_t,
+            transMatRate_t_H = transMatRate_t_H
+        )[[1]]
+        print(dim(betaHat_t1))
+        betaHat_t2[, nGrids] <- c2[nGrids]
+        betaHat_t2 <- R_run_backward_haploid(
+            betaHat_t2,
+            c = c2,
+            eMatGrid_t = eMatGrid_t2,
+            alphaMat_t = alphaMat_t,
+            transMatRate_t_H = transMatRate_t_H
+        )[[1]]
+        if (ff > 0) {
+            betaHat_t3[, nGrids] <- c3[nGrids]
+            betaHat_t3 <- R_run_backward_haploid(
+                betaHat_t3,
+                c = c3,
+                eMatGrid_t = eMatGrid_t3,
+                alphaMat_t = alphaMat_t,
+                transMatRate_t_H = transMatRate_t_H
+            )[[1]]
+        }
     }
     return(
         list(
@@ -3169,6 +3235,6 @@ calculate_proposed_change_to_read_probs <- function() {
     ##
     table(H_class[after_reads])
     table(truth_class, truth_labels)
-    ## 
-    
+    ##
+
 }
