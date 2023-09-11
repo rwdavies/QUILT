@@ -1,13 +1,13 @@
 QUILT
 =====
-**__Current Version: 1.0.4__**
-Release date: Nov 1, 2022
+**__Current Version: 1.0.5__**
+Release date: Sept 11, 2023
 
 ![Build Status](https://github.com/rwdavies/QUILT/workflows/CI/badge.svg)
 
 Changes in latest version
 
-1. Simplify how QUILT HLA reference packages are built 
+1. Be able to work with cram files
 
 For details of past changes please see [CHANGELOG](CHANGELOG.md).
 

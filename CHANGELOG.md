@@ -1,3 +1,5 @@
+* v1.0.5
+	* Be able to work with cram files
 * v1.0.4
 	* Mostly small bugs and some future capabilities
 * v1.0.3
