@@ -279,7 +279,8 @@ test_that("blarh", {
             verbose = FALSE,
             fpp_stuff = NULL,
             shard_check_every_pair = TRUE,
-            H_class = package[["H_class"]]
+            H_class = package[["H_class"]],
+            sample_using_H_class = TRUE
         )
 
         print(package$log_p)
