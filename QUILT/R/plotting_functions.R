@@ -124,7 +124,7 @@ plot_single_gamma_dosage <- function(
             letter_col <- rep("black", K)
             letter_col[new_haps] <- "white"
         } else {
-            letter_col <- rep("black", K)            
+            letter_col <- rep("black", K)
         }
         xlim <- range(L_grid)
         ylim <- c(0, 1 + scale_dosage + scale_dosage)
@@ -550,15 +550,15 @@ plot_prob_of_flipping_to_first_hap <- function(
 ) {
 
     filename <- "~/temp.png"
-    load(file = "~/temp.RData")    
-    
+    load(file = "~/temp.RData")
+
     nReads <- ncol(p1_store[[1]][[1]])
     n_sampling_its <- nrow(p1_store[[1]][[1]])
 
     n_seek_its <- length(p1_store[[1]])
     nGibbsSamples <- length(p1_store) - 1
 
-    ## 
+    ##
     size <- round(nReads / 1000)
     size <- min(max(size, 5), 20)
 
@@ -585,12 +585,12 @@ plot_prob_of_flipping_to_first_hap <- function(
         ##
         xleft <- rep(xleft, nReads)
         xright <- rep(xright, nReads)
-        ## 
+        ##
         cols <- colorRampPalette(c("#FFFFFF", "#56B4E9"))(51)
         for(i_it in 1:n_seek_its) {
             for(iGibbs in 1:(nGibbsSamples + 1)) {
                 if (i_what == 1) {  p1 <- p1_store[[iGibbs]][[i_it]] }
-                if (i_what == 2) {  p1 <- read_store[[iGibbs]][[i_it]] }                
+                if (i_what == 2) {  p1 <- read_store[[iGibbs]][[i_it]] }
                 rect(i_it + xleft, iGibbs + ybottom, i_it + xright, iGibbs + ytop, col = cols[round(100 * abs(p1 - 0.5)) + 1], border = NA)
                 rect(i_it, iGibbs, i_it + 1, iGibbs + 1)
             }
@@ -603,7 +603,7 @@ plot_prob_of_flipping_to_first_hap <- function(
     ## here plot the reads themselves
     ##
     table(round(colMeans(abs(x - 0.5)), 1))
-    
+
     ## plot reads used as well
     filename <- "temp.reads.png"
     png(filename, height = size, width = size, units = "in", res = 300)
@@ -617,7 +617,7 @@ plot_prob_of_flipping_to_first_hap <- function(
 
     table(f(1, 1), f(1, 3))
     table(f(2, 3), f(1, 3)) ## mostly the same
-    
+
 
     ##
     ## here compare the read probs at the start and end of each run
@@ -636,12 +636,12 @@ plot_prob_of_flipping_to_first_hap <- function(
         a <- cbind(a, o[[j]])
     }
     a <- t(a)
-    
+
     pdf("~/temp.pdf", height = 10, width = 30)
     xlim <- c(0, 1)
     ylim <- c(0, 1)
     plot(x = 0, y = 0, col = "white", xlim = xlim, ylim = ylim, axes = TRUE, xlab = "", ylab = "")
-    ## 
+    ##
     ybottom <- (0:(nReads - 1)) / nReads
     ytop <- ybottom + 1 / nReads
     n_sampling_its <- nrow(a)
@@ -652,14 +652,70 @@ plot_prob_of_flipping_to_first_hap <- function(
     ytop <- rep(ytop, each = n_sampling_its)
     xleft <- rep(xleft, nReads)
     xright <- rep(xright, nReads)
-    ## 
+    ##
     rect(ybottom, xleft, ytop, xright, col = cols[round(100 * abs(a - 0.5)) + 1], border = NA)
     ## add some lines
     abline(h = seq(0, n_sampling_its - 1, 6) / n_sampling_its)
     dev.off()
-    
+
 }
 
+
+
+## this can be used to plot H too
+plot_H_class <- function(H_class, L_grid, wif0) {
+    cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+    xlim <- range(L_grid)
+    x <- L_grid
+    a <- (x[-1] + x[-length(x)]) / 2
+    xleft <- c(x[1] - (x[2] - x[1]) / 2, a)
+    xright <- c(a, x[length(x)] + (x[length(x)] - x[length(x) - 1]) / 2)
+    f8 <- function(x) {
+        sapply(1:6, function(i) {
+            sum(x == i)
+        })
+    }
+    m1 <- t(sapply(as.integer(names(table(wif0))), function(iGrid) {
+        w <- wif0 == iGrid ## meh
+        f8(H_class[w])
+    }))
+    ## skip 0 and 7
+    m1b <- t(apply(m1, 1, function(x) x / sum(x)))
+    plot(x = 0, y = 0, xlim = xlim, ylim = c(0, 1), axes = FALSE, xlab = "", ylab = "")
+    ybottom <-rep(0, nrow(m1b))
+    ytop <- rep(0, nrow(m1b))
+    n <- ncol(m1b)
+    for(i in 1:n) {
+        ytop <- ytop + m1b[, i]
+        rect(xleft = xleft, xright = xright, ybottom = ybottom, ytop = ytop, col = cbPalette[i], border = NA)
+        ybottom <- ytop
+    }
+    NULL
+}
+
+plot_average_prob_of_read_labels_in_grid <- function(H, L_grid, wif0, ff) {
+    xlim <- range(L_grid)
+    x <- L_grid
+    a <- (x[-1] + x[-length(x)]) / 2
+    xleft <- c(x[1] - (x[2] - x[1]) / 2, a)
+    xright <- c(a, x[length(x)] + (x[length(x)] - x[length(x) - 1]) / 2)
+    f8 <- function(x) {
+        sapply(1:6, function(i) {
+            sum(x == i)
+        })
+    }
+    a <- log(c(0.5, 0.5 - ff / 2, ff / 2))
+    m1 <- t(sapply(as.integer(names(table(wif0))), function(iGrid) {
+        w <- wif0 == iGrid ## meh
+        m <- f8(H[w])
+        sum(m[1:3] * a[1:3]) / sum(m)
+    }))
+    ## skip 0 and 7
+    ylim <- range(a)
+    plot(x = 0, y = 0, xlim = xlim, ylim = range(a), xlab = "", ylab = "", axes = FALSE)
+    lines(x = (xleft + xright) / 2, y = m1, lwd = 2)
+    return(m1)
+}
 
 
 
@@ -671,7 +727,7 @@ plot_prob_of_flipping_to_first_hap <- function(
 
 ##
 ## mostly just for interactive debugging
-## 
+##
 plot_shard_block_output <- function(
     shard_block_results,
     before_gamma1_t,
@@ -733,7 +789,7 @@ plot_shard_block_output <- function(
     ## L_grid will be the middle of the two
     ## x_left and x_right will average to L_grid
     ## with a first x_right and the next x_left adding up
-    ## 
+    ##
     x <- L_grid
     a <- (x[-1] + x[-length(x)]) / 2
     xleft <- c(x[1] - (x[2] - x[1]) / 2, a)
@@ -761,13 +817,15 @@ plot_shard_block_output <- function(
         ## if this is the first one, add the H_class results
         ##
         if (i_type == 1) {
+            ## par(mar = c(0, 0, 3, 0))
+            ## ylim <- c(0, 1)
+            ## plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, col = "white")
+            ## y <- 0.1 + (2 - (read_labels - 1)) / 3 + runif(length(read_labels)) / 4
+            ## col <- cbPalette[before_H_class + 1]
+            ## segments(x0 = L[uu[1, ]], x1 = L[uu[2, ]], y0 = y, y1 = y, col = col, lwd = 1.5)
+            ## legend("topright", c("None", "1", "2", "3", "12", "13", "23", "123"), col = cbPalette, lwd = 2, cex = 0.75)
             par(mar = c(0, 0, 3, 0))
-            ylim <- c(0, 1)
-            plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, col = "white")
-            y <- 0.1 + (2 - (read_labels - 1)) / 3 + runif(length(read_labels)) / 4
-            col <- cbPalette[before_H_class + 1]
-            segments(x0 = L[uu[1, ]], x1 = L[uu[2, ]], y0 = y, y1 = y, col = col, lwd = 1.5)
-            legend("topright", c("None", "1", "2", "3", "12", "13", "23", "123"), col = cbPalette, lwd = 2, cex = 0.75)
+            plot_H_class(before_H_class, L_grid, wif0)
         }
         ##
         ## if this is the second one, add the results in here
@@ -778,7 +836,7 @@ plot_shard_block_output <- function(
             plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, col = "white")
             col <- cbPalette[ir_chosen]
             rect(xleft = xleft[-1], xright = xright[-1], ybottom = 1, ytop = 1.2, col = col, border = NA)
-            ## 
+            ##
             ybottom <- rep(0, nrow(shard_block_results))
             ytop <- shard_block_results[, "p1"]
             for(ir in 1:6) {
@@ -830,7 +888,7 @@ plot_shard_block_output <- function(
         }
         if (only_plot_confident_reads & have_truth_haplotypes) {
             w <- truth != 0
-            segments(x0 = L[uu[1, !w]], x1 = L[uu[2, !w]], y0 = y[!w], y1 = y[!w], col = alpha_col("grey", 0.4), lwd = lwd)            
+            segments(x0 = L[uu[1, !w]], x1 = L[uu[2, !w]], y0 = y[!w], y1 = y[!w], col = alpha_col("grey", 0.4), lwd = lwd)
         } else {
             w <- rep(TRUE, nReads)
         }
@@ -863,7 +921,7 @@ plot_shard_block_output <- function(
             a <- (x[-1] + x[-length(x)]) / 2
             xleft <- c(x[1] - (x[2] - x[1]) / 2, a)
             xright <- c(a, x[length(x)] + (x[length(x)] - x[length(x) - 1]) / 2)
-            ## 
+            ##
             m <- array(0, c(nGrids, K + 1))
             ## is this slow...
             for(i in 1:K) {
