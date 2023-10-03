@@ -10,7 +10,8 @@ if ( 1 == 0 ) {
         a <- a[-b]
     }
     o <- sapply(a, source)
-
+    QUILT::rcpp_nth_partial_sort(runif(10), 3) ## I dunno
+    
 }
 
 test_that("blarh", {
@@ -19,7 +20,7 @@ test_that("blarh", {
     
     i_it <- 3
     nSNPs <- 18808
-    load("/well/davies/users/dcc832/werAwerBwerC.3.85034.RData")
+    load("/well/davies/users/dcc832/werAwerBwerC.3.18808.RData")
     suppressOutput <- 0
     shard_check_every_pair <- TRUE
 
@@ -31,15 +32,6 @@ test_that("blarh", {
                 )
    truth_labels <-  truth_label_set$truth_labels
    uncertain_truth_labels <-  truth_label_set$uncertain_truth_labels
-    
-        fpp_stuff <- list(
-            transMatRate_tc_H = small_transMatRate_tc_H,
-            alphaMatCurrent_tc = small_alphaMatCurrent_tc,
-            priorCurrent_m = small_priorCurrent_m ,
-            eMatRead_t = out$eMatRead_t,
-            s = 1,
-            sampleReads = sampleReads
-        )
     
     ## problem in add gammas and genProbs_t to output
 
@@ -199,6 +191,14 @@ test_that("blarh", {
         print(names(out[["gibbs_block_output_list"]][[1]]))
 
 
+        fpp_stuff <- list(
+            transMatRate_tc_H = small_transMatRate_tc_H,
+            alphaMatCurrent_tc = small_alphaMatCurrent_tc,
+            priorCurrent_m = small_priorCurrent_m ,
+            eMatRead_t = out$eMatRead_t,
+            s = 1,
+            sampleReads = sampleReads
+        )
         
         sapply(1:3, function(i) {
             m <- out[["gibbs_block_output_list"]][[i]][["shard_block_output"]][[1]]
@@ -250,6 +250,7 @@ test_that("blarh", {
             small_alphaMatCurrent_tc,
             small_priorCurrent_m,
             small_transMatRate_tc_H,
+            fpp_stuff,
             file = file
         )
     
@@ -279,8 +280,7 @@ test_that("blarh", {
             verbose = FALSE,
             fpp_stuff = NULL,
             shard_check_every_pair = TRUE,
-            H_class = package[["H_class"]],
-            sample_using_H_class = TRUE
+            H_class = package[["H_class"]]
         )
 
         print(package$log_p)

@@ -693,27 +693,25 @@ plot_H_class <- function(H_class, L_grid, wif0) {
     NULL
 }
 
-plot_average_prob_of_read_labels_in_grid <- function(H, L_grid, wif0, ff) {
+plot_log_H_class_in_grid <- function(H_class, L_grid, wif0, ff, plot = TRUE, plot_new = FALSE, col = "black") {
     xlim <- range(L_grid)
     x <- L_grid
     a <- (x[-1] + x[-length(x)]) / 2
     xleft <- c(x[1] - (x[2] - x[1]) / 2, a)
     xright <- c(a, x[length(x)] + (x[length(x)] - x[length(x) - 1]) / 2)
-    f8 <- function(x) {
-        sapply(1:6, function(i) {
-            sum(x == i)
-        })
-    }
     a <- log(c(0.5, 0.5 - ff / 2, ff / 2))
     m1 <- t(sapply(as.integer(names(table(wif0))), function(iGrid) {
         w <- wif0 == iGrid ## meh
-        m <- f8(H[w])
-        sum(m[1:3] * a[1:3]) / sum(m)
+        get_log_p_H_class(H_class[w], ff)  / sum(w)
     }))
     ## skip 0 and 7
-    ylim <- range(a)
-    plot(x = 0, y = 0, xlim = xlim, ylim = range(a), xlab = "", ylab = "", axes = FALSE)
-    lines(x = (xleft + xright) / 2, y = m1, lwd = 2)
+    ylim <- c(min(a), 0) ## meh, should be OK
+    if (plot) {
+        if (plot_new) {
+            plot(x = 0, y = 0, xlim = xlim, ylim = ylim, xlab = "", ylab = "", axes = FALSE)
+        }
+        lines(x = (xleft + xright) / 2, y = m1, lwd = 2, col = col)
+    }
     return(m1)
 }
 
@@ -751,14 +749,15 @@ plot_shard_block_output <- function(
     method,
     ff,
     only_plot_confident_reads,
-    before_H_class
+    before_H_class,
+    after_H_class,
+    is_block = FALSE
 ) {
     cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
     cbPalette4 <- sapply(cbPalette, alpha_col, alpha = 0.4)
     if (method != "nipt") {
         stop("function is partially adapted, but only for NIPT")
     }
-    ir_chosen <- shard_block_results[, "ir_chosen"]
     ##
     ##
     ##
@@ -771,9 +770,9 @@ plot_shard_block_output <- function(
     ##
     ##
     ## width <- min(max(20, (L_grid[length(L_grid)] - L_grid[1]) / 1e6 * 36), 200)
-    height <- 15
+    height <- 20
     png(outname, height = height, width = 25, res = 200, units = "in")
-    mfrow <- 10 ## c(diploid = 11, nipt = 15)[method]
+    mfrow <- c(diploid = 11, nipt = 15)[method]
     par(mfrow = c(mfrow, 1))
     par(oma = c(0, 0, 5, 0))
     grid_distances <- diff(L_grid)
@@ -806,52 +805,91 @@ plot_shard_block_output <- function(
             gamma2_t <- before_gamma2_t
             gamma3_t <- before_gamma3_t
             what_we_are_plotting <- "before"
+            H_class <- before_H_class
         } else {
             read_labels <- after_read_labels
             gamma1_t <- after_gamma1_t
             gamma2_t <- after_gamma2_t
             gamma3_t <- after_gamma3_t
             what_we_are_plotting <- "after"
+            H_class <- after_H_class            
         }
         ##
-        ## if this is the first one, add the H_class results
-        ##
+        ## if this is the first one, add the comparison of H_class results
         if (i_type == 1) {
-            ## par(mar = c(0, 0, 3, 0))
-            ## ylim <- c(0, 1)
-            ## plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, col = "white")
-            ## y <- 0.1 + (2 - (read_labels - 1)) / 3 + runif(length(read_labels)) / 4
-            ## col <- cbPalette[before_H_class + 1]
-            ## segments(x0 = L[uu[1, ]], x1 = L[uu[2, ]], y0 = y, y1 = y, col = col, lwd = 1.5)
-            ## legend("topright", c("None", "1", "2", "3", "12", "13", "23", "123"), col = cbPalette, lwd = 2, cex = 0.75)
             par(mar = c(0, 0, 3, 0))
-            plot_H_class(before_H_class, L_grid, wif0)
+            m1 <- plot_log_H_class_in_grid(before_H_class, L_grid, wif0, ff, plot = TRUE, plot_new = TRUE, col = "black")
+            m2 <- plot_log_H_class_in_grid(after_H_class, L_grid, wif0, ff, plot = TRUE, plot_new = FALSE, col = "red")
         }
+        ## m2 <- plot_log_H_class_in_grid(after_H_class, L_grid, wif0, ff, plot = )
+        ## par(mar = c(0, 0, 1, 0))
+        ## xlim <- range(L_grid)
+        ## x <- L_grid
+        ## a <- (x[-1] + x[-length(x)]) / 2
+        ## xleft <- c(x[1] - (x[2] - x[1]) / 2, a)
+        ## xright <- c(a, x[length(x)] + (x[length(x)] - x[length(x) - 1]) / 2)
+        ## plot(x = (xleft + xright) / 2, y = as.numeric(m2 / m1), type = "l", axes = FALSE) ## lower = better
+        ## abline(h = 1)
+        ##
+        ## par(mar = c(0, 0, 3, 0))
+        ## ylim <- c(0, 1)
+        ## plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, col = "white")
+        ## y <- 0.1 + (2 - (read_labels - 1)) / 3 + runif(length(read_labels)) / 4
+        ## col <- cbPalette[before_H_class + 1]
+        ## segments(x0 = L[uu[1, ]], x1 = L[uu[2, ]], y0 = y, y1 = y, col = col, lwd = 1.5)
+        ## legend("topright", c("None", "1", "2", "3", "12", "13", "23", "123"), col = cbPalette, lwd = 2, cex = 0.75)
+        par(mar = c(0, 0, 3, 0))
+        if (i_type == 1) {
+            H_class <- before_H_class
+        } else {
+            H_class <- after_H_class
+        }
+        plot_H_class(H_class, L_grid, wif0)
         ##
         ## if this is the second one, add the results in here
         ##
-        if (i_type == 2) {
-            par(mar = c(0, 0, 3, 0))
-            ylim <- c(0, 1.2)
-            plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, col = "white")
-            col <- cbPalette[ir_chosen]
-            rect(xleft = xleft[-1], xright = xright[-1], ybottom = 1, ytop = 1.2, col = col, border = NA)
-            ##
-            ybottom <- rep(0, nrow(shard_block_results))
-            ytop <- shard_block_results[, "p1"]
-            for(ir in 1:6) {
-                rect(xleft = xleft[-1], xright = xright[-1], ybottom = ybottom, ytop = ytop, col = cbPalette[ir], border = NA)
-                ybottom <- ytop
-                if (ir < 6) {
-                    ytop <- ytop + shard_block_results[, paste0("p", ir + 1)]
+        if (i_type == 1) {
+            ir_chosen <- rep(1, nrow(shard_block_results))
+            for(jjj in 1:2) {
+                ## first do left
+                ## then do right
+                if (jjj == 1) {
+                    ir_col <- "ir_left"
+                    prefix <- "left_p"
+                } else {
+                    ir_col <- "ir_right"
+                    prefix <- "p"
                 }
+                ir_chosen_local <- shard_block_results[, ir_col]
+                ir_chosen[ir_chosen_local != 1] <- 2 ## doesn't matter what number
+                par(mar = c(0, 0, 3, 0))
+                ylim <- c(0, 1.2)
+                plot(x = L_grid[1], y = 0, xlim = xlim, ylim = ylim, axes = FALSE, cex = 1.5, col = "white")
+                col <- cbPalette[ir_chosen_local]
+                rect(xleft = xleft[-1], xright = xright[-1], ybottom = 1, ytop = 1.2, col = col, border = NA)
+                ##
+                ## ybottom <- rep(0, nrow(shard_block_results))
+                ## ytop <- shard_block_results[, paste0(prefix, "1")]
+                ## for(ir in 1:6) {
+                ##     rect(xleft = xleft[-1], xright = xright[-1], ybottom = ybottom, ytop = ytop, col = cbPalette[ir], border = NA)
+                ##     ybottom <- ytop
+                ##     if (ir < 6) {
+                ##         ytop <- ytop + shard_block_results[, paste0(prefix, ir + 1)]
+                ##     }
+                ## }
+                abline(h = 1, lwd = 2)
+                ## add vertical bars, for sure!
+                changes <- which(diff(ir_chosen_local) != 0) + 1
+                xa <- (xleft[-1])[changes]
+                abline(v = xa, col = "black")
             }
-            abline(h = 1, lwd = 2)
             ## for the rest, add the probs
-            changes <- which(diff(ir_chosen) != 0) + 1
-            xa <- (xleft[-1])[changes]
-            abline(v = xa, col = "black")
-            text(x = xa, y = 1, labels = ir_chosen[changes], col = "black")
+            ##changes <- which(diff(ir_chosen) != 0) + 1
+            ##xa <- (xleft[-1])[changes]
+            ##abline(v = xa, col = "black")
+            ##if (length(changes) > 0) {
+            ##    text(x = xa, y = 1, labels = ir_chosen[changes], col = "black")
+            ##}
         }
         ##
         ## 2) add in reads here
@@ -953,7 +991,9 @@ plot_shard_block_output <- function(
             changes <- which(diff(ir_chosen) != 0) + 1
             xa <- (xleft[-1])[changes]
             abline(v = xa, col = "black")
-            text(x = xa, y = 1, labels = ir_chosen[changes], col = "black")
+            if (length(changes) > 0) {
+                text(x = xa, y = 1, labels = ir_chosen[changes], col = "black")
+            }
         }
     }
     dev.off()

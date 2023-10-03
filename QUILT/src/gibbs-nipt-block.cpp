@@ -416,6 +416,7 @@ void Rcpp_consider_block_relabelling(
     const arma::mat& priorCurrent_m,
     Rcpp::List& fpp_stuff,
     Rcpp::IntegerVector& H,
+    Rcpp::IntegerVector& H_class,    
     arma::imat& proposed_H,
     int nReads,
     const arma::mat& eMatRead_t,
@@ -1589,7 +1590,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
             //
             // check block relabellings
             //
-            Rcpp_consider_block_relabelling(iBlock, runif_block, sum_H, s, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, eMatGridLocal, betaHatLocal, iGrid, grid_start_0_based, grid_end_0_based, read_start_0_based, read_end_0_based, wif0, log_cStore, alphaStore, read_is_uninformative, block_approach, do_checks, all_packages, block_results, ever_changed, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, fpp_stuff, H, proposed_H, nReads, eMatRead_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3);
+            Rcpp_consider_block_relabelling(iBlock, runif_block, sum_H, s, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, eMatGridLocal, betaHatLocal, iGrid, grid_start_0_based, grid_end_0_based, read_start_0_based, read_end_0_based, wif0, log_cStore, alphaStore, read_is_uninformative, block_approach, do_checks, all_packages, block_results, ever_changed, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, fpp_stuff, H, H_class, proposed_H, nReads, eMatRead_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3);
             //
             // total relabelling 
             //

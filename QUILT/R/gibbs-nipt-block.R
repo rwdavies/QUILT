@@ -23,10 +23,15 @@ helper_block_gibbs_resampler <- function(
     block_gibbs_quantile_prob = 0.9,
     class_sum_cutoff = 0.06,
     use_smooth_cm_in_block_gibbs = FALSE,
-    eMatRead_t = NULL
+    eMatRead_t = NULL,
+    use_attempted_blocked_snps = FALSE,
+    consider_total_relabelling = TRUE
 ) {
 
     if (is.null(eMatRead_t)) {
+        if (verbose) {
+            print_message("Determine eMatRead_t")
+        }
         eMatRead_t <- array(1, c(dim(eHapsCurrent_tc)[1], length(sampleReads)))
         rcpp_make_eMatRead_t(
             eMatRead_t = eMatRead_t,
@@ -56,6 +61,9 @@ helper_block_gibbs_resampler <- function(
         s = s,
         sampleReads = sampleReads
     )
+    if (verbose) {
+        print_message("Get initial package for testing")
+    }
     initial_package <- for_testing_get_full_package_probabilities(H, fpp_stuff)
     alphaHat_t1 <- initial_package[[1]][["alphaHat_t"]]
     alphaHat_t2 <- initial_package[[2]][["alphaHat_t"]]
@@ -76,6 +84,9 @@ helper_block_gibbs_resampler <- function(
     ##
     ## check attempt to identify breaks
     ##
+    if (verbose) {
+        print_message("Define blocked SNPs using gamma on the fly")
+    }
     if (language == "R") {
         f <- R_define_blocked_snps_using_gamma_on_the_fly
     } else {
@@ -112,9 +123,14 @@ helper_block_gibbs_resampler <- function(
         f <- Rcpp_define_blocked_snps_using_gamma_on_the_fly
         s <- s + 1L
     }
+    if (use_attempted_blocked_snps) {
+        blocked_snps <- attempted_blocked_snps
+    }
 
 
-
+    if (verbose) {
+        print_message("Determine H_class")
+    }
 
     H_class <- calculate_H_class(
         eMatRead_t = eMatRead_t,
@@ -151,6 +167,10 @@ helper_block_gibbs_resampler <- function(
         stop("not a language!")
     }
 
+    if (verbose) {
+        print_message("Do block Gibbs resampling")
+    }
+    
     block_out <- f(
         alphaHat_t1 = alphaHat_t1,
         alphaHat_t2 = alphaHat_t2,
@@ -190,7 +210,8 @@ helper_block_gibbs_resampler <- function(
         prev_section = "prev_section",
         next_section = "next_section",
         suppressOutput = 1,
-        prev = 0
+        prev = 0,
+        consider_total_relabelling = consider_total_relabelling
     )
 
     if (language == "Rcpp") {
@@ -408,7 +429,8 @@ R_block_gibbs_resampler <- function(
     verbose = FALSE,
     fpp_stuff = NULL,
     use_cpp_bits_in_R = FALSE,
-    block_approach = 4
+    block_approach = 4,
+    consider_total_relabelling = TRUE
 ) {
 
     ##
@@ -473,7 +495,9 @@ R_block_gibbs_resampler <- function(
         "p_O3_given_H3_L",
         "p_O_given_H_L",
         "p_H_given_L",
-        "p_H_given_O_L_up_to_C"
+        "p_H_given_O_L_up_to_C",
+        "p_H_class_given_L",
+        "p_H_class_given_O_L_up_to_C"        
     )
     block_results <- matrix(0.0, nrow = n_blocks * 2, ncol = length(block_results_columns))
     colnames(block_results) <- block_results_columns
@@ -638,6 +662,8 @@ R_block_gibbs_resampler <- function(
             if (class(H[1]) != "integer") {
                 stop("somehow H became non-integer!")
             }
+            ## NOTE
+            ## WILL NEED TO ADD H_CLASS TO CONSIDER_BLOCK
             out <- f(
                 iBlock = iBlock,
                 runif_block = runif_block,
@@ -672,6 +698,7 @@ R_block_gibbs_resampler <- function(
                 priorCurrent_m = priorCurrent_m,
                 fpp_stuff = fpp_stuff,
                 H = H,
+                H_class = H_class,
                 proposed_H = proposed_H,
                 nReads = nReads,
                 eMatRead_t = eMatRead_t,
@@ -700,7 +727,9 @@ R_block_gibbs_resampler <- function(
                 ever_changed <- out$ever_changed
                 block_results <- out$block_results
                 sum_H <- out$sum_H
+                H_class <- out$H_class
             }
+
             if (do_checks) {
                 if (verbose) {
                     print_message("Check everything after block relabelling, and before total relabelling")
@@ -720,7 +749,7 @@ R_block_gibbs_resampler <- function(
             ## total relabelling
             ##
             ## weird results if use this on the fly, maybe due toe pass by reference? but hard to nail down
-            if (ff_0_condition) {                 ## only do if ff > 0
+            if (ff_0_condition & consider_total_relabelling) {                 ## only do if ff > 0
                 if (use_cpp_bits_in_R) {
                     f <- Rcpp_consider_total_relabelling
                 } else {
@@ -910,6 +939,7 @@ R_block_gibbs_resampler <- function(
             betaHat_t2 = betaHat_t2,
             betaHat_t3 = betaHat_t3,
             H = H,
+            H_class = H_class,
             fpp_stuff = fpp_stuff,
             block_results = block_results,
             consider_snp_start_0_based = consider_snp_start_0_based,
@@ -1039,8 +1069,8 @@ R_define_blocked_snps_using_gamma_on_the_fly <- function(
             if (sum(available[a:b]) == 3) {
                 ## no matter what, one further away
                 ## return 1-based as well
-                snp_left <- R_determine_where_to_stop(smoothed_rate, available, snp_best, break_thresh, nGrids, TRUE)
-                snp_right <- R_determine_where_to_stop(smoothed_rate, available, snp_best, break_thresh, nGrids, FALSE)
+                snp_left <- STITCH::R_determine_where_to_stop(smoothed_rate, available, snp_best, break_thresh, nGrids, TRUE)
+                snp_right <- STITCH::R_determine_where_to_stop(smoothed_rate, available, snp_best, break_thresh, nGrids, FALSE)
                 available[snp_left:snp_right] <- FALSE
                 ## print(paste0("snp_left = ", snp_left, ", snp_right = ", snp_right))
             } else {
@@ -1208,6 +1238,7 @@ R_consider_block_relabelling <- function(
     priorCurrent_m,
     fpp_stuff,
     H,
+    H_class,
     proposed_H,
     nReads,
     eMatRead_t,
@@ -1224,6 +1255,76 @@ R_consider_block_relabelling <- function(
     c3,
     eMatGrid_t3
 ) {
+
+
+##     save(
+##     iBlock,
+##     runif_block,
+##     sum_H,
+##     s,
+##     rr,
+##     rr0,
+##     ff,
+##     log_prior_probs,
+##     logC_before,
+##     logC_after,
+##     verbose,
+##     swap_list,
+##     eMatGridLocal,
+##     betaHatLocal,
+##     iGrid,
+##     grid_start_0_based,
+##     grid_end_0_based,
+##     read_start_0_based,
+##     read_end_0_based,
+##     wif0,
+##     log_cStore,
+##     alphaStore,
+##     read_is_uninformative,
+##     block_approach,
+##     do_checks,
+##     all_packages,
+##     block_results,
+##     ever_changed,
+##     transMatRate_tc_H,
+##     alphaMatCurrent_tc,
+##     priorCurrent_m,
+##     fpp_stuff,
+##     H,
+##     H_class,
+##     proposed_H,
+##     nReads,
+##     eMatRead_t,
+##     alphaHat_t1,
+##     betaHat_t1,
+##     c1,
+##     eMatGrid_t1,
+##     alphaHat_t2,
+##     betaHat_t2,
+##     c2,
+##     eMatGrid_t2,
+##     alphaHat_t3,
+##     betaHat_t3,
+##     c3,
+##     eMatGrid_t3,
+##     file = "~/temp.RData")
+## print("done saving")
+    
+##     stop("WER")
+    
+## load("~/temp.RData")
+    
+
+    
+    ## will need this later
+    rx <- rbind(
+        c(1L, 2L, 3L),
+        c(1L, 3L, 2L),
+        c(2L, 1L, 3L),
+        c(3L, 1L, 2L),
+        c(2L, 3L, 1L),
+        c(3L, 2L, 1L)
+    )
     ##
     betaHatLocal[, 1] <- betaHat_t1[, iGrid]
     betaHatLocal[, 2] <- betaHat_t2[, iGrid]
@@ -1282,7 +1383,18 @@ R_consider_block_relabelling <- function(
             log_prior_probs = log_prior_probs,
             rr = rr
         )
-    }
+    } else if (block_approach == 6) {
+        choice_log_probs_H <- calculate_block_read_label_probabilities_using_H_class(
+            read_start_0_based = read_start_0_based,
+            read_end_0_based = read_end_0_based,
+            proposed_H = proposed_H,
+            H_class = H_class,
+            log_prior_probs = log_prior_probs,
+            rr = rr,
+            ff = ff
+        )
+    }    
+    
     ## now choose!
     choice_log_probs <- choice_log_probs_P + choice_log_probs_H
     ## now do sampling
@@ -1310,6 +1422,7 @@ R_consider_block_relabelling <- function(
             ir_chosen <- i
         }
     }
+    
     ##
     if (verbose) {
         print_message(paste0("In block ", iBlock, ", see the following probabilities"))
@@ -1336,7 +1449,22 @@ R_consider_block_relabelling <- function(
         expect_equal(sum(H == 2), sum_H[2])
         expect_equal(sum(H == 3), sum_H[3])
     }
+    one_based_swap <- as.integer(c(1, 1 + rx[ir_chosen, 1:3], 8 - rx[ir_chosen, 3:1], 8))
+
+
+    ## ## so what about 7s here
+    ## w <- read_start_0_based:read_end_0_based + 1
+    ## table(H_class[w], H[w])
+    ## ## now what happens
+    ## H_class_new <- one_based_swap[H_class[w] + 1] - 1
+    ## H_new <- one_based_swap[H[w] + 1] - 1L
+    ## table(H_class_new, H_new)
+    ## ## yeah, does seem to do the right thing
+    
+    
+    
     ## not entirely true for approach 2
+    ## should be OK, I think
     x <- 0
     for(i in 1:3) {
         if (sum_H[i] > 0) {
@@ -1349,10 +1477,17 @@ R_consider_block_relabelling <- function(
             h2 <- h1
         } else if (block_approach == 4) {
             h2 <- proposed_H[ir_chosen, iRead + 1]
+        } else {
+            ## gained
+            ## H_class[iRead + 1] <- one_based_swap[H_class[iRead + 1] + 1] - 1
+            h <- one_based_swap[H[iRead] + 1] - 1L            
+            ## h2 <- rx[ir_chosen, H[iRead + 1]] ## I think OK
         }
         x <- x - log_prior_probs[h1]
         x <- x + log_prior_probs[rr[ir_chosen, h2]]
     }
+    
+    
     block_results[ibr, "p_H_given_L"] <- x
     if (do_checks) {
         Htemp <- H
@@ -1367,12 +1502,15 @@ R_consider_block_relabelling <- function(
         expect_equal(x, sum(log_prior_probs[Htemp]))
     }
     block_results[ibr, "p_H_given_O_L_up_to_C"] <- block_results[ibr, "p_O_given_H_L"] + block_results[ibr, "p_H_given_L"]
+
+    
     ##
     if (!((ever_changed == 1)| (ir_chosen != 1))) {
         if (verbose) {
             print_message("No change warranted")
         }
     } else {
+        ## 
         if (ir_chosen != 1) {
             if (verbose) {
                 print_message("Apply block relabelling")
@@ -1400,7 +1538,7 @@ R_consider_block_relabelling <- function(
                 eMatGridLocal[, rr[ir_chosen, 1]] <- eMatGrid_t1[, iGrid2]
                 eMatGridLocal[, rr[ir_chosen, 2]] <- eMatGrid_t2[, iGrid2]
                 eMatGridLocal[, rr[ir_chosen, 3]] <- eMatGrid_t3[, iGrid2]
-            } else if (block_approach == 4) {
+            } else if (block_approach == 4 | block_approach == 6) {
                 ##
                 ## rebuild eMatGrid under
                 ##
@@ -1412,8 +1550,15 @@ R_consider_block_relabelling <- function(
                     }
                 }
                 while (iRead <= nReads & (wif_read == (iGrid2 - 1))) {
-                    Hl <- proposed_H[ir_chosen, iRead]
-                    h <- rr[ir_chosen, Hl]
+                    if (block_approach == 4) {
+                        Hl <- proposed_H[ir_chosen, iRead]
+                        h <- rr[ir_chosen, Hl]
+                    } else {
+                        ## weridly, dn't re-set them here
+                        ##H_class[iRead] <- one_based_swap[H_class[iRead] + 1] - 1L
+                        h <- one_based_swap[H[iRead] + 1] - 1L
+                        ##H[iRead] <- h
+                    }
                     eMatGridLocal[, h] <- eMatGridLocal[, h] * eMatRead_t[, iRead]
                     ##
                     iRead <- iRead + 1
@@ -1469,6 +1614,11 @@ R_consider_block_relabelling <- function(
                 gained <- rr[ir_chosen, lost]
             } else if (block_approach == 4) {
                 gained <- rr[ir_chosen, proposed_H[ir_chosen, iRead + 1] ]
+            } else if (block_approach == 6) {
+                ## update H_class
+                H_class[iRead + 1] <- one_based_swap[H_class[iRead + 1] + 1] - 1
+                ## Update H
+                gained <- one_based_swap[H[iRead + 1] + 1] - 1L
             }
             H[iRead + 1] <- gained
             ## one loses
@@ -1486,6 +1636,12 @@ R_consider_block_relabelling <- function(
         }
         ##
     }
+
+    ## update this too
+    block_results[ibr, "p_H_class_given_L"] <- get_log_p_H_class(H_class, ff) 
+    block_results[ibr, "p_H_class_given_O_L_up_to_C"] <- block_results[ibr, "p_O_given_H_L"] + block_results[ibr, "p_H_class_given_L"]
+
+    
     return(
         list(
             eMatGrid_t1 = eMatGrid_t1,
@@ -1503,7 +1659,8 @@ R_consider_block_relabelling <- function(
             H = H,
             ever_changed = ever_changed,
             block_results = block_results,
-            sum_H = sum_H
+            sum_H = sum_H,
+            H_class = H_class
         )
     )
 }
@@ -1726,6 +1883,37 @@ calculate_block_read_label_probabilities_using_proposed_H <- function(
             h <- rr[ir, proposed_H[ir, iRead + 1]]
             choice_log_probs_H[ir] <- choice_log_probs_H[ir] + log_prior_probs[h]
         }
+    }
+    return(choice_log_probs_H)
+}
+
+calculate_block_read_label_probabilities_using_H_class <- function(
+    read_start_0_based,
+    read_end_0_based,
+    proposed_H,
+    H_class,
+    log_prior_probs,
+    rr,
+    ff
+) {
+    choice_log_probs_H <- array(0, 6)
+    ns <- rep(0, 8)
+    for(iRead in read_start_0_based:read_end_0_based) {
+        w <- H_class[iRead + 1] + 1
+        ns[w] <- ns[w] + 1
+    }
+    n <- ns[2:7]
+    ## 
+    for(ir in 1:6) {
+        choice_log_probs_H[ir] <- get_log_p_H_class2(
+            n[rr[ir, 1]],
+            n[rr[ir, 2]],
+            n[rr[ir, 3]],
+            n[7 - rr[ir, 3]],
+            n[7 - rr[ir, 2]],
+            n[7 - rr[ir, 1]],
+            ff
+        )
     }
     return(choice_log_probs_H)
 }
@@ -2681,8 +2869,8 @@ R_shard_block_gibbs_resampler <- function(
     fpp_stuff = NULL,
     shard_check_every_pair = FALSE,
     use_rcpp = TRUE,
-    sample_using_H_class = FALSE,
-    do_left_relabel = FALSE
+    use_H_class_for_sampling = FALSE,
+    consider_entire_relabel_at_the_start = TRUE
 ) {
     ##
     ##
@@ -2739,7 +2927,7 @@ R_shard_block_gibbs_resampler <- function(
             "p_O_stay", "p_O_flip"
         )
     } else {
-        if (!sample_using_H_class) {        
+        if (!use_H_class_for_sampling) {        
             shard_block_columns <- c(
                 "iBlock", "ir_chosen",
                 "p1", "p2", "p3", "p4", "p5", "p6"
@@ -2747,19 +2935,43 @@ R_shard_block_gibbs_resampler <- function(
         } else {
             ## want: overall (not log), log based on Os, log based on probs
             shard_block_columns <- c(
-                "iBlock", "ir_chosen",
-                "p1", "p2", "p3", "p4", "p5", "p6",
-                "lo1", "lo2", "lo3", "lo4", "lo5", "lo6",
-                "lp1", "lp2", "lp3", "lp4", "lp5", "lp6"
+                "ir_left", "ir_right"
             )
         }
     }
     shard_block_results <- matrix(0.0, nrow = n_blocks - 1, ncol = length(shard_block_columns))
     colnames(shard_block_results) <- shard_block_columns
-    ## 
-    shard_block_columns_left <- c("ir_left", "p1", "p2", "p3", "p4", "p5", "p6")
-    shard_block_results_left <- matrix(0, nrow = n_blocks - 1, ncol = length(shard_block_columns_left))
-    colnames(shard_block_results_left) <- shard_block_columns_left
+    shard_block_results_list <- vector("list", length = n_blocks - 1)
+    ##
+    ##
+    ## consider an ENTIRE re-label at the start, why not!
+    ##
+    if (consider_entire_relabel_at_the_start) {
+        rr_probs <- slow_get_multiple_log_p_H_class(H_class = H_class, ff = ff, wif0 = wif0, split_grid = -1)
+        rr_probs <- rr_probs - max(rr_probs)
+        rr_probs <- exp(rr_probs)
+        rr_probs <- rr_probs / sum(rr_probs)
+        ## now sample with respect to that prob
+        ir_chosen <- sample(1:6, 1, prob = rr_probs)
+        if (ir_chosen != 1) {
+            for(what in c("alphaHat_t", "betaHat_t", "c", "eMatGrid_t")) {            
+                for(i in 1:3) {
+                    ## do old temp first
+                    eval(parse(text = (paste0(what, i, "_old <- ", what, i))))
+                }
+                for(i in 1:3) {
+                    ## now do re-label
+                    new <- i
+                    old <- rr[ir_chosen, i]
+                    eval(parse(text = (paste0(what, new, " <- ", what, old, "_old"))))
+                }
+            }
+            one_based_swap <- c(1, 1 + rx[ir_chosen, 1:3], 8 - rx[ir_chosen, 3:1], 8)
+            ## should work for both
+            H <- one_based_swap[H + 1] - 1
+            H_class <- one_based_swap[H_class + 1] - 1
+        }
+    }
     ##
     ##
     ## now do progression
@@ -2804,6 +3016,9 @@ R_shard_block_gibbs_resampler <- function(
         c(3, 2, 1)
     )
     ir_applied <- 1 ## 1 through 6, see rr
+    ##
+    ##
+    ##
     for(iGrid in 0:(nGrids - 1)) {
         ##
         ## normal forward one (includes initialization)
@@ -2926,16 +3141,18 @@ R_shard_block_gibbs_resampler <- function(
                         }
                     } else {
                         if (ir_applied != 1) {
+                            ## based on incoming H and H_class, get new H, and new H_class
+                            if (use_H_class_for_sampling) {
+                                ## now, figure out
+                                one_based_swap <- c(1, 1 + rx[ir_applied, 1:3], 8 - rx[ir_applied, 3:1], 8)
+                                H_class[iRead + 1] <- one_based_swap[H_class[iRead + 1] + 1] - 1
+                            }
                             ## now, according to the class going in, re-choose flipping
                             H[iRead + 1] <- rx[ir_applied, H[iRead + 1]]
+                            ## also do H_class 
                             have_flipped_read[iRead + 1] <- TRUE
                         } else {
                             have_flipped_read[iRead + 1] <- FALSE
-                        }
-                        if (sample_using_H_class) {
-                            ## now, figure out
-                            one_based_swap <- c(1, 1 + rx[ir_applied, 1:3], 8 - rx[ir_applied, 3:1], 8)
-                            H_class[iRead + 1] <- one_based_swap[H_class[iRead + 1] + 1] - 1
                         }
                     }
                     iRead <- iRead + 1
@@ -3011,43 +3228,6 @@ R_shard_block_gibbs_resampler <- function(
                 }
  }
             ##
-            ## consider a left break and re-label here
-            ##
-            if (do_left_relabel) {
-                left_log_p_H_class_probs <- slow_get_multiple_log_p_H_class(H_class = H_class, ff = ff, wif0 = wif0, split_grid = split_grid, right_split = FALSE)
-                left_log_p_H_class_probs <- -max(left_log_p_H_class_probs) + left_log_p_H_class_probs
-                left_p_H_class_probs <- exp(left_log_p_H_class_probs)
-                left_p_H_class_probs <- left_p_H_class_probs / sum(left_p_H_class_probs)
-                ## now sample with respect to that prob
-                ir_left <- sample(1:6, 1, prob = left_p_H_class_probs)
-                shard_block_results_left[iGridConsider + 1, "ir_left"] <- ir_left
-                for(i in 1:6) {
-                    shard_block_results_left[iGridConsider + 1, paste0("p", i)] <- left_p_H_class_probs[i]
-                }
-                if (ir_left != 1) {
-                    ## yup, re-label EVERYTHING to the LEFT
-                    ## this is R so I don't care if this is efficient
-                    w <- 1:(iGrid + 1)
-                    for(i in 1:3) {
-                        new <- i
-                        old <- rr[ir_left, i]
-                        for(what in c("alphaHat_t", "betaHat_t", "c", "eMatGrid_t")) {
-                            eval(parse(text = (paste0(what, new, "[w] <- ", what, old, "[w]"))))
-                        }
-                        ## this too: minus_log_c1_sum
-                        eval(parse(text = (paste0("minus_log_c", new, "_sum <- minus_log_c", old, "_sum"))))
-                    }
-                    ## 
-                    ## also need to do H and H_class
-                    ##
-                    w <- wif0 < split_grid
-                    one_based_swap <- c(1, 1 + rx[ir_left, 1:3], 8 - rx[ir_left, 3:1], 8)
-                    ## should work for both
-                    H[w] <- one_based_swap[H[w] + 1] - 1
-                    H_class[w] <- one_based_swap[H_class[w] + 1] - 1
-                }
-            }
-            ##
             ## this is where the meat of the options comes in!
             ##
             if (ff == 0) {
@@ -3119,7 +3299,7 @@ R_shard_block_gibbs_resampler <- function(
                     p <- pA1 + pA2 + pA3
                     rr_probs[ir] <- p
                 }
-                if (!sample_using_H_class) {
+                if (!use_H_class_for_sampling) {
                     ## Normal approach
                     ## normalize
                     rr_probs <- -rr_probs[1] + rr_probs
@@ -3150,26 +3330,85 @@ R_shard_block_gibbs_resampler <- function(
                 } else {
                     ## these are the logged probs, no H_class
                     rr_probs <- -rr_probs[1] + rr_probs
-                    l_h_probs <- slow_get_multiple_log_p_H_class(H_class = H_class, ff = ff, wif0 = wif0, split_grid = split_grid)
-                    l_h_probs <- -l_h_probs[1] + l_h_probs
-                    ## add together
-                    rr_probs_log <- rr_probs ## original one
+                    ##
+                    left_log_p_H_class_probs <- slow_get_multiple_log_p_H_class(H_class = H_class, ff = ff, wif0 = wif0, split_grid = split_grid, right_split = FALSE)
+                    left_log_p_H_class_probs <- -max(left_log_p_H_class_probs) + left_log_p_H_class_probs
                     ## 
-                    rr_probs <- rr_probs + l_h_probs
-                    ## now normalize, sample, etc
-                    rr_probs <- rr_probs - max(rr_probs)
-                    rr_probs <- exp(rr_probs)
-                    rr_probs <- rr_probs / sum(rr_probs)
-                    ## now sample with respect to that prob
-                    ir_chosen <- sample(1:6, 1, prob = rr_probs)
-                    ir_applied <- ir_chosen
-                    shard_block_results[iGridConsider + 1, "iBlock"] <- iGridConsider ## 0-based
-                    shard_block_results[iGridConsider + 1, "ir_chosen"] <- ir_chosen
-                    ## record results
+                    right_log_p_H_class_probs <- slow_get_multiple_log_p_H_class(H_class = H_class, ff = ff, wif0 = wif0, split_grid = split_grid, right_split = TRUE)
+                    right_log_p_H_class_probs <- -max(right_log_p_H_class_probs) + right_log_p_H_class_probs
+                    ## have
+                    ## rr_probs is for CURRENT left and PROPOSED right
+                    p <- matrix(0, 6, 6) ## log probs
                     for(i in 1:6) {
-                        shard_block_results[iGridConsider + 1, paste0("p", i)] <- rr_probs[i]
-                        shard_block_results[iGridConsider + 1, paste0("lo", i)] <- rr_probs_log[i]
-                        shard_block_results[iGridConsider + 1, paste0("lp", i)] <- l_h_probs[i]                        
+                        for(j in 1:6) {
+                            ## get new left
+                            new_left <- rr[i, 1:3]
+                            ## get new right labels
+                            new_right <- rr[j, 1:3]
+                            ## re-label so that new left is 1,2,3 as usual
+                            new_left <- rx[i, 1:3][new_left] ## equivalent, using "symbols"
+                            new_right <- rx[i, 1:3][new_right] ## use the SAME re-labelling
+                            ## now, what ir_chosen is that (probably a much easier way to do this!)
+                            ir_chosen <- which(
+                            (rr[, 1] == new_right[1]) &
+                            (rr[, 2] == new_right[2]) &
+                            (rr[, 3] == new_right[3])
+                            )
+                            p[i, j] <- 
+                                left_log_p_H_class_probs[i] + 
+                                right_log_p_H_class_probs[j] +
+                                rr_probs[ir_chosen]
+                        }
+                    }
+                    ## 
+                    p <- p - max(p)
+                    p <- exp(p)
+                    p <- p / sum(p)
+                    ## now choose one of them
+                    ir_chosen <- sample(1:length(p), 1, prob = as.numeric(p))
+                    ## split into left and right
+                    a <- which(ir_chosen == matrix(1:36, 6, 6), arr.ind = TRUE)
+                    ir_left <- a[1]
+                    ir_right <- a[2]
+                    if (split_grid == 100) {
+                        print("rr_probs")
+                        print(rr_probs)
+                        print("left")
+                        print(left_log_p_H_class_probs)
+                        print("right")
+                        print(right_log_p_H_class_probs)
+                        print("all")
+                        print(p)
+                        print("ir_left")
+                        print(ir_left)
+                        print("ir_right")
+                        print(ir_right)
+                    }
+                    ir_applied <- ir_right
+                    shard_block_results[iGridConsider + 1, "ir_left"] <- ir_left
+                    shard_block_results[iGridConsider + 1, "ir_right"] <- ir_right
+                    shard_block_results_list[[iGridConsider + 1]] <- p
+                    if (ir_left != 1) {
+                        ## yup, re-label EVERYTHING to the LEFT
+                        ## this is R so I don't care if this is efficient
+                        w <- 1:(iGrid + 1)
+                        for(i in 1:3) {
+                            new <- i
+                            old <- rr[ir_left, i]
+                            for(what in c("alphaHat_t", "betaHat_t", "c", "eMatGrid_t")) {
+                                eval(parse(text = (paste0(what, new, "[w] <- ", what, old, "[w]"))))
+                            }
+                            ## this too: minus_log_c1_sum
+                            eval(parse(text = (paste0("minus_log_c", new, "_sum <- minus_log_c", old, "_sum"))))
+                        }
+                        ## 
+                        ## also need to do H and H_class
+                        ##
+                        w <- wif0 < split_grid
+                        one_based_swap <- c(1, 1 + rx[ir_left, 1:3], 8 - rx[ir_left, 3:1], 8)
+                        ## should work for both
+                        H[w] <- one_based_swap[H[w] + 1] - 1
+                        H_class[w] <- one_based_swap[H_class[w] + 1] - 1
                     }
                 }
                 probs <- rr_probs
@@ -3283,9 +3522,8 @@ R_shard_block_gibbs_resampler <- function(
             betaHat_t2 = betaHat_t2,
             betaHat_t3 = betaHat_t3,
             H = H,
-            fpp_stuff = fpp_stuff,
             shard_block_results = shard_block_results,
-            shard_block_results_left = shard_block_results_left,            
+            shard_block_results_list = shard_block_results_list,
             consider_snp_start_0_based = consider_snp_start_0_based,
             consider_snp_end_0_based = consider_snp_end_0_based,
             consider_reads_start_0_based = consider_reads_start_0_based,
@@ -3402,67 +3640,54 @@ if (1 == 0) {
 
 
 
-## consider_entire_H_class_relabel <- function(
-##     H,
-##     H_class,
-##     wif0,
-##     alphaHat_t1,
-##     alphaHat_t2,
-##     alphaHat_t3,
-##     betaHat_t1,
-##     betaHat_t2,
-##     betaHat_t3,
-##     c1,
-##     c2,
-##     c3,
-##     eMatGrid_t1
-##     eMatGrid_t2
-##     eMatGrid_t3
-## ) {
 
-
-##     rr_probs <- slow_get_multiple_log_p_H_class(H_class = H_class, ff = ff, wif0 = wif0, split_grid = -1)
-##     rr_probs <- rr_probs - max(rr_probs)
-##     rr_probs <- exp(rr_probs)
-##     rr_probs <- rr_probs / sum(rr_probs)
-##     ## now sample with respect to that prob
-##     ir_chosen <- sample(1:6, 1, prob = rr_probs)
-
-##     if (ir_chosen != 1) {
-
-##         ## do re-label here
-##         if (ir_applied == 2) {
-##             eMatGrid_t1 <- eMatGrid_t1
-##             eMatGrid_t2 <- eMatGrid_t3
-##             eMatGrid_t3 <- eMatGrid_t2
-##         } else if (ir_applied == 3) {
-##             eMatGrid_t1 <- eMatGrid_t2
-##             eMatGrid_t2 <- eMatGrid_t1
-##             eMatGrid_t3 <- eMatGrid_t3
-##         } else if (ir_applied == 4) {
-##             eMatGrid_t1 <- eMatGrid_t2
-##             eMatGrid_t2 <- eMatGrid_t3
-##             eMatGrid_t3 <- eMatGrid_t1
-##         } else if (ir_applied == 5) {
-##             eMatGrid_t1 <- eMatGrid_t3
-##             eMatGrid_t2 <- eMatGrid_t1
-##             eMatGrid_t3 <- eMatGrid_t2
-##         } else if (ir_applied == 6) {
-##             eMatGrid_t1 <- eMatGrid_t3
-##             eMatGrid_t2 <- eMatGrid_t2
-##             eMatGrid_t3 <- eMatGrid_t1
-##         }
-        
-
-##     }
-
-
-    
-
-## }
+sample_H_using_H_class <- function(H_class, ff) {
+    new_H <- H_class
+    w <- new_H == 0; new_H[w] <- sample(c(1, 2, 3), sum(w), prob = c(1 / 2, 1 / 2 - ff / 2, ff / 2), replace = TRUE)
+    w <- new_H == 7; new_H[w] <- sample(c(1, 2, 3), sum(w), prob = c(1 / 2, 1 / 2 - ff / 2, ff / 2), replace = TRUE)
+    w <- new_H == 4; new_H[w] <- sample(c(1, 2, 3), sum(w), prob = c(1 / 2, 1 / 2 - ff / 2, 0), replace = TRUE)
+    w <- new_H == 5; new_H[w] <- sample(c(1, 2, 3), sum(w), prob = c(1 / 2, 0, ff / 2), replace = TRUE)
+    w <- new_H == 6; new_H[w] <- sample(c(1, 2, 3), sum(w), prob = c(0, 1 / 2 - ff / 2, ff / 2), replace = TRUE)
+    new_H
+}
 
 
 
 
-
-
+            ## ##
+            ## ## consider a left break and re-label here
+            ## ##
+            ## if (do_left_relabel) {
+            ##     left_log_p_H_class_probs <- slow_get_multiple_log_p_H_class(H_class = H_class, ff = ff, wif0 = wif0, split_grid = split_grid, right_split = FALSE)
+            ##     left_log_p_H_class_probs <- -max(left_log_p_H_class_probs) + left_log_p_H_class_probs
+            ##     left_p_H_class_probs <- exp(left_log_p_H_class_probs)
+            ##     left_p_H_class_probs <- left_p_H_class_probs / sum(left_p_H_class_probs)
+            ##     ## now sample with respect to that prob
+            ##     ir_left <- sample(1:6, 1, prob = left_p_H_class_probs)
+            ##     shard_block_results[iGridConsider + 1, "ir_left"] <- ir_left
+            ##     for(i in 1:6) {
+            ##         shard_block_results[iGridConsider + 1, paste0("left_p", i)] <- left_p_H_class_probs[i]
+            ##     }
+            ##     if (ir_left != 1) {
+            ##         ## yup, re-label EVERYTHING to the LEFT
+            ##         ## this is R so I don't care if this is efficient
+            ##         w <- 1:(iGrid + 1)
+            ##         for(i in 1:3) {
+            ##             new <- i
+            ##             old <- rr[ir_left, i]
+            ##             for(what in c("alphaHat_t", "betaHat_t", "c", "eMatGrid_t")) {
+            ##                 eval(parse(text = (paste0(what, new, "[w] <- ", what, old, "[w]"))))
+            ##             }
+            ##             ## this too: minus_log_c1_sum
+            ##             eval(parse(text = (paste0("minus_log_c", new, "_sum <- minus_log_c", old, "_sum"))))
+            ##         }
+            ##         ## 
+            ##         ## also need to do H and H_class
+            ##         ##
+            ##         w <- wif0 < split_grid
+            ##         one_based_swap <- c(1, 1 + rx[ir_left, 1:3], 8 - rx[ir_left, 3:1], 8)
+            ##         ## should work for both
+            ##         H[w] <- one_based_swap[H[w] + 1] - 1
+            ##         H_class[w] <- one_based_swap[H_class[w] + 1] - 1
+            ##     }
+            ## }
