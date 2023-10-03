@@ -41,7 +41,12 @@ if ( 1 == 0 ) {
 ## - subsetting of reads in simulation doesn't account for single vs paired end properly
 
 ## important global variables
-ANALYSIS_DIR <- "/well/davies/users/dcc832/nipt_test_2023_09_04/"
+HOSTNAME <- "smew"
+if (HOSTNAME == "smew") {
+    ANALYSIS_DIR <- "/data/smew1/rdavies/nipt_test_2023_09_11/"
+} else if (HOSTNAME == "bmrc") {
+    ANALYSIS_DIR <- "/well/davies/users/dcc832/nipt_test_2023_09_04/"
+}
 REF_PREFIX <- "HRC" ## or use ONEKG for 1000 Genomes, should work I think
 ## REF_PREFIX <- "ONEKG"
 CHR <- "chr20"
@@ -96,7 +101,11 @@ wget_or_rsync <- function(cur, link) {
     }
 }
 old_path <- function(file) {
-    file.path("/well/davies/users/dcc832/nipt_test_2022_12_06/", file)
+    if (HOSTNAME == "bmrc") {
+        file.path("/well/davies/users/dcc832/nipt_test_2022_12_06/", file)
+    } else {
+        file.path("/data/smew1/rdavies/nipt_test_2023_09_11/", file)
+    }
 }
 
 
@@ -147,14 +156,18 @@ get_random_samples_and_haps <- function() {
 
 if (REF_PREFIX == "HRC") {
     ## just use original files where they are
-    HRC_DIR <- file.path("/well/davies/shared/hrc_ega/sinan_2020_06_20")
+    if (HOSTNAME == "bmrc") {
+        HRC_DIR <- file.path("/well/davies/shared/hrc_ega/sinan_2020_06_20")
+    } else {
+        HRC_DIR <- file.path("/data/smew1/rdavies/sinan_2020_06_20")
+    }
     REF_VCF_FILE_TO_USE <- file.path(HRC_DIR, paste0("hg38_liftover_", CHR, ".vcf.gz"))
     REF_SAMPLE_FILE <- file.path(HRC_DIR, paste0("hg38_liftover_", CHR, ".samples"))
     filter_and_convert_ref_vcf(REF_VCF_FILE_TO_USE, REF_PREFIX)
-    
 } else {
     ## download 1000G for chr
     oneKG_vcf_name <- paste0("CCDG_14151_B01_GRM_WGS_2020-08-05_", CHR, ".filtered.shapeit2-duohmm-phased.vcf.gz")
+    wget_or_rsync(old_path("CEU_omni_recombination_20130507.tar"), "ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/working/20130507_omni_recombination_rates/CEU_omni_recombination_20130507.tar")
     if (!file.exists("/well/davies/users/dcc832/nipt_test_2022_12_05/CCDG_14151_B01_GRM_WGS_2020-08-05_chr20.filtered.shapeit2-duohmm-phased.vcf.gz")) {
         system(paste0("wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/", oneKG_vcf_name))
         system(paste0("wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/", oneKG_vcf_name, ".tbi"))
@@ -242,7 +255,11 @@ write.table(phase, "phasefile.diploid.txt", row.names = FALSE, col.names = TRUE,
 write.table(pos, "pos.txt", row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE)
 
 ## get bams for these samples
-wget_or_rsync("/well/davies/shared/ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/GRCh38_full_analysis_set_plus_decoy_hla.fa", "ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/working/20130507_omni_recombination_rates/CEU_omni_recombination_20130507.tar")
+if (HOSTNAME == "bmrc") {
+    wget_or_rsync("/well/davies/shared/ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/GRCh38_full_analysis_set_plus_decoy_hla.fa", )
+} else {
+    wget_or_rsync("/data/smew1/rdavies/nipt_test_2023_09_11/GRCh38_full_analysis_set_plus_decoy_hla.fa", "ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/GRCh38_full_analysis_set_plus_decoy_hla.fa")
+}
 index <- read.table("1000G_2504_high_coverage.sequence.index")
 
 for(sample in samples_to_use) {
