@@ -52,13 +52,18 @@ rcpp_simple_quantile <- function(x, q) {
 }
 
 #' @export
+rcpp_get_log_p_H_class <- function(H_class, ff) {
+    .Call('_QUILT_rcpp_get_log_p_H_class', PACKAGE = 'QUILT', H_class, ff)
+}
+
+#' @export
 Rcpp_define_blocked_snps_using_gamma_on_the_fly <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob = 0.9, verbose = FALSE, use_smooth_cm_in_block_gibbs = FALSE, ff = 0) {
     .Call('_QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob, verbose, use_smooth_cm_in_block_gibbs, ff)
 }
 
 #' @export
-Rcpp_consider_block_relabelling <- function(iBlock, runif_block, sum_H, s, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, eMatGridLocal, betaHatLocal, iGrid, grid_start_0_based, grid_end_0_based, read_start_0_based, read_end_0_based, wif0, log_cStore, alphaStore, read_is_uninformative, block_approach, do_checks, all_packages, block_results, ever_changed, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, fpp_stuff, H, proposed_H, nReads, eMatRead_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3) {
-    invisible(.Call('_QUILT_Rcpp_consider_block_relabelling', PACKAGE = 'QUILT', iBlock, runif_block, sum_H, s, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, eMatGridLocal, betaHatLocal, iGrid, grid_start_0_based, grid_end_0_based, read_start_0_based, read_end_0_based, wif0, log_cStore, alphaStore, read_is_uninformative, block_approach, do_checks, all_packages, block_results, ever_changed, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, fpp_stuff, H, proposed_H, nReads, eMatRead_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3))
+Rcpp_consider_block_relabelling <- function(iBlock, runif_block, sum_H, s, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, eMatGridLocal, betaHatLocal, iGrid, grid_start_0_based, grid_end_0_based, read_start_0_based, read_end_0_based, wif0, log_cStore, alphaStore, read_is_uninformative, block_approach, do_checks, all_packages, block_results, ever_changed, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, fpp_stuff, H, H_class, proposed_H, nReads, eMatRead_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3) {
+    invisible(.Call('_QUILT_Rcpp_consider_block_relabelling', PACKAGE = 'QUILT', iBlock, runif_block, sum_H, s, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, eMatGridLocal, betaHatLocal, iGrid, grid_start_0_based, grid_end_0_based, read_start_0_based, read_end_0_based, wif0, log_cStore, alphaStore, read_is_uninformative, block_approach, do_checks, all_packages, block_results, ever_changed, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, fpp_stuff, H, H_class, proposed_H, nReads, eMatRead_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3))
 }
 
 #' @export
@@ -87,13 +92,13 @@ Rcpp_fill_rlcM <- function(rlcM, rlc, rr0) {
 }
 
 #' @export
-Rcpp_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, do_checks = FALSE, initial_package = NULL, verbose = FALSE, fpp_stuff = NULL, use_cpp_bits_in_R = TRUE, block_approach = 4L) {
-    .Call('_QUILT_Rcpp_block_gibbs_resampler', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, do_checks, initial_package, verbose, fpp_stuff, use_cpp_bits_in_R, block_approach)
+Rcpp_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, do_checks = FALSE, initial_package = NULL, verbose = FALSE, fpp_stuff = NULL, use_cpp_bits_in_R = TRUE, block_approach = 4L, consider_total_relabelling = FALSE) {
+    .Call('_QUILT_Rcpp_block_gibbs_resampler', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, do_checks, initial_package, verbose, fpp_stuff, use_cpp_bits_in_R, block_approach, consider_total_relabelling)
 }
 
 #' @export
-Rcpp_shard_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, ff, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, do_checks = FALSE, initial_package = NULL, verbose = FALSE, fpp_stuff = NULL, shard_check_every_pair = FALSE) {
-    .Call('_QUILT_Rcpp_shard_block_gibbs_resampler', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, ff, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, do_checks, initial_package, verbose, fpp_stuff, shard_check_every_pair)
+Rcpp_shard_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, ff, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, do_checks = FALSE, initial_package = NULL, verbose = FALSE, fpp_stuff = NULL, shard_check_every_pair = FALSE) {
+    .Call('_QUILT_Rcpp_shard_block_gibbs_resampler', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, ff, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, do_checks, initial_package, verbose, fpp_stuff, shard_check_every_pair)
 }
 
 #' @export

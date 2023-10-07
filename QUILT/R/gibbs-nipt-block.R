@@ -1471,6 +1471,7 @@ R_consider_block_relabelling <- function(
             x <- x + log_prior_probs[i] * sum_H[i]
         }
     }
+
     for(iRead in read_start_0_based:read_end_0_based) {
         h1 <- H[iRead + 1]
         if (block_approach == 1 | block_approach == 2) {
@@ -1480,13 +1481,12 @@ R_consider_block_relabelling <- function(
         } else {
             ## gained
             ## H_class[iRead + 1] <- one_based_swap[H_class[iRead + 1] + 1] - 1
-            h <- one_based_swap[H[iRead] + 1] - 1L            
+            h2 <- one_based_swap[H[iRead + 1L] + 1L] - 1L
             ## h2 <- rx[ir_chosen, H[iRead + 1]] ## I think OK
         }
         x <- x - log_prior_probs[h1]
         x <- x + log_prior_probs[rr[ir_chosen, h2]]
     }
-    
     
     block_results[ibr, "p_H_given_L"] <- x
     if (do_checks) {
@@ -2870,9 +2870,25 @@ R_shard_block_gibbs_resampler <- function(
     shard_check_every_pair = FALSE,
     use_rcpp = TRUE,
     use_H_class_for_sampling = FALSE,
-    consider_entire_relabel_at_the_start = TRUE
+    consider_entire_relabel_at_the_start = FALSE
 ) {
     ##
+    rr <- rbind(
+        c(1, 2, 3),
+        c(1, 3, 2),
+        c(2, 1, 3),
+        c(2, 3, 1),
+        c(3, 1, 2),
+        c(3, 2, 1)
+    )
+    rx <- rbind(
+        c(1, 2, 3),
+        c(1, 3, 2),
+        c(2, 1, 3),
+        c(3, 1, 2),
+        c(2, 3, 1),
+        c(3, 2, 1)
+    )
     ##
     K <- dim(alphaMatCurrent_tc)[1]
     nSNPs <- length(grid)
@@ -2968,8 +2984,8 @@ R_shard_block_gibbs_resampler <- function(
             }
             one_based_swap <- c(1, 1 + rx[ir_chosen, 1:3], 8 - rx[ir_chosen, 3:1], 8)
             ## should work for both
-            H <- one_based_swap[H + 1] - 1
-            H_class <- one_based_swap[H_class + 1] - 1
+            H <- one_based_swap[H + 1L] - 1L
+            H_class <- one_based_swap[H_class + 1L] - 1L
         }
     }
     ##
@@ -3445,8 +3461,8 @@ R_shard_block_gibbs_resampler <- function(
     ##
     ## re-run backward
     ##
-    alphaMat_t <- small_alphaMatCurrent_tc[, , 1] ## meh
-    transMatRate_t_H <- small_transMatRate_tc_H[, , 1]
+    alphaMat_t <- alphaMatCurrent_tc[, , 1] ## meh
+    transMatRate_t_H <- transMatRate_tc_H[, , 1]
     if (use_rcpp) {
         betaHat_t1[, nGrids] <- c1[nGrids]
         Rcpp_run_backward_haploid(
@@ -3580,17 +3596,41 @@ get_log_p_H_class <- function(H_class, ff) {
 }
 
 get_log_p_H_class2 <- function(n1, n2, n3, n4, n5, n6, ff) {
-    0 +
-        n1 * log(1/2) +
-        n2 * log(1/2 - ff / 2) +
-        n3 * log(ff / 2) +
-        n4 * log(1 - ff / 2) + 
-        n5 * log(1 / 2 + ff / 2) + 
-        n6 * log(1 / 2)
+    ## so if ff == 0, or ff == 1, some options should not be possible
+    ## so we should penalize them heavily!
+    if (ff == 0) {
+        ## problem is that ff / 2 is now 0 so log of 0
+        out <- 0 +
+            n1 * log(1/2) +
+            n2 * log(1/2 - ff / 2) +
+            n3 * log(1e-3) + ## for example
+            n4 * log(1 - ff / 2) + 
+            n5 * log(1 / 2 + ff / 2) + 
+            n6 * log(1 / 2)
+    } else if (ff == 1) {
+        ## problem is that 
+        out <- 0 +
+            n1 * log(1/2) +
+            n2 * log(1e-3) +
+            n3 * log(ff / 2) +
+            n4 * log(1 - ff / 2) + 
+            n5 * log(1 / 2 + ff / 2) + 
+            n6 * log(1 / 2)
+    } else {
+        out <- 0 +
+            n1 * log(1/2) +
+            n2 * log(1/2 - ff / 2) +
+            n3 * log(ff / 2) +
+            n4 * log(1 - ff / 2) + 
+            n5 * log(1 / 2 + ff / 2) + 
+            n6 * log(1 / 2)
+    }
+    out
 }
 
 ## now, given ir_chosen, get new H_class
 slow_get_multiple_log_p_H_class <- function(H_class, ff, wif0, split_grid, right_split = TRUE) {
+
     rr <- rbind(
         c(1, 2, 3),
         c(1, 3, 2),

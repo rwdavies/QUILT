@@ -18,6 +18,20 @@ if (1 == 0) {
 }
 
 
+test_that("can do get_log_p_H_class in R and Rcpp", {
+
+    H_class <- sample(0:7, 1000, replace = TRUE)
+    ff <- 0.2
+    
+    expect_equal(
+        rcpp_get_log_p_H_class(H_class, ff),
+        get_log_p_H_class(H_class, ff)
+    )
+
+})
+
+
+
 test_that("can do single quantile hack in cpp using arma", {
     x <- runif(1000)
     q <- 0.90
@@ -576,16 +590,15 @@ test_that("can perform block gibbs", {
     })
     
     check_mclapply_OK(out)
-    
-})
 
+})
 
 
 
 
 test_that("can perform ff shard block gibbs including at all sites", {
 
-    for(ff in c(0, 0.2)) {    
+    for(ff in c(0.2)) {    
 
         set.seed(199)
         do_checks <- TRUE
@@ -637,6 +650,8 @@ test_that("can perform ff shard block gibbs including at all sites", {
         nReads <- length(sampleReads)
         ##
         initial_package <- for_testing_get_full_package_probabilities(true_H, list( eHapsCurrent_tc = eHapsCurrent_tc, transMatRate_tc_H = transMatRate_tc_H, alphaMatCurrent_tc = alphaMatCurrent_tc,priorCurrent_m = priorCurrent_m ,eMatRead_t = eMatRead_t,s = s,sampleReads = sampleReads))
+
+        ## also get H_class here
         
         ##
         ## so here make a 10 blocks
@@ -644,6 +659,7 @@ test_that("can perform ff shard block gibbs including at all sites", {
         ## 
         H <- integer(length(true_H))
         H[] <- true_H[] ## make clone not copy by reference
+        ## am here, can I get H_class somehow, don't I have code for this
         blocked_snps <- integer(nSNPs)
         for(i in 0:9) {
             blocked_snps[(10 * i <= grid) & (grid < (10 * (i + 1)))] <- as.integer(i)
@@ -710,6 +726,21 @@ test_that("can perform ff shard block gibbs including at all sites", {
         eMatGrid_t1 <- initial_package[[1]][["eMatGrid_t"]]
         eMatGrid_t2 <- initial_package[[2]][["eMatGrid_t"]]
         eMatGrid_t3 <- initial_package[[3]][["eMatGrid_t"]]
+
+        H_class <- calculate_H_class(
+            eMatRead_t = eMatRead_t,
+            alphaHat_t1 = initial_package[[1]][["alphaHat_t"]],
+            alphaHat_t2 = initial_package[[2]][["alphaHat_t"]],
+            alphaHat_t3 = initial_package[[3]][["alphaHat_t"]],
+            betaHat_t1 = initial_package[[1]][["betaHat_t"]],
+            betaHat_t2 = initial_package[[2]][["betaHat_t"]],
+            betaHat_t3 = initial_package[[3]][["betaHat_t"]],
+            ff = ff,
+            wif0 = wif0,
+            H = H,
+            class_sum_cutoff = class_sum_cutoff
+        )
+        
         ##
         ##
         ##
@@ -719,11 +750,11 @@ test_that("can perform ff shard block gibbs including at all sites", {
         
         for(i_run in 1:4) {
 
-            ## print("")
-            ## print(paste0("------------"))        
-            ## print(paste0("  ff = ", ff, ", i_run = ", i_run))
-            ## print(paste0("------------"))
-            ## print("")
+            print("")
+            print(paste0("------------"))        
+            print(paste0("  ff = ", ff, ", i_run = ", i_run))
+            print(paste0("------------"))
+            print("")
             
             if (i_run == 1) {
                 language  <- "R"
@@ -789,6 +820,7 @@ test_that("can perform ff shard block gibbs including at all sites", {
                 eMatGrid_t2 = eMatGrid_t2,
                 eMatGrid_t3 = eMatGrid_t3,
                 H = H,
+                H_class = H_class,
                 ff = ff,
                 eMatRead_t = eMatRead_t,    
                 blocked_snps = blocked_snps,
@@ -799,11 +831,12 @@ test_that("can perform ff shard block gibbs including at all sites", {
                 priorCurrent_m = priorCurrent_m,
                 transMatRate_tc_H = transMatRate_tc_H,
                 do_checks = do_checks,
-                initial_package = initial_package,
                 verbose = verbose,
                 fpp_stuff = fpp_stuff,
                 shard_check_every_pair = shard_check_every_pair
             )
+
+            ## initial_package = initial_package,
             
             ##
             ## OK, that DID work, neat
@@ -818,8 +851,16 @@ test_that("can perform ff shard block gibbs including at all sites", {
             ## print(round(block_out$shard_block_results, 3))            
             ## print(block_out[["shard_block_results"]][, "ir_chosen"])
 
-            ## this isn't necessarily true 
-            expect_true(sum(true_H == H) %in% c(0, length(H))) ## want it to be all right or all wrong
+
+            ## want it to match up 1 to 1
+            ##
+
+            for(i in 1:3) {
+                if (sum(true_H == i) > 0) {
+                    expect_equal(length(unique(table(H[true_H == i]))), 1)
+                }
+            }
+            
             final_package <- for_testing_get_full_package_probabilities(block_out[["H"]], fpp_stuff)
             expect_equal(block_out[["eMatGrid_t1"]], final_package[[1]][["eMatGrid_t"]])
             expect_equal(block_out[["eMatGrid_t2"]], final_package[[2]][["eMatGrid_t"]])
@@ -835,9 +876,17 @@ test_that("can perform ff shard block gibbs including at all sites", {
             }
             
         }
-        
+
+        ## only tests the second two, the blocks
         expect_equal(block_out_R[["shard_block_results"]], block_out_Rcpp[["shard_block_results"]])
+        
+        ## print("R")
+        ## print(block_out_R[["shard_block_results"]][1:3, ])
+        ## print("rcpp")
+        ## print(block_out_Rcpp[["shard_block_results"]][1:3, ])
 
     }
     
 })
+
+

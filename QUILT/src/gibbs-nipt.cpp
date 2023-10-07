@@ -228,7 +228,8 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     bool verbose = false,
     Rcpp::List fpp_stuff = R_NilValue,
     bool use_cpp_bits_in_R = true,
-    int block_approach = 4
+    int block_approach = 4,
+    bool consider_total_relabelling = false
 );
 
 
@@ -250,6 +251,7 @@ Rcpp::List Rcpp_shard_block_gibbs_resampler(
     arma::mat& eMatGrid_t2,
     arma::mat& eMatGrid_t3,
     Rcpp::IntegerVector& H,
+    Rcpp::IntegerVector& H_class,    
     double ff,    
     const arma::mat& eMatRead_t,
     Rcpp::IntegerVector& blocked_snps,
@@ -2536,7 +2538,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     Rcpp::LogicalVector skip_read(1);
     skip_read.fill(false);
     //
-    const Rcpp::NumericVector prior_probs = NumericVector::create(0.5, (1 - ff) / 2, (ff / 2));    
+    const Rcpp::NumericVector prior_probs = NumericVector::create(0.5, (1 - ff) * 0.5, ff * 0.5);
     //
     Rcpp::List to_return;
     Rcpp::List gibbs_block_output_list;
@@ -2990,7 +2992,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         prev=print_times(prev, suppressOutput, prev_section, next_section);
                         prev_section=next_section;
                         Rcpp::List out2 = Rcpp_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax_local, prev_section, next_section, suppressOutput, prev);
-                        //rc = calculate_rc(H, true); // read counts temptemp                        
+                        //rc = calculate_rc(H, true); // read counts temptemp
                         //
                         if (return_gibbs_block_output & return_advanced_gibbs_block_output) {
                             // be super greedy with saving, but who cares, this is not normally run
@@ -3010,7 +3012,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             next_section="Block gibbs - shard resampler";
                             prev=print_times(prev, suppressOutput, prev_section, next_section);
                             prev_section=next_section;
-                            out3 = Rcpp_shard_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, ff, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, false, R_NilValue, false, R_NilValue, shard_check_every_pair);
+                            out3 = Rcpp_shard_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, ff, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, false, R_NilValue, false, R_NilValue, shard_check_every_pair);
                             //rc = calculate_rc(H, true); // read counts temptemp
                         }
                         //

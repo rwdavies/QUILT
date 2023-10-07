@@ -100,6 +100,28 @@ void rcpp_alpha_forward_one(
 
 
 
+//' @export
+// [[Rcpp::export]]
+double rcpp_get_log_p_H_class(
+    Rcpp::IntegerVector& H_class,
+    double ff
+) {
+    double out = 0;
+    Rcpp::NumericVector vals(8);
+    vals(0) = 0;
+    vals(1) = log(0.5);
+    vals(2) = log(0.5 - ff * 0.5);
+    vals(3) = log(ff * 0.5);
+    vals(4) = log(1.0 - ff * 0.5);
+    vals(5) = log(0.5 + ff * 0.5);
+    vals(6) = log(0.5);
+    vals(7) = 0;
+    for(int i = 0; i < H_class.length(); i++) {
+        out += vals[H_class[i]];
+    }
+    return(out);
+}
+
 
 //' @export
 // [[Rcpp::export]]
@@ -489,6 +511,9 @@ void Rcpp_consider_block_relabelling(
       if (verbose) {
           std::cout << "done realculate block read label probs" << std::endl;
       }
+  } else if ( block_approach == 6) {
+      // actually I don't quite need this yet
+      // can I test the specific function beforehand, would make things easier
   }
   //
   if (verbose) {
@@ -585,6 +610,12 @@ void Rcpp_consider_block_relabelling(
   }
   block_results(ibr, 13) = x;
   block_results(ibr, 14) = block_results(ibr, 12) + block_results(ibr, 13);
+  //
+  // add H_class stuff
+  // eventually, make this faster! will be pretty slow
+  //
+  block_results(ibr, 15) = rcpp_get_log_p_H_class(H_class, ff);
+  block_results(ibr, 16) = block_results(ibr, 12) + block_results(ibr, 15);
   //
   // 
   //
@@ -1403,7 +1434,8 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     bool verbose = false,
     Rcpp::List fpp_stuff = R_NilValue,
     bool use_cpp_bits_in_R = true,
-    int block_approach = 4
+    int block_approach = 4,
+    bool consider_total_relabelling = false
 ) {
     //
             
@@ -1472,7 +1504,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     //
     Rcpp::NumericMatrix block_results;
     Rcpp::CharacterVector block_results_columns;
-    block_results_columns = CharacterVector::create("iBlock", "total", "p1", "p2", "p3", "p4", "p5", "p6", "ir_chosen", "p_O1_given_H1_L", "p_O2_given_H2_L", "p_O3_given_H3_L", "p_O_given_H_L", "p_H_given_L", "p_H_given_O_L_up_to_C");
+    block_results_columns = CharacterVector::create("iBlock", "total", "p1", "p2", "p3", "p4", "p5", "p6", "ir_chosen", "p_O1_given_H1_L", "p_O2_given_H2_L", "p_O3_given_H3_L", "p_O_given_H_L", "p_H_given_L", "p_H_given_O_L_up_to_C", "p_H_class_given_L", "p_H_class_given_O_L_up_to_C");
     block_results = Rcpp::NumericMatrix(2 * n_blocks, block_results_columns.length());
     block_results.fill(0);
     colnames(block_results) = block_results_columns; // neat
@@ -1594,7 +1626,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
             //
             // total relabelling 
             //
-            if (ff > 0) {
+            if (ff > 0 & consider_total_relabelling) {
                 // do not bother for ff = 0, this means diploid, so switches are 50-50 and pointless
                 Rcpp_consider_total_relabelling(iBlock, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, block_results, runif_total, sum_H, H, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3);
             }
@@ -1667,6 +1699,7 @@ Rcpp::List Rcpp_shard_block_gibbs_resampler(
     arma::mat& eMatGrid_t2,
     arma::mat& eMatGrid_t3,
     Rcpp::IntegerVector& H,
+    Rcpp::IntegerVector& H_class,    
     double ff,
     const arma::mat& eMatRead_t,
     Rcpp::IntegerVector& blocked_snps,

@@ -15,6 +15,7 @@ if (1 == 0) {
     QUILT::increment2N(0, 0, 0, 0)
 
 
+
 }
 
 
@@ -262,6 +263,9 @@ test_that("can skip reads and more efficiently calculate probabilities for gibbs
     double_list_of_starting_read_labelsX[[1]][[1]][1] <- 10
     double_list_of_starting_read_labelsX[[1]][[1]][1] <- a
     eMatRead_t <- array(0, c(1, 1))
+
+    
+    ## this is crashing, figure it out!
     
     set.seed(123)
     outRCPP <- rcpp_forwardBackwardGibbsNIPT(
@@ -279,7 +283,7 @@ test_that("can skip reads and more efficiently calculate probabilities for gibbs
         blocks_for_output = array(0, c(1, 1)),
         double_list_of_starting_read_labels = double_list_of_starting_read_labels,
         param_list = param_list,
-        suppressOutput = 1,
+        suppressOutput = 0,
         wif0 = integer(1),
         L_grid = integer(1),
         alphaHat_t1 = array(0, c(K, nGrids)),
