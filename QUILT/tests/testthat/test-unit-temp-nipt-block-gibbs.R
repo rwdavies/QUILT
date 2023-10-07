@@ -480,16 +480,6 @@ test_that("blarh", {
 
     table(truth_class, before_H_class)
     
-)
-
-sapply(1:15, function(i) {
-    w <- 1:1000 + i * 1000
-    h1 <- truth_haps[w, 1]
-    h2 <- truth_haps[w, 2]
-    h3 <- truth_haps[w, 3]
-    c(sum(h1 == h2), sum(h1 == h3), sum(h2 == h3))
-    
-## 
 
     ## so ~83% of truth labels are uncertain
     table(uncertain_truth_labels)    

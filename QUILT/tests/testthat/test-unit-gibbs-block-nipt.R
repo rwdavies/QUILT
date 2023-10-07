@@ -750,11 +750,11 @@ test_that("can perform ff shard block gibbs including at all sites", {
         
         for(i_run in 1:4) {
 
-            print("")
-            print(paste0("------------"))        
-            print(paste0("  ff = ", ff, ", i_run = ", i_run))
-            print(paste0("------------"))
-            print("")
+            ##print("")
+            ##print(paste0("------------"))        
+            ##print(paste0("  ff = ", ff, ", i_run = ", i_run))
+            ##print(paste0("------------"))
+            ##print("")
             
             if (i_run == 1) {
                 language  <- "R"
