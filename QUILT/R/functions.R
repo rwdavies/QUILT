@@ -322,7 +322,8 @@ get_and_impute_one_sample <- function(
     nGrids <- ncol(distinctHapsB)
     K <- nrow(hapMatcher)
     suppressOutput <- !print_extra_timing_information
-
+    ff <- ff_values[iSample]
+    
     if (impute_rare_common) {
 
         loadBamAndConvert(
@@ -393,14 +394,14 @@ get_and_impute_one_sample <- function(
 
             if (method == "diploid") {
                 truth_label_set <- determine_a_set_of_truth_labels(
-                    sampleReads = all_sampleReads,
+                    sampleReads = allSNP_sampleReads,
                     truth_hap1 = truth_haps_all[, 1],
                     truth_hap2 = truth_haps_all[, 2],
                     maxDifferenceBetweenReads = maxDifferenceBetweenReads
 		)
             } else {
                 truth_label_set <- determine_a_set_of_truth_labels_for_nipt(
-                    sampleReads = all_sampleReads,
+                    sampleReads = allSNP_sampleReads,
                     truth_haps = truth_haps_all,
                     phase = phase,
                     ff = ff
@@ -428,8 +429,6 @@ get_and_impute_one_sample <- function(
 
 
     }
-
-    ff <- ff_values[iSample]
 
     ##
     ## sample read stuff - work off bam file!

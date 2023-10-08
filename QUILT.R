@@ -483,7 +483,7 @@ option_list <- list(
         default = TRUE
     ), 
     make_option(
-        "--ff0_shard_check_every_pair",
+        "--shard_check_every_pair",
         type = "logical",
         help = "When using shard gibbs sampler, whether to check every pair of SNPs, or not [default TRUE] ",
         default = TRUE
@@ -615,7 +615,7 @@ QUILT(
     use_splitreadgl = opt$use_splitreadgl,
     override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
     use_hapMatcherR = opt$use_hapMatcherR,
-    ff0_shard_check_every_pair = opt$ff0_shard_check_every_pair,
+    shard_check_every_pair = opt$shard_check_every_pair,
     use_eigen = opt$use_eigen,
     impute_rare_common = opt$impute_rare_common,
     rare_af_threshold = opt$rare_af_threshold,

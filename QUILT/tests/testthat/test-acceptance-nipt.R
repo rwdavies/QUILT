@@ -168,7 +168,7 @@ test_that("QUILT can impute a few samples with NIPT, w/wo IRC, w/wo regular vs m
                     use_mspbwt <- FALSE
                 }
 
-                print(paste0("nipt = ", nipt, ", impute_rare_common = ", impute_rare_common, ", i_method = ", i_method))
+                print(paste0("nipt = ", nipt, ", impute_rare_common = ", impute_rare_common, ", i_method = ", i_method, ", ", date()))
 
                 outputdir <- STITCH::make_unique_tempdir()
 
