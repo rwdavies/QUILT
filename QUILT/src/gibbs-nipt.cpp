@@ -111,6 +111,10 @@ void rcpp_make_eMatGrid_t(
 );
 
 
+double rcpp_get_log_p_H_class(
+    Rcpp::IntegerVector& H_class,
+    double ff
+);
     
 
 Rcpp::List rcpp_make_fb_snp_offsets(
@@ -214,6 +218,8 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     Rcpp::LogicalVector& grid_has_read,
     double ff,
     int s, // this is 0-based
+    const double maxEmissionMatrixDifference,
+    const Rcpp::List& sampleReads,
     const arma::cube& alphaMatCurrent_tc,
     const arma::mat& priorCurrent_m,
     const arma::cube& transMatRate_tc_H,
@@ -228,8 +234,9 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     bool verbose = false,
     Rcpp::List fpp_stuff = R_NilValue,
     bool use_cpp_bits_in_R = true,
-    int block_approach = 4,
-    bool consider_total_relabelling = false
+    int block_approach = 6,
+    bool consider_total_relabelling = false,
+    const bool resample_H_using_H_class = true    
 );
 
 
@@ -1576,6 +1583,7 @@ void add_to_per_it_likelihoods(
     int i_result_it,
     const int n_gibbs_full_its,
     Rcpp::IntegerVector& H,
+    Rcpp::IntegerVector& H_class,
     arma::rowvec& c1,
     arma::rowvec& c2,
     arma::rowvec& c3,
@@ -1602,6 +1610,7 @@ void add_to_per_it_likelihoods(
         per_it_likelihoods(i_per_it_likelihoods, 4 + j) = temp(j);
     }
     per_it_likelihoods(i_per_it_likelihoods, 11) = relabel;
+    per_it_likelihoods(i_per_it_likelihoods, 12) = rcpp_get_log_p_H_class(H_class, ff);
     i_per_it_likelihoods++; // bump counter
     return;
 }
@@ -1936,7 +1945,7 @@ void rcpp_gibbs_nipt_iterate(
             rcpp_apply_mat_relabel(eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, relabel);
         }
     }
-    add_to_per_it_likelihoods(s, per_it_likelihoods, i_gibbs_samplings, iteration, i_result_it, n_gibbs_full_its, H, c1, c2, c3, ff, prior_probs, relabel, i_per_it_likelihoods);
+    add_to_per_it_likelihoods(s, per_it_likelihoods, i_gibbs_samplings, iteration, i_result_it, n_gibbs_full_its, H, H_class, c1, c2, c3, ff, prior_probs, relabel, i_per_it_likelihoods);
     return;
 }
 
@@ -2426,7 +2435,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const int i_snp_block_for_alpha_beta = 1,
     const bool do_block_resampling = false,
     const int artificial_relabel = -1,
-    const double class_sum_cutoff = 0.06,
+    const double class_sum_cutoff = 1,
     const int shuffle_bin_radius = 5000,
     const Rcpp::IntegerVector block_gibbs_iterations = Rcpp::IntegerVector::create(0),
     const double block_gibbs_quantile_prob = 0.9,
@@ -2742,8 +2751,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     //defined original in R
     // column names are P(O^1 | \lambda) for (1, 2, 3), then P(H | \lambda), then P(O, H | \lambda) aka the likelihood (for H) ll = log10(P(H | O, \lambda))
     int i_per_it_likelihoods = 0; // easier to just keep counter!
-    Rcpp::NumericMatrix per_it_likelihoods = Rcpp::NumericMatrix(n_per_it_likelihoods, 12);
-    colnames(per_it_likelihoods) = CharacterVector::create("s", "i_samp", "i_it", "i_result_it", "p_O1_given_H1_L", "p_O2_given_H2_L", "p_O3_given_H3_L", "p_O_given_H_L", "p_H_given_L", "p_O_H_given_L_up_to_C", "p_set_H_given_L", "relabel");
+    Rcpp::NumericMatrix per_it_likelihoods = Rcpp::NumericMatrix(n_per_it_likelihoods, 13);
+    colnames(per_it_likelihoods) = CharacterVector::create("s", "i_samp", "i_it", "i_result_it", "p_O1_given_H1_L", "p_O2_given_H2_L", "p_O3_given_H3_L", "p_O_given_H_L", "p_H_given_L", "p_O_H_given_L_up_to_C", "p_set_H_given_L", "relabel", "p_H_class_given_L");
     //
     //
     // if (print_temp_stop) {    
@@ -2898,7 +2907,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                 //
                 if (!run_fb_subset) {
                     // want this to go into i_result_it which is i_outer
-                    add_to_per_it_likelihoods(s, per_it_likelihoods, i_gibbs_samplings, iteration, i_result_it, n_gibbs_full_its, H, c1, c2, c3, ff, prior_probs, false, i_per_it_likelihoods);
+                    add_to_per_it_likelihoods(s, per_it_likelihoods, i_gibbs_samplings, iteration, i_result_it, n_gibbs_full_its, H, H_class, c1, c2, c3, ff, prior_probs, false, i_per_it_likelihoods);
                 }
             } else {
                 for(iteration = 0; iteration < n_gibbs_full_its; iteration++) {
@@ -2908,6 +2917,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         i_result_it = -2;
                     }
                     i_ever_it = n_gibbs_full_its * (i_gibbs_samplings) + iteration;
+                    //
+                    std::cout << "Before read sampling starts log(P(H_class)) = " << rcpp_get_log_p_H_class(H_class, ff) << std::endl;
                     //
                     rcpp_gibbs_nipt_iterate(
                         s, prev_section, next_section, suppressOutput, prev,
@@ -2925,6 +2936,9 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         gibbs_initialize_iteratively, first_read_for_gibbs_initialization,
                         do_block_resampling, artificial_relabel, sample_is_diploid
                     );
+                    //
+                    std::cout << "After read sampling log(P(H_class)) = " << rcpp_get_log_p_H_class(H_class, ff) << std::endl;
+                    //
                     //rc = calculate_rc(H, true); // read counts temptemp
                     //
                     // do check here for underflow/overflow
@@ -2967,6 +2981,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             gibbs_block_output_local.push_back(gamma2_t, "before_gamma2_t");
                             gibbs_block_output_local.push_back(gamma3_t, "before_gamma3_t");
                             gibbs_block_output_local.push_back(Rcpp::clone(H), "before_read_labels");
+                            gibbs_block_output_local.push_back(Rcpp::clone(H_class), "before_H_class");                            
                         }
                         //
                         // define sites
@@ -2991,7 +3006,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         next_section="Block gibbs - sample";
                         prev=print_times(prev, suppressOutput, prev_section, next_section);
                         prev_section=next_section;
-                        Rcpp::List out2 = Rcpp_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax_local, prev_section, next_section, suppressOutput, prev);
+                        Rcpp::List out2 = Rcpp_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, maxEmissionMatrixDifference, sampleReads, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax_local, prev_section, next_section, suppressOutput, prev);
                         //rc = calculate_rc(H, true); // read counts temptemp
                         //
                         if (return_gibbs_block_output & return_advanced_gibbs_block_output) {
@@ -3006,6 +3021,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             gibbs_block_output_local.push_back(gamma2_t, "after_gamma2_t");
                             gibbs_block_output_local.push_back(gamma3_t, "after_gamma3_t");
                             gibbs_block_output_local.push_back(Rcpp::clone(H), "after_read_labels");
+                            gibbs_block_output_local.push_back(Rcpp::clone(H_class), "after_H_class");
                         }
                         Rcpp::List out3;
                         if (do_shard_block_gibbs) {
@@ -3083,6 +3099,10 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         }
                     }
                 }
+                //
+                std::cout << "After everything log(P(H_class)) = " << rcpp_get_log_p_H_class(H_class, ff) << std::endl;
+                //
+                
             }
             //
             next_section="Done all iterations";

@@ -18,6 +18,7 @@ if (1 == 0) {
 }
 
 
+
 test_that("can do get_log_p_H_class in R and Rcpp", {
 
     H_class <- sample(0:7, 1000, replace = TRUE)
@@ -31,6 +32,102 @@ test_that("can do get_log_p_H_class in R and Rcpp", {
 })
 
 
+test_that("can do get_log_p_H_class2 in R and Rcpp", {
+
+    expect_equal(
+        get_log_p_H_class2(5, 10, 15, 20, 25, 30, 0.2),
+        rcpp_get_log_p_H_class2(5, 10, 15, 20, 25, 30, 0.2)
+    )
+
+})
+
+
+
+test_that("can confirm that can calculate read label probabilities using H class in R and Rcpp", {
+
+    H_class <- sample(0:7, 1000, replace = TRUE)
+    read_start_0_based <- 100
+    read_end_0_based <- 200
+    
+    ff <- 0.2
+    prior_probs <- c(0.5, (1 - ff) / 2, ff / 2)
+    log_prior_probs <- log(prior_probs)
+    rr <- rbind(
+        c(1, 2, 3),
+        c(1, 3, 2),
+        c(2, 1, 3),
+        c(2, 3, 1),
+        c(3, 1, 2),
+        c(3, 2, 1)
+    )
+    rr <- matrix(as.integer(rr), ncol = 3)
+
+    choice_log_probs_H <- calculate_block_read_label_probabilities_using_H_class(
+        read_start_0_based = read_start_0_based,
+        read_end_0_based = read_end_0_based,
+        H_class = H_class,
+        log_prior_probs = log_prior_probs,
+        rr = rr,
+        ff = ff
+    )
+
+    rcpp_choice_log_probs_H <- rcpp_calculate_block_read_label_probabilities_using_H_class(
+        read_start_0_based = read_start_0_based,
+        read_end_0_based = read_end_0_based,
+        H_class = H_class,
+        log_prior_probs = log_prior_probs,
+        rr = rr,
+        ff = ff
+    )
+
+    expect_equal(
+        choice_log_probs_H,
+        rcpp_choice_log_probs_H
+    )
+
+})
+
+
+
+test_that("idea of one_based_swap can carry over between R and Rcpp", {
+
+    rx <- rbind(
+        c(1, 2, 3),
+        c(1, 3, 2),
+        c(2, 1, 3),
+        c(3, 1, 2),
+        c(2, 3, 1),
+        c(3, 2, 1)
+    )
+    
+    for(ir_chosen in 1:6) {
+
+        set.seed(119911)
+        H <- sample(1:3, 100, replace = TRUE)
+        H_class <- sample(0:7, 100, replace = TRUE)
+
+        one_based_swap <- c(1, 1 + rx[ir_chosen, 1:3], 8 - rx[ir_chosen, 3:1], 8)
+
+        H_new <- integer(100)
+        H_class_new <- integer(100)
+
+        ## in R
+        for(iRead in 0:99) {
+            H_class_new[iRead + 1] <- one_based_swap[H_class[iRead + 1] + 1] - 1
+            H_new[iRead + 1] <- one_based_swap[H[iRead + 1] + 1] - 1L
+        }
+
+        ## in Rcpp (test function to confirm logic)
+        ## these will OVERWRITE the original versions
+        ## hence the tests below
+        rcpp_test_one_based_swap(rx, ir_chosen, H, H_class)
+
+        expect_equal(H, H_new)
+        expect_equal(H_class, H_class_new)
+
+    }
+
+})
 
 test_that("can do single quantile hack in cpp using arma", {
     x <- runif(1000)
@@ -436,8 +533,15 @@ test_that("can perform block gibbs", {
     )
     rr <- matrix(as.integer(rr), ncol = 3)
     rr0 <- rr - 1L    
-    ir_test <- 3
     rlc <- make_rlc(ff)
+    rx <- rbind(
+        c(1L, 2L, 3L),
+        c(1L, 3L, 2L),
+        c(2L, 1L, 3L),
+        c(3L, 1L, 2L),
+        c(2L, 3L, 1L),
+        c(3L, 2L, 1L)
+    )
     ## 
     initial_package <- for_testing_get_full_package_probabilities(true_H, list( eHapsCurrent_tc = eHapsCurrent_tc, transMatRate_tc_H = transMatRate_tc_H, alphaMatCurrent_tc = alphaMatCurrent_tc,priorCurrent_m = priorCurrent_m ,eMatRead_t = eMatRead_t,s = s,sampleReads = sampleReads))
     ##
@@ -454,7 +558,7 @@ test_that("can perform block gibbs", {
         ff = ff,
         wif0 = wif0,
         H = true_H,
-        class_sum_cutoff = class_sum_cutoff
+        class_sum_cutoff = 1
     )
     use_smooth_cm_in_block_gibbs <- FALSE
     smooth_cm <- numeric(1)
@@ -464,17 +568,28 @@ test_that("can perform block gibbs", {
     ## this is supposed to be like real data
     ## imagine some small blocks off in the middle of lots of blocksn
     ## want some small block in the middle to test on
-    ir_test_options <- c(1:6, 1:6)
+    ir_test_options <- c(1:6, 1:6, 1:6) ## this is the ir_chosen to flip
     ## 1 = original
     ## 2 = do not count some H
     ## 4 = sample H for all options with probabilities
-    block_approach_options <- rep(c(1, 4), each = 6)
+    ## 6 = sample H_class (?then possibly re-sample H? or do organically?)
+    block_approach_options <- rep(c(1, 4, 6), each = 6)
     to_run <- 1:length(ir_test_options)
-    to_run <- 1:12
+    ir_test <- 5
 
+    ## for now - no chance it works first time
+    to_run <- c(1:6, 13:18) ## block_approach 1 and -6
+    ## to_run <- 17
+    
+    ## i_option <- 14
+    
     ## weirdly runs into problem when not multi-cored
     ## some very weird stuff going on!
-    out <- mclapply(to_run, mc.cores = 12, function(i_option) {
+    ## , mc.cores = length(to_run),
+    ## out <- lapply(to_run, function(i_option) {
+    
+    for(i_option in to_run) {
+        
         ## 
         verbose <- FALSE
         do_checks <- FALSE
@@ -488,7 +603,10 @@ test_that("can perform block gibbs", {
         ## recast blocked_snps
         ## 
         languages_to_test <- c("R", "R_with_Rcpp", "Rcpp")
+        language <- "R"
+        
         out <- mclapply(languages_to_test, mc.cores = 1, function(language) {
+
             if (verbose) {
                 print(paste0("------------", language, "------------"))
             }
@@ -508,24 +626,69 @@ test_that("can perform block gibbs", {
             block_to_consider <- 0
             a <- (((grid)[blocked_snps == block_to_consider]))
             range_to_flip <- min(a):max(a)
+            ##
+
+            one_based_swap <- as.integer(c(1, 1 + rr[ir_test, 1:3], 8 - rr[ir_test, 3:1], 8))
             ## re-sample with respect to rr and true_H
             for(iRead in 1:nReads) {
-                h <- true_H[iRead] ## this is what
-                hlc <- true_H_class[iRead]
-                if (hlc == 0) {
-                    hl <- rr[ir_test, h]
-                } else {
-                    hl <- as.integer(sample(c(1L, 2L, 3L), size = 1, prob = rlc[h, ]))
+                ## argh, I'm not sure I've done this right
+                hci <- true_H_class[iRead]
+                if (hci == 0) {
+                    hci <- 7
                 }
+                hco <- one_based_swap[hci + 1] - 1
+                ## now sample according to that new class
+                hi <- as.integer(sample(c(1L, 2L, 3L), size = 1, prob = rlc[hci, ]))
+                ho <- as.integer(sample(c(1L, 2L, 3L), size = 1, prob = rlc[hco, ]))
+                ## 
                 if (wif0[iRead] %in% range_to_flip) {
-                    H[iRead] <- rr[ir_test, hl]
+                    H[iRead] <- ho
                 } else {
-                    H[iRead] <- hl
+                    H[iRead] <- hi
                 }
+                ## ## so based on the class, determine the new probabilities
+                ## if (hlc == 0) {
+                ##     ##h <- sample(c(1L, 2L, 3L), prob = rlc[7, ])
+                ##     hlc <- 7 ## same thing
+                ## }
+                ## ## sample a label based on those probabilities
+                ## hl <- as.integer(sample(c(1L, 2L, 3L), size = 1, prob = rlc[hlc, ]))
+                ## 
+                ## if (hlc == 0) {
+                ##     hl <- rr[ir_test, h]
+                ## } else {
+                ##     hl <- as.integer(sample(c(1L, 2L, 3L), size = 1, prob = rlc[h, ]))
+                ## }
             }
+
+            ## ## check that this makes sense
+            ## initial_package <- for_testing_get_full_package_probabilities(H, list( eHapsCurrent_tc = eHapsCurrent_tc, transMatRate_tc_H = transMatRate_tc_H, alphaMatCurrent_tc = alphaMatCurrent_tc,priorCurrent_m = priorCurrent_m ,eMatRead_t = eMatRead_t,s = s,sampleReads = sampleReads))
+            ## H_class <- calculate_H_class(
+            ##     eMatRead_t = eMatRead_t,
+            ##     alphaHat_t1 = initial_package[[1]][["alphaHat_t"]],
+            ##     alphaHat_t2 = initial_package[[2]][["alphaHat_t"]],
+            ##     alphaHat_t3 = initial_package[[3]][["alphaHat_t"]],
+            ##     betaHat_t1 = initial_package[[1]][["betaHat_t"]],
+            ##     betaHat_t2 = initial_package[[2]][["betaHat_t"]],
+            ##     betaHat_t3 = initial_package[[3]][["betaHat_t"]],
+            ##     ff = ff,
+            ##     wif0 = wif0,
+            ##     H = H,
+            ##     class_sum_cutoff = 0.06
+            ## )
+            ## ## 
+            ## w <- wif0 %in% range_to_flip
+            ## table(H_class[w], H[w])
+            ## table(true_H_class[w], H_class[w])            
+            ## prior_probs <- c(0.5, (1 - ff) / 2, ff / 2)
+            ## log_prior_probs <- log(prior_probs)
+            ## calculate_block_read_label_probabilities_using_H_class(0, 420, H_class,log_prior_probs, rr, ff)
+            ## ## happiest with 4? what?
+            
             ## now, check class OK
             check_agreements_with_truth_class(true_H, true_H_class, H, rlc)
             check_agreements_with_truth_class(true_H, true_H_class, true_H, rlc)
+            
             ## determine H_class
             block_out <- helper_block_gibbs_resampler(
                 H = H,
@@ -546,17 +709,27 @@ test_that("can perform block gibbs", {
                 Jmax = Jmax,
                 do_checks = do_checks,
                 language = language,
-                verbose = verbose,
+                verbose = FALSE,
                 block_approach = block_approach,
-                class_sum_cutoff = class_sum_cutoff,
+                class_sum_cutoff = 1,
                 smooth_cm = smooth_cm,
                 use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
                 block_gibbs_quantile_prob = block_gibbs_quantile_prob                
             )
+            block_out$block_results[c(1, 3), ]
+            
+            ## AM HERE
+            ## FOR ir_test = 5, the first block is not suggesting what I know it should do
+            ## can I fix this after lunch?
+            
+            
+            ## print(block_out$block_results[, c("p1", "p2", "ir_chosen")])
+            
             ## check H (class) here
             x <- check_agreements_with_truth_class(true_H, true_H_class, block_out[["H"]], rlc)
             expect_equal(as.logical(x < 7), TRUE) ## weird?
-            block_out$block_results
+
+            ## print(block_out$block_results[2, 1:4])
             ## expect new results pretty good
             if (verbose) {
                 print(paste0("language=", language))
@@ -570,6 +743,7 @@ test_that("can perform block gibbs", {
         })
         check_mclapply_OK(out)
         names(out) <- languages_to_test
+
         if (length(out) > 1) {
             for(j in 2:length(out)) {
                 expect_equal(out[[1]]$H, out[[j]]$H)
@@ -587,9 +761,12 @@ test_that("can perform block gibbs", {
             }
         }
         1
-    })
-    
-    check_mclapply_OK(out)
+       
+    }
+
+    ## so in this one, not updating H_class properly?
+    ## })
+    ## check_mclapply_OK(out)
 
 })
 

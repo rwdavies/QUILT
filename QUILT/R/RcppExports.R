@@ -57,6 +57,26 @@ rcpp_get_log_p_H_class <- function(H_class, ff) {
 }
 
 #' @export
+rcpp_get_log_p_H_class2 <- function(n1, n2, n3, n4, n5, n6, ff) {
+    .Call('_QUILT_rcpp_get_log_p_H_class2', PACKAGE = 'QUILT', n1, n2, n3, n4, n5, n6, ff)
+}
+
+#' @export
+rcpp_sample_H_using_H_class <- function(H_class, H, ff) {
+    invisible(.Call('_QUILT_rcpp_sample_H_using_H_class', PACKAGE = 'QUILT', H_class, H, ff))
+}
+
+#' @export
+rcpp_calculate_block_read_label_probabilities_using_H_class <- function(read_start_0_based, read_end_0_based, H_class, log_prior_probs, rr, ff) {
+    .Call('_QUILT_rcpp_calculate_block_read_label_probabilities_using_H_class', PACKAGE = 'QUILT', read_start_0_based, read_end_0_based, H_class, log_prior_probs, rr, ff)
+}
+
+#' @export
+rcpp_test_one_based_swap <- function(rx, ir_chosen, H, H_class) {
+    invisible(.Call('_QUILT_rcpp_test_one_based_swap', PACKAGE = 'QUILT', rx, ir_chosen, H, H_class))
+}
+
+#' @export
 Rcpp_define_blocked_snps_using_gamma_on_the_fly <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob = 0.9, verbose = FALSE, use_smooth_cm_in_block_gibbs = FALSE, ff = 0) {
     .Call('_QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob, verbose, use_smooth_cm_in_block_gibbs, ff)
 }
@@ -92,8 +112,8 @@ Rcpp_fill_rlcM <- function(rlcM, rlc, rr0) {
 }
 
 #' @export
-Rcpp_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, do_checks = FALSE, initial_package = NULL, verbose = FALSE, fpp_stuff = NULL, use_cpp_bits_in_R = TRUE, block_approach = 4L, consider_total_relabelling = FALSE) {
-    .Call('_QUILT_Rcpp_block_gibbs_resampler', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, do_checks, initial_package, verbose, fpp_stuff, use_cpp_bits_in_R, block_approach, consider_total_relabelling)
+Rcpp_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, maxEmissionMatrixDifference, sampleReads, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, do_checks = FALSE, initial_package = NULL, verbose = FALSE, fpp_stuff = NULL, use_cpp_bits_in_R = TRUE, block_approach = 6L, consider_total_relabelling = FALSE, resample_H_using_H_class = TRUE) {
+    .Call('_QUILT_Rcpp_block_gibbs_resampler', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, maxEmissionMatrixDifference, sampleReads, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, do_checks, initial_package, verbose, fpp_stuff, use_cpp_bits_in_R, block_approach, consider_total_relabelling, resample_H_using_H_class)
 }
 
 #' @export
@@ -192,7 +212,7 @@ rcpp_fly_weighter <- function(i, gCurrent, gAverage, ll_current, log_mult, ll_re
 }
 
 #' @export
-rcpp_forwardBackwardGibbsNIPT <- function(sampleReads, eMatRead_t, priorCurrent_m, alphaMatCurrent_tc, eHapsCurrent_tc, transMatRate_tc_H, ff, blocks_for_output, alphaHat_t1, betaHat_t1, alphaHat_t2, betaHat_t2, alphaHat_t3, betaHat_t3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, gammaMT_t_local, gammaMU_t_local, gammaP_t_local, hapSum_tc, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, rhb_t, ref_error, which_haps_to_use, wif0, grid_has_read, L_grid, smooth_cm, param_list, skip_read_iteration, Jmax_local = 100L, maxDifferenceBetweenReads = 1000, maxEmissionMatrixDifference = 10000000000, run_fb_grid_offset = 0L, grid = 0L, snp_start_1_based = -1L, snp_end_1_based = -1L, generate_fb_snp_offsets = FALSE, suppressOutput = 1L, n_gibbs_starts = 1L, n_gibbs_sample_its = 1L, n_gibbs_burn_in_its = 1L, double_list_of_starting_read_labels = NULL, seed_vector = -1L, prev_list_of_alphaBetaBlocks = NULL, i_snp_block_for_alpha_beta = 1L, do_block_resampling = FALSE, artificial_relabel = -1L, class_sum_cutoff = 0.06, shuffle_bin_radius = 5000L, block_gibbs_iterations = as.integer( c(0)), block_gibbs_quantile_prob = 0.9, rare_per_hap_info, common_snp_index = as.integer( c(0)), snp_is_common = as.logical( c(0)), rare_per_snp_info) {
+rcpp_forwardBackwardGibbsNIPT <- function(sampleReads, eMatRead_t, priorCurrent_m, alphaMatCurrent_tc, eHapsCurrent_tc, transMatRate_tc_H, ff, blocks_for_output, alphaHat_t1, betaHat_t1, alphaHat_t2, betaHat_t2, alphaHat_t3, betaHat_t3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, gammaMT_t_local, gammaMU_t_local, gammaP_t_local, hapSum_tc, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, rhb_t, ref_error, which_haps_to_use, wif0, grid_has_read, L_grid, smooth_cm, param_list, skip_read_iteration, Jmax_local = 100L, maxDifferenceBetweenReads = 1000, maxEmissionMatrixDifference = 10000000000, run_fb_grid_offset = 0L, grid = 0L, snp_start_1_based = -1L, snp_end_1_based = -1L, generate_fb_snp_offsets = FALSE, suppressOutput = 1L, n_gibbs_starts = 1L, n_gibbs_sample_its = 1L, n_gibbs_burn_in_its = 1L, double_list_of_starting_read_labels = NULL, seed_vector = -1L, prev_list_of_alphaBetaBlocks = NULL, i_snp_block_for_alpha_beta = 1L, do_block_resampling = FALSE, artificial_relabel = -1L, class_sum_cutoff = 1, shuffle_bin_radius = 5000L, block_gibbs_iterations = as.integer( c(0)), block_gibbs_quantile_prob = 0.9, rare_per_hap_info, common_snp_index = as.integer( c(0)), snp_is_common = as.logical( c(0)), rare_per_snp_info) {
     .Call('_QUILT_rcpp_forwardBackwardGibbsNIPT', PACKAGE = 'QUILT', sampleReads, eMatRead_t, priorCurrent_m, alphaMatCurrent_tc, eHapsCurrent_tc, transMatRate_tc_H, ff, blocks_for_output, alphaHat_t1, betaHat_t1, alphaHat_t2, betaHat_t2, alphaHat_t3, betaHat_t3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, gammaMT_t_local, gammaMU_t_local, gammaP_t_local, hapSum_tc, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, rhb_t, ref_error, which_haps_to_use, wif0, grid_has_read, L_grid, smooth_cm, param_list, skip_read_iteration, Jmax_local, maxDifferenceBetweenReads, maxEmissionMatrixDifference, run_fb_grid_offset, grid, snp_start_1_based, snp_end_1_based, generate_fb_snp_offsets, suppressOutput, n_gibbs_starts, n_gibbs_sample_its, n_gibbs_burn_in_its, double_list_of_starting_read_labels, seed_vector, prev_list_of_alphaBetaBlocks, i_snp_block_for_alpha_beta, do_block_resampling, artificial_relabel, class_sum_cutoff, shuffle_bin_radius, block_gibbs_iterations, block_gibbs_quantile_prob, rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info)
 }
 

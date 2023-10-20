@@ -21,11 +21,13 @@ helper_block_gibbs_resampler <- function(
     do_checks = FALSE,
     block_approach = 1,
     block_gibbs_quantile_prob = 0.9,
-    class_sum_cutoff = 0.06,
+    class_sum_cutoff = 1,
     use_smooth_cm_in_block_gibbs = FALSE,
     eMatRead_t = NULL,
     use_attempted_blocked_snps = FALSE,
-    consider_total_relabelling = TRUE
+    consider_total_relabelling = FALSE,
+    maxEmissionMatrixDifference = 10000000000,
+    resample_H_using_H_class = FALSE
 ) {
 
     if (is.null(eMatRead_t)) {
@@ -196,6 +198,8 @@ helper_block_gibbs_resampler <- function(
         grid_has_read = grid_has_read,
         ff = ff,
         s = s,
+        maxEmissionMatrixDifference = maxEmissionMatrixDifference,
+        sampleReads = sampleReads,
         alphaMatCurrent_tc = alphaMatCurrent_tc,
         priorCurrent_m = priorCurrent_m,
         transMatRate_tc_H = transMatRate_tc_H,
@@ -209,9 +213,10 @@ helper_block_gibbs_resampler <- function(
         block_approach = block_approach,
         prev_section = "prev_section",
         next_section = "next_section",
-        suppressOutput = 1,
+        suppressOutput = 1, ## yup
         prev = 0,
-        consider_total_relabelling = consider_total_relabelling
+        consider_total_relabelling = consider_total_relabelling,
+        resample_H_using_H_class = resample_H_using_H_class
     )
 
     if (language == "Rcpp") {
@@ -225,6 +230,7 @@ helper_block_gibbs_resampler <- function(
             c2 = c2,
             c3 = c3,
             H = H,
+            H_class = H_class,
             alphaHat_t1 = alphaHat_t1,
             alphaHat_t2 = alphaHat_t2,
             alphaHat_t3 = alphaHat_t3,
@@ -250,6 +256,7 @@ helper_block_gibbs_resampler <- function(
     expect_equal(block_out[["betaHat_t3"]], final_package[[3]][["betaHat_t"]])
     ##
     block_out <- append(block_out, list(attempted_blocked_snps = attempted_blocked_snps))
+
     return(block_out)
 }
 
@@ -414,6 +421,8 @@ R_block_gibbs_resampler <- function(
     grid_has_read,
     ff,
     s,
+    maxEmissionMatrixDifference = 10000000000,
+    sampleReads,
     alphaMatCurrent_tc,
     priorCurrent_m,
     transMatRate_tc_H,
@@ -430,7 +439,8 @@ R_block_gibbs_resampler <- function(
     fpp_stuff = NULL,
     use_cpp_bits_in_R = FALSE,
     block_approach = 4,
-    consider_total_relabelling = TRUE
+    consider_total_relabelling = TRUE,
+    resample_H_using_H_class = FALSE
 ) {
 
     ##
@@ -499,8 +509,12 @@ R_block_gibbs_resampler <- function(
         "p_H_class_given_L",
         "p_H_class_given_O_L_up_to_C"        
     )
-    block_results <- matrix(0.0, nrow = n_blocks * 2, ncol = length(block_results_columns))
+    block_results <- matrix(as.numeric(0), nrow = n_blocks * 2, ncol = length(block_results_columns))
     colnames(block_results) <- block_results_columns
+    ## block_results[] <- 0 ## I have no idea why this makes things 1
+    ## note that some very weird behaviour can happen from the above that I can't quite understand
+    ## possibly passed back in and out of C++
+    
     ##
     ##
     rr <- rbind(
@@ -724,10 +738,10 @@ R_block_gibbs_resampler <- function(
                 betaHat_t2 <- out$betaHat_t2
                 betaHat_t3 <- out$betaHat_t3
                 H <- out$H
+                H_class <- out$H_class
                 ever_changed <- out$ever_changed
                 block_results <- out$block_results
                 sum_H <- out$sum_H
-                H_class <- out$H_class
             }
 
             if (do_checks) {
@@ -924,6 +938,7 @@ R_block_gibbs_resampler <- function(
         transMatRate_tc = transMatRate_tc_H,
         s = s - 1
     )
+
     return(
         list(
             eMatGrid_t1 = eMatGrid_t1,
@@ -1387,13 +1402,19 @@ R_consider_block_relabelling <- function(
         choice_log_probs_H <- calculate_block_read_label_probabilities_using_H_class(
             read_start_0_based = read_start_0_based,
             read_end_0_based = read_end_0_based,
-            proposed_H = proposed_H,
             H_class = H_class,
             log_prior_probs = log_prior_probs,
             rr = rr,
             ff = ff
         )
     }    
+
+    ## print("show the probs")
+    ## print(read_start_0_based)
+    ## print(read_end_0_based)
+    ## print(choice_log_probs_P)
+    ## print(choice_log_probs_H)
+    ## print("end show the probs")
     
     ## now choose!
     choice_log_probs <- choice_log_probs_P + choice_log_probs_H
@@ -1432,6 +1453,7 @@ R_consider_block_relabelling <- function(
     ##
     ## store some probabilities about chosen change
     ##
+    
     ibr <- 2 * iBlock + 1
     block_results[ibr, "iBlock"] <- iBlock
     block_results[ibr, "total"] <- 0
@@ -1489,6 +1511,7 @@ R_consider_block_relabelling <- function(
     }
     
     block_results[ibr, "p_H_given_L"] <- x
+    
     if (do_checks) {
         Htemp <- H
         for(iRead in read_start_0_based:read_end_0_based) {
@@ -1505,7 +1528,7 @@ R_consider_block_relabelling <- function(
 
     
     ##
-    if (!((ever_changed == 1)| (ir_chosen != 1))) {
+    if (!((ever_changed == 1) | (ir_chosen != 1))) {
         if (verbose) {
             print_message("No change warranted")
         }
@@ -1554,6 +1577,8 @@ R_consider_block_relabelling <- function(
                         Hl <- proposed_H[ir_chosen, iRead]
                         h <- rr[ir_chosen, Hl]
                     } else {
+                        ## I COULD re-sample them here
+                        ## werwer-H_class
                         ## weridly, dn't re-set them here
                         ##H_class[iRead] <- one_based_swap[H_class[iRead] + 1] - 1L
                         h <- one_based_swap[H[iRead] + 1] - 1L
@@ -1890,13 +1915,12 @@ calculate_block_read_label_probabilities_using_proposed_H <- function(
 calculate_block_read_label_probabilities_using_H_class <- function(
     read_start_0_based,
     read_end_0_based,
-    proposed_H,
     H_class,
     log_prior_probs,
     rr,
     ff
 ) {
-    choice_log_probs_H <- array(0, 6)
+    choice_log_probs_H <- numeric(6)
     ns <- rep(0, 8)
     for(iRead in read_start_0_based:read_end_0_based) {
         w <- H_class[iRead + 1] + 1

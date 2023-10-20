@@ -99,6 +99,47 @@ void rcpp_alpha_forward_one(
 );
 
 
+void Rcpp_run_forward_haploid(
+    arma::mat& alphaHat_t,
+    arma::rowvec& c,
+    const arma::mat& eMatGrid_t,
+    const arma::cube& alphaMatCurrent_tc,
+    const arma::cube& transMatRate_tc_H,
+    const arma::mat& priorCurrent_m,
+    const int s,
+    const Rcpp::NumericVector alphaStart = 0,
+    bool run_fb_subset = false,
+    const bool initialize_only = false
+);
+
+
+void Rcpp_run_backward_haploid(
+    arma::mat& betaHat_t,
+    arma::rowvec& c,
+    const arma::mat& eMatGrid_t,
+    const arma::cube& alphaMatCurrent_tc,
+    const arma::cube& transMatRate_tc_H,
+    const int s
+);
+
+void rcpp_make_eMatGrid_t(
+    arma::mat& eMatGrid_t,
+    const arma::mat& eMatRead_t,
+    const Rcpp::IntegerVector& H,
+    const Rcpp::List sampleReads,
+    const int hap,
+    const int nGrids,
+    double& prev,
+    int suppressOutput,
+    std::string& prev_section,
+    std::string& next_section,
+    const int run_fb_grid_offset = 0,
+    const bool use_all_reads = false,
+    const bool bound = false,
+    const double maxEmissionMatrixDifference = 1000,
+    const bool rescale = false
+);
+
 
 //' @export
 // [[Rcpp::export]]
@@ -122,6 +163,148 @@ double rcpp_get_log_p_H_class(
     return(out);
 }
 
+
+//' @export
+// [[Rcpp::export]]
+double rcpp_get_log_p_H_class2(
+    int n1,
+    int n2,
+    int n3,
+    int n4,
+    int n5,
+    int n6,
+    double ff
+) {
+    // so if ff == 0, or ff == 1, some options should not be possible
+    // so we should penalize them heavily!
+    double out = 0;
+    if (ff == 0) {
+        // problem is that ff / 2 is now 0 so log of 0
+        out = 0 +
+            n1 * log(0.5) +
+            n2 * log(0.5 - ff * 0.5) +
+            n3 * log(0.001) +
+            n4 * log(1 - ff * 0.5) + 
+            n5 * log(1 * 0.5 + ff * 0.5) + 
+            n6 * log(1 * 0.5);
+    } else if (ff == 1) {
+        out = 0 +
+            n1 * log(0.5) +
+            n2 * log(0.001) +
+            n3 * log(ff * 0.5) +
+            n4 * log(1 - ff * 0.5) + 
+            n5 * log(1 * 0.5 + ff * 0.5) + 
+            n6 * log(1 * 0.5);
+    } else {
+        out = 0 +
+            n1 * log(0.5) +
+            n2 * log(0.5 - ff * 0.5) +
+            n3 * log(ff * 0.5) +
+            n4 * log(1 - ff * 0.5) + 
+            n5 * log(1 * 0.5 + ff * 0.5) + 
+            n6 * log(1 * 0.5);
+    }
+    return(out);
+}
+
+
+//' @export
+// [[Rcpp::export]]
+void rcpp_sample_H_using_H_class(
+    Rcpp::IntegerVector & H_class,
+    Rcpp::IntegerVector & H,
+    double ff
+) {
+    Rcpp::IntegerVector one_through_three = Rcpp::IntegerVector::create(1,2,3);
+    //
+    Rcpp::NumericVector probs07 = Rcpp::NumericVector::create(0.5, 0.5 - ff * 0.5, ff * 0.5);
+    Rcpp::NumericVector probs4 = Rcpp::NumericVector::create(0.5, 0.5 - 0.5 * ff, 0);
+    Rcpp::NumericVector probs5 = Rcpp::NumericVector::create(0.5, 0, 0.5 * ff);
+    Rcpp::NumericVector probs6 = Rcpp::NumericVector::create(0, 0.5 - ff * 0.5, ff * 0.5);
+    //
+    Rcpp::IntegerVector i_temp(1);
+    for(int iRead = 0; iRead < H.length(); iRead++) {
+        int hc = H_class[iRead];
+        if (hc == 0 | hc == 7) {
+            i_temp = Rcpp::sample(one_through_three, 1, false, probs07);
+        } else if (hc == 1) {
+            i_temp(0) = 1;
+        } else if (hc == 2) {
+            i_temp(0) = 2;
+        } else if (hc == 3) {
+            i_temp(0) = 3;
+        } else if (hc == 4) {
+            i_temp = Rcpp::sample(one_through_three, 1, false, probs4);
+        } else if (hc == 5) {
+            i_temp = Rcpp::sample(one_through_three, 1, false, probs5);            
+        } else if (hc == 6) {
+            i_temp = Rcpp::sample(one_through_three, 1, false, probs6);                        
+        }
+        H[iRead] = i_temp(0);
+    }
+    return;
+}
+
+
+//' @export
+// [[Rcpp::export]]
+Rcpp::NumericVector rcpp_calculate_block_read_label_probabilities_using_H_class(
+    int read_start_0_based,
+    int read_end_0_based,
+    Rcpp::IntegerVector & H_class,
+    Rcpp::NumericVector log_prior_probs,
+    const arma::imat & rr,
+    double ff
+) {
+    Rcpp::NumericVector choice_log_probs_H = Rcpp::NumericVector(6);
+    Rcpp::IntegerVector ns = Rcpp::IntegerVector(8);
+    for(int iRead = read_start_0_based; iRead <= read_end_0_based; iRead++) {
+        ns[H_class[iRead]]++;
+    }
+    for(int ir = 0; ir < 6; ir++) {
+        //std::cout << "ir = " << ir << std::endl;
+        //std::cout << "n1 = " << ns[rr(ir, 0)] << std::endl;
+        //std::cout << "n4 = " << ns[7 - rr(ir, 2)] << std::endl;
+        choice_log_probs_H[ir] = rcpp_get_log_p_H_class2(
+            ns[rr(ir, 0)],
+            ns[rr(ir, 1)],
+            ns[rr(ir, 2)],
+            ns[7 - rr(ir, 2)],
+            ns[7 - rr(ir, 1)],
+            ns[7 - rr(ir, 0)],
+            ff
+        );
+    }
+    return(choice_log_probs_H);
+}
+
+
+//' @export
+// [[Rcpp::export]]
+void rcpp_test_one_based_swap(
+    const arma::imat & rx,
+    int ir_chosen,
+    Rcpp::IntegerVector & H,
+    Rcpp::IntegerVector & H_class
+) {
+    // recall rx is 1-based
+    Rcpp::IntegerVector zero_based_swap(8);
+    zero_based_swap(0) = 0;
+    // ir_chosen is 1-based here i.e. values of 1 through 6
+    zero_based_swap(1) = rx(ir_chosen - 1, 0);
+    zero_based_swap(2) = rx(ir_chosen - 1, 1);
+    zero_based_swap(3) = rx(ir_chosen - 1, 2);
+    zero_based_swap(4) = 7 - rx(ir_chosen - 1, 2);
+    zero_based_swap(5) = 7 - rx(ir_chosen - 1, 1);
+    zero_based_swap(6) = 7 - rx(ir_chosen - 1, 0);
+    zero_based_swap(7) = 7;
+    //
+    for(int iRead = 0; iRead < H.length(); iRead++) {
+        H_class[iRead] = zero_based_swap[H_class[iRead]];
+        H[iRead] = zero_based_swap[H[iRead]];
+    }
+    return;
+}
 
 //' @export
 // [[Rcpp::export]]
@@ -512,8 +695,7 @@ void Rcpp_consider_block_relabelling(
           std::cout << "done realculate block read label probs" << std::endl;
       }
   } else if ( block_approach == 6) {
-      // actually I don't quite need this yet
-      // can I test the specific function beforehand, would make things easier
+      choice_log_probs_H = rcpp_calculate_block_read_label_probabilities_using_H_class(read_start_0_based, read_end_0_based, H_class, log_prior_probs, rr, ff);
   }
   //
   if (verbose) {
@@ -567,10 +749,46 @@ void Rcpp_consider_block_relabelling(
       ir_chosen = ir;
     }
   }
+  //int ir_chosen1 = ir_chosen + 1;
   if (verbose) {
     std::cout << "In block" << iBlock << ", see the following probabilities" << std::endl;
     std::cout << choice_probs << std::endl;
-    std::cout << "Have selected block relabelling:" << ir_chosen << std::endl;
+    std::cout << "Have selected block relabelling (1-based):" << ir_chosen + 1 << std::endl;
+  }
+  // in general I need this later
+  //
+  if (verbose) {
+      std::cout << "set up things needed for later" << std::endl;
+  }
+  // one_based_swap <- as.integer(c(1, 1 + rx[ir_chosen, 1:3], 8 - rx[ir_chosen, 3:1], 8))
+  // recall rx is 1-based
+    arma::imat rx(6, 3);
+    // ugh
+    rx(0, 0) = 1; rx(0, 1) = 2; rx(0, 2) = 3;
+    rx(1, 0) = 1; rx(1, 1) = 3; rx(1, 2) = 2;
+    rx(2, 0) = 2; rx(2, 1) = 1; rx(2, 2) = 3;
+    rx(3, 0) = 3; rx(3, 1) = 1; rx(3, 2) = 2;
+    rx(4, 0) = 2; rx(4, 1) = 3; rx(4, 2) = 1;
+    rx(5, 0) = 3; rx(5, 1) = 2; rx(5, 2) = 1;
+  Rcpp::IntegerVector zero_based_swap(8);
+  zero_based_swap(0) = 0;
+  // be clear about which ir_chosen this is, 1 or 0 based
+  // ir_chosen is 1-based here i.e. values of 1 through 6
+  zero_based_swap(1) = rx(ir_chosen, 0);
+  zero_based_swap(2) = rx(ir_chosen, 1);
+  zero_based_swap(3) = rx(ir_chosen, 2);
+  zero_based_swap(4) = 7 - rx(ir_chosen, 2);
+  zero_based_swap(5) = 7 - rx(ir_chosen, 1);
+  zero_based_swap(6) = 7 - rx(ir_chosen, 0);
+  zero_based_swap(7) = 7;
+  // see test with rcpp_test_one_based_swap in it in gibbs-block-nipt to confirm this code
+  //for(int iRead = 0; iRead < H.length(); iRead++) {
+  //H_class[iRead] = zero_based_swap[H_class[iRead]];
+  //H[iRead] = zero_based_swap[H[iRead]];
+  //  }
+  //
+  if (verbose) {
+      std::cout << "save some things for block_results" << std::endl;
   }
   //
   // now have ir_chosen, save results
@@ -581,7 +799,7 @@ void Rcpp_consider_block_relabelling(
   for(ir = 0; ir < 6; ir++) {
     block_results(ibr, 2 + ir) = choice_probs(ir);
   }
-  block_results(ibr, 8) = ir_chosen + 1; // internally 0-based, store 1-based
+  block_results(ibr, 8) = ir_chosen + 1; // internally 0-based, store 1-based, same as R
   //
   block_results(ibr, 9) = choice_log_probs_Pm(ir_chosen, 0);
   block_results(ibr, 10) = choice_log_probs_Pm(ir_chosen, 1);
@@ -600,10 +818,12 @@ void Rcpp_consider_block_relabelling(
   int h1, h2;
   for(int iRead = read_start_0_based; iRead <= read_end_0_based; iRead++) {
       h1 = int(H(iRead) - 1);
-      if (block_approach == 1 | block_approach == 2) {
+      if ((block_approach == 1) | (block_approach == 2)) {
           h2 = h1;
       } else if (block_approach == 4) {
           h2 = proposed_H(ir_chosen, iRead) - 1;
+      } else if (block_approach == 6) {
+          h2 = zero_based_swap[H[iRead]] - 1;
       }
       x -= log_prior_probs(h1);
       x += log_prior_probs(rr0(ir_chosen, h2));
@@ -611,11 +831,6 @@ void Rcpp_consider_block_relabelling(
   block_results(ibr, 13) = x;
   block_results(ibr, 14) = block_results(ibr, 12) + block_results(ibr, 13);
   //
-  // add H_class stuff
-  // eventually, make this faster! will be pretty slow
-  //
-  block_results(ibr, 15) = rcpp_get_log_p_H_class(H_class, ff);
-  block_results(ibr, 16) = block_results(ibr, 12) + block_results(ibr, 15);
   //
   // 
   //
@@ -637,15 +852,17 @@ void Rcpp_consider_block_relabelling(
       //
       int iRead = read_start_0_based;
       int wif_read = wif0(iRead);
+      int Hl = -1;
+      int h = -1;
       for(iGrid2 = grid_start_0_based; iGrid2 <= grid_end_0_based; iGrid2++) {
           //if (verbose) {
           //    std::cout << "changing iGrid2 (0-based) = " <<  iGrid2 << std::endl;
 	  //}
-          if (block_approach == 1 | block_approach == 2) {          
+          if ((block_approach == 1) | (block_approach == 2)) {          
               eMatGridLocal.col(rr0(ir_chosen, 0)) = eMatGrid_t1.col(iGrid2);
               eMatGridLocal.col(rr0(ir_chosen, 1)) = eMatGrid_t2.col(iGrid2);
               eMatGridLocal.col(rr0(ir_chosen, 2)) = eMatGrid_t3.col(iGrid2);
-          } else if (block_approach == 4) {
+          } else if ((block_approach == 4) | (block_approach == 6)) {
               eMatGridLocal.fill(1);
               // if necessary, move
               while ((iRead <= (nReads - 1)) & (wif_read < iGrid2)) {
@@ -655,8 +872,12 @@ void Rcpp_consider_block_relabelling(
                   }
               }
               while ((iRead <= (nReads - 1)) & (wif_read == iGrid2)) {
-                  int Hl = proposed_H(ir_chosen, iRead) - 1;
-                  int h = rr0(ir_chosen, Hl);
+                  if (block_approach == 4) {
+                      Hl = proposed_H(ir_chosen, iRead) - 1;
+                      h = rr0(ir_chosen, Hl);
+                  } else {
+                      h = zero_based_swap[H[iRead]] - 1; // I think
+                  }
                   eMatGridLocal.col(h) %= eMatRead_t.col(iRead);
                   //
                   iRead += 1;
@@ -701,16 +922,26 @@ void Rcpp_consider_block_relabelling(
       int gained = -1;
       for(int iRead = read_start_0_based; iRead <= read_end_0_based; iRead++) {
 	int lost = H(iRead) - 1;
-        if (block_approach == 1 | block_approach == 2) {
+        if ((block_approach == 1) | (block_approach == 2)) {
             gained = rr0(ir_chosen, lost);
         } else if (block_approach == 4) {
             gained = rr0(ir_chosen, proposed_H(ir_chosen, iRead) - 1);
+        } else if (block_approach == 6) {
+            gained = zero_based_swap[H[iRead]] - 1; // very weird?
+            H_class[iRead] = zero_based_swap[H_class[iRead]]; // should be OK
         }
 	H(iRead) = gained + 1;
 	sum_H(gained) += 1.0;
 	sum_H(lost) -= 1.0;
       }
   }
+  // add H_class stuff
+  // eventually, make this faster! will be pretty slow
+  // werwer-H_class
+  //
+  block_results(ibr, 15) = rcpp_get_log_p_H_class(H_class, ff);
+  block_results(ibr, 16) = block_results(ibr, 12) + block_results(ibr, 15);
+  
   return;
 };
 
@@ -747,7 +978,9 @@ void Rcpp_consider_total_relabelling(
     const bool do_checks = false
 ) {
   //
-  // consider entire relabelling here
+    if (verbose) {
+        std::cout << "Am considering entire relabelling here" << std::endl;
+    }
   //
   const int nReads = H.length();
   int iRead, ir, i, h;
@@ -1420,6 +1653,8 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     Rcpp::LogicalVector& grid_has_read,
     double ff,
     int s, // this is 0-based
+    const double maxEmissionMatrixDifference,
+    const Rcpp::List& sampleReads,    
     const arma::cube& alphaMatCurrent_tc,
     const arma::mat& priorCurrent_m,
     const arma::cube& transMatRate_tc_H,
@@ -1434,11 +1669,14 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     bool verbose = false,
     Rcpp::List fpp_stuff = R_NilValue,
     bool use_cpp_bits_in_R = true,
-    int block_approach = 4,
-    bool consider_total_relabelling = false
+    int block_approach = 6,
+    bool consider_total_relabelling = false,
+    const bool resample_H_using_H_class = true
 ) {
     //
-            
+    // note for resample_H_using_Hclass
+    // turn this ON for default use
+    // but for testing, keep it off
     //
     next_section="block gibbs - begin";
     prev=print_times(prev, suppressOutput, prev_section, next_section);
@@ -1626,7 +1864,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
             //
             // total relabelling 
             //
-            if (ff > 0 & consider_total_relabelling) {
+            if ((ff > 0) & consider_total_relabelling) {
                 // do not bother for ff = 0, this means diploid, so switches are 50-50 and pointless
                 Rcpp_consider_total_relabelling(iBlock, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, block_results, runif_total, sum_H, H, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3);
             }
@@ -1652,6 +1890,47 @@ Rcpp::List Rcpp_block_gibbs_resampler(
         logC_after(0) -= log(c1(iGrid));
         logC_after(1) -= log(c2(iGrid));
         logC_after(2) -= log(c3(iGrid));        
+    }
+    if ((ff > 0) && block_approach == 6 && resample_H_using_H_class) {
+        // now have new H_class
+        // easy to sample H using that
+        // then easy to make eMatGrid_t1 etc
+        // then can do forwards
+        // then can sample new read labels based on that 
+        // sample new read labels based on that
+        // then re-do forwards
+        // I can probably do this in-line but meh just do this for now
+        next_section="block gibbs - approach 6 - re-sample H, then re-do eMatGrid and forward";
+        prev=print_times(prev, suppressOutput, prev_section, next_section);
+        prev_section=next_section;
+        //
+        //
+        rcpp_sample_H_using_H_class(H_class, H, ff);
+        //
+        eMatGrid_t1.fill(1);
+        eMatGrid_t2.fill(1);
+        eMatGrid_t3.fill(1);
+        const bool use_all_reads = false;
+        const Rcpp::NumericVector alphaStart_local = 0;        
+        const bool initialize_only_local = false; // initialize the whole thing!!!
+        bool run_fb_subset_local = false;
+        //
+        const int run_fb_grid_offset = 0;  // I htink
+        const bool rescale_eMatGrid_t = true; // done safely I think, just multiplied (see main gibbs-nipt)
+        const bool bound_eMatGrid_t = false; // similarly, see main bit of script
+        //
+        rcpp_make_eMatGrid_t(eMatGrid_t1, eMatRead_t, H, sampleReads, 1, nGrids, prev, suppressOutput, prev_section, next_section, run_fb_grid_offset, use_all_reads, bound_eMatGrid_t, maxEmissionMatrixDifference, rescale_eMatGrid_t);
+        rcpp_make_eMatGrid_t(eMatGrid_t2, eMatRead_t, H, sampleReads, 2, nGrids, prev, suppressOutput, prev_section, next_section, run_fb_grid_offset, use_all_reads, bound_eMatGrid_t, maxEmissionMatrixDifference, rescale_eMatGrid_t);
+        rcpp_make_eMatGrid_t(eMatGrid_t3, eMatRead_t, H, sampleReads, 3, nGrids, prev, suppressOutput, prev_section, next_section, run_fb_grid_offset, use_all_reads, bound_eMatGrid_t, maxEmissionMatrixDifference, rescale_eMatGrid_t);
+        //
+        alphaHat_t1.fill(1); betaHat_t1.fill(1); c1.fill(1);
+        Rcpp_run_forward_haploid(alphaHat_t1, c1, eMatGrid_t1, alphaMatCurrent_tc, transMatRate_tc_H, priorCurrent_m, s, alphaStart_local, run_fb_subset_local, initialize_only_local);                
+        //
+        alphaHat_t2.fill(1); betaHat_t2.fill(1); c2.fill(1);
+        Rcpp_run_forward_haploid(alphaHat_t2, c2, eMatGrid_t2, alphaMatCurrent_tc, transMatRate_tc_H, priorCurrent_m, s, alphaStart_local, run_fb_subset_local, initialize_only_local);        
+        //
+        alphaHat_t3.fill(1); betaHat_t3.fill(1); c3.fill(1);        
+        Rcpp_run_forward_haploid(alphaHat_t3, c3, eMatGrid_t3, alphaMatCurrent_tc, transMatRate_tc_H, priorCurrent_m, s, alphaStart_local, run_fb_subset_local, initialize_only_local);
     }
     //
     // re-run backward

@@ -1,3 +1,34 @@
+test_that("can sample H given H_class in Rcpp", {
+
+    set.seed(101)
+    
+    ff <- 0.2
+    ## check approx frequencies between them
+    H_class <- rep(as.integer(0:7), each = 1e5) ## a lot!
+    ## 
+    H_R <- sample_H_using_H_class(H_class, ff)
+    H_Rcpp <- integer(length(H_class))
+    rcpp_sample_H_using_H_class(H_class, H_Rcpp, ff)
+
+    ## check, expect normal p-value for t.test
+    for(i in 0:7) {
+        w <- H_class == i
+        a <- H_R[w]
+        x <- c(sum(a == 1), sum(a == 2), sum(a == 3))
+        a <- H_Rcpp[w]
+        y <- c(sum(a == 1), sum(a == 2), sum(a == 3))
+        ## print(rbind(x, y))
+        p_value <- t.test(rbind(x, y))$p.value
+        expect_true(p_value > 1e-4)
+    }
+        
+    ## print(table(H_class, H_R))
+    ## print(table(H_class, H_Rcpp))
+    
+
+})
+
+
 test_that("can use ns for H_class checking", {
 
     rr <- rbind(

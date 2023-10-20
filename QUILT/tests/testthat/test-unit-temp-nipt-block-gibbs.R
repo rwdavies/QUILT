@@ -16,11 +16,13 @@ if ( 1 == 0 ) {
 
 test_that("blarh", {
 
-    skip("not for routine use")
+    ## skip("not for routine use")
     
     i_it <- 3
     nSNPs <- 18808
     load("/well/davies/users/dcc832/werAwerBwerC.3.18808.RData")
+
+    
     suppressOutput <- 0
     shard_check_every_pair <- TRUE
 
@@ -32,7 +34,31 @@ test_that("blarh", {
                 )
    truth_labels <-  truth_label_set$truth_labels
    uncertain_truth_labels <-  truth_label_set$uncertain_truth_labels
-    
+
+        fpp_stuff <- list(
+            transMatRate_tc_H = small_transMatRate_tc_H,
+            alphaMatCurrent_tc = small_alphaMatCurrent_tc,
+            priorCurrent_m = small_priorCurrent_m ,
+            eMatRead_t = out$eMatRead_t,
+            s = 1,
+            sampleReads = sampleReads
+        )
+    ## calculate true H class?
+    initial_package <- for_testing_get_full_package_probabilities(truth_labels, fpp_stuff)
+    truth_class <- calculate_H_class(
+        eMatRead_t,
+        alphaHat_t1 = initial_package[[1]]$alphaHat_t,
+        alphaHat_t2 = initial_package[[2]]$alphaHat_t,
+        alphaHat_t3 = initial_package[[3]]$alphaHat_t,
+        betaHat_t1 = initial_package[[1]]$betaHat_t,
+        betaHat_t2 = initial_package[[2]]$betaHat_t,
+        betaHat_t3 = initial_package[[3]]$betaHat_t,
+        ff = ff,
+        wif0 = wif0,
+        H = truth_labels,
+        class_sum_cutoff = 1
+    )
+   
     ## problem in add gammas and genProbs_t to output
 
     ##
@@ -85,7 +111,7 @@ test_that("blarh", {
         use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
         sample_is_diploid = sample_is_diploid,
         update_in_place = FALSE,
-        do_shard_block_gibbs = TRUE,
+        do_shard_block_gibbs = FALSE, ## for now
         shard_check_every_pair = TRUE,
         force_reset_read_category_zero = FALSE,
         disable_read_category_usage = disable_read_category_usage,
@@ -186,19 +212,24 @@ test_that("blarh", {
         )
         eMatRead_t <- out[["eMatRead_t"]]
         
-        print(out$per_it_likelihoods[, -c(1, 2, 4, 5, 6, 7)])
+        ## print(out$per_it_likelihoods[, -c(1, 2, 4, 5, 6, 7)])
+        print(out$per_it_likelihoods[, c("i_it", "p_O_given_H_L", "p_H_given_L", "p_H_class_given_L")])
         
-        print(names(out[["gibbs_block_output_list"]][[1]]))
+        ## print(names(out[["gibbs_block_output_list"]][[1]]))
 
+        ## they get better but then worse?
+        ## that seems really weird?
+        ## is this because I haven't done read sampling afterwards based on that
+        x1 <- out$gibbs_block_output_list[[1]]$gibbs_block_output$block_results        
+        x2 <- out$gibbs_block_output_list[[2]]$gibbs_block_output$block_results
+        x3 <- out$gibbs_block_output_list[[3]]$gibbs_block_output$block_results
+        print(rbind(
+            x1[c(1, nrow(x1) - 1), ],
+            x2[c(1, nrow(x2) - 1), ],
+            x3[c(1, nrow(x3) - 1), ]
+        ))
 
-        fpp_stuff <- list(
-            transMatRate_tc_H = small_transMatRate_tc_H,
-            alphaMatCurrent_tc = small_alphaMatCurrent_tc,
-            priorCurrent_m = small_priorCurrent_m ,
-            eMatRead_t = out$eMatRead_t,
-            s = 1,
-            sampleReads = sampleReads
-        )
+        ## stop("WER")
         
         sapply(1:3, function(i) {
             m <- out[["gibbs_block_output_list"]][[i]][["shard_block_output"]][[1]]
@@ -213,7 +244,70 @@ test_that("blarh", {
 
     ##     x <- out[["gibbs_block_output_list"]][[1]]
 
+        ## 
+        ## how do I plot and/or know if it is good
+        ##
+        ## 
 
+        ##
+        ##try to plot block gibbs output
+        ##
+        f <- function(o, i) {
+            x <- o[[paste0("alphaHat_t", i)]] * o[[paste0("betaHat_t", i)]]
+            apply(x, 2, function(y) y / sum(y))
+        }
+        ## cheat, start with truth labels, add an artificial break or two, can I find it
+        ## 
+
+
+        for(i in 1:3) {
+            outname <- paste0("~/robbie.test.", i, ".png")
+            x <- out$gibbs_block_output_list[[1]]$gibbs_block_output[[1]]
+            colnames(x)[colnames(x) == "ir_chosen"] <- "ir_left"
+            x <- cbind(x, ir_right = x[, "ir_left"])
+            shard_block_results <- x[seq(1, nrow(x), 2), ]
+            before_read_labels <- out$gibbs_block_output_list[[i]]$before_read_labels
+            after_read_labels <- out$gibbs_block_output_list[[i]]$after_read_labels                
+            before_gamma1_t <- out$gibbs_block_output_list[[i]]$before_gamma1_t
+            before_gamma2_t <- out$gibbs_block_output_list[[i]]$before_gamma2_t
+            before_gamma3_t <- out$gibbs_block_output_list[[i]]$before_gamma3_t
+            after_gamma1_t <- out$gibbs_block_output_list[[i]]$after_gamma1_t
+            after_gamma2_t <- out$gibbs_block_output_list[[i]]$after_gamma2_t
+            after_gamma3_t <- out$gibbs_block_output_list[[i]]$after_gamma3_t
+            before_H_class <- out$gibbs_block_output_list[[i]]$before_H_class
+            after_H_class <- out$gibbs_block_output_list[[i]]$after_H_class
+            ## 
+            plot_shard_block_output(
+                shard_block_results = shard_block_results,
+                before_gamma1_t = before_gamma1_t,
+                before_gamma2_t = before_gamma2_t,
+                before_gamma3_t = before_gamma3_t,
+                after_gamma1_t = after_gamma1_t,
+                after_gamma2_t = after_gamma2_t,
+                after_gamma3_t = after_gamma3_t,
+                before_read_labels = before_read_labels,
+                after_read_labels = after_read_labels,
+                nGrids = nGrids,
+                outname = outname,
+                L_grid = L_grid,
+                L = L,
+                uncertain_truth_labels = uncertain_truth_labels,
+                truth_labels = truth_labels,
+                have_truth_haplotypes = have_truth_haplotypes,
+                sampleReads = sampleReads,
+                wif0 = wif0,
+                grid = grid,
+                method = method,
+                ff = ff,
+                only_plot_confident_reads = TRUE,
+                before_H_class = before_H_class,
+                after_H_class = after_H_class
+            )
+        }
+
+        
+
+        
     library("testthat")
     library("QUILT")
     dir <- "~/proj/QUILT/"
@@ -313,7 +407,7 @@ test_that("blarh", {
     before_gamma2_t <- f(out, 2)
     before_gamma3_t <- f(out, 3)
     after_read_labels <- out_new[["H"]]
-        shard_block_results <- out_new[["shard_block_results"]]
+    shard_block_results <- out_new[["shard_block_results"]]
     after_gamma1_t <- f(out_new, 1)
     after_gamma2_t <- f(out_new, 2)
     after_gamma3_t <- f(out_new, 3)
