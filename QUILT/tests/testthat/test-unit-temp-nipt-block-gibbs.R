@@ -20,44 +20,13 @@ test_that("blarh", {
     
     i_it <- 3
     nSNPs <- 18808
-    load("/well/davies/users/dcc832/werAwerBwerC.3.18808.RData")
+    
+    ## load("/well/davies/users/dcc832/werAwerBwerC.3.18808.RData")
+    load("/data/smew1/rdavies/nipt_test_2023_09_11/werAwerBwerC.3.18808.RData")
 
     
     suppressOutput <- 0
     shard_check_every_pair <- TRUE
-
-    truth_label_set <- determine_a_set_of_truth_labels_for_nipt(
-                    sampleReads = sampleReads,
-                    truth_haps = truth_haps,
-                    phase = truth_haps,
-                    ff = ff
-                )
-   truth_labels <-  truth_label_set$truth_labels
-   uncertain_truth_labels <-  truth_label_set$uncertain_truth_labels
-
-        fpp_stuff <- list(
-            transMatRate_tc_H = small_transMatRate_tc_H,
-            alphaMatCurrent_tc = small_alphaMatCurrent_tc,
-            priorCurrent_m = small_priorCurrent_m ,
-            eMatRead_t = out$eMatRead_t,
-            s = 1,
-            sampleReads = sampleReads
-        )
-    ## calculate true H class?
-    initial_package <- for_testing_get_full_package_probabilities(truth_labels, fpp_stuff)
-    truth_class <- calculate_H_class(
-        eMatRead_t,
-        alphaHat_t1 = initial_package[[1]]$alphaHat_t,
-        alphaHat_t2 = initial_package[[2]]$alphaHat_t,
-        alphaHat_t3 = initial_package[[3]]$alphaHat_t,
-        betaHat_t1 = initial_package[[1]]$betaHat_t,
-        betaHat_t2 = initial_package[[2]]$betaHat_t,
-        betaHat_t3 = initial_package[[3]]$betaHat_t,
-        ff = ff,
-        wif0 = wif0,
-        H = truth_labels,
-        class_sum_cutoff = 1
-    )
    
     ## problem in add gammas and genProbs_t to output
 
@@ -236,7 +205,42 @@ test_that("blarh", {
             sum(diff(m[, "ir_chosen"]) != 0)
         })
         ## a bit better, but kind of crazy?
-        
+
+
+    truth_label_set <- determine_a_set_of_truth_labels_for_nipt(
+                    sampleReads = sampleReads,
+                    truth_haps = truth_haps,
+                    phase = truth_haps,
+                    ff = ff
+                )
+   truth_labels <-  truth_label_set$truth_labels
+   uncertain_truth_labels <-  truth_label_set$uncertain_truth_labels
+
+        fpp_stuff <- list(
+            transMatRate_tc_H = small_transMatRate_tc_H,
+            alphaMatCurrent_tc = small_alphaMatCurrent_tc,
+            priorCurrent_m = small_priorCurrent_m ,
+            eMatRead_t = eMatRead_t,
+            s = 1,
+            sampleReads = sampleReads
+        )
+    ## calculate true H class?
+    initial_package <- for_testing_get_full_package_probabilities(truth_labels, fpp_stuff)
+    truth_class <- calculate_H_class(
+        eMatRead_t,
+        alphaHat_t1 = initial_package[[1]]$alphaHat_t,
+        alphaHat_t2 = initial_package[[2]]$alphaHat_t,
+        alphaHat_t3 = initial_package[[3]]$alphaHat_t,
+        betaHat_t1 = initial_package[[1]]$betaHat_t,
+        betaHat_t2 = initial_package[[2]]$betaHat_t,
+        betaHat_t3 = initial_package[[3]]$betaHat_t,
+        ff = ff,
+        wif0 = wif0,
+        H = truth_labels,
+        class_sum_cutoff = 1
+    )
+
+    
     ##     print(names(out))
         
     ##     print(table(out[["double_list_of_ending_read_labels"]][[1]]))
@@ -421,7 +425,9 @@ test_that("blarh", {
     ##
     nReads <- length(sampleReads)
     ori_sampleReads <- sampleReads
-    load("/well/davies/users/dcc832/temp.triploid1.RData")
+    ## load("/well/davies/users/dcc832/temp.triploid1.RData")    
+    load("/data/smew1/rdavies/nipt_test_2023_09_11/temp.triploid1.RData")
+    
     u <- runif(nReads)
     triploid_read_labels <- rep(3, nReads)
     triploid_read_labels[u < (readLabelProbs[1, ] + readLabelProbs[2, ])] <- 2

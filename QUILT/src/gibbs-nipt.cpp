@@ -2918,7 +2918,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                     }
                     i_ever_it = n_gibbs_full_its * (i_gibbs_samplings) + iteration;
                     //
-                    std::cout << "Before read sampling starts log(P(H_class)) = " << rcpp_get_log_p_H_class(H_class, ff) << std::endl;
+                    //std::cout << "Before read sampling starts log(P(H_class)) = " << rcpp_get_log_p_H_class(H_class, ff) << std::endl;
                     //
                     rcpp_gibbs_nipt_iterate(
                         s, prev_section, next_section, suppressOutput, prev,
@@ -2937,7 +2937,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         do_block_resampling, artificial_relabel, sample_is_diploid
                     );
                     //
-                    std::cout << "After read sampling log(P(H_class)) = " << rcpp_get_log_p_H_class(H_class, ff) << std::endl;
+                    //std::cout << "After read sampling log(P(H_class)) = " << rcpp_get_log_p_H_class(H_class, ff) << std::endl;
                     //
                     //rc = calculate_rc(H, true); // read counts temptemp
                     //
@@ -3100,7 +3100,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                     }
                 }
                 //
-                std::cout << "After everything log(P(H_class)) = " << rcpp_get_log_p_H_class(H_class, ff) << std::endl;
+                //std::cout << "After everything log(P(H_class)) = " << rcpp_get_log_p_H_class(H_class, ff) << std::endl;
                 //
                 
             }
