@@ -347,7 +347,8 @@ to_merge <- sapply(1:length(samples_to_use), function(i_sample) {
     sample <- samples_to_use[i_sample]
     paste0(sample, ".prepped.", REGIONNAME, ".bam")
 })
-run("samtools cat --output-fmt BAM ", paste0(to_merge, collapse = " "), " | samtools sort > nipt.", REGIONNAME, ".bam")
+##run("samtools cat --output-fmt BAM ", paste0(to_merge, collapse = " "), " | samtools sort > nipt.", REGIONNAME, ".bam")
+run("samtools cat ", paste0(to_merge, collapse = " "), " | samtools sort > nipt.", REGIONNAME, ".bam")
 
 ## fix header
 file <- tempfile()
@@ -448,6 +449,12 @@ QUILT(
     use_mspbwt = TRUE
 )
 ## 
+
+## OK TODO
+## - are the plots working?
+## - does it seem to get better?
+## - 
+
 
 
 ## have done, merge code bases

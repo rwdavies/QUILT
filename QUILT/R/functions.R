@@ -2730,6 +2730,13 @@ impute_one_sample <- function(
     } else {
         pass_in_eMatRead_t <- TRUE
     }
+
+    if (ff == 0) {
+        do_shard_block_gibbs <- TRUE
+    } else {
+        do_shard_block_gibbs <- FALSE
+    }
+    
     param_list <- list(
         return_alpha = FALSE,
         return_extra = return_extra,
@@ -2750,7 +2757,7 @@ impute_one_sample <- function(
         use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
         sample_is_diploid = sample_is_diploid,
         update_in_place = FALSE,
-        do_shard_block_gibbs = TRUE,
+        do_shard_block_gibbs = do_shard_block_gibbs,
         shard_check_every_pair = shard_check_every_pair,
         force_reset_read_category_zero = FALSE,
         disable_read_category_usage = disable_read_category_usage,
@@ -2842,6 +2849,30 @@ impute_one_sample <- function(
             rare_per_hap_info = rare_per_hap_info,
             rare_per_snp_info = rare_per_snp_info
         )
+
+## ################################################################ werwerwer 
+
+##         print(paste0("Saving - ", paste0("/data/smew1/rdavies/temp.", i_gibbs_sample, ".", i_it, ".RData")))
+##         save(out, file = paste0("/data/smew1/rdavies/temp.", i_gibbs_sample, ".", i_it, ".RData"))
+##         print(paste0("Done saving - ", i_it))        
+##         print(names(out))
+##         print(table(out$H))
+##         print(table(out$H_class))
+##         print(table(out$H_class, out$H))
+##         print(table(            out$double_list_of_ending_read_labels[[1]][[1]], out$H))
+        
+##         print(out$per_it_likelihoods[, c("i_it", "p_O_given_H_L", "p_H_given_L", "p_H_class_given_L")])
+        
+##         x1 <- out$gibbs_block_output_list[[1]]$gibbs_block_output$block_results
+##         x2 <- out$gibbs_block_output_list[[2]]$gibbs_block_output$block_results
+##         x3 <- out$gibbs_block_output_list[[3]]$gibbs_block_output$block_results
+##         print(round(rbind(
+##             x1[c(1, nrow(x1) - 1), ],
+##             x2[c(1, nrow(x2) - 1), ],
+##             x3[c(1, nrow(x3) - 1), ]
+##         ), 3))
+## ################################################################ werwerwer 
+        
 
         if (out[["underflow_problem"]]) {
             new_maxDifferenceBetweenReads <- max(1, maxDifferenceBetweenReads / 10)
