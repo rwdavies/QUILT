@@ -1639,7 +1639,7 @@ get_and_impute_one_sample <- function(
             round(fet_gp_t[1, ], 3), ",",
             round(fet_gp_t[2, ], 3), ",",
             round(fet_gp_t[3, ], 3), ":",
-            round(fet_dosage, 3), ":"
+            round(fet_dosage, 3)
         )
         
     }
