@@ -1039,8 +1039,7 @@ get_and_impute_one_sample <- function(
                         regionEnd = regionEnd,
                         buffer = buffer,
                         minGLValue = minGLValue,
-                        suppressOutput = suppressOutput,
-                        method = method
+                        suppressOutput = suppressOutput
                     )
                     hap1 <- impute_all[["dosage1"]]
                     hap2 <- impute_all[["dosage2"]]

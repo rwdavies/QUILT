@@ -232,7 +232,7 @@ forwardBackwardGibbsNIPT <- function(
             ##
             rcpp_make_eMatGrid_t(eMatGrid_t = eMatGrid_t2, eMatRead_t = eMatRead_t, H = H, sampleReads = sampleReads, hap = 2, nGrids = nGrids, prev = 0, suppressOutput = 1, prev_section = "text", next_section = "", run_fb_grid_offset = run_fb_grid_offset, use_all_reads = FALSE, bound = bound_eMatGrid_t, maxEmissionMatrixDifference =  maxEmissionMatrixDifference, rescale = rescale_eMatGrid_t)
             ## 
-            rcpp_make_eMatGrid_t(eMatGrid_t = eMatGrid_t3, eMatRead_t = eMatRead_t, H = H, sampleReads = sampleReads, hap = 3, nGrids = nGrids, prev = 0, suppressOutput = 1, prev_section = "text", next_section = "", run_fb_grid_offset = run_fb_grid_offset, use_all_reads = FALSE, bound = bound_eMatGrid_t, maxEmissionMatrixDifference =  maxEmissionMatrixDifference, rescal = rescale_eMatGrid_t)
+            rcpp_make_eMatGrid_t(eMatGrid_t = eMatGrid_t3, eMatRead_t = eMatRead_t, H = H, sampleReads = sampleReads, hap = 3, nGrids = nGrids, prev = 0, suppressOutput = 1, prev_section = "text", next_section = "", run_fb_grid_offset = run_fb_grid_offset, use_all_reads = FALSE, bound = bound_eMatGrid_t, maxEmissionMatrixDifference =  maxEmissionMatrixDifference, rescale = rescale_eMatGrid_t)
             ##
             ##
             ## 

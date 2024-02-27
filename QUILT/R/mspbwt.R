@@ -642,9 +642,17 @@ impute_using_split_reads_and_small_ref_panel <- function(
         gl <- make_gl_from_u_bq(u, bq, nSNPs, minGLValue = minGLValue)
         use_eMatDH <- TRUE
         c <-  array(1, c(nGrids))  ## more useful for debugging
+        if (use_eigen) {
+            arma_alphaHat_t <- array(0, c(1, 1))
+            eigen_alphaHat_t <- full_alphaHat_t
+        } else {
+            arma_alphaHat_t <- full_alphaHat_t
+            eigen_alphaHat_t <- array(0, c(1, 1))
+        }
         Rcpp_haploid_dosage_versus_refs(
             gl = gl,
-            alphaHat_t = full_alphaHat_t,
+            arma_alphaHat_t = arma_alphaHat_t,
+            eigen_alphaHat_t = eigen_alphaHat_t,
             betaHat_t = full_betaHat_t,
             c = c,
             gamma_t = full_gamma_t,

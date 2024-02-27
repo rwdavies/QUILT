@@ -216,7 +216,8 @@ QUILT_prepare_reference <- function(
                 stop("You have selected reference populations to include, but have not included reference_sample_file with reference sample information")
             }
             if (reference_exclude_samplelist_file != "") {
-                stop("You have included reference_exclude_samplelist_file but have not included reference_sample_file with reference sample information")
+              s <- read.table(reference_exclude_samplelist_file, h = FALSE)[,1]
+              subsamples <- paste0("^", paste0(s, collapse = ",")) ## ^ means excluding in vcfpp.h
             }
         } else {
             reference_samples <- fread(reference_sample_file, header = TRUE, data.table = FALSE)
