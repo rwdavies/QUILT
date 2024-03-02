@@ -2735,6 +2735,7 @@ impute_one_sample <- function(
     } else {
         do_shard_block_gibbs <- FALSE
     }
+    if(sample_is_diploid) do_shard_block_gibbs <- FALSE
     
     param_list <- list(
         return_alpha = FALSE,
@@ -2824,7 +2825,7 @@ impute_one_sample <- function(
             snp_start_1_based = -1,
             snp_end_1_based = -1,
             generate_fb_snp_offsets = FALSE,
-            suppressOutput = suppressOutput,
+            suppressOutput = FALSE,
             n_gibbs_burn_in_its = n_gibbs_burn_in_its,
             n_gibbs_sample_its = n_gibbs_sample_its,
             n_gibbs_starts = n_gibbs_starts,

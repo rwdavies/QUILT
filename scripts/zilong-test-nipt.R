@@ -1,14 +1,14 @@
 ANALYSIS_DIR <- "/home/zilong/.tmp/quilt_nipt_test"
-REF_PREFIX <- "1KGP"
+REF_PREFIX <- "HRC"
 CHR <- "chr20"
-REGIONSTART <- 15281340
-## REGIONEND <- 23023517
-REGIONEND <- 20023517
+REGIONSTART <- 10082590
+REGIONEND <- 15082589
 BUFFER <- 500000
 FETAL_FRACTION <- 0.2
 SIM_COVERAGE <- 2.0
 SEED <- 12
 READ_LENGTH <- 150 ## NYGC 30X
+
 
 library("QUILT")
 library("data.table")
@@ -66,18 +66,17 @@ run2 <- function(...) {
 ##
 
 ## choose 3 haps at random from 3 different samples from the SAME population (otherwise it is too easy!)
-
-out <- get_random_samples_and_haps()
-samples_to_use <- out[[1]]
-haps_to_use <- out[[2]]
-
+## out <- get_random_samples_and_haps()
+## samples_to_use <- out[[1]]
+## haps_to_use <- out[[2]]
+samples_to_use <- c("NA12878", "NA12889", "NA12890")
+haps_to_use <- sample(c(1, 2), 3, replace= TRUE)
 
 ## build truth data
 load(file.path(outputdir, "RData", paste0("QUILT_prepared_reference.", CHR, ".", REGIONSTART, ".", REGIONEND, ".RData")))
 reference_samples <- run2("bcftools query -l ", reference_vcf_file)
 
 i <- match(samples_to_use, reference_samples)
-if(sum(is.na(i))) i <- sample(length(reference_samples), 3)
 samples_to_use <- reference_samples[i]
 which_haps_to_get <- 2 * i - 1 + (haps_to_use - 1) - 1 ## 0-based 
 
@@ -140,7 +139,6 @@ for(i_sample in 1:length(samples_to_use)) {
     sample <- samples_to_use[i_sample]
     load(file.path(outputdir, "input", paste0("sample.",i_sample, ".input.", REGIONNAME, ".RData")))
     load(file.path(outputdir, "input", paste0("sampleReadsInfo.",i_sample, ".input.", REGIONNAME, ".RData")))
-
     ## get a sample of truth labels
     which_haps_to_get <- 2 *match(samples_to_use[i_sample], reference_samples) + -1:0 - 1
     truth_haps_t <- STITCH::inflate_fhb_t(rhb_t, haps_to_get = which_haps_to_get, nSNPs = nrow(pos))
@@ -148,8 +146,6 @@ for(i_sample in 1:length(samples_to_use)) {
     hap_to_use <- haps_to_use[i_sample]
     readProbs <- assign_fetal_read_probabilities(sampleReads, truth_haps_t)
     read_labels <- 2 - as.integer(runif(length(sampleReads)) < (readProbs[1, ] / colSums(readProbs)))
-
-    
     ## get the reads we want
     cov_wanted <- c(0.5, 0.5 - FETAL_FRACTION / 2, FETAL_FRACTION / 2)[i_sample] * SIM_COVERAGE
     reads_wanted <- ((REGIONEND + BUFFER) - (REGIONSTART - BUFFER)) / READ_LENGTH * cov_wanted
@@ -158,14 +154,12 @@ for(i_sample in 1:length(samples_to_use)) {
     total_reads_in_region <- system(paste0("samtools view ", sample, ".",REGIONNAME, ".bam | wc -l"), intern = TRUE)
     reads_wanted <- round(reads_wanted * (n_reads_in_STITCH_object / as.integer(total_reads_in_region)))
     message(paste0("For the ", i_sample, " sample, keep ", reads_wanted, " reads "))
-    
     ## sample the reads!
     reads_to_keep <- sample(which(read_labels == hap_to_use), reads_wanted, replace = FALSE)
     file1 <- tempfile()
     file2 <- tempfile()
     file3 <- tempfile()
     cat(sampleReadsInfo[reads_to_keep, "qname"], file = file1, sep = "\n")
-
     run("samtools view ", sample, ".",REGIONNAME, ".bam > ", file2)
     run("samtools view -H ", sample, ".",REGIONNAME, ".bam > ", file3)
     ## add the reads
@@ -219,15 +213,10 @@ cat(FETAL_FRACTION, "\n", sep = "", file = "fflist.nipt.txt")
 write.table(matrix(samples_to_use, ncol = 1), file = "ref.samples.exclude.specific.txt", row.names =FALSE, col.names = FALSE, sep = "", quote = FALSE)
 
 ##
-reference_vcf_file_exclude_target <- paste0(REF_PREFIX, ".uniq.vcf.gz")
+## reference_vcf_file_exclude_target <- paste0(REF_PREFIX, ".uniq.vcf.gz")
 ## run("bcftools view -S ^ref.samples.exclude.specific.txt ", reference_vcf_file, " -Oz -o ", reference_vcf_file_exclude_target)
 ## run("bcftools index -f ", reference_vcf_file_exclude_target)
 
-## seems to work
-make_plots <- FALSE
-make_plots_block_gibbs <- FALSE
-nGibbsSamples <- 7
-n_seek_its <- 3
 
 QUILT_prepare_reference(
     outputdir = outputdir2,
@@ -240,9 +229,15 @@ QUILT_prepare_reference(
     regionEnd = REGIONEND,
     buffer = BUFFER,
     use_mspbwt = FALSE,
-    impute_rare_common = FALSE,
+    impute_rare_common = TRUE,
     rare_af_threshold = 0.001
 )
+
+## seems to work
+make_plots <- FALSE
+make_plots_block_gibbs <- FALSE
+nGibbsSamples <- 5
+n_seek_its <- 3
 
 QUILT(
     outputdir = outputdir2,
@@ -252,25 +247,31 @@ QUILT(
     regionEnd = REGIONEND,
     buffer = BUFFER,
     nGen = 100,
+    method = "diploid",
     bamlist = "bamlist.nipt.txt",
-    posfile = "pos.txt",
-    method = "nipt",
-    fflist = "fflist.nipt.txt",
-    phasefile = "phasefile.txt",   
+    ## posfile = "pos.txt",
+    ## fflist = "fflist.nipt.txt",
+    ## phasefile = "phasefile.txt",   
     nGibbsSamples = nGibbsSamples,
     n_seek_its = n_seek_its,
+    impute_rare_common = TRUE,
     make_plots = make_plots,
     make_plots_block_gibbs = make_plots_block_gibbs
 )
 
-## [2024-02-27 20:52:26] Final imputation accuracy for sample sim mat r2:0.969, PSE:0.2%, disc:2.6%
-## [2024-02-27 20:52:26] Final imputation accuracy for sample sim fet r2:0.89, PSE:0.3%, disc:11.9%
-## [2024-02-27 20:52:26] Final imputation accuracy for sample sim hap r2 mt:0.736, mu:0.628, pt:0.815
+# impute_rare_common = FALSE, use_mspbwt = FALSE
+## [2024-02-28 13:27:12] Final imputation accuracy for sample sim mat r2:0.975, PSE:0.2%, disc:1.4%
+## [2024-02-28 13:27:12] Final imputation accuracy for sample sim fet r2:0.842, PSE:0.2%, disc:15.7%
+## [2024-02-28 13:27:12] Final imputation accuracy for sample sim hap r2 mt:0.935, mu:0.93, pt:0.616
 
-## [2024-02-27 13:47:18] Final imputation accuracy for sample sim mat r2:0.953, PSE:0.1%, disc:3.9%
-## [2024-02-27 13:47:18] Final imputation accuracy for sample sim fet r2:0.813, PSE:0.1%, disc:6%
-## [2024-02-27 13:47:18] Final imputation accuracy for sample sim hap r2 mt:0.97, mu:0.889, pt:0.75
+# impute_rare_common = TRUE, rare_af_threshold = 0.001, use_mspbwt = FALSE
+## [2024-02-28 13:33:05] Final imputation accuracy for sample sim mat r2:0.979, PSE:0.2%, disc:2% (all SNPs)
+## [2024-02-28 13:33:05] Final imputation accuracy for sample sim fet r2:0.256, PSE:0.2%, disc:11.3% (all SNPs)
+## [2024-02-28 13:33:05] Final imputation accuracy for sample sim hap r2 mt:0.762, mu:0.754, pt:0.556 (all SNPs)
 
+## [2024-02-28 16:25:44] Final imputation accuracy for sample sim mat r2:0.894, PSE:2.4%, disc:17.3% (all SNPs)
+## [2024-02-28 16:25:44] Final imputation accuracy for sample sim fet r2:0.286, PSE:1%, disc:26.1% (all SNPs)
+## [2024-02-28 16:25:44] Final imputation accuracy for sample sim hap r2 mt:0.32, mu:0.224, pt:0.308 (all SNPs)
 
 QUILT_prepare_reference(
     outputdir = outputdir3,
@@ -283,8 +284,8 @@ QUILT_prepare_reference(
     regionEnd = REGIONEND,
     buffer = BUFFER,
     use_mspbwt = TRUE,
-    mspbwt_nindices = 1,
-    impute_rare_common = FALSE,
+    mspbwt_nindices = 4,
+    impute_rare_common = TRUE,
     rare_af_threshold = 0.01
 )
 
@@ -316,25 +317,9 @@ QUILT(
     make_plots_block_gibbs = make_plots_block_gibbs
 )
 
-# mspbwt impute_rare_common=false, mspbwt_nindicies=4
-## [2024-02-27 21:26:31] Final imputation accuracy for sample sim mat r2:0.962, PSE:0.3%, disc:2.8%
-## [2024-02-27 21:26:31] Final imputation accuracy for sample sim fet r2:0.891, PSE:0.1%, disc:13.2%
-## [2024-02-27 21:26:31] Final imputation accuracy for sample sim hap r2 mt:0.842, mu:0.766, pt:0.78
 
-# mspbwt impute_rare_common=false, mspbwt_nindicies=1
-## [2024-02-27 21:47:37] Final imputation accuracy for sample sim mat r2:0.956, PSE:0.6%, disc:11.4%
-## [2024-02-27 21:47:37] Final imputation accuracy for sample sim fet r2:0.857, PSE:0.3%, disc:24.6%
-## [2024-02-27 21:47:37] Final imputation accuracy for sample sim hap r2 mt:0.682, mu:0.346, pt:0.448
-
-# mspbwt impute_rare_common=true, mspbwt_nindicies=4, rare_af_threshold=0.01
-## [2024-02-27 21:12:01] Final imputation accuracy for sample sim mat r2:0.958, PSE:0.2%, disc:3.7%
-## [2024-02-27 21:12:01] Final imputation accuracy for sample sim fet r2:0.849, PSE:0.5%, disc:17%
-## [2024-02-27 21:12:01] Final imputation accuracy for sample sim hap r2 mt:0.523, mu:0.407, pt:0.65
-
-# mspbwt impute_rare_common=true, mspbwt_nindicies=1, rare_af_threshold=0.01
-## [2024-02-27 21:34:46] Final imputation accuracy for sample sim mat r2:0.961, PSE:0.4%, disc:3.7%
-## [2024-02-27 21:34:46] Final imputation accuracy for sample sim fet r2:0.858, PSE:0.2%, disc:14.6%
-## [2024-02-27 21:34:46] Final imputation accuracy for sample sim hap r2 mt:0.752, mu:0.554, pt:0.536
-
-
-
+## investigate double_list_of_starting_read_labels 
+ff <- 0.2
+nReads <- 100
+H <- sample(c(1, 2, 3), prob = c(0.5, 1 - ff / 2, ff / 2), nReads, replace = TRUE)
+H

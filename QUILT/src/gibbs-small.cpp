@@ -496,7 +496,8 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
     const double ref_error,
     const arma::imat& rhb_t,
     const bool use_eMatDH_special_symbols,
-    const bool calculate_gamma_on_the_fly
+    const bool calculate_gamma_on_the_fly,
+    const bool sample_is_diploid
 ) {
     // loop over grids
     int k, iGrid, s, e, b, dh, nSNPsLocal, bvtd, kk;
@@ -555,7 +556,7 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
             x2 = 1 / c2(iGrid);        
             gammaMU_t_local = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * x2;
             x3 = 1 / c3(iGrid);        
-            gammaP_t_local = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * x3;
+            if(!sample_is_diploid) gammaP_t_local = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * x3;
             //
         } else {
             gammaMT_t_local = gammaMT_t.col(iGrid);
@@ -732,7 +733,8 @@ void rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
     const Rcpp::List& rare_per_hap_info,
     const Rcpp::IntegerVector& common_snp_index,
     const Rcpp::LogicalVector& snp_is_common,
-    const Rcpp::List& rare_per_snp_info
+    const Rcpp::List& rare_per_snp_info,
+    const bool sample_is_diploid
 ) {
     // loop over grids
     int k, bvtd, kk;
@@ -780,7 +782,7 @@ void rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
             x2 = 1 / c2(iFullGrid);        
             gammaMU_t_local = (alphaHat_t2.col(iFullGrid) % betaHat_t2.col(iFullGrid)) * x2;
             x3 = 1 / c3(iFullGrid);        
-            gammaP_t_local = (alphaHat_t3.col(iFullGrid) % betaHat_t3.col(iFullGrid)) * x3;
+            if(!sample_is_diploid) gammaP_t_local = (alphaHat_t3.col(iFullGrid) % betaHat_t3.col(iFullGrid)) * x3;
             iFullGrid_prev = iFullGrid;
         }
         //
@@ -815,7 +817,7 @@ void rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
                 }
                 hapProbs_t(0, iFullSNP) += gammaMT_t_local(k) * d;
                 hapProbs_t(1, iFullSNP) += gammaMU_t_local(k) * d;
-                hapProbs_t(2, iFullSNP) += gammaP_t_local(k) * d;
+                if(!sample_is_diploid) hapProbs_t(2, iFullSNP) += gammaP_t_local(k) * d;
             }
         } else {
             // use rare info, slightly re-jigged (small so OK?)
@@ -824,20 +826,20 @@ void rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
                 // nothing here!
                 hapProbs_t(0, iFullSNP) = ref_error;
                 hapProbs_t(1, iFullSNP) = ref_error;
-                hapProbs_t(2, iFullSNP) = ref_error;
+                if(!sample_is_diploid) hapProbs_t(2, iFullSNP) = ref_error;
             } else {
                 // first add all in assuming ref
                 for(k = 0; k < K; k++) {
                     hapProbs_t(0, iFullSNP) += gammaMT_t_local(k) * ref_error;
                     hapProbs_t(1, iFullSNP) += gammaMU_t_local(k) * ref_error;
-                    hapProbs_t(2, iFullSNP) += gammaP_t_local(k) * ref_error;
+                    if(!sample_is_diploid) hapProbs_t(2, iFullSNP) += gammaP_t_local(k) * ref_error;
                 }
                 // now undo and redo
                 for(ik = 1; ik < k_with_alt.length(); ik++) {
                     k = k_with_alt(ik) - 1; // these are 1-based
                     hapProbs_t(0, iFullSNP) += gammaMT_t_local(k) * one_minus_2_times_ref_error;
                     hapProbs_t(1, iFullSNP) += gammaMU_t_local(k) * one_minus_2_times_ref_error;
-                    hapProbs_t(2, iFullSNP) += gammaP_t_local(k) * one_minus_2_times_ref_error;
+                    if(!sample_is_diploid) hapProbs_t(2, iFullSNP) += gammaP_t_local(k) * one_minus_2_times_ref_error;
                 }
             }
         }
@@ -846,13 +848,15 @@ void rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
         h2 = hapProbs_t(1, iFullSNP);
         genProbsM_t(0, iFullSNP) = (1 - h1) * (1 - h2);
         genProbsM_t(1, iFullSNP) = h1 * (1 - h2) + h2 * (1 - h1);
-        genProbsM_t(2, iFullSNP) = h1 * h2;
+        if(!sample_is_diploid) genProbsM_t(2, iFullSNP) = h1 * h2;
         // "fetal"
-        h1 = hapProbs_t(0, iFullSNP);
-        h2 = hapProbs_t(2, iFullSNP);
-        genProbsF_t(0, iFullSNP) = (1 - h1) * (1 - h2);
-        genProbsF_t(1, iFullSNP) = h1 * (1 - h2) + h2 * (1 - h1);
-        genProbsF_t(2, iFullSNP) = h1 * h2;
+        if(!sample_is_diploid) {
+            h1 = hapProbs_t(0, iFullSNP);
+            h2 = hapProbs_t(2, iFullSNP);
+            genProbsF_t(0, iFullSNP) = (1 - h1) * (1 - h2);
+            genProbsF_t(1, iFullSNP) = h1 * (1 - h2) + h2 * (1 - h1);
+            genProbsF_t(2, iFullSNP) = h1 * h2;
+        }
     }
     return;
 }

@@ -89,7 +89,8 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
     const double ref_error,
     const arma::imat& rhb_t,
     const bool use_eMatDH_special_symbols,
-    const bool calculate_gamma_on_the_fly
+    const bool calculate_gamma_on_the_fly,
+    const bool sample_is_diploid
 );
 
 void rcpp_make_eMatGrid_t(
@@ -229,6 +230,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     std::string& next_section,    
     const int suppressOutput,
     double& prev,
+    const bool sample_is_diploid,
     bool do_checks = false,
     Rcpp::List initial_package = R_NilValue,
     bool verbose = false,
@@ -326,7 +328,8 @@ void rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
     const Rcpp::List& rare_per_hap_info,
     const Rcpp::IntegerVector& common_snp_index,
     const Rcpp::LogicalVector& snp_is_common,
-    const Rcpp::List& rare_per_snp_info
+    const Rcpp::List& rare_per_snp_info,
+    const bool sample_is_diploid
 );
 
 
@@ -497,6 +500,7 @@ void rcpp_calculate_gn_genProbs_and_hapProbs(
     const Rcpp::IntegerVector& grid,
     const int snp_start_1_based,
     const int snp_end_1_based,
+    const bool sample_is_diploid,
     const int grid_offset = 0
 ) {
     // basically, copy and paste, either using grid or not
@@ -1902,7 +1906,8 @@ void rcpp_gibbs_nipt_iterate(
                 record_read_set, rlc, H_class, class_sum_cutoff,
                 i_gibbs_samplings, n_gibbs_full_its, prior_probs,
                 number_of_non_1_reads, indices_of_non_1_reads, read_category,
-                gibbs_initialize_iteratively, first_read_for_gibbs_initialization, sample_is_diploid
+                gibbs_initialize_iteratively, first_read_for_gibbs_initialization,
+                sample_is_diploid
             );
         }
         //
@@ -1938,6 +1943,7 @@ void rcpp_gibbs_nipt_iterate(
         }
         // artificial relabel is for testing purposes
         relabel = rcpp_consider_and_try_entire_relabelling(H, ff, artificial_relabel); // also will re-label H on the fly
+        relabel = 0;
         if (relabel > 1) { // re-label still 1-based, i.e. ranges from 1-6
             rcpp_apply_mat_relabel(alphaHat_t1, alphaHat_t2, alphaHat_t3, relabel);
             rcpp_apply_mat_relabel(betaHat_t1, betaHat_t2, betaHat_t3, relabel);
@@ -2192,6 +2198,7 @@ Rcpp::NumericMatrix unpack_gammas(
     const Rcpp::IntegerVector& common_snp_index,
     const Rcpp::LogicalVector& snp_is_common,
     const Rcpp::List& rare_per_snp_info,    
+    const bool sample_is_diploid,
     const int log_mult_max = 40
 ) {
     //
@@ -2247,10 +2254,12 @@ Rcpp::NumericMatrix unpack_gammas(
                 g_temp = 1 / c2(iGrid);
                 gammaMU_t_local.col(iGrid) *= g_temp;
             }
-            gammaP_t_local = alphaHat_t3 % betaHat_t3;
-            for(iGrid = 0; iGrid < nGrids; iGrid++) {
-                g_temp = 1 / c3(iGrid);
-                gammaP_t_local.col(iGrid) *= g_temp;
+            if(!sample_is_diploid) {
+                gammaP_t_local = alphaHat_t3 % betaHat_t3;
+                for(iGrid = 0; iGrid < nGrids; iGrid++) {
+                    g_temp = 1 / c3(iGrid);
+                    gammaP_t_local.col(iGrid) *= g_temp;
+                }
             }
         } else {
             // ugh, see + vs += below...
@@ -2259,21 +2268,23 @@ Rcpp::NumericMatrix unpack_gammas(
                 gamma_col = (alphaHat_t1.col(iGrid) % betaHat_t1.col(iGrid)) * g_temp;
                 gammaMT_t_local.col(iGrid) = hap_label_prob_matrix(0, 0) * gamma_col;
                 gammaMU_t_local.col(iGrid) = hap_label_prob_matrix(1, 0) * gamma_col;
-                gammaP_t_local.col(iGrid) = hap_label_prob_matrix(2, 0) * gamma_col;
+                if(!sample_is_diploid) gammaP_t_local.col(iGrid) = hap_label_prob_matrix(2, 0) * gamma_col;
             }
             for(iGrid = 0; iGrid < nGrids; iGrid++) {
                 g_temp = 1 / c2(iGrid);        
                 gamma_col = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * g_temp;
                 gammaMT_t_local.col(iGrid) += hap_label_prob_matrix(0, 1) * gamma_col;
                 gammaMU_t_local.col(iGrid) += hap_label_prob_matrix(1, 1) * gamma_col;
-                gammaP_t_local.col(iGrid) += hap_label_prob_matrix(2, 1) * gamma_col;
+                if(!sample_is_diploid) gammaP_t_local.col(iGrid) += hap_label_prob_matrix(2, 1) * gamma_col;
             }
-            for(iGrid = 0; iGrid < nGrids; iGrid++) {
-                g_temp = 1 / c3(iGrid);        
-                gamma_col = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * g_temp;
-                gammaMT_t_local.col(iGrid) += hap_label_prob_matrix(0, 2) * gamma_col;
-                gammaMU_t_local.col(iGrid) += hap_label_prob_matrix(1, 2) * gamma_col;
-                gammaP_t_local.col(iGrid) += hap_label_prob_matrix(2, 2) * gamma_col;
+            if(!sample_is_diploid){
+                for(iGrid = 0; iGrid < nGrids; iGrid++) {
+                    g_temp = 1 / c3(iGrid);        
+                    gamma_col = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * g_temp;
+                    gammaMT_t_local.col(iGrid) += hap_label_prob_matrix(0, 2) * gamma_col;
+                    gammaMU_t_local.col(iGrid) += hap_label_prob_matrix(1, 2) * gamma_col;
+                    gammaP_t_local.col(iGrid) += hap_label_prob_matrix(2, 2) * gamma_col;
+                }
             }
         }
     }
@@ -2284,12 +2295,14 @@ Rcpp::NumericMatrix unpack_gammas(
         next_section="calculate genProbs";
         prev=print_times(prev, suppressOutput, prev_section, next_section);
         prev_section=next_section;
+        next_section="test if works without carrying more RAM";
+        prev=print_times(prev, 0, prev_section, next_section);
         if (use_small_eHapsCurrent_tc) {
             rcpp_calculate_gn_genProbs_and_hapProbs(
                 genProbsM_t_local, genProbsF_t_local, hapProbs_t_local,
                 s, eHapsCurrent_tc,
                 gammaMT_t_local, gammaMU_t_local, gammaP_t_local,
-                grid, snp_start_1_based, snp_end_1_based, run_fb_grid_offset
+                grid, snp_start_1_based, snp_end_1_based, sample_is_diploid, run_fb_grid_offset
             );
         } else if (make_eMatRead_t_rare_common) {
             // not quite right title but need the same ideas here
@@ -2303,7 +2316,8 @@ Rcpp::NumericMatrix unpack_gammas(
                 distinctHapsB, distinctHapsIE,
                 eMatDH_special_matrix_helper, eMatDH_special_matrix,
                 which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols, 
-                rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info
+                rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info,
+                sample_is_diploid
             );
 
         } else {
@@ -2316,7 +2330,8 @@ Rcpp::NumericMatrix unpack_gammas(
                 hapMatcher, hapMatcherR, use_hapMatcherR,
                 distinctHapsB, distinctHapsIE,
                 eMatDH_special_matrix_helper, eMatDH_special_matrix,
-                which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols, calculate_gamma_on_the_fly
+                which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols,
+                calculate_gamma_on_the_fly, sample_is_diploid
             );
         }
     }
@@ -2455,7 +2470,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     double prev=clock();
     std::string prev_section="Null";
     std::string next_section="Initialize variables";
-    prev=print_times(prev, suppressOutput, prev_section, next_section);
+    prev=print_times(prev, 0, prev_section, next_section);
     prev_section=next_section;
     //
     // temp stuff
@@ -2521,6 +2536,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool record_read_set = as<bool>(param_list["record_read_set"]);
     const bool perform_block_gibbs = as<bool>(param_list["perform_block_gibbs"]);    
     const bool use_eMatDH_special_symbols = as<bool>(param_list["use_eMatDH_special_symbols"]);
+    prev=print_times(prev, 0, prev_section, next_section);
     //const bool use_provided_small_eHapsCurrent_tc = as<bool>(param_list["use_provided_small_eHapsCurrent_tc"]);
     //
     //
@@ -2902,7 +2918,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                     return_gamma, return_genProbs, return_hapProbs,
                     prior_probs, hg_log_mult, hg_ll_rescaled,
                     calculate_gamma_on_the_fly,
-                    make_eMatRead_t_rare_common, rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info 
+                    make_eMatRead_t_rare_common, rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info,sample_is_diploid 
                 );
                 //
                 if (!run_fb_subset) {
@@ -3006,7 +3022,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         next_section="Block gibbs - sample";
                         prev=print_times(prev, suppressOutput, prev_section, next_section);
                         prev_section=next_section;
-                        Rcpp::List out2 = Rcpp_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, maxEmissionMatrixDifference, sampleReads, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax_local, prev_section, next_section, suppressOutput, prev);
+                        Rcpp::List out2 = Rcpp_block_gibbs_resampler(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1,c2,c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, maxEmissionMatrixDifference, sampleReads, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax_local, prev_section, next_section, suppressOutput, prev, sample_is_diploid);
                         //rc = calculate_rc(H, true); // read counts temptemp
                         //
                         if (return_gibbs_block_output & return_advanced_gibbs_block_output) {
@@ -3015,7 +3031,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             for(iGrid = 0; iGrid < nGrids; iGrid++) {
                                 gamma1_t.col(iGrid) = (alphaHat_t1.col(iGrid) % betaHat_t1.col(iGrid)) * (1 / c1(iGrid));
                                 gamma2_t.col(iGrid) = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * (1 / c2(iGrid));
-                                gamma3_t.col(iGrid) = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * (1 / c3(iGrid));
+                                if(!sample_is_diploid) gamma3_t.col(iGrid) = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * (1 / c3(iGrid));
                             }
                             gibbs_block_output_local.push_back(gamma1_t, "after_gamma1_t");
                             gibbs_block_output_local.push_back(gamma2_t, "after_gamma2_t");
@@ -3040,7 +3056,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                                 for(iGrid = 0; iGrid < nGrids; iGrid++) {
                                     gamma1_t.col(iGrid) = (alphaHat_t1.col(iGrid) % betaHat_t1.col(iGrid)) * (1 / c1(iGrid));
                                     gamma2_t.col(iGrid) = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * (1 / c2(iGrid));
-                                    gamma3_t.col(iGrid) = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * (1 / c3(iGrid));
+                                    if(!sample_is_diploid) gamma3_t.col(iGrid) = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * (1 / c3(iGrid));
                                 }
                                 gibbs_block_output_local.push_back(gamma1_t, "after_shard_gamma1_t");
                                 gibbs_block_output_local.push_back(gamma2_t, "after_shard_gamma2_t");
@@ -3056,7 +3072,8 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             gibbs_block_output_list.push_back(gibbs_block_output_local);
                         }
                     }
-                    //
+                    prev=print_times(prev, 0, prev_section, next_section);
+
                     // save things when either: sampling iteration (yay!) or run_fb_subset (always!)
                     // 
                     if ((iteration + 1) > n_gibbs_burn_in_its) {
@@ -3082,7 +3099,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             return_gamma, return_genProbs, return_hapProbs,
                             prior_probs, hg_log_mult, hg_ll_rescaled,
                             calculate_gamma_on_the_fly,
-                            make_eMatRead_t_rare_common, rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info
+                            make_eMatRead_t_rare_common, rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info, sample_is_diploid
                         );
                         list_of_ending_read_labels.push_back(Rcpp::clone(H), "H") ;
                         //

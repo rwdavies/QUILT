@@ -636,7 +636,8 @@ void Rcpp_consider_block_relabelling(
     arma::mat& alphaHat_t3,
     arma::mat& betaHat_t3,
     arma::rowvec& c3,
-    arma::mat& eMatGrid_t3
+    arma::mat& eMatGrid_t3,
+    const bool sample_is_diploid
 ) {
   //
   if (verbose) {
@@ -648,7 +649,7 @@ void Rcpp_consider_block_relabelling(
   //
   betaHatLocal.col(0) = betaHat_t1.col(iGrid);
   betaHatLocal.col(1) = betaHat_t2.col(iGrid);
-  betaHatLocal.col(2) = betaHat_t3.col(iGrid);
+  if(!sample_is_diploid) betaHatLocal.col(2) = betaHat_t3.col(iGrid);
   //
   //
   if (verbose) {
@@ -861,7 +862,7 @@ void Rcpp_consider_block_relabelling(
           if ((block_approach == 1) | (block_approach == 2)) {          
               eMatGridLocal.col(rr0(ir_chosen, 0)) = eMatGrid_t1.col(iGrid2);
               eMatGridLocal.col(rr0(ir_chosen, 1)) = eMatGrid_t2.col(iGrid2);
-              eMatGridLocal.col(rr0(ir_chosen, 2)) = eMatGrid_t3.col(iGrid2);
+              if(!sample_is_diploid) eMatGridLocal.col(rr0(ir_chosen, 2)) = eMatGrid_t3.col(iGrid2);
           } else if ((block_approach == 4) | (block_approach == 6)) {
               eMatGridLocal.fill(1);
               // if necessary, move
@@ -888,13 +889,13 @@ void Rcpp_consider_block_relabelling(
           }
 	  eMatGrid_t1.col(iGrid2) = eMatGridLocal.col(0);
 	  eMatGrid_t2.col(iGrid2) = eMatGridLocal.col(1);
-	  eMatGrid_t3.col(iGrid2) = eMatGridLocal.col(2);
+	  if(!sample_is_diploid) eMatGrid_t3.col(iGrid2) = eMatGridLocal.col(2);
 	  //
 	  if (iGrid2 == 0) {
 	      // first grid!
 	      alphaHat_t1.col(iGrid2) = priorCurrent_m.col(s) % eMatGrid_t1.col(iGrid2);
 	      alphaHat_t2.col(iGrid2) = priorCurrent_m.col(s) % eMatGrid_t2.col(iGrid2);
-	      alphaHat_t3.col(iGrid2) = priorCurrent_m.col(s) % eMatGrid_t3.col(iGrid2);
+	      if(!sample_is_diploid) alphaHat_t3.col(iGrid2) = priorCurrent_m.col(s) % eMatGrid_t3.col(iGrid2);
 	  } else {
 	      // normal!
   	      alphaHat_t1.col(iGrid2) = eMatGrid_t1.col(iGrid2) % (
@@ -905,7 +906,7 @@ void Rcpp_consider_block_relabelling(
                   transMatRate_tc_H(0, iGrid2 - 1, s) * alphaHat_t2.col(iGrid2 - 1) + \
 	          transMatRate_tc_H(1, iGrid2 - 1, s) * alphaMatCurrent_tc.slice(s).col(iGrid2 - 1)
 	      );
-	      alphaHat_t3.col(iGrid2) = eMatGrid_t3.col(iGrid2) % (
+	      if(!sample_is_diploid) alphaHat_t3.col(iGrid2) = eMatGrid_t3.col(iGrid2) % (
 	        transMatRate_tc_H(0, iGrid2 - 1, s) * alphaHat_t3.col(iGrid2 - 1) + \
 		transMatRate_tc_H(1, iGrid2 - 1, s) * alphaMatCurrent_tc.slice(s).col(iGrid2 - 1)
 	      );
@@ -915,8 +916,10 @@ void Rcpp_consider_block_relabelling(
 	  alphaHat_t1.col(iGrid2) *= c1(iGrid2);
 	  c2(iGrid2) = 1 / arma::sum(alphaHat_t2.col(iGrid2));
 	  alphaHat_t2.col(iGrid2) *= c2(iGrid2);
-	  c3(iGrid2) = 1 / arma::sum(alphaHat_t3.col(iGrid2));
-	  alphaHat_t3.col(iGrid2) *= c3(iGrid2);
+      if(!sample_is_diploid){
+          c3(iGrid2) = 1 / arma::sum(alphaHat_t3.col(iGrid2));
+          alphaHat_t3.col(iGrid2) *= c3(iGrid2);
+      }
       }
       // finally, re-do read labels
       int gained = -1;
@@ -1085,6 +1088,7 @@ void Rcpp_consider_total_relabelling(
       // cannot seem to get pointer swap to work
       // oh well this is veeeeeery rare on real scale data
       //
+      ir_chosen = 0;
       if (ir_chosen > 0) { // re-label still 1-based, i.e. ranges from 1-6
           int relabel = ir_chosen + 1;
           rcpp_apply_mat_relabel(alphaHat_t1, alphaHat_t2, alphaHat_t3, relabel);
@@ -1262,7 +1266,8 @@ void Rcpp_reset_local_variables(
     arma::rowvec& c1,
     arma::rowvec& c2,
     arma::rowvec& c3,
-    arma::cube& log_cStore
+    arma::cube& log_cStore,
+    const bool sample_is_diploid
 ) {
     if (verbose) {
         std::cout << "Reset alphaHatLocal, cStore" << std::endl;
@@ -1271,7 +1276,8 @@ void Rcpp_reset_local_variables(
     // they are all using the current data
     alphaHatLocal.col(0) = alphaHat_t1.col(iGrid);
     alphaHatLocal.col(1) = alphaHat_t2.col(iGrid);
-    alphaHatLocal.col(2) = alphaHat_t3.col(iGrid);
+    if(!sample_is_diploid) alphaHatLocal.col(2) = alphaHat_t3.col(iGrid);
+    else alphaHatLocal.col(2).fill(0);
     Rcpp::NumericVector cLocal(3);
     cLocal(0) = c1(iGrid);
     cLocal(1) = c2(iGrid);
@@ -1664,6 +1670,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     std::string& next_section, 
     const int suppressOutput,
     double& prev,
+    const bool sample_is_diploid,
     bool do_checks = false,
     Rcpp::List initial_package = R_NilValue,
     bool verbose = false,
@@ -1845,7 +1852,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
         //}
         eMatGridLocal.col(0) = eMatGrid_t1.col(iGrid);
         eMatGridLocal.col(1) = eMatGrid_t2.col(iGrid);
-        eMatGridLocal.col(2) = eMatGrid_t3.col(iGrid);
+        if(!sample_is_diploid) eMatGridLocal.col(2) = eMatGrid_t3.col(iGrid);
         //
         // go forward one
         //
@@ -1860,7 +1867,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
             //
             // check block relabellings
             //
-            Rcpp_consider_block_relabelling(iBlock, runif_block, sum_H, s, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, eMatGridLocal, betaHatLocal, iGrid, grid_start_0_based, grid_end_0_based, read_start_0_based, read_end_0_based, wif0, log_cStore, alphaStore, read_is_uninformative, block_approach, do_checks, all_packages, block_results, ever_changed, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, fpp_stuff, H, H_class, proposed_H, nReads, eMatRead_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3);
+            Rcpp_consider_block_relabelling(iBlock, runif_block, sum_H, s, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, eMatGridLocal, betaHatLocal, iGrid, grid_start_0_based, grid_end_0_based, read_start_0_based, read_end_0_based, wif0, log_cStore, alphaStore, read_is_uninformative, block_approach, do_checks, all_packages, block_results, ever_changed, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, fpp_stuff, H, H_class, proposed_H, nReads, eMatRead_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, sample_is_diploid);
             //
             // total relabelling 
             //
@@ -1873,7 +1880,7 @@ Rcpp::List Rcpp_block_gibbs_resampler(
             //
             if ((iBlock + 1) < n_blocks) {
                 // note above - iBlock + 1, first one, is 0 vs 1-based. second one is need to check future
-                Rcpp_reset_local_variables(iGrid, verbose, alphaHatLocal, alphaStore, alphaHat_t1, alphaHat_t2, alphaHat_t3, c1, c2, c3, log_cStore);
+                Rcpp_reset_local_variables(iGrid, verbose, alphaHatLocal, alphaStore, alphaHat_t1, alphaHat_t2, alphaHat_t3, c1, c2, c3, log_cStore, sample_is_diploid);
             }
             //
             //
@@ -1940,15 +1947,17 @@ Rcpp::List Rcpp_block_gibbs_resampler(
     prev_section=next_section;
     betaHat_t1.col(nGrids - 1).fill(c1(nGrids-1));
     betaHat_t2.col(nGrids - 1).fill(c2(nGrids-1));
-    betaHat_t3.col(nGrids - 1).fill(c3(nGrids-1));
     //
     Rcpp_run_backward_haploid(betaHat_t1, c1, eMatGrid_t1, alphaMatCurrent_tc, transMatRate_tc_H, s);
     Rcpp_run_backward_haploid(betaHat_t2, c2, eMatGrid_t2, alphaMatCurrent_tc, transMatRate_tc_H, s);
-    Rcpp_run_backward_haploid(betaHat_t3, c3, eMatGrid_t3, alphaMatCurrent_tc, transMatRate_tc_H, s);
     // yes for the long term, not sure what I will ultimately do with this though
     Rcpp_run_backward_haploid_QUILT_faster(betaHat_t1, c1, eMatGrid_t1, transMatRate_tc_H, grid_has_read, s);    
-    Rcpp_run_backward_haploid_QUILT_faster(betaHat_t2, c2, eMatGrid_t2, transMatRate_tc_H, grid_has_read, s);    
-    Rcpp_run_backward_haploid_QUILT_faster(betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, grid_has_read, s);
+    Rcpp_run_backward_haploid_QUILT_faster(betaHat_t2, c2, eMatGrid_t2, transMatRate_tc_H, grid_has_read, s);
+    if(!sample_is_diploid) {
+        betaHat_t3.col(nGrids - 1).fill(c3(nGrids-1));
+        Rcpp_run_backward_haploid(betaHat_t3, c3, eMatGrid_t3, alphaMatCurrent_tc, transMatRate_tc_H, s);
+        Rcpp_run_backward_haploid_QUILT_faster(betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, grid_has_read, s);
+    }
     if (verbose) {
         std::cout << "done rcpp block gibbs sampling" << std::endl;
     }
