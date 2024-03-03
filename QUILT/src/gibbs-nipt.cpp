@@ -1348,6 +1348,7 @@ void rcpp_apply_mat_relabel(
     int iGrid;
     const int n = m1.n_cols;
     arma::colvec m_col;
+    // std::cout << arma::size(m3) << "\n";
     if (relabel == 2) {
         // 1, 3, 2  swap 2 and 3
         for(iGrid = 0; iGrid < n; iGrid++) {
@@ -1943,7 +1944,6 @@ void rcpp_gibbs_nipt_iterate(
         }
         // artificial relabel is for testing purposes
         relabel = rcpp_consider_and_try_entire_relabelling(H, ff, artificial_relabel); // also will re-label H on the fly
-        relabel = 0;
         if (relabel > 1) { // re-label still 1-based, i.e. ranges from 1-6
             rcpp_apply_mat_relabel(alphaHat_t1, alphaHat_t2, alphaHat_t3, relabel);
             rcpp_apply_mat_relabel(betaHat_t1, betaHat_t2, betaHat_t3, relabel);
@@ -2470,7 +2470,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     double prev=clock();
     std::string prev_section="Null";
     std::string next_section="Initialize variables";
-    prev=print_times(prev, 0, prev_section, next_section);
+    prev=print_times(prev, suppressOutput, prev_section, next_section);
     prev_section=next_section;
     //
     // temp stuff
@@ -2536,7 +2536,6 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool record_read_set = as<bool>(param_list["record_read_set"]);
     const bool perform_block_gibbs = as<bool>(param_list["perform_block_gibbs"]);    
     const bool use_eMatDH_special_symbols = as<bool>(param_list["use_eMatDH_special_symbols"]);
-    prev=print_times(prev, 0, prev_section, next_section);
     //const bool use_provided_small_eHapsCurrent_tc = as<bool>(param_list["use_provided_small_eHapsCurrent_tc"]);
     //
     //
@@ -3072,7 +3071,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                             gibbs_block_output_list.push_back(gibbs_block_output_local);
                         }
                     }
-                    prev=print_times(prev, 0, prev_section, next_section);
+                    prev=print_times(prev, suppressOutput, prev_section, next_section);
 
                     // save things when either: sampling iteration (yay!) or run_fb_subset (always!)
                     // 

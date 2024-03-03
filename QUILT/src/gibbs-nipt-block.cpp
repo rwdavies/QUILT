@@ -1081,14 +1081,13 @@ void Rcpp_consider_total_relabelling(
       }
       // swap H here
       for(iRead = 0; iRead < nReads; iRead++) {
-	H(iRead) = rr0(ir_chosen, H(iRead) - 1) + 1;
+          H(iRead) = rr0(ir_chosen, H(iRead) - 1) + 1;
       }
       //
       // hope I got this right!
       // cannot seem to get pointer swap to work
       // oh well this is veeeeeery rare on real scale data
       //
-      ir_chosen = 0;
       if (ir_chosen > 0) { // re-label still 1-based, i.e. ranges from 1-6
           int relabel = ir_chosen + 1;
           rcpp_apply_mat_relabel(alphaHat_t1, alphaHat_t2, alphaHat_t3, relabel);
@@ -2066,7 +2065,7 @@ Rcpp::List Rcpp_shard_block_gibbs_resampler(
     for(int iGrid2 = 0; iGrid2 < nGrids; iGrid2++) {
         minus_log_original_c1_sum -= log(c1(iGrid2));
         minus_log_original_c2_sum -= log(c2(iGrid2));
-        minus_log_original_c3_sum -= log(c3(iGrid2));        
+        if(ff>0) minus_log_original_c3_sum -= log(c3(iGrid2));        
     }
     
     bool in_flip_mode = false;
@@ -2115,7 +2114,7 @@ Rcpp::List Rcpp_shard_block_gibbs_resampler(
         //
         original_c1_this_grid = c1(iGrid);
         original_c2_this_grid = c2(iGrid);
-        original_c3_this_grid = c3(iGrid);
+        if(ff>0) original_c3_this_grid = c3(iGrid);
         //
         // normal forward one (includes initialization)
         //
@@ -2171,7 +2170,7 @@ Rcpp::List Rcpp_shard_block_gibbs_resampler(
         // note, forward_one does something different, this is what we want here, we are over-writing c
         minus_log_c1_sum -= log(c1(iGrid));
         minus_log_c2_sum -= log(c2(iGrid));
-        minus_log_c3_sum -= log(c3(iGrid));
+        if(ff>0) minus_log_c3_sum -= log(c3(iGrid));
         //
         //  go over read labels too, maybe flip them
         //
@@ -2343,11 +2342,11 @@ Rcpp::List Rcpp_shard_block_gibbs_resampler(
     }
     betaHat_t1.col(nGrids - 1).fill(c1(nGrids-1));
     betaHat_t2.col(nGrids - 1).fill(c2(nGrids-1));
-    betaHat_t3.col(nGrids - 1).fill(c3(nGrids-1));
+    if(ff>0) betaHat_t3.col(nGrids - 1).fill(c3(nGrids-1));
     //
     Rcpp_run_backward_haploid(betaHat_t1, c1, eMatGrid_t1, alphaMatCurrent_tc, transMatRate_tc_H, s);
     Rcpp_run_backward_haploid(betaHat_t2, c2, eMatGrid_t2, alphaMatCurrent_tc, transMatRate_tc_H, s);
-    Rcpp_run_backward_haploid(betaHat_t3, c3, eMatGrid_t3, alphaMatCurrent_tc, transMatRate_tc_H, s);
+    if(ff>0) Rcpp_run_backward_haploid(betaHat_t3, c3, eMatGrid_t3, alphaMatCurrent_tc, transMatRate_tc_H, s);
     if (verbose) {
         std::cout << "done rcpp block gibbs sampling" << std::endl;
     }

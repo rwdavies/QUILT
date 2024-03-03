@@ -782,9 +782,10 @@ QUILT <- function(
                 gammaP_t_local <- array(0, c(1, 1))
             }
 
+            ## honestly too hard to fix the code at this point
+          ## just going to need to carry some more RAM
+          ## zilong fixed this 03-03-2023
             if (!sample_is_diploid) {
-              ## honestly too hard to fix the code at this point
-              ## just going to need to carry some more RAM
               special_rare_common_objects_per_core <- list(
                 alphaHat_t1 = array(0, c(Ksubset, nFullGrids)),
                 betaHat_t1 = array(0, c(Ksubset, nFullGrids)),
