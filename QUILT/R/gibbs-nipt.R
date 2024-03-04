@@ -383,7 +383,8 @@ save_various_gammas <- function(
     hg_ll_rescaled,
     haploid_gibbs_equal_weighting,
     prior_probs,
-    ff
+    ff,
+    sample_is_diploid = FALSE
 ) {
     if (return_gamma | return_genProbs | return_hapProbs) {
         read_counts <- c(sum(H == 1), sum(H == 2), sum(H == 3))
@@ -424,7 +425,8 @@ save_various_gammas <- function(
             grid = grid,
             snp_start_1_based = snp_start_1_based,
             snp_end_1_based = snp_end_1_based,
-            grid_offset = run_fb_grid_offset
+            grid_offset = run_fb_grid_offset,
+            sample_is_diploid = sample_is_diploid
         )
         ## 
         if (return_genProbs | return_hapProbs) {

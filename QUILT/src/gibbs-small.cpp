@@ -863,6 +863,5 @@ void rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
             genProbsF_t(2, iFullSNP) = h1 * h2;
         }
     }
-    std::cout << "endddddddddddd\n";
     return;
 }

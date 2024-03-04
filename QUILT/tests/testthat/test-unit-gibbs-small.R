@@ -119,7 +119,8 @@ test_that("can avoid using eHapsCurrent_tc and gammas in genProbs calculation", 
         grid = grid,
         snp_start_1_based = snp_start_1_based,
         snp_end_1_based = snp_end_1_based,
-        grid_offset = 0
+        grid_offset = 0,
+        sample_is_diploid = FALSE
     )
 
 
@@ -201,7 +202,8 @@ test_that("can avoid using eHapsCurrent_tc and gammas in genProbs calculation", 
                     eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
                     eMatDH_special_matrix = eMatDH_special_matrix,
                     use_eMatDH_special_symbols = use_eMatDH_special_symbols,
-                    calculate_gamma_on_the_fly = calculate_gamma_on_the_fly
+                    calculate_gamma_on_the_fly = calculate_gamma_on_the_fly,
+                    sample_is_diploid = FALSE
                 )
                 
                 expect_equal( hapProbs_t_new, hapProbs_t)
@@ -310,7 +312,8 @@ test_that("can avoid using eHapsCurrent_tc and gammas in genProbs calculation", 
         rare_per_hap_info = rare_per_hap_info,
         common_snp_index = common_snp_index,
         snp_is_common = snp_is_common,
-        rare_per_snp_info = rare_per_snp_info
+        rare_per_snp_info = rare_per_snp_info,
+        sample_is_diploid = FALSE
     )
 
     expect_equal( hapProbs_t_new, hapProbs_t)
@@ -737,7 +740,8 @@ class(hapMatcher) <- "integer"
         distinctHapsIE = distinctHapsIE,
         which_haps_to_use = which_haps_to_use,
         ref_error = ref_error,
-        rhb_t = rhb_t
+        rhb_t = rhb_t,
+        sample_is_diploid = FALSE
     )
         list(genProbsM_t = genProbsM_t_new,
             genProbsF_t = genProbsF_t_new,

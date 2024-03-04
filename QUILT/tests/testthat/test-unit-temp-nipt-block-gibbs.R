@@ -16,7 +16,7 @@ if ( 1 == 0 ) {
 
 test_that("blarh", {
 
-    ## skip("not for routine use")
+    skip("not for routine use")
     
     i_it <- 3
     nSNPs <- 18808

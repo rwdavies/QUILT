@@ -27,7 +27,8 @@ helper_block_gibbs_resampler <- function(
     use_attempted_blocked_snps = FALSE,
     consider_total_relabelling = FALSE,
     maxEmissionMatrixDifference = 10000000000,
-    resample_H_using_H_class = FALSE
+    resample_H_using_H_class = FALSE,
+    sample_is_diploid = FALSE
 ) {
 
     if (is.null(eMatRead_t)) {
@@ -215,6 +216,7 @@ helper_block_gibbs_resampler <- function(
         next_section = "next_section",
         suppressOutput = 1, ## yup
         prev = 0,
+        sample_is_diploid = FALSE,
         consider_total_relabelling = consider_total_relabelling,
         resample_H_using_H_class = resample_H_using_H_class
     )
@@ -439,6 +441,7 @@ R_block_gibbs_resampler <- function(
     fpp_stuff = NULL,
     use_cpp_bits_in_R = FALSE,
     block_approach = 4,
+    sample_is_diploid = FALSE,
     consider_total_relabelling = TRUE,
     resample_H_using_H_class = FALSE
 ) {
@@ -716,6 +719,7 @@ R_block_gibbs_resampler <- function(
                 proposed_H = proposed_H,
                 nReads = nReads,
                 eMatRead_t = eMatRead_t,
+                sample_is_diploid = FALSE,
                 alphaHat_t1 = alphaHat_t1, betaHat_t1 = betaHat_t1, c1 = c1, eMatGrid_t1 = eMatGrid_t1,
                 alphaHat_t2 = alphaHat_t2, betaHat_t2 = betaHat_t2, c2 = c2, eMatGrid_t2 = eMatGrid_t2,
                 alphaHat_t3 = alphaHat_t3, betaHat_t3 = betaHat_t3, c3 = c3, eMatGrid_t3 = eMatGrid_t3
@@ -854,6 +858,7 @@ R_block_gibbs_resampler <- function(
                 out <- f(
                     iGrid = iGrid,
                     verbose = verbose,
+                    sample_is_diploid = FALSE,
                     alphaHatLocal = alphaHatLocal,
                     alphaStore = alphaStore,
                     alphaHat_t1 = alphaHat_t1,
@@ -1256,6 +1261,7 @@ R_consider_block_relabelling <- function(
     H_class,
     proposed_H,
     nReads,
+    sample_is_diploid,
     eMatRead_t,
     alphaHat_t1,
     betaHat_t1,
@@ -1947,6 +1953,7 @@ calculate_block_read_label_probabilities_using_H_class <- function(
 R_reset_local_variables <- function(
     iGrid,
     verbose,
+    sample_is_diploid,
     alphaHatLocal,
     alphaStore,
     alphaHat_t1,
