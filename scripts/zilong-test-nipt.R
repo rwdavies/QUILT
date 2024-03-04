@@ -228,7 +228,7 @@ QUILT_prepare_reference(
     regionStart= REGIONSTART,
     regionEnd = REGIONEND,
     buffer = BUFFER,
-    use_mspbwt = FALSE,
+    use_mspbwt = TRUE,
     impute_rare_common = TRUE,
     rare_af_threshold = 0.001
 )
@@ -254,7 +254,10 @@ QUILT(
     phasefile = "phasefile.diploid.txt",   
     nGibbsSamples = nGibbsSamples,
     n_seek_its = n_seek_its,
-    impute_rare_common = FALSE,
+    use_mspbwt = TRUE,
+    mspbwtL = 5,
+    ## impute_rare_common = TRUE,
+    ## rare_af_threshold = 0.001,
     make_plots = make_plots,
     make_plots_block_gibbs = make_plots_block_gibbs
 )

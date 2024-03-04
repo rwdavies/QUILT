@@ -532,9 +532,10 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
     arma::vec mg1(nMaxDH + 1);
     arma::vec mg2(nMaxDH + 1);
     //
-    arma::colvec gammaMT_t_local;
-    arma::colvec gammaMU_t_local;
-    arma::colvec gammaP_t_local;    
+    arma::colvec gammaMT_t_local(K);
+    arma::colvec gammaMU_t_local(K);
+    arma::colvec gammaP_t_local(K);
+    if(sample_is_diploid) gammaP_t_local.fill(0);
     //
     for(iGrid = 0; iGrid < nGrids; iGrid++) {
         s = 32 * (iGrid); // 0-based here
@@ -555,13 +556,15 @@ void rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects(
             gammaMT_t_local = (alphaHat_t1.col(iGrid) % betaHat_t1.col(iGrid)) * x1;
             x2 = 1 / c2(iGrid);        
             gammaMU_t_local = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * x2;
-            x3 = 1 / c3(iGrid);        
-            if(!sample_is_diploid) gammaP_t_local = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * x3;
+            if(!sample_is_diploid) {
+                x3 = 1 / c3(iGrid);        
+                gammaP_t_local = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * x3;   
+            }
             //
         } else {
             gammaMT_t_local = gammaMT_t.col(iGrid);
             gammaMU_t_local = gammaMU_t.col(iGrid);
-            gammaP_t_local = gammaP_t.col(iGrid);
+            if(!sample_is_diploid) gammaP_t_local = gammaP_t.col(iGrid);
         }
         for(k = 0; k < K; k++) {
             gk0 = gammaMT_t_local(k);
@@ -781,8 +784,10 @@ void rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
             gammaMT_t_local = (alphaHat_t1.col(iFullGrid) % betaHat_t1.col(iFullGrid)) * x1;
             x2 = 1 / c2(iFullGrid);        
             gammaMU_t_local = (alphaHat_t2.col(iFullGrid) % betaHat_t2.col(iFullGrid)) * x2;
-            x3 = 1 / c3(iFullGrid);        
-            if(!sample_is_diploid) gammaP_t_local = (alphaHat_t3.col(iFullGrid) % betaHat_t3.col(iFullGrid)) * x3;
+            if(!sample_is_diploid){
+                x3 = 1 / c3(iFullGrid);        
+                gammaP_t_local = (alphaHat_t3.col(iFullGrid) % betaHat_t3.col(iFullGrid)) * x3;  
+            } 
             iFullGrid_prev = iFullGrid;
         }
         //
@@ -848,7 +853,7 @@ void rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
         h2 = hapProbs_t(1, iFullSNP);
         genProbsM_t(0, iFullSNP) = (1 - h1) * (1 - h2);
         genProbsM_t(1, iFullSNP) = h1 * (1 - h2) + h2 * (1 - h1);
-        if(!sample_is_diploid) genProbsM_t(2, iFullSNP) = h1 * h2;
+        genProbsM_t(2, iFullSNP) = h1 * h2;
         // "fetal"
         if(!sample_is_diploid) {
             h1 = hapProbs_t(0, iFullSNP);
@@ -858,5 +863,6 @@ void rcpp_calculate_genProbs_and_hapProbs_final_rare_common(
             genProbsF_t(2, iFullSNP) = h1 * h2;
         }
     }
+    std::cout << "endddddddddddd\n";
     return;
 }

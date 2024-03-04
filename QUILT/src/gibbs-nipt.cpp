@@ -2295,8 +2295,6 @@ Rcpp::NumericMatrix unpack_gammas(
         next_section="calculate genProbs";
         prev=print_times(prev, suppressOutput, prev_section, next_section);
         prev_section=next_section;
-        next_section="test if works without carrying more RAM";
-        prev=print_times(prev, 0, prev_section, next_section);
         if (use_small_eHapsCurrent_tc) {
             rcpp_calculate_gn_genProbs_and_hapProbs(
                 genProbsM_t_local, genProbsF_t_local, hapProbs_t_local,
