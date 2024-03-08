@@ -145,8 +145,7 @@ test_that("QUILT can remove samples from the reference", {
                     reference_sample_file = refpack$reference_sample_file,
                     reference_exclude_samplelist_file = reference_exclude_samplelist_file,
                     reference_populations = reference_populations,
-                    nGen = 100,
-                    use_zilong = use_zilong
+                    nGen = 100
                 )
                 
                 ## check prepared stuff
@@ -189,7 +188,6 @@ test_that("QUILT can use reference vcf that is dirty with impute_rare_common and
         buffer = buffer,
         reference_vcf_file = refpack_dirty$reference_vcf_file,
         nGen = 100,
-        zilong = TRUE,
         impute_rare_common = TRUE,
         bamlist = data_package$bamlist        
     )

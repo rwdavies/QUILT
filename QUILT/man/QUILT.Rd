@@ -76,10 +76,8 @@ QUILT(
   small_ref_panel_gibbs_iterations = 20,
   plot_per_sample_likelihoods = FALSE,
   use_small_eHapsCurrent_tc = FALSE,
-  mspbwtB = 32L,
   mspbwtL = 40,
   mspbwtM = 1,
-  zilong = FALSE,
   use_mspbwt = FALSE,
   mspbwt_nindices = 4L,
   use_splitreadgl = FALSE,
@@ -238,13 +236,9 @@ QUILT(
 
 \item{use_small_eHapsCurrent_tc}{For testing purposes only}
 
-\item{mspbwtB}{How many SNPs will be encoded as one grid}
-
 \item{mspbwtL}{How many neighouring haplotypes to scan up and down at each grid.}
 
 \item{mspbwtM}{Minimun long grids matches}
-
-\item{zilong}{Using zilong's mspbwt solution}
 
 \item{use_mspbwt}{Use msPBWT to select new haplotypes}
 

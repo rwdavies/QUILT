@@ -72,10 +72,8 @@
 #'
 #' @param plot_per_sample_likelihoods Plot per sample likelihoods i.e. the likelihood as the method progresses through the Gibbs sampling iterations
 #' @param use_small_eHapsCurrent_tc For testing purposes only
-#' @param mspbwtB How many SNPs will be encoded as one grid
 #' @param mspbwtL How many neighouring haplotypes to scan up and down at each grid.
 #' @param mspbwtM Minimun long grids matches
-#' @param zilong Using zilong's mspbwt solution
 #' @param use_mspbwt Use msPBWT to select new haplotypes
 #' @param mspbwt_nindices How many mspbwt indices to build
 #' @param use_splitreadgl Use split real GL in hap selection and imputation
@@ -164,10 +162,8 @@ QUILT <- function(
     small_ref_panel_gibbs_iterations = 20,
     plot_per_sample_likelihoods = FALSE,
     use_small_eHapsCurrent_tc = FALSE,
-    mspbwtB = 32L,
     mspbwtL = 40,
     mspbwtM = 1,
-    zilong = FALSE,
     use_mspbwt = FALSE,
     mspbwt_nindices = 4L,
     use_splitreadgl = FALSE,
@@ -358,7 +354,6 @@ QUILT <- function(
             maxRate = maxRate,
             minRate = minRate,
             use_mspbwt = use_mspbwt,
-            use_zilong = zilong,
             reference_vcf_file = reference_vcf_file,
             output_file = prepared_reference_filename,
             override_use_eMatDH_special_symbols = override_use_eMatDH_special_symbols,
@@ -366,7 +361,6 @@ QUILT <- function(
             impute_rare_common = impute_rare_common,
             rare_af_threshold = rare_af_threshold,
             mspbwt_nindices = mspbwt_nindices,
-            mspbwtB = mspbwtB,
             use_list_of_columns_of_A = use_list_of_columns_of_A
         )
         print_message("Done processing reference information")        
@@ -385,21 +379,7 @@ QUILT <- function(
 
     if (use_mspbwt) {
         if (is.null(ms_indices)) {
-            stop("To use mspbwt and QUILT, you must prepare the reference package using use_mspbt=TRUE")
-        }
-    }
-
-    if (zilong && use_mspbwt) {
-        stop("Please select only one of zilong or use_mspbwt")
-    }
-
-
-    msp <- NULL
-    if (zilong) {
-        if (is.null(mspbwt_binfile)) {
-            stop("To use zilong mspbwt and QUILT, you must prepare the reference package using use_zilong=TRUE")
-        } else {
-            msp <- mspbwt_load(mspbwt_binfile, mspbwtB)
+            stop("To use mspbwt and QUILT, you must prepare the reference package using use_mspbwt=TRUE")
         }
     }
 
@@ -695,7 +675,7 @@ QUILT <- function(
 
         K <- nrow(hapMatcher)
         
-        if ((zilong | use_mspbwt) && (phasefile == "") && (genfile == "" )) {
+        if ((use_mspbwt) && (phasefile == "") && (genfile == "" )) {
             full_alphaHat_t <- array(0, c(1, 1))
         } else {
             full_alphaHat_t <- array(0, c(K, nGrids))
@@ -714,7 +694,7 @@ QUILT <- function(
         full_gammaSmall_cols_to_get <- array(-1, nGrids)
         full_gammaSmall_cols_to_get[ww] <- 0:(length(ww) - 1)
         ## can't remember exactly when I need it. keep off if no plots, and not using full heuristic 
-        if (!(use_mspbwt | zilong) | make_heuristic_plot | have_truth_haplotypes) {
+        if (!(use_mspbwt) | make_heuristic_plot | have_truth_haplotypes) {
             full_gammaSmall_t <-  array(0, c(K, length(ww)))
         } else {
             full_gammaSmall_t <-  array(0, c(1, 1))
@@ -921,10 +901,8 @@ QUILT <- function(
                 output_gt_phased_genotypes = output_gt_phased_genotypes,
                 ff_values = ff_values,
                 method = method,
-                mspbwtB = mspbwtB,
                 mspbwtL = mspbwtL,
                 mspbwtM = mspbwtM,
-                zilong = zilong,
                 msp =  msp,
                 use_mspbwt = use_mspbwt,
                 ms_indices = ms_indices,

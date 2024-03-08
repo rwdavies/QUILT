@@ -22,12 +22,10 @@
 #' @param expRate Expected recombination rate in cM/Mb
 #' @param maxRate Maximum recomb rate cM/Mb
 #' @param minRate Minimum recomb rate cM/Mb
-#' @param use_zilong Build zilong pbwt indices to be used in imputation
 #' @param use_mspbwt Build mspbwt indices to be used in imputation
 #' @param mspbwt_nindices How many mspbwt indices to build
 #' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
 #' @param use_hapMatcherR Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use
-#' @param mspbwtB How many SNPs will be encoded as one grid
 #' @param impute_rare_common Whether to use common SNPs first for imputation, followed by a round of rare imputation
 #' @param rare_af_threshold Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common
 #' @param use_list_of_columns_of_A If when using mspbwt, use columns of A rather than the whole thing, to speed up this version
@@ -58,12 +56,10 @@ QUILT_prepare_reference <- function(
     expRate = 1,
     maxRate = 100,
     minRate = 0.1,
-    use_zilong = FALSE,
     use_mspbwt = FALSE,
     mspbwt_nindices = 4L,
     override_use_eMatDH_special_symbols = NA,
     use_hapMatcherR = TRUE,
-    mspbwtB = 32L,
     impute_rare_common = FALSE,
     rare_af_threshold = 0.0001,
     use_list_of_columns_of_A = TRUE
@@ -165,8 +161,8 @@ QUILT_prepare_reference <- function(
         ##    stop("You have given reference_populations, however this does not yet work when using a reference VCF")
         ##}
     } else if (reference_haplotype_file != "" && reference_legend_file != "") {
-        if (use_zilong || use_mspbwt) {
-            stop("Please supply reference_vcf_file when use_zilong or use_mspbwt")
+        if (use_mspbwt) {
+            stop("Please supply reference_vcf_file when use_mspbwt")
         }
         print_message(paste0("Using reference information from:", reference_haplotype_file, " and ", reference_legend_file))
         use_reference_vcf <- FALSE
@@ -186,16 +182,6 @@ QUILT_prepare_reference <- function(
     }
 
 
-
-
-
-
-
-
-
-    mspbwt_binfile <- NULL ## needed by mspbwt
-
-    
     if (use_reference_vcf) {
 
         if (!impute_rare_common) {
@@ -239,19 +225,12 @@ QUILT_prepare_reference <- function(
             subsamples <- paste0(reference_samples[, 1], collapse = ",")
         }
 
-        if(use_zilong) {
-            print_message("Begin building all indices in one pass through vcf")
-            mspbwt_binfile <- paste0(outputdir, "/" , regionName, ".mspbwt")
-            out <- STITCH::quilt_mspbwt_build(mspbwt_binfile, reference_vcf_file, subsamples, samtoolslike, mspbwt_nindices, mspbwtB, rare_af_threshold)
-            print_message("End building and dumping MSPBWT indices")
-        } else {
-            out <- STITCH::Rcpp_get_hap_info_from_vcf(
-                    vcffile = reference_vcf_file,
-                    af_cutoff = rare_af_threshold,
-                    region = samtoolslike,
-                    samples = subsamples
-            )
-        }
+      out <- STITCH::Rcpp_get_hap_info_from_vcf(
+        vcffile = reference_vcf_file,
+        af_cutoff = rare_af_threshold,
+        region = samtoolslike,
+        samples = subsamples
+      )
         print_message("End get sites and haplotypes from reference vcf")
 
         ref_alleleCount <- out[["ref_alleleCount"]]
@@ -433,8 +412,7 @@ QUILT_prepare_reference <- function(
         nMaxDH = nMaxDH,
         nSNPs = nSNPs,
         ref_error = ref_error,
-        use_hapMatcherR = use_hapMatcherR,
-        zilong = use_zilong
+        use_hapMatcherR = use_hapMatcherR
     )
     distinctHapsB <- out[["distinctHapsB"]]
     distinctHapsIE <- out[["distinctHapsIE"]]
@@ -446,7 +424,7 @@ QUILT_prepare_reference <- function(
     if (!is.na(override_use_eMatDH_special_symbols)) {
         use_eMatDH_special_symbols <- override_use_eMatDH_special_symbols
     } else {
-        if (use_zilong | use_mspbwt | impute_rare_common) {
+        if (use_mspbwt | impute_rare_common) {
             use_eMatDH_special_symbols <- TRUE
         } else {
             use_eMatDH_special_symbols <- FALSE
@@ -456,7 +434,7 @@ QUILT_prepare_reference <- function(
     if (use_eMatDH_special_symbols) {
         eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
         eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
-        if (use_zilong || use_mspbwt) {
+        if (use_mspbwt) {
             rhb_t <- matrix(as.integer(1), 1, 1) ## nuke!
             gc(reset = TRUE); gc(reset = TRUE); 
         }
@@ -530,8 +508,6 @@ QUILT_prepare_reference <- function(
         buffer,
         chr,
         ms_indices,
-        mspbwt_binfile,
-        mspbwtB,
         nGen,
         use_eMatDH_special_symbols,
         rare_per_hap_info,

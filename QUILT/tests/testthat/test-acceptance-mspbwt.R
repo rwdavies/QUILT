@@ -61,7 +61,7 @@ chr <- data_package$chr
 
 
 
-test_that("QUILT can impute a few samples in a standard way using either normal, mspbwt, or zilong approaches, also using rare common idea", {
+test_that("QUILT can impute a few samples in a standard way using either normal, or mspbwt approaches, also using rare common idea", {
 
     ## options(warn=2)
 
@@ -130,11 +130,9 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         nCores = nCores,
                         nGen = 100,
                         use_mspbwt = use_mspbwt,
-                        zilong = zilong,
                         use_hapMatcherR = use_hapMatcherR,
                         impute_rare_common = impute_rare_common,
                         mspbwt_nindices = 1,
-                        mspbwtB = 32L,
                         rare_af_threshold = rare_af_threshold,
                         heuristic_approach = heuristic_approach,
                         use_list_of_columns_of_A = use_list_of_columns_of_A
@@ -154,11 +152,9 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         genetic_map_file = refpack$reference_genetic_map_file,
                         nGen = 100,
                         use_mspbwt = use_mspbwt,
-                        use_zilong = zilong,
                         use_hapMatcherR = use_hapMatcherR,
                         impute_rare_common = impute_rare_common,
                         mspbwt_nindices = 1,
-                        mspbwtB = 32L,
                         rare_af_threshold = rare_af_threshold,
                         use_list_of_columns_of_A = use_list_of_columns_of_A
                     )
@@ -175,7 +171,6 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         nCores = nCores,
                         use_hapMatcherR = use_hapMatcherR,                        
                         use_mspbwt = use_mspbwt,
-                        zilong = zilong,
                         impute_rare_common = impute_rare_common,
                         heuristic_approach = heuristic_approach                        
                     )

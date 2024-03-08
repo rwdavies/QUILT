@@ -140,12 +140,6 @@ option_list <- list(
         default = 0.1
     ), 
     make_option(
-        "--use_zilong",
-        type = "logical",
-        help = "Build zilong pbwt indices to be used in imputation [default FALSE] ",
-        default = FALSE
-    ), 
-    make_option(
         "--use_mspbwt",
         type = "logical",
         help = "Build mspbwt indices to be used in imputation [default FALSE] ",
@@ -168,12 +162,6 @@ option_list <- list(
         type = "logical",
         help = "Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use [default TRUE] ",
         default = TRUE
-    ), 
-    make_option(
-        "--mspbwtB",
-        type = "integer",
-        help = "How many SNPs will be encoded as one grid [default 32L] ",
-        default = 32L
     ), 
     make_option(
         "--impute_rare_common",
@@ -221,12 +209,10 @@ QUILT_prepare_reference(
     expRate = opt$expRate,
     maxRate = opt$maxRate,
     minRate = opt$minRate,
-    use_zilong = opt$use_zilong,
     use_mspbwt = opt$use_mspbwt,
     mspbwt_nindices = opt$mspbwt_nindices,
     override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
     use_hapMatcherR = opt$use_hapMatcherR,
-    mspbwtB = opt$mspbwtB,
     impute_rare_common = opt$impute_rare_common,
     rare_af_threshold = opt$rare_af_threshold,
     use_list_of_columns_of_A = opt$use_list_of_columns_of_A

@@ -1,202 +1,96 @@
-## zilong mspbwt32.cpp
-## @param msp is xptr to msPBWT object in C++
-select_new_haps_zilong_msp <- function(
-    hapProbs_t,
-    igibbs,
-    outputdir,
-    Kfull,
-    Knew,
-    msp,
-    mspbwtB,
-    mspbwtL,
-    mspbwtM,
-    nGrids,
-    method
-) {
-    ##
-    out <- lapply(1:nrow(hapProbs_t), function(x) {
-        hap <- round(hapProbs_t[x, ])
-        res <- as.data.frame(mspbwt_report(msp, mspbwtB, hap, mspbwtL, mspbwtM))
-        res <- res[order(-res$lens),]
-        res <- res[!duplicated(res[,c("haps")]),]
-        res$starts <- res$ends - res$lens + 1
-        res$keys <- res$starts * nGrids + res$ends
-        res$haps <- res$haps + 1
-        res
-    })
-    ## res <- do.call(rbind.data.frame, res)
-    if (method == "diploid") {
-        unique_haps <- unique(c(out[[1]][, "haps"], out[[2]][, "haps"]))
-    } else {
-        unique_haps <- unique(c(out[[1]][, "haps"], out[[2]][, "haps"], out[[3]][, "haps"]))
-    }
-    ## interhaps <- intersect(res[res$ihap == 1, "haps"], res[res$ihap == 2, "haps"])
-    ## saveRDS(res, file = file.path(outputdir, paste0("which_haps_to_use.i", igibbs, ".zilong.rds")))
-    print_message(paste("select", length(unique_haps), " unique haps by mpbwt query before post-selection"))
-    ## return(unique_haps[1:Knew])
-    if (length(unique_haps) == 0) {
-        new_haps <- sample(1:Kfull, Knew)
-        return(new_haps)
-    } else if (length(unique_haps) <= Knew) {
-        ## cannot take a sample larger than the population when 'replace = FALSE'
-        new_haps <- unique(c(
-            unique_haps,
-            sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
-        ))[1:Knew]
-        print_message(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
-        return(new_haps)
-    } else {
-        ##
-        ## heuristically, prioritize based on length and new-ness
-        ## do this for each of the two haps
-        ##
-        results <- lapply(out, function(mtm) {
-            m <- max(mtm[, "ends"])
-            weight <- numeric(m)
-            cur_sum <- numeric(m)
-            cur_sum[] <- 1
-            for(i in 1:nrow(mtm)) {
-                s <- mtm[i, "starts"]
-                e <- mtm[i, "ends"]
-                weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
-                cur_sum[s:e] <- cur_sum[s:e] + 1
-            }
-            ##
-            o <- order(-weight)
-            mtm <- mtm[o, ]
-            mtm[, "haps"]
-        })
-        ## pad out one of them
-        x <- results[[1]]
-        y <- results[[2]]
-        if (method == "nipt") {
-            z <- results[[3]]
-        } else {
-            z <- NULL
-        }
-        a <- max(c(length(x), length(y), length(z)))
-        x <- c(x, rep(NA, a - length(x)))
-        y <- c(y, rep(NA, a - length(y)))
-        if (method == "nipt") {
-            z <- c(z, rep(NA, a - length(z)))
-        }
-        if (method == "diploid") {
-            unique_ordered_haps <- unique(c(t(cbind(x, y))))
-        } else {
-            unique_ordered_haps <- unique(c(t(cbind(x, y, z))))
-        }
-        unique_ordered_haps <- unique_ordered_haps[!is.na(unique_ordered_haps)]
-        print_message(paste("select", length(unique(unique_ordered_haps)), " unique haps after post-selection 2"))
-        if (length(unique_ordered_haps) >= Knew) {
-            return(unique_ordered_haps[1:Knew])
-        } else {
-            ## add in some other (potentially) duplicated haps
-            new_haps <- c(setdiff(unique_ordered_haps, unique_haps), unique_haps)[1:Knew]
-            print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
-            return(new_haps)
-        }
-    }
-}
 
-
-## zilong mspbwt32.cpp
-## @param msp is xptr to msPBWT object in C++
-select_new_haps_zilong_msp_robbie_version <- function(
-    hapProbs_t,
-    igibbs,
-    outputdir,
-    Kfull,
-    Knew,
-    msp,
-    mspbwtB,
-    mspbwtL,
-    mspbwtM,
-    nGrids,
-    aggregated = FALSE,
-    method = "diploid"
-) {
-    res <- lapply(1:nrow(hapProbs_t), function(x) {
-        hap <- round(hapProbs_t[x, ])
-        res <- mspbwt_report(msp, hap, mspbwtL, mspbwtB, aggregated = aggregated)
-        return(res)
-    })
-    if (method == "diploid") {
-        ## merge, filter, order
-        ends <- c(res[[1]][["ends"]], res[[2]][["ends"]])
-        lens <- c(res[[1]][["lens"]], res[[2]][["lens"]])
-        haps <- c(res[[1]][["haps"]], res[[2]][["haps"]])
-        n <- c(res[[1]][["n"]], res[[2]][["n"]])
-    } else {
-        ends <- c(res[[1]][["ends"]], res[[2]][["ends"]], res[[3]][["ends"]])
-        lens <- c(res[[1]][["lens"]], res[[2]][["lens"]], res[[3]][["lens"]])
-        haps <- c(res[[1]][["haps"]], res[[2]][["haps"]], res[[3]][["haps"]])
-        n <- c(res[[1]][["n"]], res[[2]][["n"]], res[[3]][["n"]])        
-    }
-    res <- cbind(
-        haps = haps,
-        starts = ends - lens + 1,
-        ends = ends,
-        lens = lens,
-        n = n
-    )
-    res <- res[res[, "lens"] >= max(mspbwtM, 0), , drop = FALSE]
-    res <- cbind(res, keys = res[, "starts"] * nGrids + res[, "ends"])
-    ## remove those that are the same thing (effectively)
-    res <- res[!duplicated((res[, "n"] + 1) * (res[, "starts"] + 1) + nGrids * (res[, "haps"])), ]
-    ## remove those that are the same key
-    res <- res[!duplicated(res[, "keys"]), ]
-    ## can make this linear rather than an order
-    ## I'm too lazy to do it now, see if it comes back with a profile
-    ## print("make me linear")
-    res <- res[order(-res[, "lens"]), ]
-    ## 
-    unique_haps <- unique(res[, "haps"])
-    ## 
-    if (length(unique_haps) == 0) {
-        new_haps <- sample(1:Kfull, Knew)
-        return(new_haps)
-    } else if (length(unique_haps) <= Knew) {
-        ## cannot take a sample larger than the population when 'replace = FALSE'
-        new_haps <- unique(c(
-            unique_haps,
-            sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
-        ))[1:Knew]
-        print(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
-        return(new_haps)
-    } else {
-        ##
-        ## heuristically, prioritize based on length and new-ness
-        ## 
-        m <- max(res[, "ends"])
-        weight <- numeric(m)
-        cur_sum <- numeric(m)
-        cur_sum[] <- 1
-        for(i in 1:nrow(res)) {
-            s <- res[i, "starts"]
-            e <- res[i, "ends"]
-            weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
-            cur_sum[s:e] <- cur_sum[s:e] + 1
-        }
-        ##
-        unique_ordered_haps <- unique(res[order(-weight), "haps"])
-        print(paste("select", length(unique_ordered_haps), " unique haps after post-selection 2"))
-        ## 
-        if (length(unique_ordered_haps) >= Knew) {
-            return(unique_ordered_haps[1:Knew])
-        } else {
-            ## add in some other (potentially) duplicated haps
-            new_haps <- c(setdiff(unique_ordered_haps, unique_haps), unique_haps)[1:Knew]
-            print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
-            return(new_haps)
-        }
-  }
-}
-
-
-
-
-
-    
+## ## zilong mspbwt32.cpp
+## ## @param msp is xptr to msPBWT object in C++
+## select_new_haps_zilong_msp_robbie_version <- function(
+##     hapProbs_t,
+##     igibbs,
+##     outputdir,
+##     Kfull,
+##     Knew,
+##     msp,
+##     mspbwtB,
+##     mspbwtL,
+##     mspbwtM,
+##     nGrids,
+##     aggregated = FALSE,
+##     method = "diploid"
+## ) {
+##     res <- lapply(1:nrow(hapProbs_t), function(x) {
+##         hap <- round(hapProbs_t[x, ])
+##         res <- mspbwt_report(msp, hap, mspbwtL, mspbwtB, aggregated = aggregated)
+##         return(res)
+##     })
+##     if (method == "diploid") {
+##         ## merge, filter, order
+##         ends <- c(res[[1]][["ends"]], res[[2]][["ends"]])
+##         lens <- c(res[[1]][["lens"]], res[[2]][["lens"]])
+##         haps <- c(res[[1]][["haps"]], res[[2]][["haps"]])
+##         n <- c(res[[1]][["n"]], res[[2]][["n"]])
+##     } else {
+##         ends <- c(res[[1]][["ends"]], res[[2]][["ends"]], res[[3]][["ends"]])
+##         lens <- c(res[[1]][["lens"]], res[[2]][["lens"]], res[[3]][["lens"]])
+##         haps <- c(res[[1]][["haps"]], res[[2]][["haps"]], res[[3]][["haps"]])
+##         n <- c(res[[1]][["n"]], res[[2]][["n"]], res[[3]][["n"]])        
+##     }
+##     res <- cbind(
+##         haps = haps,
+##         starts = ends - lens + 1,
+##         ends = ends,
+##         lens = lens,
+##         n = n
+##     )
+##     res <- res[res[, "lens"] >= max(mspbwtM, 0), , drop = FALSE]
+##     res <- cbind(res, keys = res[, "starts"] * nGrids + res[, "ends"])
+##     ## remove those that are the same thing (effectively)
+##     res <- res[!duplicated((res[, "n"] + 1) * (res[, "starts"] + 1) + nGrids * (res[, "haps"])), ]
+##     ## remove those that are the same key
+##     res <- res[!duplicated(res[, "keys"]), ]
+##     ## can make this linear rather than an order
+##     ## I'm too lazy to do it now, see if it comes back with a profile
+##     ## print("make me linear")
+##     res <- res[order(-res[, "lens"]), ]
+##     ## 
+##     unique_haps <- unique(res[, "haps"])
+##     ## 
+##     if (length(unique_haps) == 0) {
+##         new_haps <- sample(1:Kfull, Knew)
+##         return(new_haps)
+##     } else if (length(unique_haps) <= Knew) {
+##         ## cannot take a sample larger than the population when 'replace = FALSE'
+##         new_haps <- unique(c(
+##             unique_haps,
+##             sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
+##         ))[1:Knew]
+##         print(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
+##         return(new_haps)
+##     } else {
+##         ##
+##         ## heuristically, prioritize based on length and new-ness
+##         ## 
+##         m <- max(res[, "ends"])
+##         weight <- numeric(m)
+##         cur_sum <- numeric(m)
+##         cur_sum[] <- 1
+##         for(i in 1:nrow(res)) {
+##             s <- res[i, "starts"]
+##             e <- res[i, "ends"]
+##             weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
+##             cur_sum[s:e] <- cur_sum[s:e] + 1
+##         }
+##         ##
+##         unique_ordered_haps <- unique(res[order(-weight), "haps"])
+##         print(paste("select", length(unique_ordered_haps), " unique haps after post-selection 2"))
+##         ## 
+##         if (length(unique_ordered_haps) >= Knew) {
+##             return(unique_ordered_haps[1:Knew])
+##         } else {
+##             ## add in some other (potentially) duplicated haps
+##             new_haps <- c(setdiff(unique_ordered_haps, unique_haps), unique_haps)[1:Knew]
+##             print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
+##             return(new_haps)
+##         }
+##   }
+## }
 
 
 get_and_impute_one_sample <- function(
@@ -294,10 +188,8 @@ get_and_impute_one_sample <- function(
     output_gt_phased_genotypes,
     ff_values,
     method,
-    mspbwtB,
     mspbwtL,
     mspbwtM,
-    zilong,
     msp,
     use_mspbwt,
     ms_indices,
@@ -796,7 +688,7 @@ get_and_impute_one_sample <- function(
             }
             
             ## print_message(paste0("i_gibbs, which_haps_to_use = ", paste(which_haps_to_use, collapse = ",")))
-            if (zilong | use_mspbwt) {
+            if (use_mspbwt) {
                 return_hapProbs <- TRUE
             }
 
@@ -884,7 +776,6 @@ get_and_impute_one_sample <- function(
                 i_it = i_it,
                 i_gibbs_sample = i_gibbs_sample,
                 shard_check_every_pair = shard_check_every_pair,
-                zilong = zilong,
                 calculate_gamma_on_the_fly = calculate_gamma_on_the_fly,
                 disable_read_category_usage = disable_read_category_usage
             )
@@ -938,7 +829,7 @@ get_and_impute_one_sample <- function(
             which_haps_to_use_zilong_mspbwt <- NULL
             which_haps_to_use_quilt1 <- NULL
             
-            if (zilong | (!use_mspbwt && make_heuristic_plot)) {
+            if ((!use_mspbwt && make_heuristic_plot)) {
 
                 ##print(paste0("zilong = ", zilong))
                 ##print(paste0("(!use_mspbwt && make_heuristic_plot) = ", (!use_mspbwt && make_heuristic_plot)))
@@ -952,39 +843,12 @@ get_and_impute_one_sample <- function(
                 
                 if (heuristic_approach == "A" | make_heuristic_plot) {
 
-                    which_haps_to_use <- select_new_haps_zilong_msp(
-                        hapProbs_t = gibbs_iterate$hapProbs_t,
-                        igibbs = igibbs,
-                        outputdir = outputdir,
-                        Kfull = Kfull,
-                        Knew = Knew,
-                        msp = msp,
-                        mspbwtB = mspbwtB,
-                        mspbwtL = mspbwtL,
-                        mspbwtM = mspbwtM,
-                        nGrids = nGrids,
-                        method = method
-                    )
-                    
                     which_haps_to_use_zilong_A <- which_haps_to_use
                     
                 }
 
                 if (heuristic_approach == "B" | make_heuristic_plot) {
 
-                    which_haps_to_use <- select_new_haps_zilong_msp_robbie_version(
-                        hapProbs_t = gibbs_iterate$hapProbs_t,
-                        igibbs = igibbs,
-                        outputdir = outputdir,
-                        Kfull = Kfull,
-                        Knew = Knew,
-                        msp = msp,
-                        mspbwtB = mspbwtB,
-                        mspbwtL = mspbwtL,
-                        mspbwtM = mspbwtM,
-                        nGrids = nGrids,
-                        method = method
-                    )
 
                     which_haps_to_use_zilong_B <- which_haps_to_use
 
@@ -992,7 +856,7 @@ get_and_impute_one_sample <- function(
                 
             }
 
-            if (use_mspbwt | (!zilong && make_heuristic_plot)) {
+            if (use_mspbwt | (make_heuristic_plot)) {
 
                 ## for testing purposes
                 if (use_splitreadgl) {
@@ -1104,7 +968,7 @@ get_and_impute_one_sample <- function(
 
             }
 
-            if ((!zilong && !use_mspbwt) | make_heuristic_plot) {
+            if ((!use_mspbwt) | make_heuristic_plot) {
                 
                 impute_all <- impute_using_everything(
                     eMatDH_special_matrix_helper = eMatDH_special_matrix_helper,
@@ -2579,7 +2443,6 @@ impute_one_sample <- function(
     i_it = NA,
     i_gibbs_sample = NA,
     shard_check_every_pair = FALSE,
-    zilong = FALSE,
     calculate_gamma_on_the_fly = FALSE,
     eMatRead_t = NULL,
     make_eMatRead_t_rare_common = FALSE,
@@ -2682,7 +2545,6 @@ impute_one_sample <- function(
     ## i_it,
     ## i_gibbs_sample,
     ## shard_check_every_pair,
-    ## zilong,
     ## calculate_gamma_on_the_fly,
     ## eMatRead_t,
     ## make_eMatRead_t_rare_common,

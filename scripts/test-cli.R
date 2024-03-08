@@ -36,8 +36,8 @@ STITCH::make_STITCH_cli(
     other_character_params = c("phasefile", "output_RData_filename", "RData_objects_to_save", "prepared_reference_filename", "reference_exclude_samplelist_file", "output_sites_filename", "region_exclude_file", "block_gibbs_iterations", "fflist", "method", "small_ref_panel_block_gibbs_iterations", "reference_vcf_file", "heuristic_approach"),
     integer_vectors = c("block_gibbs_iterations", "small_ref_panel_block_gibbs_iterations"),
     character_vectors = c("RData_objects_to_save"),
-    other_logical_params = c("make_plots", "verbose", "record_read_label_usage", "record_interim_dosages", "use_bx_tag", "addOptimalHapsToVCF", "estimate_bq_using_truth_read_labels", "make_plots_block_gibbs", "override_default_params_for_small_ref_panel", "hla_run", "make_fake_vcf_with_sites_list", "print_extra_timing_information", "plot_per_sample_likelihoods", "save_prepared_reference", "use_small_eHapsCurrent_tc", "output_gt_phased_genotypes", "zilong", "use_mspbwt", "use_splitreadgl",  "use_hapMatcherR", "ff0_shard_check_every_pair", "use_eigen", "impute_rare_common", "make_heuristic_plot", "use_list_of_columns_of_A", "calculate_gamma_on_the_fly", "shard_check_every_pair"),
-    other_integer_params = c("nGibbsSamples", "n_seek_its", "n_burn_in_seek_its", "Ksubset", "Knew", "K_top_matches", "panel_size", "bxTagUpperLimit", "seed", "gamma_physically_closest_to", "nMaxDH", "minimum_number_of_sample_reads", "small_ref_panel_gibbs_iterations", "mspbwtL", "mspbwtM", "override_use_eMatDH_special_symbols", "mspbwtB", "mspbwt_nindices"),
+    other_logical_params = c("make_plots", "verbose", "record_read_label_usage", "record_interim_dosages", "use_bx_tag", "addOptimalHapsToVCF", "estimate_bq_using_truth_read_labels", "make_plots_block_gibbs", "override_default_params_for_small_ref_panel", "hla_run", "make_fake_vcf_with_sites_list", "print_extra_timing_information", "plot_per_sample_likelihoods", "save_prepared_reference", "use_small_eHapsCurrent_tc", "output_gt_phased_genotypes", "use_mspbwt", "use_splitreadgl",  "use_hapMatcherR", "ff0_shard_check_every_pair", "use_eigen", "impute_rare_common", "make_heuristic_plot", "use_list_of_columns_of_A", "calculate_gamma_on_the_fly", "shard_check_every_pair"),
+    other_integer_params = c("nGibbsSamples", "n_seek_its", "n_burn_in_seek_its", "Ksubset", "Knew", "K_top_matches", "panel_size", "bxTagUpperLimit", "seed", "gamma_physically_closest_to", "nMaxDH", "minimum_number_of_sample_reads", "small_ref_panel_gibbs_iterations", "mspbwtL", "mspbwtM", "override_use_eMatDH_special_symbols", "mspbwt_nindices"),
     other_double_params = c("heuristic_match_thin", "minGLValue", "rare_af_threshold"),
     function_name = "QUILT",
     library_name = "QUILT"
@@ -50,8 +50,8 @@ STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt-prepare-reference.R",
     cli_output_file = cli_output_file,
     other_character_params = c("output_file", "reference_exclude_samplelist_file", "output_sites_filename", "region_exclude_file", "reference_vcf_file"),
-    other_logical_params = c("make_fake_vcf_with_sites_list", "use_mspbwt", "use_zilong",  "use_hapMatcherR", "impute_rare_common", "use_list_of_columns_of_A"),
-    other_integer_params = c("nMaxDH", "mspbwtB", "mspbwt_nindices", "override_use_eMatDH_special_symbols"),
+    other_logical_params = c("make_fake_vcf_with_sites_list", "use_mspbwt", "use_hapMatcherR", "impute_rare_common", "use_list_of_columns_of_A"),
+    other_integer_params = c("nMaxDH", "mspbwt_nindices", "override_use_eMatDH_special_symbols"),
     other_double_params = c("rare_af_threshold"),
     function_name = "QUILT_prepare_reference",
     library_name = "QUILT"

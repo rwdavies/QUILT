@@ -68,7 +68,6 @@ test_that("QUILT can impute a few samples using robbie mspbwt or zilong pbwt", {
             regionEnd = regionEnd,
             buffer = buffer,
             use_mspbwt = use_mspbwt,
-            use_zilong = zilong,
             mspbwt_nindices = 1
         )
         regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
@@ -88,8 +87,7 @@ test_that("QUILT can impute a few samples using robbie mspbwt or zilong pbwt", {
             posfile = data_package$posfile,
             genfile = data_package$genfile,
             phasefile = phasefile,
-            use_mspbwt = use_mspbwt,
-            zilong = zilong
+            use_mspbwt = use_mspbwt
         )
 
         which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)

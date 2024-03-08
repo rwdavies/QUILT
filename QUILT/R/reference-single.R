@@ -382,8 +382,9 @@ make_rhb_t_equality <- function(
     nMaxDH = NA,
     verbose = TRUE,
     use_hapMatcherR = FALSE,
-    zilong = TRUE
+    zilong = FALSE
 ) {
+    zilong = FALSE
     ## this overrides everything else
     if (is.na(nMaxDH)) {
         if (!use_hapMatcherR) {

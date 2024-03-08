@@ -429,12 +429,6 @@ option_list <- list(
         default = FALSE
     ), 
     make_option(
-        "--mspbwtB",
-        type = "integer",
-        help = "How many SNPs will be encoded as one grid [default 32L] ",
-        default = 32L
-    ), 
-    make_option(
         "--mspbwtL",
         type = "integer",
         help = "How many neighouring haplotypes to scan up and down at each grid. [default 40] ",
@@ -445,12 +439,6 @@ option_list <- list(
         type = "integer",
         help = "Minimun long grids matches [default 1] ",
         default = 1
-    ), 
-    make_option(
-        "--zilong",
-        type = "logical",
-        help = "Using zilong's mspbwt solution [default FALSE] ",
-        default = FALSE
     ), 
     make_option(
         "--use_mspbwt",
@@ -606,10 +594,8 @@ QUILT(
     small_ref_panel_gibbs_iterations = opt$small_ref_panel_gibbs_iterations,
     plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods,
     use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
-    mspbwtB = opt$mspbwtB,
     mspbwtL = opt$mspbwtL,
     mspbwtM = opt$mspbwtM,
-    zilong = opt$zilong,
     use_mspbwt = opt$use_mspbwt,
     mspbwt_nindices = opt$mspbwt_nindices,
     use_splitreadgl = opt$use_splitreadgl,

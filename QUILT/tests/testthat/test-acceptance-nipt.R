@@ -158,13 +158,10 @@ test_that("QUILT can impute a few samples with NIPT, w/wo IRC, w/wo regular vs m
             for(i_method in 1:2) {
 
                 if (i_method == 1) {
-                    zilong <- FALSE
                     use_mspbwt <- FALSE
                 } else if (i_method == 2) {
-                    zilong <- FALSE
                     use_mspbwt <- TRUE
                 } else if (i_method == 3) {
-                    zilong <- TRUE
                     use_mspbwt <- FALSE
                 }
 
@@ -191,7 +188,6 @@ test_that("QUILT can impute a few samples with NIPT, w/wo IRC, w/wo regular vs m
                     nCores = nCores,
                     nGen = 100,
                     use_mspbwt = use_mspbwt,
-                    zilong = zilong,
                     impute_rare_common = impute_rare_common,
                     mspbwt_nindices = 1,
                     method = method
