@@ -244,6 +244,7 @@ get_and_impute_one_sample <- function(
 
         load(file_sampleReads(tempdir, iSample, regionName))
         load(file_sampleReadsInfo(tempdir, iSample, regionName))
+        removeTmpSamplesFile(tempdir, iSample, regionName, save_sampleReadsInfo = TRUE)
         allSNP_sampleReads <- sampleReads
         allSNP_sampleReadsInfo <- sampleReadsInfo
         rm(sampleReads, sampleReadsInfo)
@@ -351,6 +352,7 @@ get_and_impute_one_sample <- function(
 
     load(file_sampleReads(tempdir, iSample, regionName))
     load(file_sampleReadsInfo(tempdir, iSample, regionName))
+    removeTmpSamplesFile(tempdir, iSample, regionName, save_sampleReadsInfo = TRUE)
 
     if (length(sampleReads) < minimum_number_of_sample_reads) {
         print_message(paste0("Sample number ", iSample, " with sample name ", sampleNames[iSample], " has ", length(sampleReads), " reads which is fewer than the minimum ", minimum_number_of_sample_reads, ". This sample will therefore not be imputed and all results will be set to missing"))
