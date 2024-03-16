@@ -941,15 +941,13 @@ QUILT <- function(
             rm(out)
 
             ## optionally, do some gc here, if longer running job
-            if (as.numeric(K) * as.numeric(nSNPs_all) > (1e6)) {
-                ## print("temporary")
-                ## print(head(sort( sapply(ls(),function(x){object.size(get(x))}), decreasing = TRUE)))
-                ## print(object.size(results_across_samples))
-                ## print(gc(reset = TRUE))
-                for(i in 1:5) {
-                    gc(reset = TRUE)
-                }
-            }
+          ## print("temporary")
+          ## print(head(sort( sapply(ls(),function(x){object.size(get(x))}), decreasing = TRUE)))
+          ## print(object.size(results_across_samples))
+          ## print(gc(reset = TRUE))
+          for(i in 1:5) {
+            gc(reset = TRUE)
+          }
 
         }
 

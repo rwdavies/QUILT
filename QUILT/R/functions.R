@@ -3240,5 +3240,56 @@ recast_haps <- function(hd1, hd2, gp) {
 }
 
 
+## chunker
 
+#' @export
+quilt_chunk_map <- function(chr, genetic_map_file, min.cm = 5, min.mb = 3000000, ex.cnt = 10) {
+
+  qmap <- data.table::fread(genetic_map_file, data.table = F)
+
+  ## min.cm <- 5
+  ## min.mb <- 3000000
+  ## ex.cnt <- 10 ## extra overlap number of sites for ligation
+  min.buf <- 0  ## don't know it at the moment. assume 500 kb
+
+  OUT <- matrix(ncol=2)
+  i <- 0
+  start <- 1
+  end <- 1
+  while(end < max(qmap[,1])){
+    ## start <- max(1, start + (i-1)*min.mb - min.buf)
+    end <- start + min.mb + min.buf
+    chunk <- subset(qmap, position >= start & position <= end)
+    ## check if cM > min.cm
+    while(diff(range(chunk[,3])) < min.cm) {
+      end <- end + min.mb / 3  ## extended by 1/10 of min.cm
+      chunk <- subset(qmap, position >= start & position <= end)
+      if(chunk[nrow(chunk),1] == qmap[nrow(qmap),1]) break;
+    }
+    a <- matrix(range(chunk[,1]), ncol=2)
+    OUT <- rbind(OUT, a)
+    start <- chunk[nrow(chunk)-ex.cnt, 1]
+    i <- i+1
+    print(i)
+  }
+
+  OUT <- OUT[-1,] ## remove first row. NA!
+  stopifnot(i==nrow(OUT))
+
+  ## check if we should merge the last two rows
+  if(OUT[i,2] - OUT[i-1,2] < min.mb / 3) {
+    OUT[i-1, 2] <- OUT[i, 2]
+    OUT <- OUT[-i, ]
+  }
+
+  ## fix first start 
+  OUT[1, 1] <- 1
+  ## pad more for the last row!
+  OUT[nrow(OUT),2] <- OUT[nrow(OUT), 2] + 5000000
+
+  rg <- apply(OUT, 1, function(o) paste0(chr,":",paste0(o, collapse = "-")))
+  dat <- data.frame(chunk = 1:length(rg)-1, chr = rep(chr, length(rg)), region = rg)
+  return(dat)
+  ## write.table(dat, "chunk.txt", row.names=F, col.names = F, quote = F, sep = "\t")
+}
 
