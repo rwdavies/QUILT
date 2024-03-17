@@ -3243,12 +3243,12 @@ recast_haps <- function(hd1, hd2, gp) {
 ## chunker
 
 #' @export
-quilt_chunk_map <- function(chr, genetic_map_file, min.cm = 5, min.mb = 3000000, ex.cnt = 10) {
+quilt_chunk_map <- function(chr, genetic_map_file, min.bp = 3e6, min.cm = 4, ex.cnt = 10) {
 
   qmap <- data.table::fread(genetic_map_file, data.table = F)
 
   ## min.cm <- 5
-  ## min.mb <- 3000000
+  ## min.bp <- 3000000
   ## ex.cnt <- 10 ## extra overlap number of sites for ligation
   min.buf <- 0  ## don't know it at the moment. assume 500 kb
 
@@ -3257,12 +3257,11 @@ quilt_chunk_map <- function(chr, genetic_map_file, min.cm = 5, min.mb = 3000000,
   start <- 1
   end <- 1
   while(end < max(qmap[,1])){
-    ## start <- max(1, start + (i-1)*min.mb - min.buf)
-    end <- start + min.mb + min.buf
+    end <- start + min.bp + min.buf
     chunk <- subset(qmap, position >= start & position <= end)
     ## check if cM > min.cm
     while(diff(range(chunk[,3])) < min.cm) {
-      end <- end + min.mb / 3  ## extended by 1/10 of min.cm
+      end <- end + min.bp / 3  ## extended by 1/3
       chunk <- subset(qmap, position >= start & position <= end)
       if(chunk[nrow(chunk),1] == qmap[nrow(qmap),1]) break;
     }
@@ -3277,7 +3276,7 @@ quilt_chunk_map <- function(chr, genetic_map_file, min.cm = 5, min.mb = 3000000,
   stopifnot(i==nrow(OUT))
 
   ## check if we should merge the last two rows
-  if(OUT[i,2] - OUT[i-1,2] < min.mb / 3) {
+  if(OUT[i,2] - OUT[i-1,2] < min.bp / 3) {
     OUT[i-1, 2] <- OUT[i, 2]
     OUT <- OUT[-i, ]
   }
