@@ -431,8 +431,8 @@ option_list <- list(
     make_option(
         "--mspbwtL",
         type = "integer",
-        help = "How many neighouring haplotypes to scan up and down at each grid. [default 40] ",
-        default = 40
+        help = "How many neighouring haplotypes to scan up and down at each grid. [default 3] ",
+        default = 3
     ), 
     make_option(
         "--mspbwtM",
@@ -491,8 +491,8 @@ option_list <- list(
     make_option(
         "--rare_af_threshold",
         type = "double",
-        help = "Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common [default 0.0001] ",
-        default = 0.0001
+        help = "Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common [default 0.001] ",
+        default = 0.001
     ), 
     make_option(
         "--make_heuristic_plot",

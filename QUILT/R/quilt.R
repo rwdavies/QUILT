@@ -162,7 +162,7 @@ QUILT <- function(
     small_ref_panel_gibbs_iterations = 20,
     plot_per_sample_likelihoods = FALSE,
     use_small_eHapsCurrent_tc = FALSE,
-    mspbwtL = 40,
+    mspbwtL = 3,
     mspbwtM = 1,
     use_mspbwt = FALSE,
     mspbwt_nindices = 4L,
@@ -172,7 +172,7 @@ QUILT <- function(
     shard_check_every_pair = TRUE,
     use_eigen = TRUE,
     impute_rare_common = FALSE,
-    rare_af_threshold = 0.0001,
+    rare_af_threshold = 0.001,
     make_heuristic_plot = FALSE,
     heuristic_approach = 'A',
     use_list_of_columns_of_A = TRUE,
@@ -187,8 +187,8 @@ QUILT <- function(
     )
     print_message(paste0("Running ", command_line))
 
-    ## not sure about naming but use it for now
-    use_sample_is_diploid <- TRUE
+  ## not sure about naming but use it for now
+  use_sample_is_diploid <- ifelse(method=="nipt", FALSE, TRUE)
     if (use_sample_is_diploid) {
         sample_is_diploid <- TRUE
     }else {

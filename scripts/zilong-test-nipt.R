@@ -236,7 +236,7 @@ QUILT_prepare_reference(
 ## seems to work
 make_plots <- FALSE
 make_plots_block_gibbs <- FALSE
-nGibbsSamples <- 7
+nGibbsSamples <- 5
 n_seek_its <- 3
 
 QUILT(
@@ -247,17 +247,18 @@ QUILT(
     regionEnd = REGIONEND,
     buffer = BUFFER,
     nGen = 100,
-    method = "diploid",
+    method = "nipt",
     bamlist = "bamlist.nipt.txt",
     posfile = "pos.txt",
-    ## fflist = "fflist.nipt.txt",
-    phasefile = "phasefile.diploid.txt",   
+    fflist = "fflist.nipt.txt",
+    phasefile = "phasefile.txt",   
     nGibbsSamples = nGibbsSamples,
     n_seek_its = n_seek_its,
     use_mspbwt = TRUE,
     mspbwtL = 5,
-    ## impute_rare_common = TRUE,
-    ## rare_af_threshold = 0.001,
+    mspbwtM = 1,
+    impute_rare_common = FALSE,
+    rare_af_threshold = 0.001,
     make_plots = make_plots,
     make_plots_block_gibbs = make_plots_block_gibbs
 )
