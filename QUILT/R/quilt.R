@@ -717,7 +717,7 @@ QUILT <- function(
           betaHat_t3 <- array(0, c(1, 1))
           eMatGrid_t3 <- array(0, c(1, 1))
         }
-        if (make_plots_block_gibbs | !calculate_gamma_on_the_fly ) {
+        if (make_plots | make_plots_block_gibbs | !calculate_gamma_on_the_fly ) {
             gammaMT_t_local <- array(0, c(Ksubset, nGrids))
             gammaMU_t_local <- array(0, c(Ksubset, nGrids))
             gammaP_t_local <- array(0, c(Ksubset, nGrids))

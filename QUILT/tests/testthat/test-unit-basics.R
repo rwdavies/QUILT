@@ -20,3 +20,5 @@ test_that("can capture failed system command", {
     expect_error(check_system_OK(out))
 
 })
+
+

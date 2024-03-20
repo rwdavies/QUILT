@@ -1285,10 +1285,19 @@ get_and_impute_one_sample <- function(
                     phasing_haps <- cbind(hap1, hap2)
                     phasing_dosage <- hap1 + hap2
                 } else {
-                    print_message("niptwerwer TO WRITE RECAST_HAPS FOR NIPT")
-                    phasing_haps <- cbind(hap1, hap2, hap3)
-                    ##phasing_mat_dosage <- hap1 + hap2
-                    ##phasing_fet_dosage <- hap1 + hap3
+                    ## phasing_haps <- cbind(hap1, hap2, hap3)
+                    out <- recast_nipt_haps(
+                        hap1 = hap1,
+                        hap2 = hap2,
+                        hap3 = hap3,
+                        mat_gp_t = mat_gp_t,
+                        fet_gp_t = fet_gp_t
+                    )
+                    phasing_haps <- cbind(
+                        out[["hap1"]],
+                        out[["hap2"]],
+                        out[["hap3"]]
+                    )
                 }
             } else {
                 if (method == "diploid") {                
@@ -1299,11 +1308,21 @@ get_and_impute_one_sample <- function(
                     hap2_all <- out$hd2
                     phasing_haps_all <- cbind(hap1_all, hap2_all)
                 } else {
-                    print_message("niptwerwer NEED TO WRITE RECAST_HAPS FOR NIPT")                    
+                    out <- recast_nipt_haps(
+                        hap1 = hap1_all,
+                        hap2 = hap2_all,
+                        hap3 = hap3_all,
+                        mat_gp_t = mat_gp_t_all,
+                        fet_gp_t = fet_gp_t_all
+                    )
                     ## phasing_haps <- cbind(hap1_all, hap2_all, hap3_all)
                     ##phasing_mat_dosage <- hap1_all + hap2_all
                     ##phasing_fet_dosage <- hap1_all + hap3_all
-                    phasing_haps_all <- cbind(hap1_all, hap2_all, hap3_all)
+                    phasing_haps_all <- cbind(
+                        out[["hap1"]],
+                        out[["hap2"]],
+                        out[["hap3"]]
+                    )
                 }
             }
         }
@@ -2688,7 +2707,7 @@ impute_one_sample <- function(
             snp_start_1_based = -1,
             snp_end_1_based = -1,
             generate_fb_snp_offsets = FALSE,
-            suppressOutput = suppressOutput,
+            suppressOutput = suppressOutput, ## 
             n_gibbs_burn_in_its = n_gibbs_burn_in_its,
             n_gibbs_sample_its = n_gibbs_sample_its,
             n_gibbs_starts = n_gibbs_starts,
@@ -3212,7 +3231,11 @@ estimate_bq <- function(truth_labels, sampleReads, truth_haps) {
 
 
 ## force phased haplotypes to agree with genotype posterior
-recast_haps <- function(hd1, hd2, gp) {
+recast_haps <- function(hd1, hd2, gp, force_round = FALSE) {
+    if (force_round) {
+        hd1 <- round(hd1)
+        hd2 <- round(hd2)
+    }
     gt1 <- round(hd1) + round(hd2)
     max_val <- gp[, 1]
     gt3 <- rep(0, nrow(gp))
@@ -3221,9 +3244,9 @@ recast_haps <- function(hd1, hd2, gp) {
         gt3[w] <- i - 1
         max_val[w] <- gp[w, i]
     }
-    
     ##
     to_change <- which(gt3 != gt1)
+    ## um, round all of them? 
     ## easy one
     hd1[to_change][gt3[to_change] == 0] <- 0
     hd2[to_change][gt3[to_change] == 0] <- 0
@@ -3237,6 +3260,85 @@ recast_haps <- function(hd1, hd2, gp) {
     hd1[to_change][gt3[to_change] == 1][a1 <= a2] <- 0
     hd2[to_change][gt3[to_change] == 1][a1 <= a2] <- 1
     return(list(hd1 = hd1, hd2 = hd2))
+}
+
+
+## this is all about the phased output
+## so can re-do them all 
+recast_nipt_haps <- function(
+    hap1,
+    hap2,
+    hap3,
+    mat_gp_t,
+    fet_gp_t
+) {
+    ## base almost entirely on argmax genotypes
+    ## obvious option: do both, keep track of those changed twice
+    gt1A <- round(hap1) + round(hap2)
+    gt1B <- round(hap1) + round(hap3)    
+    gtMT <- rep(0, ncol(mat_gp_t)) ## genotype mother thresolded
+    gtFT <- rep(0, ncol(mat_gp_t)) ## genotype fetus thresholded
+    max_valA <- mat_gp_t[1, ]
+    max_valB <- fet_gp_t[1, ]
+    for(i in 2:3) {
+        ##
+        w <- mat_gp_t[i, ] > max_valA
+        gtMT[w] <- i - 1
+        max_valA[w] <- mat_gp_t[i, w]
+        ##
+        w <- fet_gp_t[i, ] > max_valB
+        gtFT[w] <- i - 1
+        max_valB[w] <- fet_gp_t[i, w]
+    }
+    ## OK let's rock and roll
+    ## here first two cols are genotypes, last three are haps, in the normal order
+    ## three exceptions:
+    ##   two that shouldn't happen:
+    ##     mat genotypes 0 and fet genotypes 2
+    ##     mat genotypes 2 and fet genotypes 0
+    ##   one that definitely could happen
+    ##     mat genotype 1 and fet genotype 1
+    ##   in all cases, favour the maternal one, as it has more data almost certainly
+    conv_mat <- rbind(
+        c(0, 0, 0, 0, 0),
+        c(0, 1, 0, 0, 1),
+        c(0, 2, 0, 0, 1),
+        c(1, 0, 0, 1, 0),
+        c(1, 2, 1, 0, 1),
+        c(2, 0, 1, 1, 0),
+        c(2, 1, 1, 1, 0),
+        c(2, 2, 1, 1, 1)
+    )
+    for(i_row in 1:nrow(conv_mat)) {
+        w <- (gtMT == conv_mat[i_row, 1]) & (gtFT == conv_mat[i_row, 2])
+        hap1[w] <- conv_mat[i_row, 3]
+        hap2[w] <- conv_mat[i_row, 4]
+        hap3[w] <- conv_mat[i_row, 5]        
+    }
+    ## 
+    ## for double 1, should either be 1 0 0 or 0 1 1
+    ## so when those work, assign them
+    w1 <- (gtMT == 1) & (gtFT == 1)
+    ## 
+    w2 <- round(hap1[w1]) == 1 & round(hap2[w1]) == 0 & round(hap3[w1]) == 0
+    hap1[w1][w2] <- 1
+    hap2[w1][w2] <- 0
+    hap3[w1][w2] <- 0
+    ##
+    w3 <- round(hap1[w1]) == 0 & round(hap2[w1]) == 1 & round(hap3[w1]) == 1
+    hap1[w1][w3] <- 0
+    hap2[w1][w3] <- 1
+    hap3[w1][w3] <- 1
+    ## otherwise, favour the maternal one, assume error in fetal
+    w4 <- !w2 & !w3
+    hap1[w1][w4] <- round(hap1[w1][w4])
+    hap2[w1][w4] <- round(hap2[w1][w4])
+    hap3[w1][w4] <- 1 - hap1[w1][w4]
+    ## now round them all just in case
+    hap1 <- round(hap1)
+    hap2 <- round(hap2)
+    hap3 <- round(hap3)
+    return(list(hap1 = hap1, hap2 = hap2, hap3 = hap3))
 }
 
 
