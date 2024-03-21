@@ -468,6 +468,9 @@ get_and_impute_one_sample <- function(
         return_p1 <- FALSE
     }
 
+    ## just in case
+    hap3 <- NULL
+    
     ## want this off for real usage (should be OK!)
     ## testing might want this off for consistency
     disable_read_category_usage <- FALSE
@@ -1128,6 +1131,7 @@ get_and_impute_one_sample <- function(
                 allSNP_sampleReads = allSNP_sampleReads,
                 hap1 = hap1,
                 hap2 = hap2,
+                hap3 = hap3,
                 pos_all = pos_all,
                 maxDifferenceBetweenReads = maxDifferenceBetweenReads,
                 hapMatcher = hapMatcher,                
@@ -1188,7 +1192,7 @@ get_and_impute_one_sample <- function(
                 } else {
 
                     mat_dosage_all <- mat_dosage_all + hap1_all + hap2_all
-                    fet_dosage_all <- fet_dosage_all + hap1_all + hap2_all           
+                    fet_dosage_all <- fet_dosage_all + hap1_all + hap3_all ## was typo, second was hap2_all
                     mat_gp_t_all <- mat_gp_t_all + 
                         rbind((1 - hap1_all) * (1 - hap2_all), (1 - hap1_all) * hap2_all + hap1_all * (1 - hap2_all), hap1_all * hap2_all)
                     fet_gp_t_all <- fet_gp_t_all + 

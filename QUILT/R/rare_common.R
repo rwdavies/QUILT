@@ -64,13 +64,22 @@ get_initial_read_labels <- function(
     snp_is_common,
     hap1,
     hap2,
-    maxDifferenceBetweenReads
+    hap3 = NULL,
+    maxDifferenceBetweenReads,
+    ff = NULL
 ) {
     nReads <- length(allSNP_sampleReads)
-    eHapsCurrent_tc <- array(0.5, c(2, nrow(pos_all), 1))
+    nhap <- 2
+    if (!is.null(hap3)) {
+        nhap <- 3
+    }
+    eHapsCurrent_tc <- array(0.5, c(nhap, nrow(pos_all), 1))
     eHapsCurrent_tc[1, snp_is_common, 1] <- hap1
     eHapsCurrent_tc[2, snp_is_common, 1] <- hap2
-    eMatRead_t <- array(1, c(2, nReads))
+    if (nhap == 3) {
+        eHapsCurrent_tc[3, snp_is_common, 1] <- hap3
+    }
+    eMatRead_t <- array(1, c(nhap, nReads))
     rcpp_make_eMatRead_t(
         eMatRead_t = eMatRead_t,
         sampleReads = allSNP_sampleReads,
@@ -88,7 +97,12 @@ get_initial_read_labels <- function(
         rescale_eMatRead_t = TRUE,
         run_pseudo_haploid = FALSE
     )
-    H <- as.integer(runif(nReads) < (eMatRead_t[1, ] / colSums(eMatRead_t))) + 1
+    if (nhap == 2) {
+        H <- as.integer(runif(nReads) < (eMatRead_t[1, ] / colSums(eMatRead_t))) + 1
+    } else {
+        out <- get_read_groupings_given_fetal_fraction_and_cov(readProbs_t = eMatRead_t, phase = NULL, iiSample = NA, ff = ff)
+        H <- sample_H_for_NIPT_given_groupings(groupings = out$groupings, counts = out$counts, ff = ff)
+    }
     H
 }
 
@@ -98,6 +112,7 @@ impute_final_gibbs_with_rare_common <- function(
     allSNP_sampleReads,
     hap1,
     hap2,
+    hap3,
     pos_all,
     maxDifferenceBetweenReads,
     hapMatcher,
@@ -188,14 +203,27 @@ impute_final_gibbs_with_rare_common <- function(
     rare_per_hap_info <- special_rare_common_objects[["rare_per_hap_info"]]
     nSNPs <- nrow(pos_all)
 
-    H <- get_initial_read_labels(
-        pos_all = pos_all,
-        allSNP_sampleReads = allSNP_sampleReads,
-        snp_is_common = snp_is_common,
-        hap1 = hap1,
-        hap2 = hap2,
-        maxDifferenceBetweenReads = maxDifferenceBetweenReads
-    )   
+    if (method == "nipt") { 
+        H <- get_initial_read_labels(
+            pos_all = pos_all,
+            allSNP_sampleReads = allSNP_sampleReads,
+            snp_is_common = snp_is_common,
+            hap1 = hap1,
+            hap2 = hap2,
+            hap3 = hap3,
+            maxDifferenceBetweenReads = maxDifferenceBetweenReads,
+            ff = ff
+        )
+    } else {
+        H <- get_initial_read_labels(
+            pos_all = pos_all,
+            allSNP_sampleReads = allSNP_sampleReads,
+            snp_is_common = snp_is_common,
+            hap1 = hap1,
+            hap2 = hap2,
+            maxDifferenceBetweenReads = maxDifferenceBetweenReads
+        )
+    }
     
     ## snp_is_common_1_based <- which(snp_is_common)
     common_snp_index <- integer(nSNPs)
