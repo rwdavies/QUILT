@@ -3365,6 +3365,11 @@ quilt_chunk_map <- function(chr, genetic_map_file, min.bp = 3e6, min.cm = 4, ex.
   while(end < max(qmap[,1])){
     end <- start + min.bp + min.buf
     chunk <- subset(qmap, position >= start & position <= end)
+    ## if no maps, extend first chunk further
+    while(nrow(chunk)==0){ 
+      end <- end + min.mb 
+      chunk <- subset(qmap, position >= start & position <= end)
+    }
     ## check if cM > min.cm
     while(diff(range(chunk[,3])) < min.cm) {
       end <- end + min.bp / 3  ## extended by 1/3
@@ -3375,7 +3380,6 @@ quilt_chunk_map <- function(chr, genetic_map_file, min.bp = 3e6, min.cm = 4, ex.
     OUT <- rbind(OUT, a)
     start <- chunk[nrow(chunk)-ex.cnt, 1]
     i <- i+1
-    print(i)
   }
 
   OUT <- OUT[-1,] ## remove first row. NA!
