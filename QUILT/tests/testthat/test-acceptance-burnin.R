@@ -84,6 +84,8 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
         nCores = 1,
         Ksubset = 50,
         Knew = 50,
+        ## RData_objects_to_save = "super_out_read_labels",
+        ## output_RData_filename = "~/temp.RData",
         override_default_params_for_small_ref_panel = FALSE
     )
     ## 
@@ -98,5 +100,12 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
         min_info = 0.9
     )
     
+    ## now evaluate versus true phase!
+    check_sew_phase(
+        file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+        phase = data_package$phase,
+        which_snps = which_snps
+    )
+
 })
 

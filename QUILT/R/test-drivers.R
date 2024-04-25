@@ -90,7 +90,12 @@ check_quilt_output <- function(
 
 
 ## here, we check phasing is exact
-check_sew_phase <- function(vcf, phase, which_snps = NULL) {
+check_sew_phase <- function(file, phase, which_snps = NULL) {
+    vcf <- read.table(
+        file,
+        header = FALSE,
+        stringsAsFactors = FALSE
+    )
     ## GT is first column
     gt <- sapply(strsplit(vcf[, 10], ":"), function(x) x[1])
     gt1 <- substr(gt, 1, 1)
