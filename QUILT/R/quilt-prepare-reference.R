@@ -26,8 +26,7 @@
 #' @param mspbwt_nindices How many mspbwt indices to build
 #' @param override_use_eMatDH_special_symbols Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.
 #' @param use_hapMatcherR Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use
-#' @param impute_rare_common Whether to use common SNPs first for imputation, followed by a round of rare imputation
-#' @param rare_af_threshold Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common
+#' @param rare_af_threshold Allele frequency threshold under which SNPs are considered rare, otherwise they are considered common.
 #' @param use_list_of_columns_of_A If when using mspbwt, use columns of A rather than the whole thing, to speed up this version
 #' @return Results in properly formatted version
 #' @author Robert Davies
@@ -60,11 +59,11 @@ QUILT_prepare_reference <- function(
     mspbwt_nindices = 4L,
     override_use_eMatDH_special_symbols = NA,
     use_hapMatcherR = TRUE,
-    impute_rare_common = FALSE,
-    rare_af_threshold = 0.0001,
+    rare_af_threshold = 0.0,
     use_list_of_columns_of_A = TRUE
 ) {
 
+    impute_rare_common <- ifelse(rare_af_threshold > 0, TRUE, FALSE)
     x <- as.list(environment())
     command_line <- paste0(
         "QUILT_prepare_reference(",

@@ -106,8 +106,8 @@ QUILT <- function(
     nGibbsSamples = 7,
     n_seek_its = 3,
     n_burn_in_seek_its = NA,
-    Ksubset = 400,
-    Knew = 400,
+    Ksubset = 600,
+    Knew = 600,
     K_top_matches = 5,
     output_gt_phased_genotypes = TRUE,
     heuristic_match_thin = 0.1,
@@ -171,7 +171,7 @@ QUILT <- function(
     use_hapMatcherR = TRUE,
     shard_check_every_pair = TRUE,
     use_eigen = TRUE,
-    impute_rare_common = FALSE,
+    impute_rare_common = TRUE,
     rare_af_threshold = 0.001,
     make_heuristic_plot = FALSE,
     heuristic_approach = 'A',
@@ -179,6 +179,8 @@ QUILT <- function(
     calculate_gamma_on_the_fly = TRUE
 ) {
 
+    if(!impute_rare_common) rare_af_threshold <- 0
+  
     x <- as.list(environment())
     command_line <- paste0(
         "QUILT(",
@@ -187,8 +189,8 @@ QUILT <- function(
     )
     print_message(paste0("Running ", command_line))
 
-  ## not sure about naming but use it for now
-  use_sample_is_diploid <- ifelse(method=="nipt", FALSE, TRUE)
+    ## not sure about naming but use it for now
+    use_sample_is_diploid <- ifelse(method=="nipt", FALSE, TRUE)
     if (use_sample_is_diploid) {
         sample_is_diploid <- TRUE
     }else {
@@ -358,7 +360,6 @@ QUILT <- function(
             output_file = prepared_reference_filename,
             override_use_eMatDH_special_symbols = override_use_eMatDH_special_symbols,
             use_hapMatcherR = use_hapMatcherR,
-            impute_rare_common = impute_rare_common,
             rare_af_threshold = rare_af_threshold,
             mspbwt_nindices = mspbwt_nindices,
             use_list_of_columns_of_A = use_list_of_columns_of_A

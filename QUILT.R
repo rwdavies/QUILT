@@ -95,14 +95,14 @@ option_list <- list(
     make_option(
         "--Ksubset",
         type = "integer",
-        help = "How many haplotypes to use in the faster Gibbs sampling [default 400] ",
-        default = 400
+        help = "How many haplotypes to use in the faster Gibbs sampling [default 600] ",
+        default = 600
     ), 
     make_option(
         "--Knew",
         type = "integer",
-        help = "How many haplotypes to replace per-iteration after doing the full reference panel imputation [default 400] ",
-        default = 400
+        help = "How many haplotypes to replace per-iteration after doing the full reference panel imputation [default 600] ",
+        default = 600
     ), 
     make_option(
         "--K_top_matches",
@@ -485,8 +485,8 @@ option_list <- list(
     make_option(
         "--impute_rare_common",
         type = "logical",
-        help = "Whether to use common SNPs first for imputation, followed by a round of rare imputation [default FALSE] ",
-        default = FALSE
+        help = "Whether to use common SNPs first for imputation, followed by a round of rare imputation [default TRUE] ",
+        default = TRUE
     ), 
     make_option(
         "--rare_af_threshold",

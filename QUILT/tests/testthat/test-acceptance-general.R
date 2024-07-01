@@ -462,12 +462,6 @@ test_that("QUILT can impute samples with very few reads", {
 })
 
 
-
-
-
-
-
-
 test_that("QUILT can use or not use eigen to impute", {
 
     outputdir <- STITCH::make_unique_tempdir()

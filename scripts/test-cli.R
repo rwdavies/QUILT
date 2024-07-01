@@ -50,7 +50,7 @@ STITCH::make_STITCH_cli(
     function_file = "QUILT/R/quilt-prepare-reference.R",
     cli_output_file = cli_output_file,
     other_character_params = c("output_file", "reference_exclude_samplelist_file", "output_sites_filename", "region_exclude_file", "reference_vcf_file"),
-    other_logical_params = c("make_fake_vcf_with_sites_list", "use_mspbwt", "use_hapMatcherR", "impute_rare_common", "use_list_of_columns_of_A"),
+    other_logical_params = c("make_fake_vcf_with_sites_list", "use_mspbwt", "use_hapMatcherR", "use_list_of_columns_of_A"),
     other_integer_params = c("nMaxDH", "mspbwt_nindices", "override_use_eMatDH_special_symbols"),
     other_double_params = c("rare_af_threshold"),
     function_name = "QUILT_prepare_reference",

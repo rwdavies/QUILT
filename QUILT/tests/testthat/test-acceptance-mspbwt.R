@@ -153,7 +153,6 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
                         nGen = 100,
                         use_mspbwt = use_mspbwt,
                         use_hapMatcherR = use_hapMatcherR,
-                        impute_rare_common = impute_rare_common,
                         mspbwt_nindices = 1,
                         rare_af_threshold = rare_af_threshold,
                         use_list_of_columns_of_A = use_list_of_columns_of_A
