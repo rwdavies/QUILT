@@ -1,97 +1,4 @@
-
-## ## zilong mspbwt32.cpp
-## ## @param msp is xptr to msPBWT object in C++
-## select_new_haps_zilong_msp_robbie_version <- function(
-##     hapProbs_t,
-##     igibbs,
-##     outputdir,
-##     Kfull,
-##     Knew,
-##     msp,
-##     mspbwtB,
-##     mspbwtL,
-##     mspbwtM,
-##     nGrids,
-##     aggregated = FALSE,
-##     method = "diploid"
-## ) {
-##     res <- lapply(1:nrow(hapProbs_t), function(x) {
-##         hap <- round(hapProbs_t[x, ])
-##         res <- mspbwt_report(msp, hap, mspbwtL, mspbwtB, aggregated = aggregated)
-##         return(res)
-##     })
-##     if (method == "diploid") {
-##         ## merge, filter, order
-##         ends <- c(res[[1]][["ends"]], res[[2]][["ends"]])
-##         lens <- c(res[[1]][["lens"]], res[[2]][["lens"]])
-##         haps <- c(res[[1]][["haps"]], res[[2]][["haps"]])
-##         n <- c(res[[1]][["n"]], res[[2]][["n"]])
-##     } else {
-##         ends <- c(res[[1]][["ends"]], res[[2]][["ends"]], res[[3]][["ends"]])
-##         lens <- c(res[[1]][["lens"]], res[[2]][["lens"]], res[[3]][["lens"]])
-##         haps <- c(res[[1]][["haps"]], res[[2]][["haps"]], res[[3]][["haps"]])
-##         n <- c(res[[1]][["n"]], res[[2]][["n"]], res[[3]][["n"]])        
-##     }
-##     res <- cbind(
-##         haps = haps,
-##         starts = ends - lens + 1,
-##         ends = ends,
-##         lens = lens,
-##         n = n
-##     )
-##     res <- res[res[, "lens"] >= max(mspbwtM, 0), , drop = FALSE]
-##     res <- cbind(res, keys = res[, "starts"] * nGrids + res[, "ends"])
-##     ## remove those that are the same thing (effectively)
-##     res <- res[!duplicated((res[, "n"] + 1) * (res[, "starts"] + 1) + nGrids * (res[, "haps"])), ]
-##     ## remove those that are the same key
-##     res <- res[!duplicated(res[, "keys"]), ]
-##     ## can make this linear rather than an order
-##     ## I'm too lazy to do it now, see if it comes back with a profile
-##     ## print("make me linear")
-##     res <- res[order(-res[, "lens"]), ]
-##     ## 
-##     unique_haps <- unique(res[, "haps"])
-##     ## 
-##     if (length(unique_haps) == 0) {
-##         new_haps <- sample(1:Kfull, Knew)
-##         return(new_haps)
-##     } else if (length(unique_haps) <= Knew) {
-##         ## cannot take a sample larger than the population when 'replace = FALSE'
-##         new_haps <- unique(c(
-##             unique_haps,
-##             sample(Kfull, min(length(unique_haps) + Knew, Knew), replace = FALSE)
-##         ))[1:Knew]
-##         print(paste("select", length(unique(new_haps)), " unique haps after post-selection 1"))
-##         return(new_haps)
-##     } else {
-##         ##
-##         ## heuristically, prioritize based on length and new-ness
-##         ## 
-##         m <- max(res[, "ends"])
-##         weight <- numeric(m)
-##         cur_sum <- numeric(m)
-##         cur_sum[] <- 1
-##         for(i in 1:nrow(res)) {
-##             s <- res[i, "starts"]
-##             e <- res[i, "ends"]
-##             weight[i] <- (e - s + 1) * 1 / sum(cur_sum[s:e])
-##             cur_sum[s:e] <- cur_sum[s:e] + 1
-##         }
-##         ##
-##         unique_ordered_haps <- unique(res[order(-weight), "haps"])
-##         print(paste("select", length(unique_ordered_haps), " unique haps after post-selection 2"))
-##         ## 
-##         if (length(unique_ordered_haps) >= Knew) {
-##             return(unique_ordered_haps[1:Knew])
-##         } else {
-##             ## add in some other (potentially) duplicated haps
-##             new_haps <- c(setdiff(unique_ordered_haps, unique_haps), unique_haps)[1:Knew]
-##             print(paste("select", length(unique(new_haps)), " unique haps after post-selection 3"))
-##             return(new_haps)
-##         }
-##   }
-## }
-
+## -*- ess-indent-offset: 4; -*-
 
 get_and_impute_one_sample <- function(
     rhb_t,
@@ -1337,7 +1244,7 @@ get_and_impute_one_sample <- function(
             if (is.na(gamma_physically_closest_to)) {
                 iGrid <- round(nGrids / 2)
             } else {
-
+                iGrid <- grid[which.min(abs(L - gamma_physically_closest_to))] + 1
             }
             gamma1 <- gamma1[, iGrid]
             gamma2 <- gamma2[, iGrid]

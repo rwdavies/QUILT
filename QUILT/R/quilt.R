@@ -1,3 +1,5 @@
+## -*- ess-indent-offset: 4; -*-
+
 #' @title QUILT
 #' @param outputdir What output directory to use
 #' @param chr What chromosome to run. Should match BAM headers
@@ -179,7 +181,6 @@ QUILT <- function(
     calculate_gamma_on_the_fly = TRUE
 ) {
 
-  
     x <- as.list(environment())
     command_line <- paste0(
         "QUILT(",
@@ -378,6 +379,16 @@ QUILT <- function(
     load(prepared_reference_filename)
     L_grid <- as.integer(L_grid)
 
+    
+    if(hla_run) {
+        use_eMatDH_special_symbols <- FALSE
+        use_hapMatcherR <- FALSE
+        hapMatcherR <- array(as.raw(0), c(nrow(hapMatcher), 1))
+        eMatDH_special_matrix_helper <- matrix(as.integer(1), 1, 1) ## nuke!
+        eMatDH_special_matrix <- matrix(as.integer(1), 1, 1) ## nuke!
+        message("nuke variables for HLA RUN")
+    } 
+    
     if (use_mspbwt) {
         if (is.null(ms_indices)) {
             stop("To use mspbwt and QUILT, you must prepare the reference package using use_mspbwt=TRUE")
