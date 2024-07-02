@@ -171,7 +171,7 @@ QUILT <- function(
     use_hapMatcherR = TRUE,
     shard_check_every_pair = TRUE,
     use_eigen = TRUE,
-    impute_rare_common = TRUE,
+    impute_rare_common = FALSE,
     rare_af_threshold = 0.001,
     make_heuristic_plot = FALSE,
     heuristic_approach = 'A',
@@ -179,7 +179,6 @@ QUILT <- function(
     calculate_gamma_on_the_fly = TRUE
 ) {
 
-    if(!impute_rare_common) rare_af_threshold <- 0
   
     x <- as.list(environment())
     command_line <- paste0(
@@ -356,6 +355,7 @@ QUILT <- function(
             maxRate = maxRate,
             minRate = minRate,
             use_mspbwt = use_mspbwt,
+            impute_rare_common = impute_rare_common,
             reference_vcf_file = reference_vcf_file,
             output_file = prepared_reference_filename,
             override_use_eMatDH_special_symbols = override_use_eMatDH_special_symbols,

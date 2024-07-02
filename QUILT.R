@@ -485,8 +485,8 @@ option_list <- list(
     make_option(
         "--impute_rare_common",
         type = "logical",
-        help = "Whether to use common SNPs first for imputation, followed by a round of rare imputation [default TRUE] ",
-        default = TRUE
+        help = "Whether to use common SNPs first for imputation, followed by a round of rare imputation [default FALSE] ",
+        default = FALSE
     ), 
     make_option(
         "--rare_af_threshold",

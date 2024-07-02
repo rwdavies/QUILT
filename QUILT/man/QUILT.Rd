@@ -85,7 +85,7 @@ QUILT(
   use_hapMatcherR = TRUE,
   shard_check_every_pair = TRUE,
   use_eigen = TRUE,
-  impute_rare_common = TRUE,
+  impute_rare_common = FALSE,
   rare_af_threshold = 0.001,
   make_heuristic_plot = FALSE,
   heuristic_approach = "A",
