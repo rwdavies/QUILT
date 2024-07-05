@@ -9,7 +9,8 @@ make_and_write_output_file <- function(
     inRegion2,
     sampleRanges,
     addOptimalHapsToVCF,
-    output_gt_phased_genotypes
+    output_gt_phased_genotypes,
+    method
 ) {
 
     print_message("Begin making and writing output file")
@@ -17,12 +18,19 @@ make_and_write_output_file <- function(
     output_unbgzipped <- gsub(".gz", "", output_filename)
 
     ## make header
-    make_and_write_quilt_header(
-        output_vcf_header_file = output_unbgzipped,
-        sampleNames = sampleNames,
-        addOptimalHapsToVCF = addOptimalHapsToVCF,
-        output_gt_phased_genotypes = output_gt_phased_genotypes
-    )
+    if (method == "diploid") {
+        make_and_write_quilt_header(
+            output_vcf_header_file = output_unbgzipped,
+            sampleNames = sampleNames,
+            addOptimalHapsToVCF = addOptimalHapsToVCF,
+            output_gt_phased_genotypes = output_gt_phased_genotypes
+        )
+    } else {
+        make_and_write_quilt_nipt_header(
+            output_vcf_header_file = output_unbgzipped,
+            sampleNames = sampleNames
+        )
+    }
 
     ##
     ## re-build final annotation stuff across all cores
@@ -52,10 +60,14 @@ make_and_write_output_file <- function(
     ##
     ## summarize info bit
     ##
-    if (addOptimalHapsToVCF) {
-        FORMAT <- "GT:GP:DS:HD:OHD" ## genotypes, posteriors, dosages, haploid-dosages, optimal haploid-dosages
-    } else {
-        FORMAT <- "GT:GP:DS:HD" ## genotypes, posteriors, dosages, haploid-dosages
+    if (method == "nipt") {
+        FORMAT <- "GT:MGP:MDS:FGP:FDS"        
+    }  else {
+        if (addOptimalHapsToVCF) {
+            FORMAT <- "GT:GP:DS:HD:OHD" ## genotypes, posteriors, dosages, haploid-dosages, optimal haploid-dosages
+        } else {
+            FORMAT <- "GT:GP:DS:HD" ## genotypes, posteriors, dosages, haploid-dosages
+        }
     }
     INFO <- paste0(
         "EAF=", round(estimatedAlleleFrequency, 5), ";",
@@ -108,13 +120,12 @@ make_and_write_output_file <- function(
     if (length(grep("~", output_unbgzipped)) > 0) {
         ## not entirely sure why this system call isn't working otherwise
         check_system_OK(system(paste0("bgzip --threads ", nCores, " -f ", output_unbgzipped), intern = TRUE))
-        check_system_OK(system(paste0("tabix ", output_filename), intern = TRUE))
+        print(system(paste0("tabix -f ", output_filename), intern = TRUE))
+        check_system_OK(system(paste0("tabix -f ", output_filename), intern = TRUE))
     } else {
         check_system_OK(system(paste0("bgzip --threads ", nCores, " -f ", shQuote(output_unbgzipped)), intern = TRUE))
-        check_system_OK(system(paste0("tabix ", shQuote(output_filename)), intern = TRUE))
+        check_system_OK(system(paste0("tabix -f ", shQuote(output_filename)), intern = TRUE))
     }
-
-    
     print_message("Done making and writing output file")
 
     return(NULL)
@@ -233,6 +244,35 @@ make_and_write_quilt_header <- function(
     if (addOptimalHapsToVCF) {
         header <- paste0(header, '##FORMAT=<ID=OHD,Number=2,Type=Float,Description="Optimal haploid dosages">\n')
     }
+    header2 <- paste("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", paste(sampleNames, collapse = "\t", sep="\t"), sep="\t")
+    cat(header, header2, "\n", sep="", file = output_vcf_header_file)
+    return(NULL)
+}
+
+make_and_write_quilt_nipt_header <- function(
+    output_vcf_header_file,
+    sampleNames
+) {
+    ## annotations now constant
+    annot_header <- paste0(
+        '##INFO=<ID=INFO_SCORE,Number=.,Type=Float,Description="Info score from maternal genotype posteriors">\n',
+        '##INFO=<ID=EAF,Number=.,Type=Float,Description="Estimated allele frequency">\n',
+        '##INFO=<ID=HWE,Number=.,Type=Float,Description="Hardy-Weinberg p-value from maternal genotypes">\n',
+        '##INFO=<ID=ERC,Number=.,Type=Float,Description="Estimated number of copies of the reference allele from the pileup">\n',
+        '##INFO=<ID=EAC,Number=.,Type=Float,Description="Estimated number of copies of the alternate allele from the pileup">\n',
+        '##INFO=<ID=PAF,Number=.,Type=Float,Description="Estimated allele frequency using the pileup of reference and alternate alleles">\n'
+    )
+    ##
+    gt_annot <- '##FORMAT=<ID=GT,Number=1,Type=String,Description="Phased genotypes in order of maternal transmitted, maternal untransmitted, and fetal transmitted">\n'
+    header <- paste0(
+        '##fileformat=VCFv4.0\n',
+        annot_header,        
+        gt_annot,
+        '##FORMAT=<ID=MGP,Number=3,Type=Float,Description="Maternal Posterior genotype probability of 0/0, 0/1, and 1/1">\n',
+        '##FORMAT=<ID=MDS,Number=1,Type=Float,Description="Maternal Diploid dosage">\n',
+        '##FORMAT=<ID=FGP,Number=3,Type=Float,Description="Maternal Posterior genotype probability of 0/0, 0/1, and 1/1">\n',
+        '##FORMAT=<ID=FDS,Number=1,Type=Float,Description="Maternal Diploid dosage">\n'
+    )
     header2 <- paste("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", paste(sampleNames, collapse = "\t", sep="\t"), sep="\t")
     cat(header, header2, "\n", sep="", file = output_vcf_header_file)
     return(NULL)

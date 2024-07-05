@@ -52,13 +52,38 @@ rcpp_simple_quantile <- function(x, q) {
 }
 
 #' @export
-Rcpp_define_blocked_snps_using_gamma_on_the_fly <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob = 0.9, verbose = FALSE, use_smooth_cm_in_block_gibbs = FALSE) {
-    .Call('_QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob, verbose, use_smooth_cm_in_block_gibbs)
+rcpp_get_log_p_H_class <- function(H_class, ff) {
+    .Call('_QUILT_rcpp_get_log_p_H_class', PACKAGE = 'QUILT', H_class, ff)
 }
 
 #' @export
-Rcpp_consider_block_relabelling <- function(iBlock, runif_block, sum_H, s, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, eMatGridLocal, betaHatLocal, iGrid, grid_start_0_based, grid_end_0_based, read_start_0_based, read_end_0_based, wif0, log_cStore, alphaStore, read_is_uninformative, block_approach, do_checks, all_packages, block_results, ever_changed, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, fpp_stuff, H, proposed_H, nReads, eMatRead_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3) {
-    invisible(.Call('_QUILT_Rcpp_consider_block_relabelling', PACKAGE = 'QUILT', iBlock, runif_block, sum_H, s, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, eMatGridLocal, betaHatLocal, iGrid, grid_start_0_based, grid_end_0_based, read_start_0_based, read_end_0_based, wif0, log_cStore, alphaStore, read_is_uninformative, block_approach, do_checks, all_packages, block_results, ever_changed, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, fpp_stuff, H, proposed_H, nReads, eMatRead_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3))
+rcpp_get_log_p_H_class2 <- function(n1, n2, n3, n4, n5, n6, ff) {
+    .Call('_QUILT_rcpp_get_log_p_H_class2', PACKAGE = 'QUILT', n1, n2, n3, n4, n5, n6, ff)
+}
+
+#' @export
+rcpp_sample_H_using_H_class <- function(H_class, H, ff) {
+    invisible(.Call('_QUILT_rcpp_sample_H_using_H_class', PACKAGE = 'QUILT', H_class, H, ff))
+}
+
+#' @export
+rcpp_calculate_block_read_label_probabilities_using_H_class <- function(read_start_0_based, read_end_0_based, H_class, log_prior_probs, rr, ff) {
+    .Call('_QUILT_rcpp_calculate_block_read_label_probabilities_using_H_class', PACKAGE = 'QUILT', read_start_0_based, read_end_0_based, H_class, log_prior_probs, rr, ff)
+}
+
+#' @export
+rcpp_test_one_based_swap <- function(rx, ir_chosen, H, H_class) {
+    invisible(.Call('_QUILT_rcpp_test_one_based_swap', PACKAGE = 'QUILT', rx, ir_chosen, H, H_class))
+}
+
+#' @export
+Rcpp_define_blocked_snps_using_gamma_on_the_fly <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob = 0.9, verbose = FALSE, use_smooth_cm_in_block_gibbs = FALSE, ff = 0) {
+    .Call('_QUILT_Rcpp_define_blocked_snps_using_gamma_on_the_fly', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, smooth_cm, transMatRate_tc_H, shuffle_bin_radius, L_grid, grid, s, block_gibbs_quantile_prob, verbose, use_smooth_cm_in_block_gibbs, ff)
+}
+
+#' @export
+Rcpp_consider_block_relabelling <- function(iBlock, runif_block, sum_H, s, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, eMatGridLocal, betaHatLocal, iGrid, grid_start_0_based, grid_end_0_based, read_start_0_based, read_end_0_based, wif0, log_cStore, alphaStore, read_is_uninformative, block_approach, do_checks, all_packages, block_results, ever_changed, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, fpp_stuff, H, H_class, proposed_H, nReads, eMatRead_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, sample_is_diploid) {
+    invisible(.Call('_QUILT_Rcpp_consider_block_relabelling', PACKAGE = 'QUILT', iBlock, runif_block, sum_H, s, rr, rr0, ff, log_prior_probs, logC_before, logC_after, verbose, swap_list, eMatGridLocal, betaHatLocal, iGrid, grid_start_0_based, grid_end_0_based, read_start_0_based, read_end_0_based, wif0, log_cStore, alphaStore, read_is_uninformative, block_approach, do_checks, all_packages, block_results, ever_changed, transMatRate_tc_H, alphaMatCurrent_tc, priorCurrent_m, fpp_stuff, H, H_class, proposed_H, nReads, eMatRead_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, sample_is_diploid))
 }
 
 #' @export
@@ -72,8 +97,8 @@ Rcpp_gibbs_block_forward_one <- function(approach2_iRead, iGrid, s, ff, alphaSto
 }
 
 #' @export
-Rcpp_reset_local_variables <- function(iGrid, verbose, alphaHatLocal, alphaStore, alphaHat_t1, alphaHat_t2, alphaHat_t3, c1, c2, c3, log_cStore) {
-    invisible(.Call('_QUILT_Rcpp_reset_local_variables', PACKAGE = 'QUILT', iGrid, verbose, alphaHatLocal, alphaStore, alphaHat_t1, alphaHat_t2, alphaHat_t3, c1, c2, c3, log_cStore))
+Rcpp_reset_local_variables <- function(iGrid, verbose, alphaHatLocal, alphaStore, alphaHat_t1, alphaHat_t2, alphaHat_t3, c1, c2, c3, log_cStore, sample_is_diploid) {
+    invisible(.Call('_QUILT_Rcpp_reset_local_variables', PACKAGE = 'QUILT', iGrid, verbose, alphaHatLocal, alphaStore, alphaHat_t1, alphaHat_t2, alphaHat_t3, c1, c2, c3, log_cStore, sample_is_diploid))
 }
 
 #' @export
@@ -87,13 +112,18 @@ Rcpp_fill_rlcM <- function(rlcM, rlc, rr0) {
 }
 
 #' @export
-Rcpp_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, do_checks = FALSE, initial_package = NULL, verbose = FALSE, fpp_stuff = NULL, use_cpp_bits_in_R = TRUE, block_approach = 4L) {
-    .Call('_QUILT_Rcpp_block_gibbs_resampler', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, do_checks, initial_package, verbose, fpp_stuff, use_cpp_bits_in_R, block_approach)
+Rcpp_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, maxEmissionMatrixDifference, sampleReads, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, sample_is_diploid, do_checks = FALSE, initial_package = NULL, verbose = FALSE, fpp_stuff = NULL, use_cpp_bits_in_R = TRUE, block_approach = 6L, consider_total_relabelling = FALSE, resample_H_using_H_class = TRUE) {
+    .Call('_QUILT_Rcpp_block_gibbs_resampler', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, eMatRead_t, blocked_snps, runif_block, runif_total, runif_proposed, grid, wif0, grid_has_read, ff, s, maxEmissionMatrixDifference, sampleReads, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, maxDifferenceBetweenReads, Jmax, prev_section, next_section, suppressOutput, prev, sample_is_diploid, do_checks, initial_package, verbose, fpp_stuff, use_cpp_bits_in_R, block_approach, consider_total_relabelling, resample_H_using_H_class)
 }
 
 #' @export
-Rcpp_ff0_shard_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, do_checks = FALSE, initial_package = NULL, verbose = FALSE, fpp_stuff = NULL) {
-    .Call('_QUILT_Rcpp_ff0_shard_block_gibbs_resampler', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, do_checks, initial_package, verbose, fpp_stuff)
+Rcpp_shard_block_gibbs_resampler <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, ff, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, do_checks = FALSE, initial_package = NULL, verbose = FALSE, fpp_stuff = NULL, shard_check_every_pair = FALSE) {
+    .Call('_QUILT_Rcpp_shard_block_gibbs_resampler', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, H, H_class, ff, eMatRead_t, blocked_snps, grid, wif0, s, alphaMatCurrent_tc, priorCurrent_m, transMatRate_tc_H, do_checks, initial_package, verbose, fpp_stuff, shard_check_every_pair)
+}
+
+#' @export
+rcpp_evaluate_read_variability <- function(eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, read_category, cutoff = 20L) {
+    invisible(.Call('_QUILT_rcpp_evaluate_read_variability', PACKAGE = 'QUILT', eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, read_category, cutoff))
 }
 
 #' @export
@@ -107,8 +137,8 @@ rcpp_initialize_gibbs_forward_backward <- function(alphaMatCurrent_tc, transMatR
 }
 
 #' @export
-rcpp_calculate_gn_genProbs_and_hapProbs <- function(genProbsM_t, genProbsF_t, hapProbs_t, s, eHapsCurrent_tc, gammaMT_t, gammaMU_t, gammaP_t, grid, snp_start_1_based, snp_end_1_based, grid_offset = 0L) {
-    invisible(.Call('_QUILT_rcpp_calculate_gn_genProbs_and_hapProbs', PACKAGE = 'QUILT', genProbsM_t, genProbsF_t, hapProbs_t, s, eHapsCurrent_tc, gammaMT_t, gammaMU_t, gammaP_t, grid, snp_start_1_based, snp_end_1_based, grid_offset))
+rcpp_calculate_gn_genProbs_and_hapProbs <- function(genProbsM_t, genProbsF_t, hapProbs_t, s, eHapsCurrent_tc, gammaMT_t, gammaMU_t, gammaP_t, grid, snp_start_1_based, snp_end_1_based, sample_is_diploid, grid_offset = 0L) {
+    invisible(.Call('_QUILT_rcpp_calculate_gn_genProbs_and_hapProbs', PACKAGE = 'QUILT', genProbsM_t, genProbsF_t, hapProbs_t, s, eHapsCurrent_tc, gammaMT_t, gammaMU_t, gammaP_t, grid, snp_start_1_based, snp_end_1_based, sample_is_diploid, grid_offset))
 }
 
 #' @export
@@ -132,8 +162,8 @@ rcpp_reinitialize_in_iterations <- function(s, alphaHat_t, c, priorCurrent_m, eM
 }
 
 #' @export
-sample_reads_in_grid <- function(iRead, iGrid, done_reads, read_wif_iRead, verbose, nReads, pC, pA1, pA2, alphaHat_m, betaHat_m, ab_m, eMatRead_t, runif_reads, H, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, c1, c2, c3, minus_log_c1_sum, minus_log_c2_sum, minus_log_c3_sum, alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, sampleReads, return_p_store, iteration, p_store, record_read_set, rlc, H_class, class_sum_cutoff, i_gibbs_samplings, n_gibbs_full_its, prior_probs, gibbs_initialize_iteratively = FALSE, first_read_for_gibbs_initialization = 0L) {
-    invisible(.Call('_QUILT_sample_reads_in_grid', PACKAGE = 'QUILT', iRead, iGrid, done_reads, read_wif_iRead, verbose, nReads, pC, pA1, pA2, alphaHat_m, betaHat_m, ab_m, eMatRead_t, runif_reads, H, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, c1, c2, c3, minus_log_c1_sum, minus_log_c2_sum, minus_log_c3_sum, alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, sampleReads, return_p_store, iteration, p_store, record_read_set, rlc, H_class, class_sum_cutoff, i_gibbs_samplings, n_gibbs_full_its, prior_probs, gibbs_initialize_iteratively, first_read_for_gibbs_initialization))
+sample_reads_in_grid <- function(iRead, iGrid, done_reads, read_wif_iRead, verbose, nReads, pC, pA1, pA2, alphaHat_m, betaHat_m, ab_m, eMatRead_t, runif_reads, H, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, c1, c2, c3, minus_log_c1_sum, minus_log_c2_sum, minus_log_c3_sum, alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, sampleReads, return_p_store, return_p1, iteration, p_store, p1, pH, skip_read, skip_read_iteration, record_read_set, rlc, H_class, class_sum_cutoff, i_gibbs_samplings, n_gibbs_full_its, prior_probs, number_of_non_1_reads, indices_of_non_1_reads, read_category, gibbs_initialize_iteratively = FALSE, first_read_for_gibbs_initialization = 0L, sample_is_diploid = FALSE) {
+    invisible(.Call('_QUILT_sample_reads_in_grid', PACKAGE = 'QUILT', iRead, iGrid, done_reads, read_wif_iRead, verbose, nReads, pC, pA1, pA2, alphaHat_m, betaHat_m, ab_m, eMatRead_t, runif_reads, H, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, c1, c2, c3, minus_log_c1_sum, minus_log_c2_sum, minus_log_c3_sum, alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, sampleReads, return_p_store, return_p1, iteration, p_store, p1, pH, skip_read, skip_read_iteration, record_read_set, rlc, H_class, class_sum_cutoff, i_gibbs_samplings, n_gibbs_full_its, prior_probs, number_of_non_1_reads, indices_of_non_1_reads, read_category, gibbs_initialize_iteratively, first_read_for_gibbs_initialization, sample_is_diploid))
 }
 
 #' @export
@@ -167,13 +197,13 @@ rcpp_consider_and_try_entire_relabelling <- function(H, ff, relabel = -1L) {
 }
 
 #' @export
-rcpp_gibbs_nipt_initialize <- function(s, prev_section, next_section, suppressOutput, prev, run_fb_subset, alphaBetaBlocks_one, i_snp_block_for_alpha_beta, eMatRead_t, sampleReads, H, run_fb_grid_offset, bound_eMatGrid_t, rescale_eMatGrid_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, gibbs_initialize_iteratively, priorCurrent_m, alphaMatCurrent_tc, maxEmissionMatrixDifference) {
-    invisible(.Call('_QUILT_rcpp_gibbs_nipt_initialize', PACKAGE = 'QUILT', s, prev_section, next_section, suppressOutput, prev, run_fb_subset, alphaBetaBlocks_one, i_snp_block_for_alpha_beta, eMatRead_t, sampleReads, H, run_fb_grid_offset, bound_eMatGrid_t, rescale_eMatGrid_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, gibbs_initialize_iteratively, priorCurrent_m, alphaMatCurrent_tc, maxEmissionMatrixDifference))
+rcpp_gibbs_nipt_initialize <- function(s, prev_section, next_section, suppressOutput, prev, run_fb_subset, alphaBetaBlocks_one, i_snp_block_for_alpha_beta, eMatRead_t, sampleReads, H, run_fb_grid_offset, bound_eMatGrid_t, rescale_eMatGrid_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, gibbs_initialize_iteratively, priorCurrent_m, alphaMatCurrent_tc, maxEmissionMatrixDifference, sample_is_diploid) {
+    invisible(.Call('_QUILT_rcpp_gibbs_nipt_initialize', PACKAGE = 'QUILT', s, prev_section, next_section, suppressOutput, prev, run_fb_subset, alphaBetaBlocks_one, i_snp_block_for_alpha_beta, eMatRead_t, sampleReads, H, run_fb_grid_offset, bound_eMatGrid_t, rescale_eMatGrid_t, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, transMatRate_tc_H, gibbs_initialize_iteratively, priorCurrent_m, alphaMatCurrent_tc, maxEmissionMatrixDifference, sample_is_diploid))
 }
 
 #' @export
-rcpp_gibbs_nipt_iterate <- function(s, prev_section, next_section, suppressOutput, prev, iteration, sampleReads, priorCurrent_m, transMatRate_tc_H, alphaMatCurrent_tc, n_gibbs_full_its, nGrids, K, H, eMatRead_t, runif_reads, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, p_store, i_per_it_likelihoods, verbose, return_p_store, run_fb_subset, i_gibbs_samplings, n_gibbs_starts, i_result_it, ff, record_read_set, rlc, H_class, class_sum_cutoff, run_fb_grid_offset, prior_probs, per_it_likelihoods, grid_has_read, gibbs_initialize_iteratively = FALSE, first_read_for_gibbs_initialization = 0L, do_block_resampling = FALSE, artificial_relabel = -1L) {
-    invisible(.Call('_QUILT_rcpp_gibbs_nipt_iterate', PACKAGE = 'QUILT', s, prev_section, next_section, suppressOutput, prev, iteration, sampleReads, priorCurrent_m, transMatRate_tc_H, alphaMatCurrent_tc, n_gibbs_full_its, nGrids, K, H, eMatRead_t, runif_reads, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, p_store, i_per_it_likelihoods, verbose, return_p_store, run_fb_subset, i_gibbs_samplings, n_gibbs_starts, i_result_it, ff, record_read_set, rlc, H_class, class_sum_cutoff, run_fb_grid_offset, prior_probs, per_it_likelihoods, grid_has_read, gibbs_initialize_iteratively, first_read_for_gibbs_initialization, do_block_resampling, artificial_relabel))
+rcpp_gibbs_nipt_iterate <- function(s, prev_section, next_section, suppressOutput, prev, iteration, sampleReads, priorCurrent_m, transMatRate_tc_H, alphaMatCurrent_tc, n_gibbs_full_its, nGrids, K, H, eMatRead_t, runif_reads, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, p_store, p1, pH, skip_read, skip_read_iteration, i_per_it_likelihoods, verbose, return_p_store, return_p1, run_fb_subset, i_gibbs_samplings, n_gibbs_starts, i_result_it, ff, record_read_set, rlc, H_class, class_sum_cutoff, run_fb_grid_offset, prior_probs, per_it_likelihoods, grid_has_read, number_of_non_1_reads, indices_of_non_1_reads, read_category, gibbs_initialize_iteratively = FALSE, first_read_for_gibbs_initialization = 0L, do_block_resampling = FALSE, artificial_relabel = -1L, sample_is_diploid = FALSE) {
+    invisible(.Call('_QUILT_rcpp_gibbs_nipt_iterate', PACKAGE = 'QUILT', s, prev_section, next_section, suppressOutput, prev, iteration, sampleReads, priorCurrent_m, transMatRate_tc_H, alphaMatCurrent_tc, n_gibbs_full_its, nGrids, K, H, eMatRead_t, runif_reads, alphaHat_t1, betaHat_t1, c1, eMatGrid_t1, alphaHat_t2, betaHat_t2, c2, eMatGrid_t2, alphaHat_t3, betaHat_t3, c3, eMatGrid_t3, p_store, p1, pH, skip_read, skip_read_iteration, i_per_it_likelihoods, verbose, return_p_store, return_p1, run_fb_subset, i_gibbs_samplings, n_gibbs_starts, i_result_it, ff, record_read_set, rlc, H_class, class_sum_cutoff, run_fb_grid_offset, prior_probs, per_it_likelihoods, grid_has_read, number_of_non_1_reads, indices_of_non_1_reads, read_category, gibbs_initialize_iteratively, first_read_for_gibbs_initialization, do_block_resampling, artificial_relabel, sample_is_diploid))
 }
 
 #' @export
@@ -182,23 +212,58 @@ rcpp_fly_weighter <- function(i, gCurrent, gAverage, ll_current, log_mult, ll_re
 }
 
 #' @export
-rcpp_forwardBackwardGibbsNIPT <- function(sampleReads, priorCurrent_m, alphaMatCurrent_tc, eHapsCurrent_tc, transMatRate_tc_H, ff, blocks_for_output, alphaHat_t1, betaHat_t1, alphaHat_t2, betaHat_t2, alphaHat_t3, betaHat_t3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, gammaMT_t_local, gammaMU_t_local, gammaP_t_local, hapSum_tc, hapMatcher, distinctHapsIE, rhb_t, ref_error, which_haps_to_use, wif0, grid_has_read, L_grid, smooth_cm, param_list, Jmax_local = 100L, maxDifferenceBetweenReads = 1000, maxEmissionMatrixDifference = 10000000000, run_fb_grid_offset = 0L, grid = 0L, snp_start_1_based = -1L, snp_end_1_based = -1L, generate_fb_snp_offsets = FALSE, suppressOutput = 1L, n_gibbs_starts = 1L, n_gibbs_sample_its = 1L, n_gibbs_burn_in_its = 1L, double_list_of_starting_read_labels = NULL, seed_vector = -1L, prev_list_of_alphaBetaBlocks = NULL, i_snp_block_for_alpha_beta = 1L, haploid_gibbs_equal_weighting = TRUE, gibbs_initialize_iteratively = FALSE, gibbs_initialize_at_first_read = TRUE, do_block_resampling = FALSE, artificial_relabel = -1L, pass_in_alphaBeta = FALSE, update_in_place = FALSE, update_hapSum = FALSE, record_read_set = FALSE, class_sum_cutoff = 0.06, perform_block_gibbs = FALSE, shuffle_bin_radius = 5000L, block_gibbs_iterations = as.integer( c(0)), rescale_eMatRead_t = TRUE, use_smooth_cm_in_block_gibbs = FALSE, block_gibbs_quantile_prob = 0.9, do_shard_ff0_block_gibbs = TRUE, use_small_eHapsCurrent_tc = TRUE) {
-    .Call('_QUILT_rcpp_forwardBackwardGibbsNIPT', PACKAGE = 'QUILT', sampleReads, priorCurrent_m, alphaMatCurrent_tc, eHapsCurrent_tc, transMatRate_tc_H, ff, blocks_for_output, alphaHat_t1, betaHat_t1, alphaHat_t2, betaHat_t2, alphaHat_t3, betaHat_t3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, gammaMT_t_local, gammaMU_t_local, gammaP_t_local, hapSum_tc, hapMatcher, distinctHapsIE, rhb_t, ref_error, which_haps_to_use, wif0, grid_has_read, L_grid, smooth_cm, param_list, Jmax_local, maxDifferenceBetweenReads, maxEmissionMatrixDifference, run_fb_grid_offset, grid, snp_start_1_based, snp_end_1_based, generate_fb_snp_offsets, suppressOutput, n_gibbs_starts, n_gibbs_sample_its, n_gibbs_burn_in_its, double_list_of_starting_read_labels, seed_vector, prev_list_of_alphaBetaBlocks, i_snp_block_for_alpha_beta, haploid_gibbs_equal_weighting, gibbs_initialize_iteratively, gibbs_initialize_at_first_read, do_block_resampling, artificial_relabel, pass_in_alphaBeta, update_in_place, update_hapSum, record_read_set, class_sum_cutoff, perform_block_gibbs, shuffle_bin_radius, block_gibbs_iterations, rescale_eMatRead_t, use_smooth_cm_in_block_gibbs, block_gibbs_quantile_prob, do_shard_ff0_block_gibbs, use_small_eHapsCurrent_tc)
+rcpp_forwardBackwardGibbsNIPT <- function(sampleReads, eMatRead_t, priorCurrent_m, alphaMatCurrent_tc, eHapsCurrent_tc, transMatRate_tc_H, ff, blocks_for_output, alphaHat_t1, betaHat_t1, alphaHat_t2, betaHat_t2, alphaHat_t3, betaHat_t3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, gammaMT_t_local, gammaMU_t_local, gammaP_t_local, hapSum_tc, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, rhb_t, ref_error, which_haps_to_use, wif0, grid_has_read, L_grid, smooth_cm, param_list, skip_read_iteration, Jmax_local = 100L, maxDifferenceBetweenReads = 1000, maxEmissionMatrixDifference = 10000000000, run_fb_grid_offset = 0L, grid = 0L, snp_start_1_based = -1L, snp_end_1_based = -1L, generate_fb_snp_offsets = FALSE, suppressOutput = 1L, n_gibbs_starts = 1L, n_gibbs_sample_its = 1L, n_gibbs_burn_in_its = 1L, double_list_of_starting_read_labels = NULL, seed_vector = -1L, prev_list_of_alphaBetaBlocks = NULL, i_snp_block_for_alpha_beta = 1L, do_block_resampling = FALSE, artificial_relabel = -1L, class_sum_cutoff = 1, shuffle_bin_radius = 5000L, block_gibbs_iterations = as.integer( c(0)), block_gibbs_quantile_prob = 0.9, rare_per_hap_info, common_snp_index = as.integer( c(0)), snp_is_common = as.logical( c(0)), rare_per_snp_info) {
+    .Call('_QUILT_rcpp_forwardBackwardGibbsNIPT', PACKAGE = 'QUILT', sampleReads, eMatRead_t, priorCurrent_m, alphaMatCurrent_tc, eHapsCurrent_tc, transMatRate_tc_H, ff, blocks_for_output, alphaHat_t1, betaHat_t1, alphaHat_t2, betaHat_t2, alphaHat_t3, betaHat_t3, eMatGrid_t1, eMatGrid_t2, eMatGrid_t3, gammaMT_t_local, gammaMU_t_local, gammaP_t_local, hapSum_tc, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, rhb_t, ref_error, which_haps_to_use, wif0, grid_has_read, L_grid, smooth_cm, param_list, skip_read_iteration, Jmax_local, maxDifferenceBetweenReads, maxEmissionMatrixDifference, run_fb_grid_offset, grid, snp_start_1_based, snp_end_1_based, generate_fb_snp_offsets, suppressOutput, n_gibbs_starts, n_gibbs_sample_its, n_gibbs_burn_in_its, double_list_of_starting_read_labels, seed_vector, prev_list_of_alphaBetaBlocks, i_snp_block_for_alpha_beta, do_block_resampling, artificial_relabel, class_sum_cutoff, shuffle_bin_radius, block_gibbs_iterations, block_gibbs_quantile_prob, rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info)
 }
 
 #' @export
-Rcpp_make_eMatRead_t_for_gibbs_using_objects <- function(eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads) {
-    invisible(.Call('_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects', PACKAGE = 'QUILT', eMatRead_t, sampleReads, hapMatcher, grid, rhb_t, distinctHapsIE, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads))
+rcpp_evaluate_read_probabilities <- function(alphaHat_m, betaHat_m, ab_m, pC, pA1, pA2, read_category, iRead, h_rC, h_rA1, h_rA2, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, sample_is_diploid = TRUE) {
+    .Call('_QUILT_rcpp_evaluate_read_probabilities', PACKAGE = 'QUILT', alphaHat_m, betaHat_m, ab_m, pC, pA1, pA2, read_category, iRead, h_rC, h_rA1, h_rA2, eMatRead_t, number_of_non_1_reads, indices_of_non_1_reads, sample_is_diploid)
 }
 
 #' @export
-rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects <- function(genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, distinctHapsIE, which_haps_to_use, ref_error, rhb_t) {
-    invisible(.Call('_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects', PACKAGE = 'QUILT', genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, distinctHapsIE, which_haps_to_use, ref_error, rhb_t))
+rcpp_simple_binary_search <- function(val, vec) {
+    .Call('_QUILT_rcpp_simple_binary_search', PACKAGE = 'QUILT', val, vec)
+}
+
+#' @export
+rcpp_simple_binary_matrix_search <- function(val, mat, s1, e1) {
+    .Call('_QUILT_rcpp_simple_binary_matrix_search', PACKAGE = 'QUILT', val, mat, s1, e1)
+}
+
+#' @export
+Rcpp_make_eMatRead_t_for_gibbs_using_objects <- function(eMatRead_t, sampleReads, hapMatcher, hapMatcherR, use_hapMatcherR, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads, use_eMatDH_special_symbols) {
+    invisible(.Call('_QUILT_Rcpp_make_eMatRead_t_for_gibbs_using_objects', PACKAGE = 'QUILT', eMatRead_t, sampleReads, hapMatcher, hapMatcherR, use_hapMatcherR, grid, rhb_t, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads, use_eMatDH_special_symbols))
+}
+
+#' @export
+Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects <- function(eMatRead_t, rare_per_hap_info, common_snp_index, snp_is_common, sampleReads, hapMatcherR, grid, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads, rare_per_snp_info) {
+    invisible(.Call('_QUILT_Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects', PACKAGE = 'QUILT', eMatRead_t, rare_per_hap_info, common_snp_index, snp_is_common, sampleReads, hapMatcherR, grid, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, ref_error, which_haps_to_use, rescale_eMatRead_t, Jmax, maxDifferenceBetweenReads, rare_per_snp_info))
+}
+
+#' @export
+rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols, calculate_gamma_on_the_fly, sample_is_diploid) {
+    invisible(.Call('_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcher, hapMatcherR, use_hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols, calculate_gamma_on_the_fly, sample_is_diploid))
+}
+
+#' @export
+rcpp_calculate_genProbs_and_hapProbs_final_rare_common <- function(alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols, rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info, sample_is_diploid) {
+    invisible(.Call('_QUILT_rcpp_calculate_genProbs_and_hapProbs_final_rare_common', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols, rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info, sample_is_diploid))
 }
 
 #' @export
 Rcpp_quilt_test_doubler <- function(a) {
     .Call('_QUILT_Rcpp_quilt_test_doubler', PACKAGE = 'QUILT', a)
+}
+
+#' @export
+Rcpp_raw_test <- function(a, b) {
+    .Call('_QUILT_Rcpp_raw_test', PACKAGE = 'QUILT', a, b)
+}
+
+#' @export
+Rcpp_raw_test_int <- function(a, b) {
+    .Call('_QUILT_Rcpp_raw_test_int', PACKAGE = 'QUILT', a, b)
 }
 
 #' @export
@@ -222,6 +287,11 @@ Rcpp_get_top_K_or_more_matches_while_building_gamma <- function(alphaHat_t, beta
 }
 
 #' @export
+Rcpp_get_top_K_or_more_matches_while_building_gamma_eigen <- function(eigen_alphaHat_t, betaHat_t_col, gamma_t_col, iGrid, K, K_top_matches, special_multiplication_value = 1) {
+    .Call('_QUILT_Rcpp_get_top_K_or_more_matches_while_building_gamma_eigen', PACKAGE = 'QUILT', eigen_alphaHat_t, betaHat_t_col, gamma_t_col, iGrid, K, K_top_matches, special_multiplication_value)
+}
+
+#' @export
 Rcpp_build_eMatDH <- function(distinctHapsB, gl, nGrids, nSNPs, ref_error, ref_one_minus_error, add_zero_row = FALSE) {
     .Call('_QUILT_Rcpp_build_eMatDH', PACKAGE = 'QUILT', distinctHapsB, gl, nGrids, nSNPs, ref_error, ref_one_minus_error, add_zero_row)
 }
@@ -237,8 +307,13 @@ Rcpp_haploid_reference_single_forward <- function(gammaSmall_cols_to_get, gl, al
 }
 
 #' @export
-Rcpp_haploid_reference_single_forward_version2 <- function(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference = 1e10, normalize_emissions = FALSE) {
-    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_forward_version2', PACKAGE = 'QUILT', gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, hapMatcher, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions))
+Rcpp_haploid_reference_single_forward_version2 <- function(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, hapMatcher, hapMatcherR, use_hapMatcherR, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference = 1e10, normalize_emissions = FALSE) {
+    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_forward_version2', PACKAGE = 'QUILT', gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, hapMatcher, hapMatcherR, use_hapMatcherR, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions))
+}
+
+#' @export
+Rcpp_haploid_reference_single_forward_version3 <- function(gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, hapMatcher, hapMatcherR, use_hapMatcherR, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference = 1e10, normalize_emissions = FALSE) {
+    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_forward_version3', PACKAGE = 'QUILT', gammaSmall_cols_to_get, gl, alphaHat_t, c, transMatRate_t, rhb_t, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, hapMatcher, hapMatcherR, use_hapMatcherR, eMatDH, nGrids, nSNPs, K, use_eMatDH, ref_error, only_store_alpha_at_gamma_small, always_normalize, min_emission_prob_normalization_threshold, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions))
 }
 
 #' @export
@@ -247,12 +322,42 @@ Rcpp_haploid_reference_single_backward <- function(alphaHat_t, betaHat_t, gamma_
 }
 
 #' @export
-Rcpp_haploid_reference_single_backward_version2 <- function(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage, nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions) {
-    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_backward_version2', PACKAGE = 'QUILT', alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage, nGrids, transMatRate_t, eMatDH, hapMatcher, nSNPs, K, use_eMatDH, rhb_t, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions))
+Rcpp_haploid_reference_single_backward_version2 <- function(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage, nGrids, transMatRate_t, eMatDH, hapMatcher, hapMatcherR, use_hapMatcherR, nSNPs, K, use_eMatDH, rhb_t, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions) {
+    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_backward_version2', PACKAGE = 'QUILT', alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage, nGrids, transMatRate_t, eMatDH, hapMatcher, hapMatcherR, use_hapMatcherR, nSNPs, K, use_eMatDH, rhb_t, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions))
 }
 
 #' @export
-Rcpp_haploid_dosage_versus_refs <- function(gl, alphaHat_t, betaHat_t, c, gamma_t, gammaSmall_t, best_haps_stuff_list, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, hapMatcher, gammaSmall_cols_to_get, eMatDH_special_grid_which, eMatDH_special_values_list, K_top_matches, suppressOutput = 1L, min_emission_prob_normalization_threshold = 1e-100, return_betaHat_t = TRUE, return_dosage = TRUE, return_gamma_t = TRUE, return_gammaSmall_t = FALSE, get_best_haps_from_thinned_sites = FALSE, is_version_2 = TRUE, return_extra = FALSE, always_normalize = TRUE, normalize_emissions = TRUE) {
-    invisible(.Call('_QUILT_Rcpp_haploid_dosage_versus_refs', PACKAGE = 'QUILT', gl, alphaHat_t, betaHat_t, c, gamma_t, gammaSmall_t, best_haps_stuff_list, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, hapMatcher, gammaSmall_cols_to_get, eMatDH_special_grid_which, eMatDH_special_values_list, K_top_matches, suppressOutput, min_emission_prob_normalization_threshold, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, is_version_2, return_extra, always_normalize, normalize_emissions))
+Rcpp_haploid_reference_single_backward_version3 <- function(alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage, nGrids, transMatRate_t, eMatDH, hapMatcher, hapMatcherR, use_hapMatcherR, nSNPs, K, use_eMatDH, rhb_t, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions) {
+    invisible(.Call('_QUILT_Rcpp_haploid_reference_single_backward_version3', PACKAGE = 'QUILT', alphaHat_t, betaHat_t, gamma_t, gammaSmall_t, best_haps_stuff_list, gammaSmall_cols_to_get, dosage, nGrids, transMatRate_t, eMatDH, hapMatcher, hapMatcherR, use_hapMatcherR, nSNPs, K, use_eMatDH, rhb_t, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, ref_error, gl, c, distinctHapsIE, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, nMaxDH, K_top_matches, eMatDH_special_grid_which, eMatDH_special_values_list, maxEmissionMatrixDifference, normalize_emissions))
+}
+
+#' @export
+Rcpp_haploid_dosage_versus_refs <- function(gl, arma_alphaHat_t, eigen_alphaHat_t, betaHat_t, c, gamma_t, gammaSmall_t, best_haps_stuff_list, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, hapMatcher, hapMatcherR, use_hapMatcherR, gammaSmall_cols_to_get, eMatDH_special_grid_which, eMatDH_special_values_list, K_top_matches, suppressOutput = 1L, min_emission_prob_normalization_threshold = 1e-100, return_betaHat_t = TRUE, return_dosage = TRUE, return_gamma_t = TRUE, return_gammaSmall_t = FALSE, get_best_haps_from_thinned_sites = FALSE, is_version_2 = TRUE, is_version_3 = FALSE, return_extra = FALSE, always_normalize = TRUE, use_eigen = FALSE, normalize_emissions = TRUE) {
+    invisible(.Call('_QUILT_Rcpp_haploid_dosage_versus_refs', PACKAGE = 'QUILT', gl, arma_alphaHat_t, eigen_alphaHat_t, betaHat_t, c, gamma_t, gammaSmall_t, best_haps_stuff_list, dosage, transMatRate_t, rhb_t, ref_error, use_eMatDH, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, use_eMatDH_special_symbols, hapMatcher, hapMatcherR, use_hapMatcherR, gammaSmall_cols_to_get, eMatDH_special_grid_which, eMatDH_special_values_list, K_top_matches, suppressOutput, min_emission_prob_normalization_threshold, return_betaHat_t, return_dosage, return_gamma_t, return_gammaSmall_t, get_best_haps_from_thinned_sites, is_version_2, is_version_3, return_extra, always_normalize, use_eigen, normalize_emissions))
+}
+
+#' @export
+rcpp_test1 <- function(alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t) {
+    invisible(.Call('_QUILT_rcpp_test1', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t))
+}
+
+#' @export
+rcpp_test2 <- function(alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t) {
+    invisible(.Call('_QUILT_rcpp_test2', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t))
+}
+
+#' @export
+rcpp_test3 <- function(alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t) {
+    invisible(.Call('_QUILT_rcpp_test3', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t))
+}
+
+#' @export
+rcpp_test4 <- function(alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t) {
+    invisible(.Call('_QUILT_rcpp_test4', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t))
+}
+
+#' @export
+rcpp_test5 <- function(alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t) {
+    invisible(.Call('_QUILT_rcpp_test5', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, betaHat_t1, betaHat_t2, sampleReads, eMatRead_t))
 }
 

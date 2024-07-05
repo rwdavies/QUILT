@@ -1,0 +1,48 @@
+#+TITLE:  QUILT + PBWT
+
+
+* Installation
+
+I use https://github.com/Zilong-Li/vcfpp for parsing vcf/bcf, which depends on the =htslib=. Therefore make sure =htslib= is in your system path.
+
+#+begin_src shell
+git clone --recursive https://github.com/rwdavies/QUILT.git
+cd QUILT
+./scripts/install-dependencies.sh
+./scripts/build-and-install.R
+#+end_src
+
+* Quick Start
+
+Download example data
+
+#+begin_src shell
+wget http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2021_01_15A.tgz ## or curl -O
+tar -xzvf QUILT_example_2021_01_15A.tgz
+#+end_src
+
+run QUILT with PBWT
+
+#+begin_src shell
+rm -rf quilt_output
+./QUILT.R \
+--outputdir=quilt_output \
+--chr=chr20 \
+--regionStart=2000001 \
+--regionEnd=2100000 \
+--buffer=10000 \
+--bamlist=package_2021_01_15A/bamlist.1.0.txt \
+--posfile=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.posfile.txt \
+--phasefile=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.phasefile.txt \
+--reference_haplotype_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.hap.gz \
+--reference_legend_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.legend.gz \
+--reference_sample_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.samples \
+--genetic_map_file=package_2021_01_15A/CEU-chr20-final.b38.txt.gz \
+--nGen=100 \
+--reference_vcf_file=package_2021_01_15A/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.2100000.noNA12878.vcf.gz \
+--pbwtL=2 \
+--pbwtS=8 \
+--use_mspbwt=FALSE \
+--zilong=TRUE \
+--save_prepared_reference=TRUE
+#+end_src

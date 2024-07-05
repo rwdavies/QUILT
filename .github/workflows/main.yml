@@ -21,20 +21,14 @@ jobs:
       - uses: actions/checkout@v2
  
       - name: Manually install dependency
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y libdeflate-dev libdeflate-tools
-          sudo ln -sf /usr/lib/x86_64-linux-gnu/libdeflate.so /usr/local/lib/libdeflate.so
-          sudo apt-get install -y libcurl4-openssl-dev
-          sudo apt-get install -y libharfbuzz-dev
-          sudo apt-get install -y libfribidi-dev
+        run: sudo apt-get update -y && sudo apt-get install -y libcurl4-openssl-dev && sudo apt-get install -y libharfbuzz-dev && sudo apt-get install -y libfribidi-dev && which pkg-config
 
       - uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
 
       - name: Install dependencies
-        run: ./scripts/install-dependencies.sh
+        run: export DEV_STITCH="TRUE" && ./scripts/install-dependencies.sh
 
       - name: Unit tests
         run: ./scripts/test-unit.sh

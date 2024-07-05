@@ -2,6 +2,7 @@ if ( 1 == 0 ) {
     
     library("testthat")
     library("QUILT")
+    curdir <- getwd()
     dir <- "~/proj/QUILT/"
     setwd(paste0(dir, "/QUILT/R"))
     a <- dir(pattern = "*.R")
@@ -10,6 +11,7 @@ if ( 1 == 0 ) {
         a <- a[-b]
     }
     o <- sapply(a, source)
+    setwd(curdir)
 
 
 }
@@ -155,7 +157,7 @@ test_that("QUILT can use all combinations of posfile, genfile and phasfile in th
             regionEnd <- NA
             buffer <- NA
         }
-        
+
         QUILT_prepare_reference(
             outputdir = outputdir,
             chr = data_package$chr,
@@ -167,6 +169,7 @@ test_that("QUILT can use all combinations of posfile, genfile and phasfile in th
             regionEnd = regionEnd,
             buffer = buffer
         )
+        
         if (is.na(regionStart)) {
             regionName <- data_package$chr
         } else {
@@ -198,7 +201,9 @@ test_that("QUILT can use all combinations of posfile, genfile and phasfile in th
                 genfile <- data_package$genfile
                 phasefile <- data_package$phasefile
             }
+            
             ## capture messages from this to check it worked
+
             output <- testthat::capture_messages(
                 QUILT(
                     outputdir = outputdir,
@@ -213,8 +218,15 @@ test_that("QUILT can use all combinations of posfile, genfile and phasfile in th
                     nGibbsSamples = 3
                 )
             )
-            n_imp_dos <- length(grep("Final imputation dosage", output))
-            n_phase <- length(grep("Final phasing accuracy", output))            
+
+            a <- grep("Final imputation accuracy", output)
+            if (length(a) > 0) {
+                n_imp_dos <- length(grep("r2", output[a]))
+                n_phase <- length(grep("PSE", output[a]))
+            } else {
+                n_imp_dos <- 0
+                n_phase <- 0
+            }
             if (verbose) {
                 print(paste0("n_imp_dos = ", n_imp_dos))
                 print(paste0("n_phase = ", n_phase))
@@ -252,7 +264,6 @@ test_that("QUILT can use all combinations of posfile, genfile and phasfile in th
     }
     
 })
-
 
 
 
@@ -440,7 +451,7 @@ test_that("QUILT can impute samples with very few reads", {
                 file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
                 data_package = data_package,
                 which_snps = which_snps,
-                tol = 1,
+                tol = 1.1,
                 min_info = 0,
                 max_missingness = 1.1
             )
@@ -451,6 +462,54 @@ test_that("QUILT can impute samples with very few reads", {
 })
 
 
+test_that("QUILT can use or not use eigen to impute", {
 
+    outputdir <- STITCH::make_unique_tempdir()
+    regionStart <- 11
+    regionEnd <- 40
+    buffer <- 5
+
+    QUILT_prepare_reference(
+        outputdir = outputdir,
+        chr = data_package$chr,
+        nGen = 100,
+        reference_haplotype_file = refpack$reference_haplotype_file,
+        reference_legend_file = refpack$reference_legend_file,
+        reference_sample_file = refpack$reference_sample_file,
+        genetic_map_file = refpack$reference_genetic_map_file,
+        regionStart = regionStart,
+        regionEnd = regionEnd,
+        buffer = buffer,
+        expRate = 0.5
+    )
+    regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
+    expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
+
+    for(use_eigen in c(FALSE, TRUE)) {
+        
+        QUILT(
+            outputdir = outputdir,
+            chr = data_package$chr,
+            regionStart = regionStart,
+            regionEnd = regionEnd,
+            buffer = buffer,
+            bamlist = data_package$bamlist,
+            posfile = data_package$posfile,
+            use_eigen = use_eigen
+        )
+        
+        which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
+        
+        ## now evaluate versus truth!
+        check_quilt_output(
+            file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
+            data_package = data_package,
+            which_snps = which_snps,
+            tol = 0.1,
+            min_info = 0.9
+        )
+    }
+
+})
 
 

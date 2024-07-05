@@ -1,8 +1,8 @@
 Package: QUILT
 Type: Package
 Title: QUILT
-Version: 1.0.5
-Date: 2023-09-11
+Version: 2.0.0
+Date: 2024-07-05
 Author: Robert William Davies
 Maintainer: Robert William Davies <robertwilliamdavies@gmail.com>
 Description: QUILT performs imputation of individuals sequenced to low coverage
@@ -11,11 +11,11 @@ Installation: To install, first install dependencies, then run the
         install.packages command, pointing to the downloaded tarball
         (QUILT.tar.gz)
 Getting started: Please see github README.
-Depends: parallel, data.table, rrbgen (>= 0.0.4), STITCH (>= 1.6.6)
+Depends: parallel, data.table, rrbgen (>= 0.0.4), STITCH (>= 1.6.10)
 Imports: Rcpp
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo: Rcpp, RcppArmadillo,RcppEigen
 Packaged: 2020-07-24 12:00:00 UTC; rdavies
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 License: GPL | file LICENSE
 SystemRequirements: C++11
 NeedsCompilation: yes

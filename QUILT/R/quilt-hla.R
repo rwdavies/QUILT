@@ -1,3 +1,5 @@
+## -*- ess-indent-offset: 4; -*-
+
 #' @title QUILT_HLA
 #' @param bamlist Path to file with bam file locations. File is one row per entry, path to bam files. Bam index files should exist in same directory as for each bam, suffixed either .bam.bai or .bai
 #' @param region HLA region to be analyzed, for example A for HLA-A
@@ -185,7 +187,8 @@ QUILT_HLA <- function(
     }
 
     
-    outfile1 <- tempfile()    
+    outfile1 <- tempfile()
+    
     QUILT(
         outputdir = tempdir(),
         chr = chr,

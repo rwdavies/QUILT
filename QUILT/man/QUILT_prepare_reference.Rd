@@ -12,6 +12,7 @@ QUILT_prepare_reference(
   regionEnd = NA,
   buffer = NA,
   output_file = "",
+  reference_vcf_file = "",
   reference_haplotype_file = "",
   reference_legend_file = "",
   reference_sample_file = "",
@@ -26,7 +27,14 @@ QUILT_prepare_reference(
   output_sites_filename = NA,
   expRate = 1,
   maxRate = 100,
-  minRate = 0.1
+  minRate = 0.1,
+  use_mspbwt = FALSE,
+  mspbwt_nindices = 4L,
+  override_use_eMatDH_special_symbols = NA,
+  use_hapMatcherR = TRUE,
+  impute_rare_common = FALSE,
+  rare_af_threshold = 0.001,
+  use_list_of_columns_of_A = TRUE
 )
 }
 \arguments{
@@ -43,6 +51,8 @@ QUILT_prepare_reference(
 \item{buffer}{Buffer of region to perform imputation over. So imputation is run form regionStart-buffer to regionEnd+buffer, and reported for regionStart to regionEnd, including the bases of regionStart and regionEnd}
 
 \item{output_file}{Path to output RData file containing prepared haplotypes (has default value that works with QUILT)}
+
+\item{reference_vcf_file}{Path to reference haplotype file in VCF format (values must be 0 or 1)}
 
 \item{reference_haplotype_file}{Path to reference haplotype file in IMPUTE format (file with no header and no rownames, one row per SNP, one column per reference haplotype, space separated, values must be 0 or 1)}
 
@@ -73,6 +83,20 @@ QUILT_prepare_reference(
 \item{maxRate}{Maximum recomb rate cM/Mb}
 
 \item{minRate}{Minimum recomb rate cM/Mb}
+
+\item{use_mspbwt}{Build mspbwt indices to be used in imputation}
+
+\item{mspbwt_nindices}{How many mspbwt indices to build}
+
+\item{override_use_eMatDH_special_symbols}{Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used.}
+
+\item{use_hapMatcherR}{Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use}
+
+\item{impute_rare_common}{Whether to use common SNPs first for imputation, followed by a round of rare imputation}
+
+\item{rare_af_threshold}{Allele frequency threshold under which SNPs are considered rare, otherwise they are considered common.}
+
+\item{use_list_of_columns_of_A}{If when using mspbwt, use columns of A rather than the whole thing, to speed up this version}
 }
 \value{
 Results in properly formatted version

@@ -1,5 +1,5 @@
 if ( 1 == 0 ) {
-    
+
     library("testthat")
     library("QUILT")
     dir <- "~/proj/QUILT/"
@@ -13,6 +13,7 @@ if ( 1 == 0 ) {
 
 }
 
+## n_snps <- 500
 n_snps <- 50
 chr <- 10
 K <- 6
@@ -38,13 +39,16 @@ refpack <- STITCH::make_reference_package(
     chr = chr,
     phasemaster = phasemaster
 )
-set.seed(010)
+
 
 test_that("QUILT can impute a few samples in a standard way, using a large panel", {
-    
+
+    set.seed(0105)
+
     outputdir <- STITCH::make_unique_tempdir()
-    
+
     regionStart <- 11
+    ## regionEnd <- 400
     regionEnd <- 40
     buffer <- 5
     QUILT_prepare_reference(
@@ -58,15 +62,16 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
         regionEnd = regionEnd,
         buffer = buffer
     )
+
     regionName <- paste0(data_package$chr, ".", regionStart, ".", regionEnd)
     expect_true(file.exists(file_quilt_prepared_reference(outputdir, regionName)))
     i <- 1
-    
+
     for(i in 1:2) {
 
         if (i == 1) {phasefile <- "" }
         if (i == 2) {phasefile <- data_package$phasefile}
-        
+
         QUILT(
             outputdir = outputdir,
             chr = data_package$chr,
@@ -81,14 +86,17 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
             n_seek_its = 2,
             nCores = 1,
             RData_objects_to_save = "final_set_of_results",
-            addOptimalHapsToVCF = FALSE
+            addOptimalHapsToVCF = FALSE,
+            make_plots = FALSE,
+            make_plots_block_gibbs = FALSE,
+            use_eigen = TRUE
         )
 
         ## Ksubset = 100,
         ## Knew = 25,
-        
+
         which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
-    
+
         ## now evaluate versus truth!
         check_quilt_output(
             file = file.path(outputdir, paste0("quilt.", regionName, ".vcf.gz")),
@@ -97,13 +105,13 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
             tol = 0.1,
             min_info = 0.9
         )
-        
+
         ## check loaded stuff
         load(file_quilt_output_RData(outputdir, regionName))
         expect_equal(length(final_set_of_results), 3)
         unlink(file_quilt_output_RData(outputdir, regionName))
-        
+
     }
-    
+
 })
 

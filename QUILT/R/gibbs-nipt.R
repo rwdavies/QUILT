@@ -61,7 +61,8 @@ forwardBackwardGibbsNIPT <- function(
     perform_block_gibbs = FALSE,
     shuffle_bin_radius = NULL,
     block_gibbs_iterations = NULL,
-    return_gibbs_block_output = NULL
+    return_gibbs_block_output = NULL,
+    force_reset_read_category_zero = TRUE
 ) {
     if (!is.na(seed)) {
         set.seed(seed)
@@ -139,7 +140,17 @@ forwardBackwardGibbsNIPT <- function(
         run_pseudo_haploid = FALSE,
         rescale_eMatRead_t = rescale_eMatRead_t
     )
+    ## 
+    ## evaluate how necessary they are
     ##
+    outR <- evaluate_read_variability(eMatRead_t)
+    number_of_non_1_reads <- outR[["number_of_non_1_reads"]]
+    indices_of_non_1_reads <- outR[["indices_of_non_1_reads"]]
+    read_category <- outR[["read_category"]]
+    ##
+    if (force_reset_read_category_zero) {
+        read_category[read_category != 1L] <- 0L
+    }
     ##
     to_return <- list()
     if (return_extra) {
@@ -221,7 +232,7 @@ forwardBackwardGibbsNIPT <- function(
             ##
             rcpp_make_eMatGrid_t(eMatGrid_t = eMatGrid_t2, eMatRead_t = eMatRead_t, H = H, sampleReads = sampleReads, hap = 2, nGrids = nGrids, prev = 0, suppressOutput = 1, prev_section = "text", next_section = "", run_fb_grid_offset = run_fb_grid_offset, use_all_reads = FALSE, bound = bound_eMatGrid_t, maxEmissionMatrixDifference =  maxEmissionMatrixDifference, rescale = rescale_eMatGrid_t)
             ## 
-            rcpp_make_eMatGrid_t(eMatGrid_t = eMatGrid_t3, eMatRead_t = eMatRead_t, H = H, sampleReads = sampleReads, hap = 3, nGrids = nGrids, prev = 0, suppressOutput = 1, prev_section = "text", next_section = "", run_fb_grid_offset = run_fb_grid_offset, use_all_reads = FALSE, bound = bound_eMatGrid_t, maxEmissionMatrixDifference =  maxEmissionMatrixDifference, rescal = rescale_eMatGrid_t)
+            rcpp_make_eMatGrid_t(eMatGrid_t = eMatGrid_t3, eMatRead_t = eMatRead_t, H = H, sampleReads = sampleReads, hap = 3, nGrids = nGrids, prev = 0, suppressOutput = 1, prev_section = "text", next_section = "", run_fb_grid_offset = run_fb_grid_offset, use_all_reads = FALSE, bound = bound_eMatGrid_t, maxEmissionMatrixDifference =  maxEmissionMatrixDifference, rescale = rescale_eMatGrid_t)
             ##
             ##
             ## 
@@ -274,7 +285,7 @@ forwardBackwardGibbsNIPT <- function(
             ##
             ## do an iteration here
             ##
-            out <- gibbs_nipt_one_iteration(s = s, iteration = iteration, sampleReads = sampleReads, priorCurrent_m = priorCurrent_m, transMatRate_tc_H = transMatRate_tc_H, alphaMatCurrent_tc = alphaMatCurrent_tc, n_gibbs_full_its = n_gibbs_full_its, nGrids = nGrids,K = K, H = H, eMatRead_t = eMatRead_t, runif_reads = runif_reads, alphaHat_t1 = alphaHat_t1, betaHat_t1 = betaHat_t1, c1 = c1, eMatGrid_t1 = eMatGrid_t1, alphaHat_t2 = alphaHat_t2, betaHat_t2 = betaHat_t2, c2 = c2, eMatGrid_t2 = eMatGrid_t2, alphaHat_t3 = alphaHat_t3, betaHat_t3 = betaHat_t3, c3 = c3, eMatGrid_t3 = eMatGrid_t3, p_store = p_store, verbose = verbose, return_p_store = return_p_store, true_H = true_H, i_gibbs_samplings = i_gibbs_samplings, ff = ff, bound_eMatGrid_t = bound_eMatGrid_t, per_it_likelihoods = per_it_likelihoods, gibbs_initialize_iteratively = gibbs_initialize_iteratively, first_read_for_gibbs_initialization = first_read_for_gibbs_initialization, do_block_resampling = do_block_resampling, artificial_relabel = artificial_relabel, prior_probs = prior_probs, i_result_it = i_result_it, record_read_set = record_read_set, H_class = H_class, rlc = rlc, class_sum_cutoff = class_sum_cutoff)
+            out <- gibbs_nipt_one_iteration(s = s, iteration = iteration, sampleReads = sampleReads, priorCurrent_m = priorCurrent_m, transMatRate_tc_H = transMatRate_tc_H, alphaMatCurrent_tc = alphaMatCurrent_tc, n_gibbs_full_its = n_gibbs_full_its, nGrids = nGrids,K = K, H = H, eMatRead_t = eMatRead_t, runif_reads = runif_reads, alphaHat_t1 = alphaHat_t1, betaHat_t1 = betaHat_t1, c1 = c1, eMatGrid_t1 = eMatGrid_t1, alphaHat_t2 = alphaHat_t2, betaHat_t2 = betaHat_t2, c2 = c2, eMatGrid_t2 = eMatGrid_t2, alphaHat_t3 = alphaHat_t3, betaHat_t3 = betaHat_t3, c3 = c3, eMatGrid_t3 = eMatGrid_t3, p_store = p_store, verbose = verbose, return_p_store = return_p_store, true_H = true_H, i_gibbs_samplings = i_gibbs_samplings, ff = ff, bound_eMatGrid_t = bound_eMatGrid_t, per_it_likelihoods = per_it_likelihoods, gibbs_initialize_iteratively = gibbs_initialize_iteratively, first_read_for_gibbs_initialization = first_read_for_gibbs_initialization, do_block_resampling = do_block_resampling, artificial_relabel = artificial_relabel, prior_probs = prior_probs, i_result_it = i_result_it, record_read_set = record_read_set, H_class = H_class, rlc = rlc, class_sum_cutoff = class_sum_cutoff, number_of_non_1_reads = number_of_non_1_reads, indices_of_non_1_reads  = indices_of_non_1_reads, read_category = read_category)
             ## unpack
             alphaHat_t1 <- out$alphaHat_t1; betaHat_t1 <- out$betaHat_t1; c1 <- out$c1; eMatGrid_t1 <- out$eMatGrid_t1
             alphaHat_t2 <- out$alphaHat_t2; betaHat_t2 <- out$betaHat_t2; c2 <- out$c2; eMatGrid_t2 <- out$eMatGrid_t2
@@ -372,7 +383,8 @@ save_various_gammas <- function(
     hg_ll_rescaled,
     haploid_gibbs_equal_weighting,
     prior_probs,
-    ff
+    ff,
+    sample_is_diploid = FALSE
 ) {
     if (return_gamma | return_genProbs | return_hapProbs) {
         read_counts <- c(sum(H == 1), sum(H == 2), sum(H == 3))
@@ -413,7 +425,8 @@ save_various_gammas <- function(
             grid = grid,
             snp_start_1_based = snp_start_1_based,
             snp_end_1_based = snp_end_1_based,
-            grid_offset = run_fb_grid_offset
+            grid_offset = run_fb_grid_offset,
+            sample_is_diploid = sample_is_diploid
         )
         ## 
         if (return_genProbs | return_hapProbs) {
@@ -534,7 +547,10 @@ gibbs_nipt_one_iteration <- function(
     record_read_set,
     H_class,
     rlc,
-    class_sum_cutoff
+    class_sum_cutoff,
+    number_of_non_1_reads,
+    indices_of_non_1_reads,
+    read_category
 ) {
     ##
     nReads <- length(sampleReads)
@@ -596,269 +612,279 @@ gibbs_nipt_one_iteration <- function(
         ##
         while((done_reads == FALSE) & (read_wif_iRead + 1) == iGrid) {
             ##
-            ## decide on what type of work is being done
+            ## don't bother if read is uninformative
             ##
-            currently_doing_normal_progress <- FALSE
-            currently_doing_gibbs_initialization <- FALSE
-            currently_doing_pass_through <- FALSE
-            if (!gibbs_initialize_iteratively) {
-                currently_doing_normal_progress <- TRUE
-            } else {
-                if ((iRead < first_read_for_gibbs_initialization) & (iteration == 1)) {
-                    currently_doing_pass_through <- TRUE
-                } else if ((first_read_for_gibbs_initialization <= iRead) & (iteration == 1)) {
-                    currently_doing_gibbs_initialization <- TRUE
-                } else if ((iRead < first_read_for_gibbs_initialization) & (iteration == 2)) {
-                    currently_doing_gibbs_initialization <- TRUE
-                } else {
-                    currently_doing_normal_progress <- TRUE
-                }
-            }
-            ## in R, make a check, always, exactly 1 should be chosen
-            x <- c(currently_doing_normal_progress, currently_doing_gibbs_initialization, currently_doing_pass_through)
-            if (sum(x) != 1) {
-                print(x)
-                stop("Bad initialization choice")
-            }
-            ##
-            if (verbose) {
-                print(paste0("------------------------ it = ", iteration, ", iRead = ", iRead))
-            }
-            ##
-            if (currently_doing_normal_progress) {
-                ## i_remove = 0 is remove it from the haplotype that normally has it
-                ## i_remove = 1 is add it to the haplotype that is (temporarily) gaining it
-                ## these are 1-3 based as normal here
-                h_rC <- H[iRead] ## h_r current
-                h_rA1 <- setdiff(1:3, H[iRead])[1] ## h_r alternate 1
-                h_rA2 <- setdiff(1:3, H[iRead])[2] ## h_r alternate 1
-                if (verbose) {
-                    print(paste0("h_rC = ", h_rC, ", h_rA1 = ", h_rA1, ", h_rA2 = ", h_rA2))
-                }
-                ## so pC is current three probabilities
-                ## need same three probabilities for flip 1, flip 2
-                pA1 <- pC ## read label becomes h_rA1
-                pA2 <- pC ## read label becomes h_rA2
-                ## now - blank out the two that switch
-                ## default behaviour
-                pA1[c(h_rC, h_rA1)] <- 0
-                pA2[c(h_rC, h_rA2)] <- 0
-                for(k in 1:K) {
-                    ## A1 loser
-                    pA1[h_rC]  <- pA1[h_rC]  + alphaHat_m[h_rC, k]  * betaHat_m[h_rC, k] / eMatRead_t[k, iRead]
-                    ## A1 gainer
-                    pA1[h_rA1] <- pA1[h_rA1] + alphaHat_m[h_rA1, k]  * betaHat_m[h_rA1, k] * eMatRead_t[k, iRead]
-                    ## A2 gainer
-                    pA2[h_rA2] <- pA2[h_rA2] + alphaHat_m[h_rA2, k]  * betaHat_m[h_rA2, k] * eMatRead_t[k, iRead]
-                }
-                ## A2 loser
-                pA2[h_rC] <- pA1[h_rC]
-            } else if (currently_doing_gibbs_initialization) {
-                h_rC <- 1
-                h_rA1 <- 2
-                h_rA2 <- 3
-                pA1 <- pC
-                pA2 <- pC
-                pC[h_rC] <- 0
-                pA1[h_rA1] <- 0
-                pA2[h_rA2] <- 0
-                for(k in 1:K) {
-                    ## everything is multiplied!
-                    pC[h_rC] <- pC[h_rC] + alphaHat_m[h_rC, k]  * betaHat_m[h_rC, k] * eMatRead_t[k, iRead]
-                    pA1[h_rA1] <- pA1[h_rA1] + alphaHat_m[h_rA1, k]  * betaHat_m[h_rA1, k] * eMatRead_t[k, iRead]
-                    pA2[h_rA2] <- pA2[h_rA2] + alphaHat_m[h_rA2, k]  * betaHat_m[h_rA2, k] * eMatRead_t[k, iRead]
-                }
-            } else if (currently_doing_pass_through) {
-                h_rC <- 1
-                h_rA1 <- 2
-                h_rA2 <- 3
-                ## nothing!
-                pA1 <- pC
-                pA2 <- pC
-            }
-            ## NOTE - THIS works out to be the same thing as e.g. prod(pA1) *  (prior_probs[h_rA1] / prior_probs[h_rC])
-            ## which make a bit more sense
-            prod_pC <- prod(pC) * prior_probs[h_rC]
-            prod_pA1 <- prod(pA1) * prior_probs[h_rA1]
-            prod_pA2 <- prod(pA2) * prior_probs[h_rA2]
-            ##
-            denom <- (prod_pC + prod_pA1 + prod_pA2)
-            norm_pC <- prod_pC / denom
-            norm_pA1 <- prod_pA1 / denom
-            norm_pA2 <- prod_pA2 / denom
-            if (iRead == 191) {
-                print("------191 run---")
-                print(pC)
-                print(pA1)
-                print(pA2)
-                print(denom)
-                print(prior_probs)
-            }
-            if (verbose) {
-                print(paste0("normalized_probabilities = ", paste0(c(norm_pC, norm_pA1, norm_pA2), collapse = ",")))
-                print(paste0("pC = ", paste0(pC, collapse = ",")))
-                print(paste0("denom = ", denom))
-            }
-            ##
-            ##
-            ##
-            ## mt = 0            -> 0.5
-            ## mu = 0.5          -> 0.5 + ff / 2
-            ## p  = 0.5 + ff / 2 -> 1
-            ##
-            ## which one is the winner
-            ##
-            cumsum_flip_probs <- c(0, 0, 0) ## H 1,2,3 ordering, i.e. mt, mu, p ordering
-            cumsum_flip_probs[h_rC] <- norm_pC
-            cumsum_flip_probs[h_rA1] <- norm_pA1
-            cumsum_flip_probs[h_rA2] <- norm_pA2
-            cumsum_flip_probs <- cumsum(cumsum_flip_probs)
-            ##
-            chance <- runif_reads[nReads * (iteration - 1) + iRead]
-            h_rN <- 0
-            for(i in 3:1) {
-                if (chance < cumsum_flip_probs[i]) {
-                    h_rN <- i
-                }
-            }
-            if (!(h_rN %in% c(1, 2, 3))) {
-                print(c("h_rC", "h_rA1", "h_rA2"))
-                print(c(h_rC, h_rA1, h_rA2))
-                print(cumsum_flip_probs)
-                print(chance)
-                stop("bad h_rN")
-            }
-            ##
-            if (
-            ((h_rN != h_rC) | currently_doing_gibbs_initialization) & (!currently_doing_pass_through)
-            ) {
+            if (read_category[iRead] != 1L) {
                 ##
-                H[iRead] <- h_rN
-                ## update alphas
-                if (currently_doing_normal_progress) {
-                    for(k in 0:(K - 1)) {
-                        alphaHat_m[h_rC, k + 1] <- alphaHat_m[h_rC, k + 1] / eMatRead_t[k + 1, iRead]
+                ## decide on what type of work is being done
+                ##
+                currently_doing_normal_progress <- FALSE
+                currently_doing_gibbs_initialization <- FALSE
+                currently_doing_pass_through <- FALSE
+                if (!gibbs_initialize_iteratively) {
+                    currently_doing_normal_progress <- TRUE
+                } else {
+                    if ((iRead < first_read_for_gibbs_initialization) & (iteration == 1)) {
+                        currently_doing_pass_through <- TRUE
+                    } else if ((first_read_for_gibbs_initialization <= iRead) & (iteration == 1)) {
+                        currently_doing_gibbs_initialization <- TRUE
+                    } else if ((iRead < first_read_for_gibbs_initialization) & (iteration == 2)) {
+                        currently_doing_gibbs_initialization <- TRUE
+                    } else {
+                        currently_doing_normal_progress <- TRUE
                     }
                 }
-                for(k in 0:(K - 1)) {
-                    alphaHat_m[h_rN, k + 1] <- alphaHat_m[h_rN, k + 1] * eMatRead_t[k + 1, iRead]
+                ## in R, make a check, always, exactly 1 should be chosen
+                x <- c(currently_doing_normal_progress, currently_doing_gibbs_initialization, currently_doing_pass_through)
+                if (sum(x) != 1) {
+                    print(x)
+                    stop("Bad initialization choice")
                 }
-                ## now - first - who loses
-                if (currently_doing_normal_progress) {
-                    if (h_rC == 1) { for(k in 1:K) { eMatGrid_t1[k, iGrid] = eMatGrid_t1[k, iGrid] / eMatRead_t[k, iRead] } }
-                    if (h_rC == 2) { for(k in 1:K) { eMatGrid_t2[k, iGrid] = eMatGrid_t2[k, iGrid] / eMatRead_t[k, iRead] } }
-                    if (h_rC == 3) { for(k in 1:K) { eMatGrid_t3[k, iGrid] = eMatGrid_t3[k, iGrid] / eMatRead_t[k, iRead] } }
+                ##
+                if (verbose) {
+                    print(paste0("------------------------ it = ", iteration, ", iRead = ", iRead))
                 }
-                if (h_rN == 1) { for(k in 1:K) { eMatGrid_t1[k, iGrid] = eMatGrid_t1[k, iGrid] * eMatRead_t[k, iRead] } }
-                if (h_rN == 2) { for(k in 1:K) { eMatGrid_t2[k, iGrid] = eMatGrid_t2[k, iGrid] * eMatRead_t[k, iRead] } }
-                if (h_rN == 3) { for(k in 1:K) { eMatGrid_t3[k, iGrid] = eMatGrid_t3[k, iGrid] * eMatRead_t[k, iRead] } }
-                ## reset pC
+                ##
                 if (currently_doing_normal_progress) {
-                    for(i in 1:3) {
-                        if (h_rC == 1) {
-                            if (h_rN == 2) {pC[i] = pA1[i];}
-                            if (h_rN == 3) {pC[i] = pA2[i];}
-                        } else if (h_rC == 2) {
-                            if (h_rN == 1) {pC[i] = pA1[i];}
-                            if (h_rN == 3) {pC[i] = pA2[i];}
-                        } else if (h_rC == 3) {
-                            if (h_rN == 1) {pC[i] = pA1[i];}
-                            if (h_rN == 2) {pC[i] = pA2[i];}
+                    ## i_remove = 0 is remove it from the haplotype that normally has it
+                    ## i_remove = 1 is add it to the haplotype that is (temporarily) gaining it
+                    ## these are 1-3 based as normal here
+                    h_rC <- H[iRead] ## h_r current
+                    h_rA1 <- setdiff(1:3, H[iRead])[1] ## h_r alternate 1
+                    h_rA2 <- setdiff(1:3, H[iRead])[2] ## h_r alternate 1
+                    if (verbose) {
+                        print(paste0("h_rC = ", h_rC, ", h_rA1 = ", h_rA1, ", h_rA2 = ", h_rA2))
+                    }
+                    out <- evaluate_read_probabilities(
+                        alphaHat_m = alphaHat_m,
+                        betaHat_m = betaHat_m, 
+                        pC = pC,
+                        read_category = read_category,
+                        iRead = iRead,
+                        h_rC = h_rC,
+                        h_rA1 = h_rA1,
+                        h_rA2 = h_rA2,
+                        eMatRead_t = eMatRead_t,
+                        number_of_non_1_reads = number_of_non_1_reads,
+                        indices_of_non_1_reads = indices_of_non_1_reads
+                    )
+                    pA1 <- out[["pA1"]]
+                    pA2 <- out[["pA2"]]                    
+                } else if (currently_doing_gibbs_initialization) {
+                    h_rC <- 1
+                    h_rA1 <- 2
+                    h_rA2 <- 3
+                    pA1 <- pC
+                    pA2 <- pC
+                    pC[h_rC] <- 0
+                    pA1[h_rA1] <- 0
+                    pA2[h_rA2] <- 0
+                    for(k in 1:K) {
+                        ## everything is multiplied!
+                        pC[h_rC] <- pC[h_rC] + alphaHat_m[h_rC, k]  * betaHat_m[h_rC, k] * eMatRead_t[k, iRead]
+                        pA1[h_rA1] <- pA1[h_rA1] + alphaHat_m[h_rA1, k]  * betaHat_m[h_rA1, k] * eMatRead_t[k, iRead]
+                        pA2[h_rA2] <- pA2[h_rA2] + alphaHat_m[h_rA2, k]  * betaHat_m[h_rA2, k] * eMatRead_t[k, iRead]
+                    }
+                } else if (currently_doing_pass_through) {
+                    h_rC <- 1
+                    h_rA1 <- 2
+                    h_rA2 <- 3
+                    ## nothing!
+                    pA1 <- pC
+                    pA2 <- pC
+                }
+                ## NOTE - THIS works out to be the same thing as e.g. prod(pA1) *  (prior_probs[h_rA1] / prior_probs[h_rC])
+                ## which make a bit more sense
+                prod_pC <- prod(pC) * prior_probs[h_rC]
+                prod_pA1 <- prod(pA1) * prior_probs[h_rA1]
+                prod_pA2 <- prod(pA2) * prior_probs[h_rA2]
+                ##
+                denom <- (prod_pC + prod_pA1 + prod_pA2)
+                norm_pC <- prod_pC / denom
+                norm_pA1 <- prod_pA1 / denom
+                norm_pA2 <- prod_pA2 / denom
+                if (verbose) {
+                    print(paste0("normalized_probabilities = ", paste0(c(norm_pC, norm_pA1, norm_pA2), collapse = ",")))
+                    print(paste0("pC = ", paste0(pC, collapse = ",")))
+                    print(paste0("denom = ", denom))
+                }
+                ##
+                ##
+                ##
+                ## mt = 0            -> 0.5
+                ## mu = 0.5          -> 0.5 + ff / 2
+                ## p  = 0.5 + ff / 2 -> 1
+                ##
+                ## which one is the winner
+                ##
+                cumsum_flip_probs <- c(0, 0, 0) ## H 1,2,3 ordering, i.e. mt, mu, p ordering
+                cumsum_flip_probs[h_rC] <- norm_pC
+                cumsum_flip_probs[h_rA1] <- norm_pA1
+                cumsum_flip_probs[h_rA2] <- norm_pA2
+                cumsum_flip_probs <- cumsum(cumsum_flip_probs)
+                ##
+                chance <- runif_reads[nReads * (iteration - 1) + iRead]
+                h_rN <- 0
+                for(i in 3:1) {
+                    if (chance < cumsum_flip_probs[i]) {
+                        h_rN <- i
+                    }
+                }
+                if (!(h_rN %in% c(1, 2, 3))) {
+                    print(c("h_rC", "h_rA1", "h_rA2"))
+                    print(c(h_rC, h_rA1, h_rA2))
+                    print(cumsum_flip_probs)
+                    print(chance)
+                    stop("bad h_rN")
+                }
+                ## if (iRead == 4) {
+                ##     print(alphaHat_m[, 1:5])
+                ##     print(betaHat_m[, 1:5])
+                ##     print(paste0("iRead = ", iRead, ", read_category(iRead) = ", read_category[iRead]))
+                ##     print(paste0("h_rC = ", h_rC, ", h_rN = ", h_rN))
+                ##     print(paste0("chance = ", chance))
+                ##     ##     print(paste0("cumsum_flip_probs = ", cumsum_flip_probs, collapse = ", "))
+                ##     print(paste0("norm_pC = ", paste0(norm_pC, collapse = ", ")))
+                ##     print(paste0("norm_pA1 = ", paste0(norm_pA1, collapse = ", ")))
+                ##     print(paste0("pC = ", paste0(pC, collapse = ", ")))
+                ##     print(paste0("pA1 = ", paste0(pA1, collapse = ", ")))
+                ##     ##     print(paste0("prior_probs = ", paste0(prior_probs, collapse = ", ")))
+                ##     ##
+                ## }
+                ##
+                if (
+                ((h_rN != h_rC) | currently_doing_gibbs_initialization) & (!currently_doing_pass_through)
+                ) {
+                    ##
+                    H[iRead] <- h_rN
+                    ## update alphas
+                    if (currently_doing_normal_progress) {
+                        for(k in 0:(K - 1)) {
+                            alphaHat_m[h_rC, k + 1] <- alphaHat_m[h_rC, k + 1] / eMatRead_t[k + 1, iRead]
                         }
                     }
-                } else if (currently_doing_gibbs_initialization) {
-                    ## otherwise, if gibbs_initialize
-                    ## reset no matter what, based on new sampled read
-                    for(i in 1:3) {
-                        ## if h_rN is 1, we're good already
-                        if (h_rN == 2) {pC[i] = pA1[i];}
-                        if (h_rN == 3) {pC[i] = pA2[i];}
+                    for(k in 0:(K - 1)) {
+                        alphaHat_m[h_rN, k + 1] <- alphaHat_m[h_rN, k + 1] * eMatRead_t[k + 1, iRead]
+                    }
+                    ## now - first - who loses
+                    if (currently_doing_normal_progress) {
+                        if (h_rC == 1) { for(k in 1:K) { eMatGrid_t1[k, iGrid] = eMatGrid_t1[k, iGrid] / eMatRead_t[k, iRead] } }
+                        if (h_rC == 2) { for(k in 1:K) { eMatGrid_t2[k, iGrid] = eMatGrid_t2[k, iGrid] / eMatRead_t[k, iRead] } }
+                        if (h_rC == 3) { for(k in 1:K) { eMatGrid_t3[k, iGrid] = eMatGrid_t3[k, iGrid] / eMatRead_t[k, iRead] } }
+                    }
+                    if (h_rN == 1) { for(k in 1:K) { eMatGrid_t1[k, iGrid] = eMatGrid_t1[k, iGrid] * eMatRead_t[k, iRead] } }
+                    if (h_rN == 2) { for(k in 1:K) { eMatGrid_t2[k, iGrid] = eMatGrid_t2[k, iGrid] * eMatRead_t[k, iRead] } }
+                    if (h_rN == 3) { for(k in 1:K) { eMatGrid_t3[k, iGrid] = eMatGrid_t3[k, iGrid] * eMatRead_t[k, iRead] } }
+                    ## reset pC
+                    if (currently_doing_normal_progress) {
+                        for(i in 1:3) {
+                            if (h_rC == 1) {
+                                if (h_rN == 2) {pC[i] = pA1[i];}
+                                if (h_rN == 3) {pC[i] = pA2[i];}
+                            } else if (h_rC == 2) {
+                                if (h_rN == 1) {pC[i] = pA1[i];}
+                                if (h_rN == 3) {pC[i] = pA2[i];}
+                            } else if (h_rC == 3) {
+                                if (h_rN == 1) {pC[i] = pA1[i];}
+                                if (h_rN == 2) {pC[i] = pA2[i];}
+                            }
+                        }
+                    } else if (currently_doing_gibbs_initialization) {
+                        ## otherwise, if gibbs_initialize
+                        ## reset no matter what, based on new sampled read
+                        for(i in 1:3) {
+                            ## if h_rN is 1, we're good already
+                            if (h_rN == 2) {pC[i] = pA1[i];}
+                            if (h_rN == 3) {pC[i] = pA2[i];}
+                        }
+                    }
+                    ##if (iRead <= 4) {
+                    ##    print(paste0("the new PC is ", paste0(pC, collapse = ", ")))
+                    ## }
+                }
+                ##
+                ##
+                ##
+                if ((sum(pC > 1*10**50) > 0) | (sum(pC < 1*10**(-50)) > 0)) {
+                    if (verbose) {
+                        print(paste0("renormalize"))
+                    }
+                    ## inject back
+                    alphaHat_t1[, iGrid] <- alphaHat_m[1, ]
+                    alphaHat_t2[, iGrid] <- alphaHat_m[2, ]
+                    alphaHat_t3[, iGrid] <- alphaHat_m[3, ]
+                    ## update-c
+                    a <- 1 / sum(alphaHat_t1[, iGrid])
+                    c1[iGrid] <- c1[iGrid] * a
+                    alphaHat_t1[, iGrid] <- alphaHat_t1[, iGrid] * a
+                    print(paste0("a = ", a))
+                    ##
+                    a <- 1 / sum(alphaHat_t2[, iGrid])
+                    c2[iGrid] <- c2[iGrid] * a
+                    alphaHat_t2[, iGrid] <- alphaHat_t2[, iGrid] * a
+                    ##
+                    a <- 1 / sum(alphaHat_t3[, iGrid])
+                    c3[iGrid] <- c3[iGrid] * a
+                    alphaHat_t3[, iGrid] <- alphaHat_t3[, iGrid] * a
+                    ## now re-get stuff
+                    alphaHat_m <- rbind(alphaHat_t1[, iGrid], alphaHat_t2[, iGrid], alphaHat_t3[, iGrid])
+                    betaHat_m <- rbind(betaHat_t1[, iGrid], betaHat_t2[, iGrid], betaHat_t3[, iGrid])
+                    print(paste0("before probabilities = ", paste0(pC, collapse = ", ")))                
+                    pC <- rowSums(alphaHat_m * betaHat_m) ##
+                    print(paste0("renormalized_probabilities = ", paste0(pC, collapse = ", ")))
+                    print(paste0("pC = ", paste0(pC, collapse = ",")))
+                }
+                ##
+                ## record the read set it came from, if so inclined
+                ##
+                if (record_read_set) {
+                    ## determine how close it is to the three probs
+                    x <- array(NA, 3)
+                    x[h_rC] <- norm_pC
+                    x[h_rA1] <- norm_pA1
+                    x[h_rA2] <- norm_pA2
+                    ## check if those three probs are the default option probs
+                    ## within 0.01 of any option
+                    ## (what if they overlap? - future problem?)
+                    ## get label as 1 through 6 (or 7), or not!
+                    y <- array(NA, 7)
+                    for(i in 1:7) {
+                        ## check closest, and within range
+                        y[i] <- sum(abs(rlc[i, ] - x))
+                    }
+                    if ((min(y) < (class_sum_cutoff))) {
+                        H_class[iRead] <- which.min(y)
+                    } else {
+                        H_class[iRead] <- 0
                     }
                 }
-                ##if (iRead <= 4) {
-                ##    print(paste0("the new PC is ", paste0(pC, collapse = ", ")))
-                ## }
-            }
-            ##
-            ## 
-            ##
-            if ((sum(pC > 1*10**50) > 0) | (sum(pC < 1*10**(-50)) > 0)) {
-                if (verbose) {
-                    print(paste0("renormalize"))
-                }
-                ## inject back
-                alphaHat_t1[, iGrid] <- alphaHat_m[1, ]
-                alphaHat_t2[, iGrid] <- alphaHat_m[2, ]
-                alphaHat_t3[, iGrid] <- alphaHat_m[3, ]
-                ## update-c
-                a <- 1 / sum(alphaHat_t1[, iGrid])
-                c1[iGrid] <- c1[iGrid] * a
-                alphaHat_t1[, iGrid] <- alphaHat_t1[, iGrid] * a
-                print(paste0("a = ", a))
                 ##
-                a <- 1 / sum(alphaHat_t2[, iGrid])
-                c2[iGrid] <- c2[iGrid] * a
-                alphaHat_t2[, iGrid] <- alphaHat_t2[, iGrid] * a
-                ##
-                a <- 1 / sum(alphaHat_t3[, iGrid])
-                c3[iGrid] <- c3[iGrid] * a
-                alphaHat_t3[, iGrid] <- alphaHat_t3[, iGrid] * a
-                ## now re-get stuff
-                alphaHat_m <- rbind(alphaHat_t1[, iGrid], alphaHat_t2[, iGrid], alphaHat_t3[, iGrid])
-                betaHat_m <- rbind(betaHat_t1[, iGrid], betaHat_t2[, iGrid], betaHat_t3[, iGrid])
-                print(paste0("before probabilities = ", paste0(pC, collapse = ", ")))                
-                pC <- rowSums(alphaHat_m * betaHat_m) ##
-                print(paste0("renormalized_probabilities = ", paste0(pC, collapse = ", ")))
-                print(paste0("pC = ", paste0(pC, collapse = ",")))
-            }
-            ##
-            ## record the read set it came from, if so inclined
-            ##
-            if (record_read_set) {
-                ## determine how close it is to the three probs
-                x <- array(NA, 3)
-                x[h_rC] <- norm_pC
-                x[h_rA1] <- norm_pA1
-                x[h_rA2] <- norm_pA2
-                ## check if those three probs are the default option probs
-                ## within 0.01 of any option
-                ## (what if they overlap? - future problem?)
-                ## get label as 1 through 6 (or 7), or not!
-                y <- array(NA, 7)
-                for(i in 1:7) {
-                    ## check closest, and within range
-                    y[i] <- sum(abs(rlc[i, ] - x))
-                }
-                if ((min(y) < (class_sum_cutoff))) {
-                    H_class[iRead] <- which.min(y)
-                } else {
-                    H_class[iRead] <- 0
+                if (return_p_store) {
+                    w <-
+                        (i_gibbs_samplings - 1) * n_gibbs_full_its * nReads +
+                        (iteration - 1) * nReads + iRead
+                    ##p_store[w, c("p_1", "p_2", "p_3")[h_rC]] <- norm_pC
+                    ##p_store[w, c("p_1", "p_2", "p_3")[h_rA1]] <- norm_pA1
+                    ##p_store[w, c("p_1", "p_2", "p_3")[h_rA2]] <- norm_pA2
+                    p_store[w, h_rC] <- norm_pC
+                    p_store[w, h_rA1] <- norm_pA1
+                    p_store[w, h_rA2] <- norm_pA2
+                    p_store[w, "chance"] <- chance
+                    p_store[w, "h_rC"] <- h_rC
+                    p_store[w, "h_rN"] <- h_rN
+                    p_store[w, "agreePer"] <- sum(abs(H ==  true_H)) / length(H) * 100
+                    p_store[w, "itType"] <- sum(as.integer((0:2) * c(currently_doing_pass_through, currently_doing_gibbs_initialization, currently_doing_normal_progress)))
+                    ##
+                    p_store[w, "p_O1_given_H1_L"] <- (-sum(log(c1)) + log(sum(alphaHat_m[1, ])))
+                    p_store[w, "p_O2_given_H2_L"] <- (-sum(log(c2)) + log(sum(alphaHat_m[2, ])))
+                    p_store[w, "p_O3_given_H3_L"] <- (-sum(log(c3)) + log(sum(alphaHat_m[3, ])))
+                    p_store[w, "p_O_given_H_L"] <- p_store[w, "p_O1_given_H1_L"] + p_store[w, "p_O2_given_H2_L"] + p_store[w, "p_O3_given_H3_L"]
+                    p_store[w, "p_H_given_L"] <- sum(log(prior_probs[H]))
+                    p_store[w, "p_H_given_O_L_up_to_C"] <- p_store[w, "p_O_given_H_L"] + p_store[w, "p_H_given_L"]
                 }
             }
             ##
-            if (return_p_store) {
-                w <-
-                    (i_gibbs_samplings - 1) * n_gibbs_full_its * nReads +
-                    (iteration - 1) * nReads + iRead
-                ##p_store[w, c("p_1", "p_2", "p_3")[h_rC]] <- norm_pC
-                ##p_store[w, c("p_1", "p_2", "p_3")[h_rA1]] <- norm_pA1
-                ##p_store[w, c("p_1", "p_2", "p_3")[h_rA2]] <- norm_pA2
-                p_store[w, h_rC] <- norm_pC
-                p_store[w, h_rA1] <- norm_pA1
-                p_store[w, h_rA2] <- norm_pA2
-                p_store[w, "chance"] <- chance
-                p_store[w, "h_rC"] <- h_rC
-                p_store[w, "h_rN"] <- h_rN
-                p_store[w, "agreePer"] <- sum(abs(H ==  true_H)) / length(H) * 100
-                p_store[w, "itType"] <- sum(as.integer((0:2) * c(currently_doing_pass_through, currently_doing_gibbs_initialization, currently_doing_normal_progress)))
-                ##
-                p_store[w, "p_O1_given_H1_L"] <- (-sum(log(c1)) + log(sum(alphaHat_m[1, ])))
-                p_store[w, "p_O2_given_H2_L"] <- (-sum(log(c2)) + log(sum(alphaHat_m[2, ])))
-                p_store[w, "p_O3_given_H3_L"] <- (-sum(log(c3)) + log(sum(alphaHat_m[3, ])))
-                p_store[w, "p_O_given_H_L"] <- p_store[w, "p_O1_given_H1_L"] + p_store[w, "p_O2_given_H2_L"] + p_store[w, "p_O3_given_H3_L"]
-                p_store[w, "p_H_given_L"] <- sum(log(prior_probs[H]))
-                p_store[w, "p_H_given_O_L_up_to_C"] <- p_store[w, "p_O_given_H_L"] + p_store[w, "p_H_given_L"]
-            }
+            ## do this for all reads anyway
             ##
             iRead <- iRead + 1
             if (nReads < iRead) {
@@ -1946,3 +1972,179 @@ make_rlc <- function(ff) {
     rlc[7, ] <- p
     return(rlc)
 }
+
+
+
+determine_a_set_of_truth_labels_for_nipt <- function(
+    sampleReads,
+    truth_haps,
+    phase,
+    ff
+) {
+    readProbs_t <- assign_fetal_read_probabilities(
+        sampleReads = sampleReads,
+        truth_haps_t = t(truth_haps)
+    )
+    ## convert those probabilities into probabilities they originate from sets of haplotypes
+    ## e.g. given ff, and a read could come from matt and p, what is the probability it came from each
+    out <- get_read_groupings_given_fetal_fraction_and_cov(
+        readProbs_t = readProbs_t,
+        phase = phase,
+        iiSample = 1,
+        ff = ff
+    )
+    ## 
+    truth_labels <- sample_H_for_NIPT_given_groupings(
+        groupings = out$groupings,
+        counts = out$counts,
+        ff = ff
+    )
+    ## hmm, for now, make these exact
+    groupings <- out$groupings
+    uncertain_truth_labels <- rep(TRUE, nrow(out$groupings))
+    uncertain_truth_labels[groupings[, "matt_only"]] <- FALSE
+    uncertain_truth_labels[groupings[, "matu_only"]] <- FALSE
+    uncertain_truth_labels[groupings[, "pat_only"]] <- FALSE   
+    ## 
+    list(
+        truth_labels = truth_labels,
+        uncertain_truth_labels = uncertain_truth_labels
+    )
+}
+
+
+evaluate_read_variability <- function(eMatRead_t) {
+    K <- nrow(eMatRead_t)
+    nReads <- ncol(eMatRead_t)
+    number_of_non_1_reads <- integer(nReads)
+    indices_of_non_1_reads <- array(0, c(K, nReads))
+    thresh <- 1 - 1e-12
+    thresh2 <- as.integer(floor(K * 0.20)) ## threshold for "few" subtractions to do
+    ## category 0 = normal (full mult)
+    ## category 1 = can skip completely (all 1s)
+    ## category 2 = subraction of specific entries, all with the same value (one non-1 value seen)
+    ## category 3 = subraction of specific entries
+    read_category <- integer(nReads)
+    read_category[] <- 0L ## assume 
+    for(iRead in 1:nReads) {
+        c <- 1
+        val <- -1
+        more_than_two <- FALSE
+        for(k in 1:K) {
+            if (eMatRead_t[k, iRead] < (thresh)) {
+                indices_of_non_1_reads[c, iRead] <- k - 1 ## make 0-based
+                c <- c + 1
+                if (val == -1) {
+                    val <- eMatRead_t[k, iRead]
+                } else {
+                    if (eMatRead_t[k, iRead] != val) {
+                        more_than_two <- TRUE
+                    }
+                }
+            }
+        }
+        number_of_non_1_reads[iRead] <- c - 1
+        if (number_of_non_1_reads[iRead] == 0) {
+            read_category[iRead] <- 1L
+        } else if (!more_than_two) {
+            read_category[iRead] <- 2L
+        } else if (number_of_non_1_reads[iRead] < thresh2) {
+            read_category[iRead] <- 3L
+        } else {
+            read_category[iRead] <- 0L
+        }
+    }
+    return(
+        list(
+            number_of_non_1_reads = number_of_non_1_reads,
+            indices_of_non_1_reads = indices_of_non_1_reads,
+            read_category = read_category
+        )
+    )
+}
+
+
+
+evaluate_read_probabilities <- function(
+    alphaHat_m,
+    betaHat_m,
+    pC,
+    read_category,
+    iRead,
+    h_rC,
+    h_rA1,
+    h_rA2,
+    eMatRead_t,
+    number_of_non_1_reads,
+    indices_of_non_1_reads
+) {
+    ## need same three probabilities for flip 1, flip 2
+    pA1 <- pC ## read label becomes h_rA1
+    pA2 <- pC ## read label becomes h_rA2
+    if (read_category[iRead] == 0L) {
+        ## default behaviour
+        pA1[c(h_rC, h_rA1)] <- 0
+        pA2[c(h_rC, h_rA2)] <- 0
+        K <- nrow(eMatRead_t)
+        for(k in 1:K) {
+            ## A1 loser
+            pA1[h_rC]  <- pA1[h_rC]  + alphaHat_m[h_rC, k]  * betaHat_m[h_rC, k] / eMatRead_t[k, iRead]
+            ## A1 gainer
+            pA1[h_rA1] <- pA1[h_rA1] + alphaHat_m[h_rA1, k]  * betaHat_m[h_rA1, k] * eMatRead_t[k, iRead]
+            ## A2 gainer
+            pA2[h_rA2] <- pA2[h_rA2] + alphaHat_m[h_rA2, k]  * betaHat_m[h_rA2, k] * eMatRead_t[k, iRead]
+        }
+        ## A2 loser
+        pA2[h_rC] <- pA1[h_rC]
+        
+    } else if (read_category[iRead] == 2L) {
+        ##
+        ## subtraction based approach, all the same
+        ##
+        ## setup already done with no change
+        ## now remove and consider
+        ## 
+        ## now go back over, remove, and add back in
+        ##
+        val1 <- 0
+        val2 <- 0
+        val3 <- 0
+        for(ik in 1:number_of_non_1_reads[iRead]) {
+            k <- indices_of_non_1_reads[ik, iRead] + 1 ## make 1-based here            
+            ## A1 loser
+            val1 <- val1 + alphaHat_m[h_rC, k]  * betaHat_m[h_rC, k]
+            ## A1 gainer
+            val2 <- val2 + alphaHat_m[h_rA1, k]  * betaHat_m[h_rA1, k]
+            ## A2 gainer
+            val3 <- val3 + alphaHat_m[h_rA2, k]  * betaHat_m[h_rA2, k]
+        }
+        ## k at the end is fine
+        pA1[h_rC] <-  pA1[h_rC]  + val1 * (1 / eMatRead_t[k, iRead] - 1)
+        pA1[h_rA1] <- pA1[h_rA1] + val2 * (eMatRead_t[k, iRead] - 1)
+        pA2[h_rA2] <- pA2[h_rA2]  + val3 * (eMatRead_t[k, iRead] - 1)
+        ## A2 loser
+        pA2[h_rC] <- pA1[h_rC]
+    } else if (read_category[iRead] == 3L) {        
+        ##
+        ## subtraction based approach, all distinct
+        ##
+        ## setup already done with no change
+        ## now remove and consider
+        ## 
+        ## now go back over, remove, and add back in
+        ##
+        for(ik in 1:number_of_non_1_reads[iRead]) {
+            k <- indices_of_non_1_reads[ik, iRead] + 1 ## make 1-based here
+            ## A1 loser
+            pA1[h_rC]  <- pA1[h_rC]  + alphaHat_m[h_rC, k]  * betaHat_m[h_rC, k] * (1 / eMatRead_t[k, iRead] - 1)
+            ## A1 gainer
+            pA1[h_rA1] <- pA1[h_rA1] + alphaHat_m[h_rA1, k]  * betaHat_m[h_rA1, k] * (eMatRead_t[k, iRead] - 1)
+            ## A2 gainer
+            pA2[h_rA2] <- pA2[h_rA2] + alphaHat_m[h_rA2, k]  * betaHat_m[h_rA2, k] * (eMatRead_t[k, iRead] - 1)
+        }
+        ## A2 loser
+        pA2[h_rC] <- pA1[h_rC]
+    }
+    return(list(pA1 = pA1, pA2 = pA2))
+}
+

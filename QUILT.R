@@ -15,6 +15,12 @@ option_list <- list(
         help = "What chromosome to run. Should match BAM headers"
     ), 
     make_option(
+        "--method",
+        type = "character",
+        help = "What method to run (diploid or nipt) [default diploid] ",
+        default = "diploid"
+    ), 
+    make_option(
         "--regionStart",
         type = "integer",
         help = "When running imputation, where to start from. The 1-based position x is kept if regionStart <= x <= regionEnd [default NA] ",
@@ -31,6 +37,12 @@ option_list <- list(
         type = "integer",
         help = "Buffer of region to perform imputation over. So imputation is run form regionStart-buffer to regionEnd+buffer, and reported for regionStart to regionEnd, including the bases of regionStart and regionEnd [default NA] ",
         default = NA
+    ), 
+    make_option(
+        "--fflist",
+        type = "character",
+        help = "Path to file with fetal fraction values, one row per entry, in the same order as the bamlist [default \"\"] ",
+        default = ""
     ), 
     make_option(
         "--bamlist",
@@ -75,16 +87,22 @@ option_list <- list(
         default = 3
     ), 
     make_option(
+        "--n_burn_in_seek_its",
+        type = "integer",
+        help = "How many iterations of the seek_its should be burn in. As an example, if n_seek_its is 3 and n_burn_in_seek_its is 2, then only the dosage from the final round is included. If n_seek_its is 4 and n_burn_in_seek_its is 2, then dosages from the last two rounds are used. Default value NA sets n_burn_in_seek_its to n_seek_its minus 1 [default NA] ",
+        default = NA
+    ), 
+    make_option(
         "--Ksubset",
         type = "integer",
-        help = "How many haplotypes to use in the faster Gibbs sampling [default 400] ",
-        default = 400
+        help = "How many haplotypes to use in the faster Gibbs sampling [default 600] ",
+        default = 600
     ), 
     make_option(
         "--Knew",
         type = "integer",
-        help = "How many haplotypes to replace per-iteration after doing the full reference panel imputation [default 100] ",
-        default = 100
+        help = "How many haplotypes to replace per-iteration after doing the full reference panel imputation [default 600] ",
+        default = 600
     ), 
     make_option(
         "--K_top_matches",
@@ -180,6 +198,12 @@ option_list <- list(
         "--make_plots",
         type = "logical",
         help = "Whether to make some plots of per-sample imputation. Especially nice when truth data. This is pretty slow though so useful more for debugging and understanding and visualizing performance [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
+        "--make_plots_block_gibbs",
+        type = "logical",
+        help = "Whether to make some plots of per-sample imputation looking at how the block Gibbs is performing. This can be extremely slow so use for debugging or visualizing performance on one-off situations not for general runs [default FALSE] ",
         default = FALSE
     ), 
     make_option(
@@ -285,6 +309,12 @@ option_list <- list(
         default = NA
     ), 
     make_option(
+        "--reference_vcf_file",
+        type = "character",
+        help = "Path to reference VCF file with haplotypes, matching the reference haplotype and legend file [default \"\"] ",
+        default = ""
+    ), 
+    make_option(
         "--reference_haplotype_file",
         type = "character",
         help = "Path to reference haplotype file in IMPUTE format (file with no header and no rownames, one row per SNP, one column per reference haplotype, space separated, values must be 0 or 1) [default \"\"] ",
@@ -375,15 +405,15 @@ option_list <- list(
         default = FALSE
     ), 
     make_option(
-        "--block_gibbs_iterations",
+        "--small_ref_panel_block_gibbs_iterations",
         type = "character",
-        help = "What iterations to perform block Gibbs sampling for the Gibbs sampler [default c(3,6,9)] ",
-        default = "c(3,6,9)"
+        help = "What iterations to perform block Gibbs sampling for the Gibbs sampler [default c(3, 6, 9)] ",
+        default = "c(3, 6, 9)"
     ), 
     make_option(
-        "--n_gibbs_burn_in_its",
+        "--small_ref_panel_gibbs_iterations",
         type = "integer",
-        help = "How many iterations to run the Gibbs sampler for each time it is run [default 20] ",
+        help = "How many iterations to run the Gibbs sampler for each time it is run (i.e. how many full passes to run the Gibbs sampler over all the reads) [default 20] ",
         default = 20
     ), 
     make_option(
@@ -397,6 +427,96 @@ option_list <- list(
         type = "logical",
         help = "For testing purposes only [default FALSE] ",
         default = FALSE
+    ), 
+    make_option(
+        "--mspbwtL",
+        type = "integer",
+        help = "How many neighouring haplotypes to scan up and down at each grid. [default 3] ",
+        default = 3
+    ), 
+    make_option(
+        "--mspbwtM",
+        type = "integer",
+        help = "Minimun long grids matches [default 1] ",
+        default = 1
+    ), 
+    make_option(
+        "--use_mspbwt",
+        type = "logical",
+        help = "Use msPBWT to select new haplotypes [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
+        "--mspbwt_nindices",
+        type = "integer",
+        help = "How many mspbwt indices to build [default 4L] ",
+        default = 4L
+    ), 
+    make_option(
+        "--use_splitreadgl",
+        type = "logical",
+        help = "Use split real GL in hap selection and imputation [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
+        "--override_use_eMatDH_special_symbols",
+        type = "integer",
+        help = "Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used. [default NA] ",
+        default = NA
+    ), 
+    make_option(
+        "--use_hapMatcherR",
+        type = "logical",
+        help = "Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use [default TRUE] ",
+        default = TRUE
+    ), 
+    make_option(
+        "--shard_check_every_pair",
+        type = "logical",
+        help = "When using shard gibbs sampler, whether to check every pair of SNPs, or not [default TRUE] ",
+        default = TRUE
+    ), 
+    make_option(
+        "--use_eigen",
+        type = "logical",
+        help = "Use eigen library for per haploid full li and stephens pass of full haplotype reference panel [default TRUE] ",
+        default = TRUE
+    ), 
+    make_option(
+        "--impute_rare_common",
+        type = "logical",
+        help = "Whether to use common SNPs first for imputation, followed by a round of rare imputation [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
+        "--rare_af_threshold",
+        type = "double",
+        help = "Allele frequency yhreshold under which SNPs are considered rare, otherwise they are considered common [default 0.001] ",
+        default = 0.001
+    ), 
+    make_option(
+        "--make_heuristic_plot",
+        type = "logical",
+        help = "Whether to make a plot for understanding heuristic performance [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
+        "--heuristic_approach",
+        type = "character",
+        help = "Which heuristic to use [default 'A'] ",
+        default = 'A'
+    ), 
+    make_option(
+        "--use_list_of_columns_of_A",
+        type = "logical",
+        help = "If when using mspbwt, use columns of A rather than the whole thing, to speed up this version [default TRUE] ",
+        default = TRUE
+    ), 
+    make_option(
+        "--calculate_gamma_on_the_fly",
+        type = "logical",
+        help = "If when calculating genProbs, calculate gamma on the fly rather than saving [default TRUE] ",
+        default = TRUE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -405,9 +525,11 @@ Sys.setenv(PATH = paste0(Sys.getenv("PATH"), ":", getwd()))
 QUILT(
     outputdir = opt$outputdir,
     chr = opt$chr,
+    method = opt$method,
     regionStart = opt$regionStart,
     regionEnd = opt$regionEnd,
     buffer = opt$buffer,
+    fflist = opt$fflist,
     bamlist = opt$bamlist,
     cramlist = opt$cramlist,
     sampleNames_file = opt$sampleNames_file,
@@ -415,6 +537,7 @@ QUILT(
     nCores = opt$nCores,
     nGibbsSamples = opt$nGibbsSamples,
     n_seek_its = opt$n_seek_its,
+    n_burn_in_seek_its = opt$n_burn_in_seek_its,
     Ksubset = opt$Ksubset,
     Knew = opt$Knew,
     K_top_matches = opt$K_top_matches,
@@ -433,6 +556,7 @@ QUILT(
     phasefile = opt$phasefile,
     maxDifferenceBetweenReads = opt$maxDifferenceBetweenReads,
     make_plots = opt$make_plots,
+    make_plots_block_gibbs = opt$make_plots_block_gibbs,
     verbose = opt$verbose,
     shuffle_bin_radius = opt$shuffle_bin_radius,
     iSizeUpperLimit = opt$iSizeUpperLimit,
@@ -450,6 +574,7 @@ QUILT(
     minGLValue = opt$minGLValue,
     minimum_number_of_sample_reads = opt$minimum_number_of_sample_reads,
     nGen = opt$nGen,
+    reference_vcf_file = opt$reference_vcf_file,
     reference_haplotype_file = opt$reference_haplotype_file,
     reference_legend_file = opt$reference_legend_file,
     reference_sample_file = opt$reference_sample_file,
@@ -465,8 +590,23 @@ QUILT(
     maxRate = opt$maxRate,
     minRate = opt$minRate,
     print_extra_timing_information = opt$print_extra_timing_information,
-    block_gibbs_iterations = eval(parse(text=opt$block_gibbs_iterations)),
-    n_gibbs_burn_in_its = opt$n_gibbs_burn_in_its,
+    small_ref_panel_block_gibbs_iterations = eval(parse(text=opt$small_ref_panel_block_gibbs_iterations)),
+    small_ref_panel_gibbs_iterations = opt$small_ref_panel_gibbs_iterations,
     plot_per_sample_likelihoods = opt$plot_per_sample_likelihoods,
-    use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc
+    use_small_eHapsCurrent_tc = opt$use_small_eHapsCurrent_tc,
+    mspbwtL = opt$mspbwtL,
+    mspbwtM = opt$mspbwtM,
+    use_mspbwt = opt$use_mspbwt,
+    mspbwt_nindices = opt$mspbwt_nindices,
+    use_splitreadgl = opt$use_splitreadgl,
+    override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
+    use_hapMatcherR = opt$use_hapMatcherR,
+    shard_check_every_pair = opt$shard_check_every_pair,
+    use_eigen = opt$use_eigen,
+    impute_rare_common = opt$impute_rare_common,
+    rare_af_threshold = opt$rare_af_threshold,
+    make_heuristic_plot = opt$make_heuristic_plot,
+    heuristic_approach = opt$heuristic_approach,
+    use_list_of_columns_of_A = opt$use_list_of_columns_of_A,
+    calculate_gamma_on_the_fly = opt$calculate_gamma_on_the_fly
 )

@@ -26,3 +26,30 @@ double Rcpp_quilt_test_doubler(
 ) {
   return(a * a);
 }
+
+
+//' @export
+// [[Rcpp::export]]
+int Rcpp_raw_test(
+    Rcpp::RawVector a,
+    Rcpp::IntegerVector b
+) {
+    int c = 0;
+    for(int i = 0; i < a.length(); i++) {
+        c += b(a(i));
+    }
+    return(c);
+}
+
+//' @export
+// [[Rcpp::export]]
+int Rcpp_raw_test_int(
+    Rcpp::IntegerVector a,
+    Rcpp::IntegerVector b
+) {
+    int c = 0;
+    for(int i = 0; i < a.length(); i++) {
+        c += b(a(i));
+    }
+    return(c);
+}

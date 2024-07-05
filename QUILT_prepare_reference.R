@@ -44,6 +44,12 @@ option_list <- list(
         default = ""
     ), 
     make_option(
+        "--reference_vcf_file",
+        type = "character",
+        help = "Path to reference haplotype file in VCF format (values must be 0 or 1) [default \"\"] ",
+        default = ""
+    ), 
+    make_option(
         "--reference_haplotype_file",
         type = "character",
         help = "Path to reference haplotype file in IMPUTE format (file with no header and no rownames, one row per SNP, one column per reference haplotype, space separated, values must be 0 or 1) [default \"\"] ",
@@ -132,6 +138,48 @@ option_list <- list(
         type = "double",
         help = "Minimum recomb rate cM/Mb [default 0.1] ",
         default = 0.1
+    ), 
+    make_option(
+        "--use_mspbwt",
+        type = "logical",
+        help = "Build mspbwt indices to be used in imputation [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
+        "--mspbwt_nindices",
+        type = "integer",
+        help = "How many mspbwt indices to build [default 4L] ",
+        default = 4L
+    ), 
+    make_option(
+        "--override_use_eMatDH_special_symbols",
+        type = "integer",
+        help = "Not for general use. If NA will choose version appropriately depending on whether a PBWT flavour is used. [default NA] ",
+        default = NA
+    ), 
+    make_option(
+        "--use_hapMatcherR",
+        type = "logical",
+        help = "Used for nMaxDH less than or equal to 255. Use R raw format to hold hapMatcherR. Lowers RAM use [default TRUE] ",
+        default = TRUE
+    ), 
+    make_option(
+        "--impute_rare_common",
+        type = "logical",
+        help = "Whether to use common SNPs first for imputation, followed by a round of rare imputation [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
+        "--rare_af_threshold",
+        type = "double",
+        help = "Allele frequency threshold under which SNPs are considered rare, otherwise they are considered common. [default 0.001] ",
+        default = 0.001
+    ), 
+    make_option(
+        "--use_list_of_columns_of_A",
+        type = "logical",
+        help = "If when using mspbwt, use columns of A rather than the whole thing, to speed up this version [default TRUE] ",
+        default = TRUE
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -145,6 +193,7 @@ QUILT_prepare_reference(
     regionEnd = opt$regionEnd,
     buffer = opt$buffer,
     output_file = opt$output_file,
+    reference_vcf_file = opt$reference_vcf_file,
     reference_haplotype_file = opt$reference_haplotype_file,
     reference_legend_file = opt$reference_legend_file,
     reference_sample_file = opt$reference_sample_file,
@@ -159,5 +208,12 @@ QUILT_prepare_reference(
     output_sites_filename = opt$output_sites_filename,
     expRate = opt$expRate,
     maxRate = opt$maxRate,
-    minRate = opt$minRate
+    minRate = opt$minRate,
+    use_mspbwt = opt$use_mspbwt,
+    mspbwt_nindices = opt$mspbwt_nindices,
+    override_use_eMatDH_special_symbols = opt$override_use_eMatDH_special_symbols,
+    use_hapMatcherR = opt$use_hapMatcherR,
+    impute_rare_common = opt$impute_rare_common,
+    rare_af_threshold = opt$rare_af_threshold,
+    use_list_of_columns_of_A = opt$use_list_of_columns_of_A
 )
