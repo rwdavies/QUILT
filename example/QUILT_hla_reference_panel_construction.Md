@@ -105,9 +105,9 @@ We need the reference genome to determine which allele is carried by the referen
 
 ```
 cd ${inputs_dir}
-#wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
-#samtools faidx GRCh38_full_analysis_set_plus_decoy_hla.fa
-rsync -av /data/smew1/rdavies/quilt_hla_2021_12_24_3430/GRCh38* ${inputs_dir}
+wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
+samtools faidx GRCh38_full_analysis_set_plus_decoy_hla.fa
+#rsync -av /data/smew1/rdavies/quilt_hla_2021_12_24_3430/GRCh38* ${inputs_dir}
 ref_fasta=${inputs_dir}GRCh38_full_analysis_set_plus_decoy_hla.fa
 ```
 

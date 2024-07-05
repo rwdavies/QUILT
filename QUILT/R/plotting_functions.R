@@ -308,6 +308,8 @@ plot_single_gamma_dosage <- function(
     if (output_plot) {
         dev.off()
     }
+
+    
     ## abline(h = 1)
     return(r2s)
 }
