@@ -570,7 +570,7 @@ get_and_impute_one_sample <- function(
                         if (method == "diploid") {
                             H <- sample(c(1, 2), length(sampleReads), replace = TRUE)
                         } else {
-                            H <- sample(c(1, 2, 3), prob = c(0.5, 1 - ff / 2, ff / 2),length(sampleReads), replace = TRUE)
+                            H <- sample(c(1, 2, 3), prob = c(0.5, 0.5 - ff / 2, ff / 2),length(sampleReads), replace = TRUE)
                         }
                         return(H)
                     })
