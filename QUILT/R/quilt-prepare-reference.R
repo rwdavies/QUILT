@@ -407,7 +407,7 @@ QUILT_prepare_reference <- function(
     ## do compression here
     ## note now can work out recommended nMaxDH on the fly
     ##
-    out <- make_rhb_t_equality(
+    out <- STITCH::make_rhb_t_equality(
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,
         nSNPs = nSNPs,

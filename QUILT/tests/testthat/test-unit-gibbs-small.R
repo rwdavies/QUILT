@@ -129,7 +129,7 @@ test_that("can avoid using eHapsCurrent_tc and gammas in genProbs calculation", 
     ##
     ## new version
     ##
-    out <- make_rhb_t_equality(
+    out <- STITCH::make_rhb_t_equality(
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,
         nSNPs = nSNPs,
@@ -144,7 +144,7 @@ test_that("can avoid using eHapsCurrent_tc and gammas in genProbs calculation", 
     nrow_which_hapMatcher_0 <- out[["nrow_which_hapMatcher_0"]]
     eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
     eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
-    out <- make_rhb_t_equality(
+    out <- STITCH::make_rhb_t_equality(
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,
         nSNPs = nSNPs,
@@ -239,7 +239,7 @@ test_that("can avoid using eHapsCurrent_tc and gammas in genProbs calculation", 
     common_snp_index[which(snp_is_common)] <- 1:nCommonSNPs ## 1-based
 
 
-    out <- make_rhb_t_equality(
+    out <- STITCH::make_rhb_t_equality(
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,
         nSNPs = nCommonSNPs,
@@ -417,7 +417,7 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
     ##
 
     ## first, build useful things
-    out <- make_rhb_t_equality(
+    out <- STITCH::make_rhb_t_equality(
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,
         nSNPs = nSNPs,
@@ -452,7 +452,7 @@ test_that("can avoid inflating fhb_t using eHapsCurrent_tc to make eMatRead_t", 
 
         for(use_hapMatcherR in c(FALSE, TRUE)) {
 
-            out <- make_rhb_t_equality(
+            out <- STITCH::make_rhb_t_equality(
                 rhb_t = rhb_t,
                 nMaxDH = nMaxDH,
                 nSNPs = nSNPs,

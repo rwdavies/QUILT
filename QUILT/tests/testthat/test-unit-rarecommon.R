@@ -50,7 +50,7 @@ test_that("can make old eHapsCurrent_tc using rare common idea", {
 
 
     ## make special objects
-    out <- make_rhb_t_equality(
+    out <- STITCH::make_rhb_t_equality(
         rhb_t = rhb_t,
         nSNPs = nCommonSNPs,
         ref_error = ref_error,
