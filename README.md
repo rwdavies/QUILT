@@ -15,7 +15,7 @@ Please use this README for general information about QUILT2. Also, specific info
 1. [Introduction](#paragraph-introduction)
 2. [Installation](#paragraph-installation)
 3. [Quick start run](#paragraph-quickstartrun)
-4. [Tutorials](#paragraph-examples)
+4. [Tutorials](#paragraph-tutorial)
 5. [License](#paragraph-license)
 6. [Citation](#paragraph-citation)
 7. [Testing](#paragraph-testing)
@@ -34,7 +34,7 @@ QUILT2 depends on [STITCH](https://github.com/rwdavies/STITCH) and [mspbwt](http
 ```
 git clone --recursive https://github.com/rwdavies/QUILT.git
 cd QUILT
-bash ./scripts/install-dependencies.sh
+bash ./scripts/install-dependencies.sh ## skip this if STITCH and mspbwt already installed
 Rscript ./scripts/build-and-install.R
 ```
 
@@ -45,16 +45,33 @@ A quick start to ensure QUILT is properly installed and working can be performed
 Download example data package, containing 1000 Genomes haplotypes, and NA12878 bams
 
 ```
-wget http://www.stats.ox.ac.uk/~rdavies/QUILT_example_2021_01_15A.tgz ## or curl -O
-tar -xzvf QUILT_example_2021_01_15A.tgz
+wget https://zenodo.org/records/12697284/files/QUILT2_example_2024.tar.xz ## or curl -O
+tar --xz -xf QUILT2_example_2024.tar.xz
 ```
 
-For a detailed version of examples, see [Tutorials](#paragraph-examples)
+Perform imputation as below. Note that reference panel data can be processed separately to speed up repeated imputation of the same region in independent jobs, for a detailed tutorial on preparing reference, options, input/output files, see [Tutorials](#paragraph-tutorial)
 
 
-## Tutorials <a name="paragraph-examples"></a>
+```
+outdir=quilt2_output && rm -rf $outdir
+./QUILT2.R \
+--outputdir=$outdir \
+--chr=chr20 \
+--regionStart=2000001 \
+--regionEnd=4000000 \
+--buffer=500000 \
+--nGen=100 \
+--bamlist=package/bamlist.1.0.txt \
+--genetic_map_file=package/CEU-chr20-final.b38.txt.gz \
+--reference_vcf_file=package/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.4000000.noNA12878.vcf.gz \
+--save_prepared_reference=TRUE
+```
 
-Please use the **[QUILT2 Tutorial](README_QUILT2.Md)** for guide of running QUILT2 efficiently.
+## Tutorials <a name="paragraph-tutorial"></a>
+
+- Please use the **[QUILT2 Tutorial](README_QUILT2.md)** for guide of running QUILT2 efficiently. 
+- Please use the **[QUILT1 Tutorial](README_QUILT1.md)** for guide of running QUILT1 efficiently. 
+- Please use the **[QUILT-HLA Tutorial](README_QUILT-HLA.md)** for guide of running QUILT-HLA efficiently. 
 
 ## License <a name="paragraph-license"></a>
 

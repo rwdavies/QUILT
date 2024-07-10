@@ -113,7 +113,56 @@ for(cli_output_file in c("QUILT.R", "QUILT_prepare_reference.R", "QUILT_HLA.R", 
     expect_equal(0, out)
 }
 
+## make cli for QUILT2
 
+quilt_cli <- "QUILT.R"
+quilt2_cli <- "QUILT2.R"
+
+for(quilt_cli in c("QUILT.R", "QUILT_prepare_reference.R")) {
+
+  quilt2_cli <- gsub("QUILT","QUILT2", quilt_cli)
+  
+  ## read all from QUILT.R
+  tx <- readChar(quilt_cli, file.info(quilt_cli)$size)
+
+  ## s <- "abcde\n    fghij<Foobar>"
+  ## regmatches(s, regexec("(.*)<Foobar>", s))[[1]][2]
+
+  ## blanks <- function(n) strrep(" ", n)
+  ## regmatches(ts, lapply(m, drop_first)) <- Map(blanks, lapply(regmatches(ts, m), nchar))
+
+  drop_first <- function(x) {
+    if(!anyNA(x) && all(x > 0)) {
+      ml <- attr(x, 'match.length')
+      if(is.matrix(x)) x <- x[-1,] else x <- x[-1]
+      attr(x, 'match.length') <- if(is.matrix(ml)) ml[-1,] else ml[-1]
+    }
+    x
+  }
+
+  ## Create a copy
+  ts <- tx
+
+  ## match use_mspbwt
+  m <- regexec("--use_mspbwt.+default (FALSE).+mspbwt_nindices\",", tx)
+
+  ## change FALSE to TRUE
+  regmatches(ts, lapply(m, drop_first)) <- "TRUE"
+
+  ## do matching again
+  m <- regexec("--use_mspbwt.+default = (FALSE).+mspbwt_nindices\",", ts)
+  regmatches(ts, lapply(m, drop_first)) <- "TRUE"
+
+  ## match impute_rare_common
+  m <- regexec("--impute_rare_common.+default (FALSE).+rare_af_threshold\",", ts)
+  regmatches(ts, lapply(m, drop_first)) <- "TRUE"
+  m <- regexec("--impute_rare_common.+default = (FALSE).+rare_af_threshold\",", ts)
+  regmatches(ts, lapply(m, drop_first)) <- "TRUE"
+
+
+  cat(ts, file=quilt2_cli)
+  system(paste0("chmod +x ", quilt2_cli))
+}
 
 ##
 ## todo, add more CLI tests
