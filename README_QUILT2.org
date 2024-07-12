@@ -1,0 +1,129 @@
+#+title: Tutorial of QUILT2
+#+author: Zilong Li
+
+* Split the genome into chunks
+
+For many reasons, imputation is usually done for each genomic regions/chunks
+independently with some overlapped buffer in between. For example, for
+computational reason, we want to distribute our tasks into multiple machines
+with limited memory. However, for the accuracy reason, we need to impute with
+reasonable big chunks so that the model can work well. QUILT2 offers the
+=quilt_chunk_map= function for splitting the genome into multiple reasonable
+chunks given the genetic map file.
+
+#+begin_src R
+dat <- QUILT::quilt_chunk_map("chr20", "package/CEU-chr20-final.b38.txt.gz")
+str(dat)
+## 'data.frame':	16 obs. of  3 variables:
+##  $ chunk : num  0 1 2 3 4 5 6 7 8 9 ...
+##  $ chr   : chr  "chr20" "chr20" "chr20" "chr20" ...
+##  $ region: chr  "chr20:1-2998495" "chr20:2965894-5963047" ...
+#+end_src
+
+* Prepare the reference panel seperately
+
+For large reference panels, and for many jobs involving imputing few samples,
+it can be computationally efficient to pre-process the reference panel and
+save the output, and use this output for multiple independent runs, which is
+done via the which is done via =QUILT2_prepare_reference.R=. Here is an example
+for how we would do this, for the case of the quick start example.
+
+#+begin_src shell
+./QUILT2_prepare_reference.R \
+    --genetic_map_file=package/CEU-chr20-final.b38.txt.gz \
+    --reference_vcf_file=package/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.4000000.noNA12878.vcf.gz \
+    --chr=chr20 \
+    --regionStart=2000001 \
+    --regionEnd=4000000 \
+    --buffer=500000 \
+    --outputdir=quilt2_output
+#+end_src
+
+Input/Output files:
+- reference_vcf_panel. QUILT2 now supports VCF/BCF files with phased genotypes as the reference panel, thanks to [[https://github.com/Zilong-Li/vcfpp][vcfpp]]!.
+- genetic_map_file.  File with genetic map information, with 3 white-space delimited columns giving position (1-based), genetic rate map in cM/Mbp, and genetic map in cM. Find the prepared ones here [[file:maps]].
+- outputdir. Directory for saving the output. The prepared reference data is saved as =RData= that is in the =outputdir/RData=.
+
+Find the more options via =./QUILT2_prepare_reference.R -h=.
+  
+* Perform diploid imputation
+
+Now given the saved reference data, we can perform imputation as follows. Note
+that QUILT2 has option =method=diploid= in default.
+
+#+begin_src shell
+./QUILT2.R \
+--prepared_reference_filename=quilt2_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData \
+--bamlist=package/bamlist.1.0.txt \
+--method=diploid \
+--chr=chr20 \
+--regionStart=2000001 \
+--regionEnd=4000000 \
+--buffer=500000 \
+--output_filename=quilt2_output/quilt2.diploid.vcf.gz
+#+end_src
+
+Note that when running multiple versions of QUILT2 against the same reference
+data, it is useful to set output_filename to change the default filename for
+each job, and to keep the temporary directories used independent (which is the
+behaviour for default =tempdir=).
+
+For a full list of options, query =?QUILT::QUILT= in R, or alternatively, type =./QUILT2.R --help= in terminal
+
+** Important parameters that influence run time and accuracy
+
+These parameters are most likely to influence run time and accuracy
+
+- nGibbsSamples. Number of Gibbs samples performed. Run time is approximately linear in this, and increasing it will increase accuracy, but with diminishing returns. Generally less important for higher coverage.
+- n_seek_its. Number of iterations between Gibbs sampling on small reference panel, and imputing using the full reference panel to find good matches for the small reference panel. Run time is approximately linear in this. Setting it higher will increase accuracy but with diminishing returns.
+- Ksubset. Size of the small reference panel. Higher values might increase accuracy but will increase run time.
+
+** Output of diploid imputation
+
+- VCF with both SNP annotation information (see below) and per-sample genotype information. Per-sample genotype information includes the following entries
+- GT (*Phased genotypes)* Phased genotype, where each allele is the rounded per-haplotype posterior probability (HD below)
+- GP (*Genotype posteriors)* Posterior probabilities of the three genotypes given the data
+- DS (*Diploid dosage)* Posterior expectation of the diploid genotype i.e. the expected number of copies of the alternate allele
+- HD (*Haploid dosages)* Per-haplotype posterior probability of an alternate allele
+
+** ligate the chunks
+
+If one run QUILT2 with chunks determined above by =quilt_chunk_map=, which
+will create overlapping region for successive chunks, then the ligation of
+multiple VCF files for diploid results can be done using =bcftools=. Note that
+this does not change the HD entry (haplotype dosages) which thereafter is
+not useable. The GP (genotype posterior) and DS (dosage) entries remain
+useable as they are phase invariant.
+
+#+begin_src shell
+bcftools concat \
+    --ligate \
+    --output-type z \
+    --output quilt2.diploid.chr20.ligate.vcf.gz \
+    quilt2_output/quilt2.diploid.chr20.chunk0.vcf.gz \
+    quilt2_output/quilt2.diploid.chr20.chunk1.vcf.gz \
+    quilt2_output/quilt2.diploid.chr20.chunk2.vcf.gz 
+#+end_src
+
+* Perform nipt imputation
+
+To perform imputation for NIPT data, we need to set =method=nipt= and supply a file with estimated fetal fraction for each sample. 
+
+#+begin_src shell
+./QUILT2.R \
+--prepared_reference_filename=quilt2_output/RData/QUILT_prepared_reference.chr20.2000001.4000000.RData \
+--bamlist=package/bamlist.1.0.txt \
+--fflist=package/fflist.1.0.txt \
+--method=nipt \
+--chr=chr20 \
+--regionStart=2000001 \
+--regionEnd=4000000 \
+--buffer=500000 \
+--output_filename=quilt2_output/quilt2.nipt.vcf.gz
+#+end_src
+
+** ligate the chunks
+
+* Evaluation
+
+* Visualization

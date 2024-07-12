@@ -69,7 +69,7 @@ outdir=quilt2_output && rm -rf $outdir
 
 ## Tutorials <a name="paragraph-tutorial"></a>
 
-- Please use the **[QUILT2 Tutorial](README_QUILT2.md)** for guide of running QUILT2 efficiently. 
+- Please use the **[QUILT2 Tutorial](README_QUILT2.org)** for guide of running QUILT2 efficiently. 
 - Please use the **[QUILT1 Tutorial](README_QUILT1.md)** for guide of running QUILT1 efficiently. 
 - Please use the **[QUILT-HLA Tutorial](README_QUILT-HLA.md)** for guide of running QUILT-HLA efficiently. 
 
