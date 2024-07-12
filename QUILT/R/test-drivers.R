@@ -395,7 +395,7 @@ make_reference_single_test_package <- function(
     rhb <- t(rhb_t)
     K <- nrow(rhb_t)
     nGrids <- ncol(rhb_t)
-    out <- make_rhb_t_equality(
+    out <- STITCH::make_rhb_t_equality(
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,
         nSNPs = nSNPs,
@@ -410,7 +410,7 @@ make_reference_single_test_package <- function(
     eMatDH_special_matrix <- out[["eMatDH_special_matrix"]]
     eMatDH_special_matrix_helper <- out[["eMatDH_special_matrix_helper"]]
     ## get hapMatcherR as well
-    out <- make_rhb_t_equality(
+    out <- STITCH::make_rhb_t_equality(
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,
         nSNPs = nSNPs,

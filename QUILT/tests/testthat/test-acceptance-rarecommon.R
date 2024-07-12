@@ -149,7 +149,7 @@ test_that("can parse and use input hap VCF only, and use rare vs common idea", {
     ## 
     ## what I need from rhb_t for the common stuff
     ## 
-    out <- make_rhb_t_equality(
+    out <- STITCH::make_rhb_t_equality(
         rhb_t = rhb_t,
         nMaxDH = nMaxDH,
         nSNPs = nSNPs,

@@ -534,7 +534,7 @@ QUILT <- function(
         rhb_t <- rhb_t[1:as.integer(panel_size), ] ## this is the number of HAPLOTYPES
         reference_samples <- reference_samples[1:as.integer(panel_size), ]
         ##nMaxDH <- 2 ** 8 - 1
-        out <- make_rhb_t_equality(
+        out <- STITCH::make_rhb_t_equality(
             rhb_t = rhb_t,
             nMaxDH = nMaxDH,
             nSNPs = nSNPs,

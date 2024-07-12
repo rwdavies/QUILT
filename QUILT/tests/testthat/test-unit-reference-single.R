@@ -240,7 +240,7 @@ test_that("can build necessary components from make_rhb_t_equality", {
         for(use_hapMatcherR in c(FALSE, TRUE)) {
 
             ## make haplotype matching objects
-            out <- make_rhb_t_equality(
+            out <- STITCH::make_rhb_t_equality(
                 rhb_t = rhb_t,
                 nMaxDH = nMaxDH,
                 nSNPs = nSNPs,
@@ -823,7 +823,7 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
 
 
                 ## make haplotype matching objects
-                out <- make_rhb_t_equality(
+                out <- STITCH::make_rhb_t_equality(
                     rhb_t = rhb_t,
                     nMaxDH = nMaxDH,
                     nSNPs = nSNPs,
@@ -843,7 +843,7 @@ test_that("can run a single gl sample through reference haplotypes quickly with 
                     use_eMatDH_special_symbols <- TRUE
                 }
                 use_hapMatcherR <- FALSE ## possibly change this!
-                out <- make_rhb_t_equality(
+                out <- STITCH::make_rhb_t_equality(
                     rhb_t = rhb_t,
                     nMaxDH = nMaxDH,
                     nSNPs = nSNPs,
@@ -1046,7 +1046,7 @@ test_that("profile", {
         load("~/Downloads/impute_develop.RData")
         nMaxDH <- 2 ** 8 - 1
         ref_error <- 1e-2
-        out <- make_rhb_t_equality(
+        out <- STITCH::make_rhb_t_equality(
             rhb_t = rhb_t,
             nMaxDH = nMaxDH,
             nSNPs = nSNPs,
