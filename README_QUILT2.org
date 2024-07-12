@@ -1,6 +1,20 @@
 #+title: Tutorial of QUILT2
 #+author: Zilong Li
 
+This is the detailed guideline of QUILT2. Also, check out the nifty [[https://github.com/Zilong-Li/lcWGS-imputation-workflow][lcWGS-imputation-workflow]] for automate and reproducible workflow.
+
+* Table of Contents :toc:noexport:
+- [[#split-the-genome-into-chunks][Split the genome into chunks]]
+- [[#prepare-the-reference-panel-seperately][Prepare the reference panel seperately]]
+- [[#perform-diploid-imputation][Perform diploid imputation]]
+  - [[#important-parameters-that-influence-run-time-and-accuracy][Important parameters that influence run time and accuracy]]
+  - [[#output-of-diploid-imputation][Output of diploid imputation]]
+  - [[#ligate-the-results][Ligate the results]]
+- [[#perform-nipt-imputation][Perform NIPT imputation]]
+  - [[#output-of-nipt-imputation][Output of NIPT imputation]]
+  - [[#ligate-the-results-1][Ligate the results]]
+- [[#evaluation-and-visualization][Evaluation and visualization]]
+
 * Split the genome into chunks
 
 For many reasons, imputation is usually done for each genomic regions/chunks
@@ -40,9 +54,9 @@ for how we would do this, for the case of the quick start example.
 #+end_src
 
 Input/Output files:
-- reference_vcf_panel. QUILT2 now supports VCF/BCF files with phased genotypes as the reference panel, thanks to [[https://github.com/Zilong-Li/vcfpp][vcfpp]]!.
-- genetic_map_file.  File with genetic map information, with 3 white-space delimited columns giving position (1-based), genetic rate map in cM/Mbp, and genetic map in cM. Find the prepared ones here [[file:maps]].
-- outputdir. Directory for saving the output. The prepared reference data is saved as =RData= that is in the =outputdir/RData=.
+- =reference_vcf_panel=. QUILT2 now supports VCF/BCF files with phased genotypes as the reference panel, thanks to [[https://github.com/Zilong-Li/vcfpp][vcfpp]]!.
+- =genetic_map_file=.  File with genetic map information, with 3 white-space delimited columns giving position (1-based), genetic rate map in cM/Mbp, and genetic map in cM. Find the prepared ones in the [[file:maps]] folder.
+- =outputdir=. Directory for saving the output. The prepared reference data is saved as =RData= that is in the =outputdir/RData=.
 
 Find the more options via =./QUILT2_prepare_reference.R -h=.
   
@@ -74,9 +88,9 @@ For a full list of options, query =?QUILT::QUILT= in R, or alternatively, type =
 
 These parameters are most likely to influence run time and accuracy
 
-- nGibbsSamples. Number of Gibbs samples performed. Run time is approximately linear in this, and increasing it will increase accuracy, but with diminishing returns. Generally less important for higher coverage.
-- n_seek_its. Number of iterations between Gibbs sampling on small reference panel, and imputing using the full reference panel to find good matches for the small reference panel. Run time is approximately linear in this. Setting it higher will increase accuracy but with diminishing returns.
-- Ksubset. Size of the small reference panel. Higher values might increase accuracy but will increase run time.
+- =nGibbsSamples=. Number of Gibbs samples performed. Run time is approximately linear in this, and increasing it will increase accuracy, but with diminishing returns. Generally less important for higher coverage.
+- =n_seek_its=. Number of iterations between Gibbs sampling on small reference panel, and imputing using the full reference panel to find good matches for the small reference panel. Run time is approximately linear in this. Setting it higher will increase accuracy but with diminishing returns.
+- =Ksubset=. Size of the small reference panel. Higher values might increase accuracy but will increase run time.
 
 ** Output of diploid imputation
 
@@ -86,9 +100,9 @@ These parameters are most likely to influence run time and accuracy
 - DS (*Diploid dosage)* Posterior expectation of the diploid genotype i.e. the expected number of copies of the alternate allele
 - HD (*Haploid dosages)* Per-haplotype posterior probability of an alternate allele
 
-** ligate the chunks
+** Ligate the results
 
-If one run QUILT2 with chunks determined above by =quilt_chunk_map=, which
+If one runs QUILT2 with chunks determined above by =quilt_chunk_map=, which
 will create overlapping region for successive chunks, then the ligation of
 multiple VCF files for diploid results can be done using =bcftools=. Note that
 this does not change the HD entry (haplotype dosages) which thereafter is
@@ -105,9 +119,9 @@ bcftools concat \
     quilt2_output/quilt2.diploid.chr20.chunk2.vcf.gz 
 #+end_src
 
-* Perform nipt imputation
+* Perform NIPT imputation
 
-To perform imputation for NIPT data, we need to set =method=nipt= and supply a file with estimated fetal fraction for each sample. 
+To perform imputation for NIPT data with QUILT2, we need to set =method=nipt= and provide a file with estimated fetal fraction for each sample. 
 
 #+begin_src shell
 ./QUILT2.R \
@@ -122,8 +136,66 @@ To perform imputation for NIPT data, we need to set =method=nipt= and supply a f
 --output_filename=quilt2_output/quilt2.nipt.vcf.gz
 #+end_src
 
-** ligate the chunks
+** Output of NIPT imputation
 
-* Evaluation
+Since we are imputing both maternal and fetal genotypes, the outputted VCF
+is totally *different from the diploid output*!
 
-* Visualization
+First of all, the VCF header gives explanation on the FORMAT fields.
+
+#+begin_src shell
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Phased genotypes in order of maternal transmitted, maternal untransmitted, and fetal transmitted">
+##FORMAT=<ID=MGP,Number=3,Type=Float,Description="Maternal Posterior genotype probability of 0/0, 0/1, and 1/1">
+##FORMAT=<ID=MDS,Number=1,Type=Float,Description="Maternal Diploid dosage">
+##FORMAT=<ID=FGP,Number=3,Type=Float,Description="Maternal Posterior genotype probability of 0/0, 0/1, and 1/1">
+##FORMAT=<ID=FDS,Number=1,Type=Float,Description="Maternal Diploid dosage">
+#+end_src
+
+The per-sample genotype information includes the following entries:
+
+- GT (*Phased Genotypes*). Phased genotype for three haplotypes in order of the maternal transmitted, maternal untransmitted, fetal transmitted. 
+- MGP (*Maternal genotype posteriors*). Maternal posterior probabilities of the three genotypes given the data and fetal fraction.
+- MDS (*Maternal genotype dosage*). Maternal posterior expectation of the diploid genotype i.e. the expected number of copies of the alternate allele
+- FGP (*Fetal genotype posteriors*). Fetal posterior probabilities of the three genotypes given the data and fetal fraction.
+- FDS (*Fetal genotype dosage*). Maternal posterior expectation of the diploid genotype i.e. the expected number of copies of the alternate allele
+  
+** Ligate the results
+
+Here we have two genomes that forms four haplotypes, while the QUILT2-nipt
+only outputs 3 haplotypes in =GT=. If one does not care about the phased
+genotypes of both mother and fetus, then we can just concatenate the chunks
+and remove one of the duplicated variants from the overlapping region, which
+can be done as follows.
+
+#+begin_src shell
+bcftools concat \
+    quilt2_output/quilt2.nipt.chr20.chunk0.vcf.gz \
+    quilt2_output/quilt2.nipt.chr20.chunk1.vcf.gz \
+    quilt2_output/quilt2.nipt.chr20.chunk2.vcf.gz | \
+    bcftools norm -D 
+    --output-type z \
+    --output quilt2.nipt.chr20.concat.vcf.gz
+#+end_src
+
+Note the above will result in meaningless phased GT across chunks. If we
+want to have proper ligated phased genotypes across the chunks for both
+mother and fetus, we need to create two separate VCF for mother and fetus
+with phased genotypes in each chunk. Then we can perform ligation normally
+as for the diploid output above.
+
+* Evaluation and visualization
+
+Assume we have the truth genotypes data, we then can evaluate and visualize
+the imputation results conveniently via [[https://github.com/Zilong-Li/vcfppR][vcfppR.]]
+
+#+begin_src R
+library(vcfppR)
+res <- vcfcomp(test = imputedvcf, truth = truthvcf,
+               stats = "r2", region = "chr20", 
+               formats = c("DS","GT"))
+par(mar=c(5,5,2,2), cex.lab = 2)
+vcfplot(res, col = 2,cex = 2, lwd = 3, type = "b")
+#+end_src
+
+
+
