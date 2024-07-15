@@ -70,7 +70,7 @@ outdir=quilt2_output && rm -rf $outdir
 
 ## READMEs and tutorials <a name="paragraph-readme-tutorial"></a>
 
-- **[QUILT2 README](README_QUILT2.md)**. Please see the **[QUILT2 Tutorial](README_QUILT2.org)** for a guide and example code for running QUILT2 efficiently. 
+- **[QUILT2 README](README.md)**. Please see the **[QUILT2 Tutorial](README_QUILT2.org)** for a guide and example code for running QUILT2 efficiently. 
 - **[QUILT1 README](README_QUILT1.md)**. For tutorials, please see **[Examples](README_QUILT1.md#paragraph-examples)** section of the QUILT1 README.
 - **[QUILT-HLA README](README_QUILT-HLA.md)**. For tutorials, please see **[Example making and running a reference panel](QUILT/example/QUILT_hla_reference_panel_construction.Md)**.
 
