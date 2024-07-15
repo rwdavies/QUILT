@@ -5,26 +5,27 @@ Release date: July 06, 2024
 
 ![Build Status](https://github.com/rwdavies/QUILT/workflows/CI/badge.svg)
 
-We are excited about the upgraded QUILT, that is QUILT2. For details of past changes please see [CHANGELOG](CHANGELOG.md).
+We are excited to release QUILT2, a major upgrade over QUILT (QUILT1). For details of past changes to QUILT2 and QUILT1, please see the [CHANGELOG](CHANGELOG.md).
 
-QUILT2 is an R and C++ program for fast genotype imputation from low-coverage sequence using a large reference panel, which is also accurate and versatile for various data, such as ***short reads, long reads, ancient DNA and cell-free DNA from NIPT***.
+QUILT2 is an R and C++ program for fast genotype imputation from low-coverage sequence using a large reference panel. QUILT2 is accurate and versatile, able to handle imputation from ***short read, long read, ancient DNA and cell-free DNA from NIPT***.
 
-Please use this README for general information about QUILT2. Also, specific information about original QUILT1 and QUILT-HLA, please see the [QUILT1 README](README_QUILT1.md) and [QUILT-HLA README](README_QUILT-HLA.md) for specific details.
+Please use this README for general information about QUILT2. For more information about QUILT1 and QUILT-HLA, please see the [QUILT1 README](README_QUILT1.md) and the [QUILT-HLA README](README_QUILT-HLA.md).
 
 # Table of contents
 1. [Introduction](#paragraph-introduction)
 2. [Installation](#paragraph-installation)
 3. [Quick start run](#paragraph-quickstartrun)
-4. [Tutorials](#paragraph-tutorial)
-5. [License](#paragraph-license)
-6. [Citation](#paragraph-citation)
-7. [Testing](#paragraph-testing)
-8. [Bug reports](#paragraph-bugreports)
+4. [READMEs and tutorials](#paragraph-readme-tutorial)
+5. [NIPT](#paragraph-nipt)
+6. [License](#paragraph-license)
+7. [Citation](#paragraph-citation)
+8. [Testing](#paragraph-testing)
+9. [Bug reports](#paragraph-bugreports)
 
 
 ## Introduction <a name="paragraph-introduction"></a>
 
-First of all, QUILT2 is a major upgrade of QUILT1, and is fast and memory-efficient for millions reference haplotypes. Methodologically, in addition to diploid method, QUILT2 can impute the mother and fetus simultaneously using cell-free DNA from NIPT. Computationally, QUILT2 introduces [mspbwt](https://github.com/rwdavies/mspbwt) and a two-stage imputation strategy for rare and common variants. Statistically, QUILT2 models directly on a per-read basis, and is base quality aware, meaning it can accurately impute from diverse inputs, including noisy long read sequencing (e.g. Oxford Nanopore Technologies), barcoded Illumina sequencing (e.g. Haplotagging) and ancient DNA. Accuracy using QUILT2 and lc-WGS meets or exceeds other methods for lc-WGS imputation, particularly for high diversity regions or genomes (e.g. MHC, or non-human species). Relative to DNA genotyping microarrays, QUILT2 offers improved accuracy at reduced cost, particularly for diverse populations, with the potential for accuracy to nearly double at rare SNPs. Further details and detailed evaluations are available in the [QUILT paper](README.md#paragraph-citation).
+QUILT2 is a fast and memory-efficient method for imputation from low coverage sequence. Statistically, QUILT2 operates on a per-read basis, and is base quality aware, meaning it can accurately impute from diverse inputs, including short read (e.g. Illumina), long read sequencing (that might be noisy) (e.g. Oxford Nanopore Technologies), barcoded Illumina sequencing (e.g. Haplotagging) and ancient DNA. In addition, QUILT2 can impute both the mother and fetal genome using cfDNA NIPT data. Methodologically, QUILT2 introduces [mspbwt](https://github.com/rwdavies/mspbwt), and a two-stage imputation strategy for rare and common variants, to facilitate analysis using haplotype reference panels derived from hundreds of thousands or millions of whole genome sequenced haplotypes. Accuracy using QUILT2 and lc-WGS meets or exceeds other methods for imputation, particularly for high diversity regions or genomes (e.g. MHC, or non-human species). Relative to DNA genotyping microarrays, QUILT2 offers improved accuracy at reduced cost, particularly for diverse populations, with the potential to nearly double accurate at rare SNPs. Links to published references with more details and detailed evaluations are available in the [Citation](README.md#paragraph-citation).
 
 ## Installation <a name="paragraph-installation"></a>
 
@@ -40,7 +41,7 @@ Rscript ./scripts/build-and-install.R
 
 ## Quick start run <a name="paragraph-quickstartrun"></a>
 
-A quick start to ensure QUILT is properly installed and working can be performed using the following.
+A quick start to ensure QUILT2 is properly installed and working can be performed using the following.
 
 Download example data package, containing 1000 Genomes haplotypes, and NA12878 bams
 
@@ -49,7 +50,7 @@ wget https://zenodo.org/records/12697284/files/QUILT2_example_2024.tar.xz ## or 
 tar --xz -xf QUILT2_example_2024.tar.xz
 ```
 
-Perform imputation as below. Note that reference panel data can be processed separately to speed up repeated imputation of the same region in independent jobs, for a detailed tutorial on preparing reference, options, input/output files, see [Tutorials](#paragraph-tutorial)
+Perform imputation as below. Note that reference panel data can be processed separately to speed up repeated imputation of the same region in independent jobs. For a detailed tutorial on preparing reference, options, input/output files, see [READMEs and tutorials](#paragraph-readme-tutorial)
 
 
 ```
@@ -67,27 +68,34 @@ outdir=quilt2_output && rm -rf $outdir
 --save_prepared_reference=TRUE
 ```
 
-## Tutorials <a name="paragraph-tutorial"></a>
+## READMEs and tutorials <a name="paragraph-readme-tutorial"></a>
 
-- Please use the **[QUILT2 Tutorial](README_QUILT2.org)** for guide of running QUILT2 efficiently. 
-- Please use the **[QUILT1 Tutorial](README_QUILT1.md)** for guide of running QUILT1 efficiently. 
-- Please use the **[QUILT-HLA Tutorial](README_QUILT-HLA.md)** for guide of running QUILT-HLA efficiently. 
+- **[QUILT2 README](README_QUILT2.md)**. Please see the **[QUILT2 Tutorial](README_QUILT2.org)** for a guide and example code for running QUILT2 efficiently. 
+- **[QUILT1 README](README_QUILT1.md)**. For tutorials, please see **[Examples](README_QUILT1.md#paragraph-examples)** section of the QUILT1 README.
+- **[QUILT-HLA README](README_QUILT-HLA.md)**. For tutorials, please see **[Example making and running a reference panel](QUILT/example/QUILT_hla_reference_panel_construction.Md)**.
+
+Note that in the future, the QUILT1 and QUILT-HLA READMEs will not be further updated. All of `QUILT2.R`, `QUILT.R` and `QUILT_HLA.R` can be accessed through the main QUILT github page, which serves all three.
+
+## NIPT <a name="paragraph-nipt"></a>
+
+QUILT2 can impute using cfDNA NIPT. To impute using cfDNA NIPT, you need to set `method=nipt` and specify a path to `fflist`, which is a textfile, with one entry per line, with a one to one correspondence to `bamlist`, with the fetal fraction of that sample  (i.e. the first row of fflist is the fetal fraction for the first entry of bamlist, the second row is for the second entry of bamlist, etc.). For more details, including output details, please see [here](README_QUILT2.org#perform-nipt-imputation). 
 
 ## License <a name="paragraph-license"></a>
 
-QUILT and the code in this repo is available under a GPL3 license. For more information please see the [LICENSE](LICENSE).
+QUILT2, QUILT and QUILT_HLA, and the code in this repo is available under a GPL3 license. For more information please see the [LICENSE](LICENSE).
 
 ## Citation <a name="paragraph-citation"></a>
 
-Davies, R. W., Kucka M., Su D., Shi S., Flanagan M., Cunniff C. M., Chan Y. F. , Myers S. Rapid genotype imputation from sequence with reference panels. In press, Nature Genetics
+- For QUILT2, a citation will be available shortly
+- For QUILT1, please cite: Davies, R. W., Kucka M., Su D., Shi S., Flanagan M., Cunniff C. M., Chan Y. F. , Myers S. Rapid genotype imputation from sequence with reference panels. *Nat. Genet.* 53, 1104–1111 (2021)
 
 ## Testing <a name="paragraph-testing"></a>
 
-Tests in QUILT are split into unit or acceptance run using ```./scripts/test-unit.sh``` and ```./scripts/test-acceptance.sh```. To run all tests use ```./scripts/all-tests.sh```, which also builds and installs a release version of QUILT. To make compilation go faster do something like ```export MAKE="make -j 8"```.
+Tests in QUILT2 are split into unit or acceptance run using ```./scripts/test-unit.sh``` and ```./scripts/test-acceptance.sh```. To run all tests use ```./scripts/all-tests.sh```, which also builds and installs a release version of QUILT2. To make compilation go faster do something like ```export MAKE="make -j 8"```.
 
 ## Bug reports <a name="paragraph-bugreports"></a>
 
-The best way to get help is to submit a bug report on GitHub in the [Issues](https://github.com/rwdavies/STITCH/issues) section. Please also use the Issues section if you have a more general question, such issues will be left open for others to see. Similarly, please check the issues before posting to see if your issue has already been addressed
+The best way to get help is to submit a bug report on GitHub in the [Issues](https://github.com/rwdavies/QUILT/issues) section. Please also use the Issues section if you have a more general question, such issues will be left open for others to see. Similarly, please check the issues before posting to see if your issue has already been addressed
 
-For more detailed questions or other concerns please contact Robert Davies robertwilliamdavies@gmail.com
+For more detailed questions or other concerns please contact Robert Davies robertwilliamdavies@gmail.com and Zilong Li zilong.dk@gmail.com
  

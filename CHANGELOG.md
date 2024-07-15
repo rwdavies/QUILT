@@ -1,3 +1,8 @@
+* v2.0.0
+	* Major version update
+	* Includes msPBWT method of haplotype selection
+	* Includes common and all SNP processing
+	* Includes NIPT method for imputing mother and fetus from cfDNA NIPT sequence
 * v1.0.5
 	* Be able to work with cram files
 * v1.0.4
