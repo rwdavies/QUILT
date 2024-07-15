@@ -74,7 +74,8 @@ outdir=quilt2_output && rm -rf $outdir
 - **[QUILT1 README](README_QUILT1.md)**. For tutorials, please see **[Examples](README_QUILT1.md#paragraph-examples)** section of the QUILT1 README.
 - **[QUILT-HLA README](README_QUILT-HLA.md)**. For tutorials, please see **[Example making and running a reference panel](QUILT/example/QUILT_hla_reference_panel_construction.Md)**.
 
-Note that in the future, the QUILT1 and QUILT-HLA READMEs will not be further updated. All of `QUILT2.R`, `QUILT.R` and `QUILT_HLA.R` can be accessed through the main QUILT github page, which serves all three.
+Note that in the future, the QUILT1 and QUILT-HLA READMEs will not be further updated. All of `QUILT2.R`, `QUILT.R` and `QUILT_HLA.R` can be accessed through the main QUILT github page, which serves all three. Note that `QUILT2.R` and `QUILT.R` differ only in that in `QUILT2.R`, msPBWT is turned on by default `use_mspbwt=TRUE`, as is the two stage strategy of first using common variants, and then using all variants `impute_rare_common=TRUE`.
+
 
 ## NIPT <a name="paragraph-nipt"></a>
 
