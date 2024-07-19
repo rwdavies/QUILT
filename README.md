@@ -25,17 +25,17 @@ Please use this README for general information about QUILT2. For more informatio
 
 ## Introduction <a name="paragraph-introduction"></a>
 
-QUILT2 is a fast and memory-efficient method for imputation from low coverage sequence. Statistically, QUILT2 operates on a per-read basis, and is base quality aware, meaning it can accurately impute from diverse inputs, including short read (e.g. Illumina), long read sequencing (that might be noisy) (e.g. Oxford Nanopore Technologies), barcoded Illumina sequencing (e.g. Haplotagging) and ancient DNA. In addition, QUILT2 can impute both the mother and fetal genome using cfDNA NIPT data. Methodologically, QUILT2 introduces [mspbwt](https://github.com/rwdavies/mspbwt), and a two-stage imputation strategy for rare and common variants, to facilitate analysis using haplotype reference panels derived from hundreds of thousands or millions of whole genome sequenced haplotypes. Accuracy using QUILT2 and lc-WGS meets or exceeds other methods for imputation, particularly for high diversity regions or genomes (e.g. MHC, or non-human species). Relative to DNA genotyping microarrays, QUILT2 offers improved accuracy at reduced cost, particularly for diverse populations, with the potential to nearly double accurate at rare SNPs. Links to published references with more details and detailed evaluations are available in the [Citation](README.md#paragraph-citation).
+QUILT2 is a fast and memory-efficient method for imputation from low coverage sequence. Statistically, QUILT2 operates on a per-read basis, and is base quality aware, meaning it can accurately impute from diverse inputs, including short read (e.g. Illumina), long read sequencing (that might be noisy) (e.g. Oxford Nanopore Technologies), barcoded Illumina sequencing (e.g. Haplotagging) and ancient DNA. In addition, QUILT2 can impute both the mother and fetal genome using cfDNA NIPT data. Methodologically, QUILT2 introduces [mspbwt](https://github.com/rwdavies/mspbwt), and a two-stage imputation strategy for rare and common variants, to facilitate analysis using haplotype reference panels derived from hundreds of thousands or millions of whole genome sequenced haplotypes. Accuracy using QUILT2 and lc-WGS meets or exceeds other methods for imputation, particularly for high diversity regions or genomes (e.g. MHC, or non-human species). Relative to DNA genotyping microarrays, QUILT2 offers improved accuracy at reduced cost, particularly for diverse populations, with the potential to nearly double accurate at rare SNPs. Links to published references with more details and detailed evaluations are available in the [Citation](#paragraph-citation).
 
 ## Installation <a name="paragraph-installation"></a>
 
 QUILT2 is available to download and install through this Github repository.
-QUILT2 depends on [STITCH](https://github.com/rwdavies/STITCH) and [mspbwt](https://github.com/rwdavies/mspbwt).
+QUILT2 depends on [STITCH>=1.7.0](https://github.com/rwdavies/STITCH) and [mspbwt>=0.1.0](https://github.com/rwdavies/mspbwt).
 
 ```
 git clone --recursive https://github.com/rwdavies/QUILT.git
 cd QUILT
-bash ./scripts/install-dependencies.sh ## skip this if STITCH and mspbwt already installed
+bash ./scripts/install-dependencies.sh ## skip this if STITCH>=1.7.0 and mspbwt>=0.1.0 installed
 Rscript ./scripts/build-and-install.R
 ```
 
