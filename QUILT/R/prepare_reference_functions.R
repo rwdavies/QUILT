@@ -70,7 +70,7 @@ remove_sites_from_pos_to_use <- function(region_exclude_file, pos_to_use) {
 
 
 get_pos_to_use_from_reference_legend_file <- function(reference_legend_file, chr, regionStart, regionEnd, buffer) {
-    ref_legend <- fread(cmd = paste0("gunzip -c ", shQuote(reference_legend_file)), data.table = FALSE)
+    ref_legend <- data.table::fread(cmd = paste0("gunzip -c ", shQuote(reference_legend_file)), data.table = FALSE)
     colnames(ref_legend) <- c("CHR", "POS", "REF", "ALT")
     ref_legend[, 1] <- chr
     if (!is.na(regionStart)) {

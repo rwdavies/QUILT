@@ -206,7 +206,7 @@ QUILT_prepare_reference <- function(
               subsamples <- paste0("^", paste0(s, collapse = ",")) ## ^ means excluding in vcfpp.h
             }
         } else {
-            reference_samples <- fread(reference_sample_file, header = TRUE, data.table = FALSE)
+            reference_samples <- data.table::fread(reference_sample_file, header = TRUE, data.table = FALSE)
             if (reference_exclude_samplelist_file != "") {
                 s <- read.table(reference_exclude_samplelist_file, h = FALSE)[,1]
                 w <- (!reference_samples[, 1] %in% s)
@@ -313,7 +313,7 @@ QUILT_prepare_reference <- function(
         ## possibly exclude samples, note, does not fix ref_alleleCount!
         ##
         if (reference_sample_file != "") {
-            reference_samples <- fread(reference_sample_file, header = TRUE, data.table = FALSE)
+            reference_samples <- data.table::fread(reference_sample_file, header = TRUE, data.table = FALSE)
             if (!use_reference_vcf) {
                 if (!is.na(reference_populations[1])) {
                     keep_samples <- as.character(reference_samples[, "POP"]) %in% reference_populations
