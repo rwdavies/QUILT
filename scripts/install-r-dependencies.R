@@ -29,12 +29,11 @@ if (!suppressPackageStartupMessages(require("STITCH"))) {
     if (check) {
         install_github("rwdavies/STITCH", subdir = "STITCH", upgrade = "never")
     } else {
-        install.packages("https://github.com/rwdavies/STITCH/releases/download/1.6.11/STITCH_1.6.11.tar.gz", repos=NULL)
+        install.packages("https://github.com/rwdavies/STITCH/releases/download/1.7.0/STITCH_1.7.0.tar.gz", repos=NULL)
     }
 }
 
 
 if (!suppressPackageStartupMessages(require("mspbwt"))) {
-    ## install.packages("https://www.stats.ox.ac.uk/~rdavies/mspbwt_0.0.1.tar.gz")
-    install_github("rwdavies/mspbwt", subdir = "mspbwt", upgrade = "never")
+    install.packages("https://github.com/rwdavies/mspbwt/releases/download/0.1.0/mspbwt_0.1.0.tar.gz", repos=NULL)
 }
