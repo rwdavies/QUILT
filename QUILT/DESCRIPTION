@@ -11,7 +11,7 @@ Installation: To install, first install dependencies, then run the
         install.packages command, pointing to the downloaded tarball
         (QUILT.tar.gz)
 Getting started: Please see github README.
-Depends: parallel, data.table, rrbgen (>= 0.0.4), STITCH (>= 1.6.11)
+Depends: STITCH (>= 1.7.0), mspbwt (>= 0.1.0)
 Imports: Rcpp
 LinkingTo: Rcpp, RcppArmadillo,RcppEigen
 Packaged: 2020-07-24 12:00:00 UTC; rdavies

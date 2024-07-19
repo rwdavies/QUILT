@@ -1,6 +1,7 @@
 FROM ubuntu:22.04
 
 WORKDIR /docker_build/
+ENV MAKE="make -j4"
 
 # Install required packages
 RUN apt-get update
@@ -23,11 +24,6 @@ RUN apt-get install -y r-base r-cran-devtools
 ######## install QUILT2
 
 RUN git clone https://github.com/rwdavies/QUILT.git
-RUN cd QUILT
-RUN bash ./scripts/install-dependencies.sh
-RUN Rscript ./scripts/build-and-install.R
-# move CLI binary
-RUN mv *.R /bin
-cd ..
+RUN cd QUILT && bash ./scripts/install-dependencies.sh && Rscript ./scripts/build-and-install.R && mv *.R /bin 
 
 WORKDIR /
