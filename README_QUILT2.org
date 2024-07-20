@@ -73,6 +73,7 @@ that QUILT2 has option =method=diploid= in default.
 --chr=chr20 \
 --regionStart=2000001 \
 --regionEnd=4000000 \
+--nGen=100 \
 --buffer=500000 \
 --output_filename=quilt2_output/quilt2.diploid.vcf.gz
 #+end_src
@@ -132,6 +133,7 @@ To perform imputation for NIPT data with QUILT2, we need to set =method=nipt= an
 --chr=chr20 \
 --regionStart=2000001 \
 --regionEnd=4000000 \
+--nGen=100 \
 --buffer=500000 \
 --output_filename=quilt2_output/quilt2.nipt.vcf.gz
 #+end_src

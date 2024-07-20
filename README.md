@@ -1,7 +1,7 @@
 QUILT2
 =====
 **__Current Version: 2.0.0__**
-Release date: July 06, 2024
+***Prerelease*** date: July 06, 2024
 
 ![Build Status](https://github.com/rwdavies/QUILT/workflows/CI/badge.svg)
 
@@ -36,17 +36,18 @@ QUILT2 depends on [STITCH>=1.7.0](https://github.com/rwdavies/STITCH) and [mspbw
 git clone --recursive https://github.com/rwdavies/QUILT.git
 cd QUILT
 bash ./scripts/install-dependencies.sh ## skip this if STITCH>=1.7.0 and mspbwt>=0.1.0 installed
-Rscript ./scripts/build-and-install.R
+wget https://github.com/rwdavies/QUILT/releases/download/2.0.0/QUILT_2.0.0.tar.gz ## or curl -OL
+R CMD INSTALL QUILT_2.0.0.tar.gz
 ```
 
 ## Quick start run <a name="paragraph-quickstartrun"></a>
 
-A quick start to ensure QUILT2 is properly installed and working can be performed using the following.
+A quick start to ensure QUILT2 is properly installed and working can be performed using the following. **Note QUILT2 only takes VCF file as input for reference panel.** 
 
 Download example data package, containing 1000 Genomes haplotypes, and NA12878 bams
 
 ```
-wget https://zenodo.org/records/12697284/files/QUILT2_example_2024.tar.xz ## or curl -O
+wget https://zenodo.org/records/12786681/files/QUILT2_example_2024.tar.xz  ## or curl -OL
 tar --xz -xf QUILT2_example_2024.tar.xz
 ```
 

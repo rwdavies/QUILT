@@ -28,7 +28,10 @@ jobs:
           use-public-rspm: true
 
       - name: Install dependencies
-        run: export DEV_STITCH="TRUE" && ./scripts/install-dependencies.sh
+        run:  ./scripts/install-dependencies.sh
+
+      - name: Test README
+        run: ./scripts/test-readme.sh
 
       - name: Unit tests
         run: ./scripts/test-unit.sh
