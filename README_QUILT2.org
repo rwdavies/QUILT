@@ -23,7 +23,8 @@ computational reason, we want to distribute our tasks into multiple machines
 with limited memory. However, for the accuracy reason, we need to impute with
 reasonable big chunks so that the model can work well. QUILT2 offers the
 =quilt_chunk_map= function for splitting the genome into multiple reasonable
-chunks given the genetic map file.
+chunks given the genetic map file. The function returns a table with the 3rd
+column being the genomic region (in bcftools-like format) of each chunk.
 
 #+begin_src R
 dat <- QUILT::quilt_chunk_map("chr20", "package/CEU-chr20-final.b38.txt.gz")
@@ -49,12 +50,13 @@ for how we would do this, for the case of the quick start example.
     --chr=chr20 \
     --regionStart=2000001 \
     --regionEnd=4000000 \
+    --nGen=100 \
     --buffer=500000 \
     --outputdir=quilt2_output
 #+end_src
 
 Input/Output files:
-- =reference_vcf_panel=. QUILT2 now supports VCF/BCF files with phased genotypes as the reference panel, thanks to [[https://github.com/Zilong-Li/vcfpp][vcfpp]]!.
+- =reference_vcf_panel=. QUILT2 now *only supports VCF/BCF file* with phased genotypes as the reference panel, thanks to [[https://github.com/Zilong-Li/vcfpp][vcfpp]]!.
 - =genetic_map_file=.  File with genetic map information, with 3 white-space delimited columns giving position (1-based), genetic rate map in cM/Mbp, and genetic map in cM. Find the prepared ones in the [[file:maps]] folder.
 - =outputdir=. Directory for saving the output. The prepared reference data is saved as =RData= that is in the =outputdir/RData=.
 

@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run:  ./scripts/install-dependencies.sh
 
+      - name: Test the build
+        run: ./scripts/build-and-install.R
+        
       - name: Test README
         run: ./scripts/test-readme.sh
 
@@ -39,13 +42,10 @@ jobs:
       - name: Acceptance tests
         run: ./scripts/test-acceptance.sh
 
-      - name: Test the build
-        run: ./scripts/build-and-install.R
-        
       - name: Test the CLI
         run: ./scripts/test-cli.R
  
-      - name: Example test
+      - name: QUILT1 Example test
         run: ./example/run_example.sh example/QUILT_usage.Md
 
       - name: HLA test
