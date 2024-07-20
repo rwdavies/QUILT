@@ -15,38 +15,39 @@ if ( 1 == 0 ) {
 }
 
 
-n_snps <- 220
-chr <- 10
-K <- 6
-set.seed(919)
-phasemaster <- array(sample(c(0, 1), n_snps * K, replace = TRUE), c(n_snps, K))
-reads_span_n_snps <- 3
-## want about 1X here
-n_reads <- round(1.0 * n_snps / reads_span_n_snps)
-data_package <- STITCH::make_acceptance_test_data_package(
-    reads_span_n_snps = reads_span_n_snps,
-    n_samples = 3,
-    n_snps = n_snps,
-    n_reads = n_reads,
-    seed = 2,
-    chr = chr,
-    K = K,
-    phasemaster = phasemaster
-)
-refpack <- STITCH::make_reference_package(
-    n_snps = n_snps,
-    n_samples_per_pop = 500,
-    reference_populations = c("CEU", "GBR"),
-    chr = chr,
-    phasemaster = phasemaster
-)
-set.seed(010)
-
-
 
 test_that("can concatenate using external software", {
 
     skip("to restore in the future because CI hangs here for over 6h, although can work locally")
+  
+    n_snps <- 220
+    chr <- 10
+    K <- 6
+    set.seed(919)
+    phasemaster <- array(sample(c(0, 1), n_snps * K, replace = TRUE), c(n_snps, K))
+    reads_span_n_snps <- 3
+    ## want about 1X here
+    n_reads <- round(1.0 * n_snps / reads_span_n_snps)
+    data_package <- STITCH::make_acceptance_test_data_package(
+      reads_span_n_snps = reads_span_n_snps,
+      n_samples = 3,
+      n_snps = n_snps,
+      n_reads = n_reads,
+      seed = 2,
+      chr = chr,
+      K = K,
+      phasemaster = phasemaster
+    )
+    refpack <- STITCH::make_reference_package(
+      n_snps = n_snps,
+      n_samples_per_pop = 500,
+      reference_populations = c("CEU", "GBR"),
+      chr = chr,
+      phasemaster = phasemaster
+    )
+    set.seed(010)
+
+
     outputdir <- STITCH::make_unique_tempdir()
     i_region <- 1
 
