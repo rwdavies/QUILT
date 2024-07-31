@@ -18,7 +18,6 @@ if ( 1 == 0 ) {
 
 test_that("can concatenate using external software", {
 
-    skip("to restore in the future because CI hangs here for over 6h, although can work locally")
   
     n_snps <- 220
     chr <- 10
