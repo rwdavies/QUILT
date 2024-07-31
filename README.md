@@ -88,7 +88,7 @@ QUILT2, QUILT and QUILT_HLA, and the code in this repo is available under a GPL3
 
 ## Citation <a name="paragraph-citation"></a>
 
-- For QUILT2, a citation will be available shortly
+- For QUILT2, please cite Li Z., Albrechtsen A., Davies R. W. Rapid and accurate genotype imputation from low coverage short read, long read, and cell free DNA sequence. bioRxiv. [https://doi.org/10.1101/2024.07.18.604149](https://doi.org/10.1101/2024.07.18.604149)
 - For QUILT1, please cite: Davies, R. W., Kucka M., Su D., Shi S., Flanagan M., Cunniff C. M., Chan Y. F. , Myers S. Rapid genotype imputation from sequence with reference panels. *Nat. Genet.* 53, 1104–1111 (2021)
 
 ## Testing <a name="paragraph-testing"></a>
