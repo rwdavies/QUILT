@@ -1,5 +1,3 @@
-## -*- ess-indent-offset: 4; -*-
-
 get_and_impute_one_sample <- function(
     rhb_t,
     outputdir,

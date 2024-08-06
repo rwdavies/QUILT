@@ -133,85 +133,106 @@ process <- function(varset){
 
 
 
+
+
+get_kmers_from_one_file <- function(
+    i_file,
+    ourfiles
+) {
+
+    zztop <- i_file ##  dangit Simon
+    n <- length(ourfiles)
+    ##if (zztop %in% (match(1:10, ceiling(10 * (1:n / n))))) {
+    print_message(paste0("Processing file ", zztop, " out of ", length(ourfiles)))
+    ##}
+    
+    curkmers=matrix(nrow=0,ncol=3)
+
+    this <- scan(
+        file.path(
+            outputdir,
+            "alignments",
+            paste0(ourfiles[zztop], "_gen.txt")
+        ),
+        what = 'char',
+        quiet = TRUE
+    )
+    
+    temp=grep("Please",this)
+    this=this[1:(temp-1)]
+    
+    starts=grep("gDNA",this)
+    ll=getseqs(starts[1]+2,starts[2]-1,paste(ourfiles[zztop],"[*]",sep=""), this = this)
+    starts=c(starts,length(this)+2)
+    
+    ## amount to trim for first codon
+    ## offset=as.double(this[starts[1]+1])
+    
+    for(k in 2:(length(starts)-1)) {
+        ll=paste(
+            ll,
+            getseqs(starts[k]+2,starts[k+1]-1,paste(ourfiles[zztop],"[*]",sep=""), this = this),
+            sep=""
+        )
+        ##print(k)
+    }
+    names(ll)=getnames(starts[1]+2,starts[2]-1,paste(ourfiles[zztop],"[*]",sep=""), this = this)
+    
+    ## find a match
+    
+    temp=matrix(nrow=length(ll),ncol=nchar(ll[1]))
+    
+    for(i in 1:ncol(temp)) temp[,i]=substring(ll,i,i)
+    for(i in 1:ncol(temp)) temp[temp[,i]=="-",i]=temp[1,i]
+    
+    spos=which(temp[1,]=="|")[1]
+    temp=temp[,(spos+1):ncol(temp)]
+    temp=temp[,temp[1,]!="|"]
+    
+    newseqs=vector(length=nrow(temp))
+    for(i in 1:length(newseqs)){ newseqs[i]=paste(temp[i,],collapse="")
+        newseqs[i]=unlist(gsub("\\.","",newseqs[i]))
+    }
+    
+    for(curpos in 1:(max(nchar(newseqs))-9)){
+        
+        vv=unique(substring(newseqs,curpos,curpos+9))
+        qq=grep("\\*",vv)
+        if(length(qq) )
+            vv=vv[-qq]
+        vv=vv[nchar(vv)==10]
+        if(length(vv))curkmers=rbind(curkmers,cbind(vv,curpos,ourfiles[zztop]))
+    }
+
+    curkmers
+
+}
+
+
 make_and_save_hla_all_alleles_kmers <- function(
     outputdir,
     all_hla_regions,
-    hla_gene_information
+    hla_gene_information,
+    nCores
 ) {
 
     ourfiles <- all_hla_regions
     
     print_message("Begin making HLA all alleles kmers file")
     ## code to make HLAallalleleskmers.out
+
+    out <- mclapply(
+        1:length(ourfiles),
+        FUN = get_kmers_from_one_file,
+        ourfiles = ourfiles,
+        mc.cores = nCores
+    )
     
-    kmers=matrix(nrow=0,ncol=3)
-    for(zztop in 1:length(ourfiles)){
-
-        n <- length(ourfiles)
-        if (zztop %in% (match(1:10, ceiling(10 * (1:n / n))))) {
-            print_message(paste0("Processing file ", zztop, " out of ", length(ourfiles)))
-        }
-        
-        curkmers=matrix(nrow=0,ncol=3)
-
-        this <- scan(
-            file.path(
-                outputdir,
-                "alignments",
-                paste0(ourfiles[zztop], "_gen.txt")
-            ),
-            what = 'char',
-            quiet = TRUE
-        )
-        
-        temp=grep("Please",this)
-        this=this[1:(temp-1)]
-        
-        starts=grep("gDNA",this)
-        ll=getseqs(starts[1]+2,starts[2]-1,paste(ourfiles[zztop],"[*]",sep=""), this = this)
-        starts=c(starts,length(this)+2)
-        
-        ## amount to trim for first codon
-        ## offset=as.double(this[starts[1]+1])
-        
-        for(k in 2:(length(starts)-1)) {
-            ll=paste(
-                ll,
-                getseqs(starts[k]+2,starts[k+1]-1,paste(ourfiles[zztop],"[*]",sep=""), this = this),
-                sep=""
-            )
-            ##print(k)
-        }
-        names(ll)=getnames(starts[1]+2,starts[2]-1,paste(ourfiles[zztop],"[*]",sep=""), this = this)
-        
-        ## find a match
-        
-        temp=matrix(nrow=length(ll),ncol=nchar(ll[1]))
-        
-        for(i in 1:ncol(temp)) temp[,i]=substring(ll,i,i)
-        for(i in 1:ncol(temp)) temp[temp[,i]=="-",i]=temp[1,i]
-        
-        spos=which(temp[1,]=="|")[1]
-        temp=temp[,(spos+1):ncol(temp)]
-        temp=temp[,temp[1,]!="|"]
-        
-        newseqs=vector(length=nrow(temp))
-        for(i in 1:length(newseqs)){ newseqs[i]=paste(temp[i,],collapse="")
-            newseqs[i]=unlist(gsub("\\.","",newseqs[i]))
-        }
-        
-        for(curpos in 1:(max(nchar(newseqs))-9)){
-            
-            vv=unique(substring(newseqs,curpos,curpos+9))
-            qq=grep("\\*",vv)
-            if(length(qq) )
-                vv=vv[-qq]
-            vv=vv[nchar(vv)==10]
-            if(length(vv))curkmers=rbind(curkmers,cbind(vv,curpos,ourfiles[zztop]))
-        }
-        
-        kmers=rbind(kmers,curkmers)
+    kmers <- out[[1]]
+    for(i in 2:length(out)) {
+        kmers <- rbind(kmers,out[[i]])
     }
+    ## kmers <- get_kmers_for_hla_alleles_all_of_them(ourfiles)
     
     newnames=unique(kmers[,1])
     newkmers=matrix(nrow=length(newnames),ncol=3)
@@ -741,7 +762,7 @@ make_and_save_hla_files_for_imputation <- function(
         } else {
             genome_pos <- hla_gene_information[m, "End"]
         }
-        
+
         out <- get_and_reformat_gen_alignments_for_hla_region(
             outputdir = outputdir,
             hla_region = hla_region,
@@ -758,7 +779,7 @@ make_and_save_hla_files_for_imputation <- function(
             start <- genome_pos - (aligned - 1)
         }
         end <- start + aligned - 1
-        
+
         reference_allele <- determine_reference_genome_hla_allele(
             ref_fasta = ref_fasta,
             chr = hla_gene_information[1, "Chr"],
@@ -784,7 +805,7 @@ make_and_save_hla_files_for_imputation <- function(
         } else {
             start <- genome_pos - (aligned - 1)
         }
-            
+
         ourpos <- rep(0,ncol(temp))
         ourpos[1] <- start
         

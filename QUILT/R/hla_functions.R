@@ -113,6 +113,7 @@ quilt_hla_one_sample <- function(
         region = region,
         kk = kk
     )
+    
     readlikelihoodmat <- out[["readlikelihoodmat"]]
     readset1 <- out[["readset1"]]
     readset2 <- out[["readset2"]]
@@ -621,6 +622,10 @@ filter_that2 <- function(
     ##now the hla defined read mapping filters
     ##above is all that is used so can filter these initially
     if(nrow(that2)>0){
+        ## this also filters these to be their mode length
+        rl = get_mode(nchar(that2[, 11]))
+        that2 <- that2[nchar(that2[, 11]) == rl, ]
+        
         check=as.vector(that2[,7])
         check2=as.vector(that2[,3])
         check3=as.vector(that2[,12])
@@ -1076,12 +1081,12 @@ filterbyregion=function(seqs,seqnames,newkmers,regname){
     readposc=cbind(newkmers[match(substring(compseqs,11,20),newkmers[,1]),2],newkmers[match(substring(compseqs,21,30),newkmers[,1]),2],newkmers[match(substring(compseqs,rl-29,rl-20),newkmers[,1]),2],newkmers[match(substring(compseqs,rl-19,rl-10),newkmers[,1]),2])
     readregc=cbind(newkmers[match(substring(compseqs,11,20),newkmers[,1]),3],newkmers[match(substring(compseqs,21,30),newkmers[,1]),3],newkmers[match(substring(compseqs,rl-29,rl-20),newkmers[,1]),3],newkmers[match(substring(compseqs,rl-19,rl-10),newkmers[,1]),3])
 
-    # readpos=cbind(newkmers[match(substring(seqs,11,20),newkmers[,1]),2],newkmers[match(substring(seqs,21,30),newkmers[,1]),2],newkmers[match(substring(seqs,121,130),newkmers[,1]),2],newkmers[match(substring(seqs,131,140),newkmers[,1]),2])
-    # readreg=cbind(newkmers[match(substring(seqs,11,20),newkmers[,1]),3],newkmers[match(substring(seqs,21,30),newkmers[,1]),3],newkmers[match(substring(seqs,121,130),newkmers[,1]),3],newkmers[match(substring(seqs,131,140),newkmers[,1]),3])
+    ## readpos=cbind(newkmers[match(substring(seqs,11,20),newkmers[,1]),2],newkmers[match(substring(seqs,21,30),newkmers[,1]),2],newkmers[match(substring(seqs,121,130),newkmers[,1]),2],newkmers[match(substring(seqs,131,140),newkmers[,1]),2])
+    ## readreg=cbind(newkmers[match(substring(seqs,11,20),newkmers[,1]),3],newkmers[match(substring(seqs,21,30),newkmers[,1]),3],newkmers[match(substring(seqs,121,130),newkmers[,1]),3],newkmers[match(substring(seqs,131,140),newkmers[,1]),3])
 
 
-    # readposc=cbind(newkmers[match(substring(compseqs,11,20),newkmers[,1]),2],newkmers[match(substring(compseqs,21,30),newkmers[,1]),2],newkmers[match(substring(compseqs,121,130),newkmers[,1]),2],newkmers[match(substring(compseqs,131,140),newkmers[,1]),2])
-    # readregc=cbind(newkmers[match(substring(compseqs,11,20),newkmers[,1]),3],newkmers[match(substring(compseqs,21,30),newkmers[,1]),3],newkmers[match(substring(compseqs,121,130),newkmers[,1]),3],newkmers[match(substring(compseqs,131,140),newkmers[,1]),3])
+    ## readposc=cbind(newkmers[match(substring(compseqs,11,20),newkmers[,1]),2],newkmers[match(substring(compseqs,21,30),newkmers[,1]),2],newkmers[match(substring(compseqs,121,130),newkmers[,1]),2],newkmers[match(substring(compseqs,131,140),newkmers[,1]),2])
+    ## readregc=cbind(newkmers[match(substring(compseqs,11,20),newkmers[,1]),3],newkmers[match(substring(compseqs,21,30),newkmers[,1]),3],newkmers[match(substring(compseqs,121,130),newkmers[,1]),3],newkmers[match(substring(compseqs,131,140),newkmers[,1]),3])
 
 
 ######turn this into a matrix of which regions and positions we might have
@@ -1389,7 +1394,13 @@ do_simon_read_stuff_with_that_and_that2 <- function(
         qualmat2=matrix(nrow=length(seqs2),ncol=nchar(seqs2[1]))
 ##        qualmat2=matrix(nrow=length(seqs2),ncol=nchar(seqs2)[1])
         for(i in 1:nchar(seqs2[1])) qualmat2[,i]=substring(quals2,i,i)
-        for(i in 1:nrow(qualmat2)) for(j in 1:ncol(qualmat2)) qualmat2[i,j]=utf8ToInt(qualmat2[i,j])
+        for(i in 1:nrow(qualmat2)) {
+            for(j in 1:ncol(qualmat2)) {
+                ## a handful of these might have ""
+                ## I think this is that the reads are too short?
+                qualmat2[i, j] <- utf8ToInt(qualmat2[i, j])
+            }
+        }
         qualmat=matrix(as.double(qualmat)-33,ncol=ncol(qualmat))
         qualmat2=matrix(as.double(qualmat2)-33,ncol=ncol(qualmat2))
         ## given a read it is now trivial to get info:
@@ -1397,10 +1408,10 @@ do_simon_read_stuff_with_that_and_that2 <- function(
         readpos2=cbind(kk[substring(seqs2,11,20)],kk[substring(seqs2,21,30)],kk[substring(seqs2,rl-29,rl-20)],kk[substring(seqs2,rl-19,rl-10)])
         readposc=cbind(kk[substring(compseqs,11,20)],kk[substring(compseqs,21,30)],kk[substring(compseqs,rl-29,rl-20)],kk[substring(compseqs,rl-19,rl-10)])
         readpos2c=cbind(kk[substring(compseqs2,11,20)],kk[substring(compseqs2,21,30)],kk[substring(compseqs2,rl-29,rl-20)],kk[substring(compseqs2,rl-19,rl-10)])
-        # readpos=cbind(kk[substring(seqs,11,20)],kk[substring(seqs,21,30)],kk[substring(seqs,121,130)],kk[substring(seqs,131,140)])
-        # readpos2=cbind(kk[substring(seqs2,11,20)],kk[substring(seqs2,21,30)],kk[substring(seqs2,121,130)],kk[substring(seqs2,131,140)])
-        # readposc=cbind(kk[substring(compseqs,11,20)],kk[substring(compseqs,21,30)],kk[substring(compseqs,121,130)],kk[substring(compseqs,131,140)])
-        # readpos2c=cbind(kk[substring(compseqs2,11,20)],kk[substring(compseqs2,21,30)],kk[substring(compseqs2,121,130)],kk[substring(compseqs2,131,140)])
+        ## readpos=cbind(kk[substring(seqs,11,20)],kk[substring(seqs,21,30)],kk[substring(seqs,121,130)],kk[substring(seqs,131,140)])
+        ## readpos2=cbind(kk[substring(seqs2,11,20)],kk[substring(seqs2,21,30)],kk[substring(seqs2,121,130)],kk[substring(seqs2,131,140)])
+        ## readposc=cbind(kk[substring(compseqs,11,20)],kk[substring(compseqs,21,30)],kk[substring(compseqs,121,130)],kk[substring(compseqs,131,140)])
+        ## readpos2c=cbind(kk[substring(compseqs2,11,20)],kk[substring(compseqs2,21,30)],kk[substring(compseqs2,121,130)],kk[substring(compseqs2,131,140)])
         ## print("##find alignments")
         vv <- rep(-1000,nrow(readpos))
         scoresmat=matrix(nrow=nrow(readpos),ncol=nrow(fullalleles))
@@ -1439,13 +1450,14 @@ do_simon_read_stuff_with_that_and_that2 <- function(
                     posmat[i,]=ourscores2[,2]
                     compmat[i,]=1
                     ##print(max(scoresmat[i,]))
+                } else {
+                    if(max(ourscores2[,1])>max(ourscores[,1])){
+                        scoresmat[i,]=ourscores2[,1]
+                        posmat[i,]=ourscores2[,2]
+                        compmat[i,]=1
+                        ##print(max(scoresmat[i,]))
+                    }
                 }
-                if(length(temp)) if(max(ourscores2[,1])>max(ourscores[,1])){
-                                     scoresmat[i,]=ourscores2[,1]
-                                     posmat[i,]=ourscores2[,2]
-                                     compmat[i,]=1
-                                     ##print(max(scoresmat[i,]))
-                                 }
             }
         }
         ## print("#####find alignments")
