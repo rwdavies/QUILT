@@ -21,10 +21,15 @@ jobs:
       - uses: actions/checkout@v2
  
       - name: Manually install dependency
-        run: sudo apt-get update -y && sudo apt-get install -y build-essential libbz2-dev libcurl4-openssl-dev libssl-dev zlib1g-dev liblzma-dev libdeflate-dev libncurses5-dev curl autoconf git && which pkg-config && sudo apt-get install -y r-base r-cran-devtools
+        run: sudo apt-get update -y && sudo apt-get install -y libcurl4-openssl-dev && sudo apt-get install -y libharfbuzz-dev && sudo apt-get install -y libfribidi-dev && which pkg-config
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.2.2' # TODO: test latest version 
+          use-public-rspm: true
 
       - name: Install dependencies
-        run: ./scripts/install-dependencies.sh
+        run:  export DEV_STITCH="TRUE" && ./scripts/install-dependencies.sh
 
       - name: Test the build
         run: ./scripts/build-and-install.R
