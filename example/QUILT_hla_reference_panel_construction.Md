@@ -30,10 +30,16 @@ wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_
 
 bcftools view --output-file oneKG.temp.vcf.gz --output-type z --min-alleles 2 --max-alleles 2 --types snps ${oneKG_vcf_name} chr6:25000000-34000000
 tabix oneKG.temp.vcf.gz
+
+## ensure only one instance of multi-allelic records. use awk as not sure why bcftools seemingly not working as expected
+bcftools sort oneKG.temp.vcf.gz --output oneKG.temp.sorted.vcf.gz
+gunzip -c oneKG.temp.sorted.vcf.gz | awk 'NR==1{print; prev=$2; next} $2 != prev {print; prev=$2}' | bgzip > oneKG.temp.vcf.gz
+rm oneKG.temp.sorted.vcf.gz
 bcftools convert --haplegendsample oneKG oneKG.temp.vcf.gz
 reference_haplotype_file=${inputs_dir}oneKG.hap.gz
 reference_legend_file=${inputs_dir}oneKG.legend.gz
 reference_sample_file=${inputs_dir}oneKG.samples
+rm oneKG.temp.vcf.gz
 ## convert to uppercase, slight wording change
 sed -i 's/sample population group sex/SAMPLE POP GROUP SEX/g' ${reference_sample_file}
 ```

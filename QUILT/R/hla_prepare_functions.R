@@ -137,7 +137,8 @@ process <- function(varset){
 
 get_kmers_from_one_file <- function(
     i_file,
-    ourfiles
+    ourfiles,
+    outputdir
 ) {
 
     zztop <- i_file ##  dangit Simon
@@ -225,8 +226,10 @@ make_and_save_hla_all_alleles_kmers <- function(
         1:length(ourfiles),
         FUN = get_kmers_from_one_file,
         ourfiles = ourfiles,
+        outputdir = outputdir,
         mc.cores = nCores
     )
+    check_mclapply_OK(out)
     
     kmers <- out[[1]]
     for(i in 2:length(out)) {
@@ -756,6 +759,14 @@ make_and_save_hla_files_for_imputation <- function(
         print_message(paste0("Working on region:", hla_region))
 
         m <- match(paste0("HLA-", hla_region), hla_gene_information[, "Name"])
+        if (is.na(m)) {
+            msg <- paste0(
+                "Cannot match ", shQuote(paste0("HLA-", hla_region)), " to any of the available hla genes:",
+                paste0(hla_gene_information[, "Name"], collapse= ", ")
+            )
+            stop(msg)
+        }
+
         hla_strand <- hla_gene_information[m, "Strand"]
         if (hla_strand == 1) {
             genome_pos <- hla_gene_information[m, "Start"]

@@ -59,6 +59,10 @@ phase_hla_haplotypes <- function(
     hlatypes <- read.table(hla_types_panel, header = TRUE, skip = 0, sep = "\t")
     ref_samples <- read.table(reference_sample_file, header = TRUE)
     ## keep only well defined samples
+    if (!("SAMPLE" %in% colnames(ref_samples))) {
+        msg <- paste0("Expecting columns named 'SAMPLE POP GROUP SEX' in reference_sample_file=", reference_sample_file)
+        stop(msg)
+    }
     remove <- !(ref_samples[, "SAMPLE"] %in% hlatypes[, "Sample.ID"])
     samples_to_remove <- ref_samples[remove, "SAMPLE"]
     if (reference_exclude_samples_for_initial_phasing) {

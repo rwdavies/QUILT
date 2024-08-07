@@ -74,6 +74,7 @@ QUILT_HLA_prepare_reference <- function(
         what = "refseq"
     )
 
+   
     make_and_save_hla_all_alleles_kmers(
         outputdir = outputdir,
         all_hla_regions = all_hla_regions,

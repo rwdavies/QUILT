@@ -108,6 +108,12 @@ option_list <- list(
         type = "double",
         help = "When reporting results, give results until posterior probability exceeds this value [default 0.99] ",
         default = 0.99
+    ), 
+    make_option(
+        "--downsampleToCov",
+        type = "double",
+        help = "For imputing states specifically using QUILT, what coverage to downsample individual sites to. This ensures no floating point errors at sites with really high coverage. This is not used in the direct read mapping [default 30] ",
+        default = 30
     )
 )
 opt <- suppressWarnings(parse_args(OptionParser(option_list = option_list)))
@@ -131,5 +137,6 @@ QUILT_HLA(
     chr = opt$chr,
     quilt_buffer = opt$quilt_buffer,
     quilt_bqFilter = opt$quilt_bqFilter,
-    summary_best_alleles_threshold = opt$summary_best_alleles_threshold
+    summary_best_alleles_threshold = opt$summary_best_alleles_threshold,
+    downsampleToCov = opt$downsampleToCov
 )

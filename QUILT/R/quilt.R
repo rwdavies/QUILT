@@ -1,5 +1,3 @@
-## -*- ess-indent-offset: 4; -*-
-
 #' @title QUILT
 #' @param outputdir What output directory to use
 #' @param chr What chromosome to run. Should match BAM headers

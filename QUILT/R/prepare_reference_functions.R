@@ -36,7 +36,7 @@ make_face_vcf_with_sites_list <- function(outputdir, regionName, output_sites_fi
 
 
 
-remove_sites_from_pos_to_use <- function(region_exclude_file, pos_to_use) {
+remove_sites_from_pos_to_use <- function(region_exclude_file, pos_to_use, chr) {
     if (!file.exists(region_exclude_file)) {
         stop(paste0("Cannot find region_exclude_file:", region_exclude_file))
     }

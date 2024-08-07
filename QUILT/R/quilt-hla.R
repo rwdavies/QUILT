@@ -17,6 +17,7 @@
 #' @param quilt_buffer For QUILT Gibbs sampling, what buffer to include around center of gene
 #' @param quilt_bqFilter For QUILT Gibbs sampling, do not consider sequence information if the base quality is below this threshold
 #' @param summary_best_alleles_threshold When reporting results, give results until posterior probability exceeds this value
+#' @param downsampleToCov For imputing states specifically using QUILT, what coverage to downsample individual sites to. This ensures no floating point errors at sites with really high coverage. This is not used in the direct read mapping
 #' @return Results in properly formatted version
 #' @author Robert Davies
 #' @export
@@ -39,7 +40,8 @@ QUILT_HLA <- function(
     chr = 'chr6',
     quilt_buffer = 500000,
     quilt_bqFilter = 10,
-    summary_best_alleles_threshold = 0.99
+    summary_best_alleles_threshold = 0.99,
+    downsampleToCov = 30
 ) {
 
     x <- as.list(environment())
@@ -205,7 +207,8 @@ QUILT_HLA <- function(
         gamma_physically_closest_to = regmid,
         seed = quilt_seed,
         hla_run = TRUE,
-        verbose = FALSE
+        verbose = FALSE,
+        downsampleToCov = downsampleToCov
     )
     load(outfile1)
     unlink(outfile1)

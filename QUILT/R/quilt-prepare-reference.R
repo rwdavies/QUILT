@@ -266,7 +266,11 @@ QUILT_prepare_reference <- function(
 
         ## potentially remove sites from consideration
         if (region_exclude_file != "") {
-            pos_to_use <- remove_sites_from_pos_to_use(region_exclude_file, pos_to_use) 
+            pos_to_use <- remove_sites_from_pos_to_use(
+                region_exclude_file = region_exclude_file,
+                pos_to_use = pos_to_use,
+                chr = chr
+            )
         }
 
         ## (optional) make fake vcf with sites list

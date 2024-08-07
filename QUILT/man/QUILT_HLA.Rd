@@ -23,7 +23,8 @@ QUILT_HLA(
   chr = "chr6",
   quilt_buffer = 5e+05,
   quilt_bqFilter = 10,
-  summary_best_alleles_threshold = 0.99
+  summary_best_alleles_threshold = 0.99,
+  downsampleToCov = 30
 )
 }
 \arguments{
@@ -62,6 +63,8 @@ QUILT_HLA(
 \item{quilt_bqFilter}{For QUILT Gibbs sampling, do not consider sequence information if the base quality is below this threshold}
 
 \item{summary_best_alleles_threshold}{When reporting results, give results until posterior probability exceeds this value}
+
+\item{downsampleToCov}{For imputing states specifically using QUILT, what coverage to downsample individual sites to. This ensures no floating point errors at sites with really high coverage. This is not used in the direct read mapping}
 }
 \value{
 Results in properly formatted version
