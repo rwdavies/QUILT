@@ -13,9 +13,9 @@ export PATH=${PATH}:`pwd`/
 # only bother if library files not presen
 # Curl seems always installed?
 http_stem="https://github.com/samtools/samtools/releases/download/"
-samv=1.10
-bcftoolsv=1.12
-htslibv=1.10
+samv=1.18
+bcftoolsv=1.18
+htslibv=1.18
 mkdir -p dependencies
 
 get_url () {
@@ -45,6 +45,7 @@ then
     cd samtools-${samv}
     ./configure
     make all
+    make install || true
     cd ../../
     ## add soft link
     dir=`pwd`
@@ -62,6 +63,7 @@ then
     tar -xvf bcftools-${bcftoolsv}.tar
     cd bcftools-${bcftoolsv}
     make all
+    make install || true
     cd ../../
     ## add soft link
     dir=`pwd`
@@ -81,6 +83,7 @@ then
     cd htslib-${htslibv}
     ./configure
     make all
+    make install || true
     cd ../../
     ## add soft link
     dir=`pwd`

@@ -25,23 +25,23 @@ jobs:
 
       - uses: r-lib/actions/setup-r@v2
         with:
-          r-version: '4.2.2' # TODO: test latest version 
           use-public-rspm: true
 
       - name: Install dependencies
-        run:  export DEV_STITCH="TRUE" && ./scripts/install-dependencies.sh
+        run:  export MAKE="make -j6" && sudo bash ./scripts/install-dependencies.sh
 
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          working-directory: ./QUILT
+          args: 'c("--no-manual", "--as-cran")'
+          error-on: '"error"'
+          upload-snapshots: true
+          
       - name: Test the build
         run: ./scripts/build-and-install.R
         
       - name: Test README
         run: ./scripts/test-readme.sh
-
-      - name: Unit tests
-        run: ./scripts/test-unit.sh
-
-      - name: Acceptance tests
-        run: ./scripts/test-acceptance.sh
 
       - name: Test the CLI
         run: ./scripts/test-cli.R

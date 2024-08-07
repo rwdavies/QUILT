@@ -11,7 +11,7 @@ Installation: To install, first install dependencies, then run the
         install.packages command, pointing to the downloaded tarball
         (QUILT.tar.gz)
 Getting started: Please see github README.
-Depends: STITCH (>= 1.7.0), mspbwt (>= 0.1.0), data.table
+Depends: R (>= 3.6.0), Rcpp (<= 1.0.12), STITCH (>= 1.7.0), mspbwt (>= 0.1.0), data.table
 Remotes: github::rwdavies/STITCH/STITCH,github::rwdavies/mspbwt/mspbwt
 Imports: Rcpp
 LinkingTo: Rcpp, RcppArmadillo,RcppEigen

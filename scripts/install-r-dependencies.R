@@ -1,6 +1,9 @@
 #!/usr/bin/env Rscript
 
-required_packages <- c("proftools", "Rcpp", "RcppArmadillo", "optparse", "devtools", "testthat", "roxygen2", "data.table", "RcppEigen", "microbenchmark")
+### latest Rcpp 1.0.13 is not working
+install.packages("https://cran.r-project.org/src/contrib/Archive/Rcpp/Rcpp_1.0.12.tar.gz", repos=NULL, type="source")
+
+required_packages <- c("proftools", "RcppArmadillo", "optparse", "devtools", "testthat", "roxygen2", "data.table", "RcppEigen", "microbenchmark")
 for(package in required_packages) {
     if (!suppressPackageStartupMessages(require(package, character.only = TRUE))) {
         out <- install.packages(package, repos="http://cran.rstudio.com/")
