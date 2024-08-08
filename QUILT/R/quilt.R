@@ -379,12 +379,15 @@ QUILT <- function(
 
     
     if(hla_run) {
-        use_eMatDH_special_symbols <- FALSE
-        use_hapMatcherR <- FALSE
-        hapMatcherR <- array(as.raw(0), c(nrow(hapMatcher), 1))
-        eMatDH_special_matrix_helper <- matrix(as.integer(1), 1, 1) ## nuke!
-        eMatDH_special_matrix <- matrix(as.integer(1), 1, 1) ## nuke!
-        message("nuke variables for HLA RUN")
+        ## if these don't exist, set them
+        if (!exists("use_hapMatcherR")) {
+            use_eMatDH_special_symbols <- FALSE
+            use_hapMatcherR <- FALSE
+            hapMatcherR <- array(as.raw(0), c(nrow(hapMatcher), 1))
+            eMatDH_special_matrix_helper <- matrix(as.integer(1), 1, 1) ## nuke!
+            eMatDH_special_matrix <- matrix(as.integer(1), 1, 1) ## nuke!
+            message("nuke variables for HLA RUN")
+        }
     } 
     
     if (use_mspbwt) {
