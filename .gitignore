@@ -5,6 +5,7 @@ test-results/
 samtools
 bgzip
 bcftools
+releases
 *.o
 *.so
 .Rhistory
