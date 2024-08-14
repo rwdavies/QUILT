@@ -195,7 +195,7 @@ QUILT <- function(
         sample_is_diploid <- FALSE
     }
 
-    
+
     ## turn this off for now
     ## plot_p1 Plot first haplotype read sampling probabilities
     plot_p1 = FALSE
@@ -363,7 +363,7 @@ QUILT <- function(
             mspbwt_nindices = mspbwt_nindices,
             use_list_of_columns_of_A = use_list_of_columns_of_A
         )
-        print_message("Done processing reference information")        
+        print_message("Done processing reference information")
     }
 
 
@@ -374,22 +374,27 @@ QUILT <- function(
     new_regionEnd <- regionEnd
     new_buffer <- buffer
 
+    ## load reference data
+    ## but do complicated check of whether use_hapMatcherR exists for backwards compatibility
+    use_hapMatcherR_ori <- use_hapMatcherR
+    rm(use_hapMatcherR)
     load(prepared_reference_filename)
+    exists_use_hapMatcherR_in_prepared_reference_filename <- exists("use_hapMatcherR")
+    use_hapMatcherR <- use_hapMatcherR_ori
     L_grid <- as.integer(L_grid)
 
-    
     if(hla_run) {
-        ## if these don't exist, set them
-        if (!exists("use_hapMatcherR")) {
+        ## if these don't exist (in the prepared_reference_filename)
+        if (!exists_use_hapMatcherR_in_prepared_reference_filename) {
             use_eMatDH_special_symbols <- FALSE
             use_hapMatcherR <- FALSE
             hapMatcherR <- array(as.raw(0), c(nrow(hapMatcher), 1))
             eMatDH_special_matrix_helper <- matrix(as.integer(1), 1, 1) ## nuke!
             eMatDH_special_matrix <- matrix(as.integer(1), 1, 1) ## nuke!
-            message("nuke variables for HLA RUN")
+            print_message("nuke variables for HLA RUN")
         }
-    } 
-    
+    }
+
     if (use_mspbwt) {
         if (is.null(ms_indices)) {
             stop("To use mspbwt and QUILT, you must prepare the reference package using use_mspbwt=TRUE")
@@ -480,7 +485,7 @@ QUILT <- function(
         phaseX <- get_and_validate_phase(
             phasefile,
             method = method
-        ) 
+        )
         ##
         ## shrink (if regionStart and regionEnd are NA)
         ##
@@ -611,13 +616,13 @@ QUILT <- function(
         n2 <- nrow(pos_all)
         print_message(paste0("There are ", n1, " common SNPs and ", n2, " SNPs overall in this region"))
     }
-    
+
     out <- get_transMatRate_tc_H_and_smooth_cm(
         sigmaCurrent_m = sigmaCurrent_m,
         L_grid = L_grid,
         shuffle_bin_radius = shuffle_bin_radius
     )
-    
+
 
     ##
     ## here initialize where to start and stop getting reads from
@@ -638,13 +643,13 @@ QUILT <- function(
 
     ##
     ## defined for all SNPs here
-    ## 
+    ##
     out <- get_transMatRate_tc_H_and_smooth_cm(sigmaCurrent_m, L_grid, shuffle_bin_radius)
     smooth_cm <- out[["smooth_cm"]]
     small_transMatRate_tc_H <- out[["small_transMatRate_tc_H"]]
     full_transMatRate_t_H <- out[["full_transMatRate_t_H"]]
 
-    
+
     ##
     ## special objects on all SNPs
     ##
@@ -669,7 +674,7 @@ QUILT <- function(
         special_rare_common_objects <- list()
         nSNPs_all <- nrow(pos)
     }
-    
+
 
     ##
     ## mclapply the runs!
@@ -687,7 +692,7 @@ QUILT <- function(
         alleleCount <- array(0, c(nSNPs_all, 2))
 
         K <- nrow(hapMatcher)
-        
+
         if ((use_mspbwt) && (phasefile == "") && (genfile == "" )) {
             full_alphaHat_t <- array(0, c(1, 1))
         } else {
@@ -697,7 +702,7 @@ QUILT <- function(
         full_betaHat_t <- array(0, c(1, 1))
         if (make_plots) {
             ## could also change this one
-            full_gamma_t <- array(0, c(K, nGrids))            
+            full_gamma_t <- array(0, c(K, nGrids))
         } else {
             full_gamma_t <- array(0, c(1, 1))
         }
@@ -706,13 +711,13 @@ QUILT <- function(
         ww <- seq(1, nGrids, length.out = max(1, round(heuristic_match_thin * nGrids)))
         full_gammaSmall_cols_to_get <- array(-1, nGrids)
         full_gammaSmall_cols_to_get[ww] <- 0:(length(ww) - 1)
-        ## can't remember exactly when I need it. keep off if no plots, and not using full heuristic 
+        ## can't remember exactly when I need it. keep off if no plots, and not using full heuristic
         if (!(use_mspbwt) | make_heuristic_plot | have_truth_haplotypes) {
             full_gammaSmall_t <-  array(0, c(K, length(ww)))
         } else {
             full_gammaSmall_t <-  array(0, c(1, 1))
         }
-        
+
         ## hmm, OK
         S <- 1
         alphaHat_t1 <- array(0, c(Ksubset, nGrids))
@@ -756,7 +761,7 @@ QUILT <- function(
             K <- nrow(hapMatcher)
             nFullGrids <- ceiling(nrow(pos_all) / 32)
             nFullSNPs <- nrow(pos_all)
-                
+
             if (make_plots) {
                 complete_full_gamma_t <- array(0, c(K, nFullGrids))
             } else {
@@ -929,7 +934,7 @@ QUILT <- function(
                 use_eigen = use_eigen,
                 pos_all = pos_all,
                 special_rare_common_objects = special_rare_common_objects,
-                special_rare_common_objects_per_core = special_rare_common_objects_per_core,                
+                special_rare_common_objects_per_core = special_rare_common_objects_per_core,
                 impute_rare_common = impute_rare_common,
                 make_heuristic_plot = make_heuristic_plot,
                 heuristic_approach = heuristic_approach,
@@ -988,7 +993,7 @@ QUILT <- function(
         pos <- pos_all
     }
 
-    
+
     ##
     ## make and write output file
     ##
@@ -1005,7 +1010,7 @@ QUILT <- function(
         addOptimalHapsToVCF = addOptimalHapsToVCF,
         output_gt_phased_genotypes = output_gt_phased_genotypes,
         method = method
-    )   
+    )
 
 
     ##
