@@ -2983,12 +2983,15 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                         //
                         gibbs_block_output_local = Rcpp::List();
                         if (return_gibbs_block_output & return_advanced_gibbs_block_output) {
-                            // be super greedy with saving, but who cares, this is not normally run
                             // Rcpp::clone
                             for(iGrid = 0; iGrid < nGrids; iGrid++) {
                                 gamma1_t.col(iGrid) = (alphaHat_t1.col(iGrid) % betaHat_t1.col(iGrid)) * (1 / c1(iGrid));
                                 gamma2_t.col(iGrid) = (alphaHat_t2.col(iGrid) % betaHat_t2.col(iGrid)) * (1 / c2(iGrid));
-                                gamma3_t.col(iGrid) = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * (1 / c3(iGrid));
+                            }
+                            if (!sample_is_diploid) {
+                                for(iGrid = 0; iGrid < nGrids; iGrid++) {
+                                    gamma3_t.col(iGrid) = (alphaHat_t3.col(iGrid) % betaHat_t3.col(iGrid)) * (1 / c3(iGrid));
+                                }
                             }
                             gibbs_block_output_local.push_back(gamma1_t, "before_gamma1_t");
                             gibbs_block_output_local.push_back(gamma2_t, "before_gamma2_t");
