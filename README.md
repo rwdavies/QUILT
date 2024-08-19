@@ -1,9 +1,13 @@
-QUILT2
+QUILT2: genotype calling from low coverage reads
 =====
+<!-- badges: start -->
+![Build Status](https://github.com/rwdavies/QUILT/workflows/CI/badge.svg)
+[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/r-quilt/README.html)
+![](https://anaconda.org/bioconda/r-quilt/badges/version.svg)
+<!-- badges: end -->
+
 **__Current Version: 2.0.0__**
 ***Prerelease*** date: July 06, 2024
-
-![Build Status](https://github.com/rwdavies/QUILT/workflows/CI/badge.svg)
 
 We are excited to release QUILT2, a major upgrade over QUILT (QUILT1). For details of past changes to QUILT2 and QUILT1, please see the [CHANGELOG](CHANGELOG.md).
 
