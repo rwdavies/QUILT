@@ -3,11 +3,10 @@ QUILT2: genotype calling from low coverage reads
 <!-- badges: start -->
 ![Build Status](https://github.com/rwdavies/QUILT/workflows/CI/badge.svg)
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/r-quilt/README.html)
-![](https://anaconda.org/bioconda/r-quilt/badges/version.svg)
+![version](https://anaconda.org/bioconda/r-quilt/badges/version.svg)
 <!-- badges: end -->
 
-**__Current Version: 2.0.0__**
-***Prerelease*** date: July 06, 2024
+**__Current Version: 2.0.0__**. Release date: July 06, 2024
 
 We are excited to release QUILT2, a major upgrade over QUILT (QUILT1). For details of past changes to QUILT2 and QUILT1, please see the [CHANGELOG](CHANGELOG.md).
 
@@ -25,6 +24,7 @@ Please use this README for general information about QUILT2. For more informatio
 7. [Citation](#paragraph-citation)
 8. [Testing](#paragraph-testing)
 9. [Bug reports](#paragraph-bugreports)
+10. [Contacts](#paragraph-contacts)
 
 
 ## Introduction <a name="paragraph-introduction"></a>
@@ -33,8 +33,13 @@ QUILT2 is a fast and memory-efficient method for imputation from low coverage se
 
 ## Installation <a name="paragraph-installation"></a>
 
-QUILT2 is available to download and install through this Github repository.
-QUILT2 depends on [STITCH>=1.7.0](https://github.com/rwdavies/STITCH) and [mspbwt>=0.1.0](https://github.com/rwdavies/mspbwt).
+QUILT2 is available on bioconda which can be installed by 
+
+```
+conda create -c bioconda -n quilt2 'r-quilt>=2.0.0'
+```
+
+Also, QUILT2 is available to download and install through this GitHub repository, which depends on [STITCH>=1.7.0](https://github.com/rwdavies/STITCH) and [mspbwt>=0.1.0](https://github.com/rwdavies/mspbwt).
 
 ```
 git clone --recursive https://github.com/rwdavies/QUILT.git
@@ -102,6 +107,8 @@ Tests in QUILT2 are split into unit or acceptance run using ```./scripts/test-un
 ## Bug reports <a name="paragraph-bugreports"></a>
 
 The best way to get help is to submit a bug report on GitHub in the [Issues](https://github.com/rwdavies/QUILT/issues) section. Please also use the Issues section if you have a more general question, such issues will be left open for others to see. Similarly, please check the issues before posting to see if your issue has already been addressed
+
+## Contacts <a name="paragraph-contacts"></a>
 
 For more detailed questions or other concerns please contact Robert Davies robertwilliamdavies@gmail.com and Zilong Li zilong.dk@gmail.com
  
