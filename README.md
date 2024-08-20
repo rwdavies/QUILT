@@ -36,7 +36,7 @@ QUILT2 is a fast and memory-efficient method for imputation from low coverage se
 QUILT2 is available on bioconda which can be installed by 
 
 ```
-conda create -c bioconda -n quilt2 'r-quilt>=2.0.0'
+conda create -c conda-forge -c defaults -c bioconda -n quilt2 'r-quilt>=2.0.0'
 ```
 
 Also, QUILT2 is available to download and install through this GitHub repository, which depends on [STITCH>=1.7.0](https://github.com/rwdavies/STITCH) and [mspbwt>=0.1.0](https://github.com/rwdavies/mspbwt).
