@@ -270,8 +270,8 @@ make_and_write_quilt_nipt_header <- function(
         gt_annot,
         '##FORMAT=<ID=MGP,Number=3,Type=Float,Description="Maternal Posterior genotype probability of 0/0, 0/1, and 1/1">\n',
         '##FORMAT=<ID=MDS,Number=1,Type=Float,Description="Maternal Diploid dosage">\n',
-        '##FORMAT=<ID=FGP,Number=3,Type=Float,Description="Maternal Posterior genotype probability of 0/0, 0/1, and 1/1">\n',
-        '##FORMAT=<ID=FDS,Number=1,Type=Float,Description="Maternal Diploid dosage">\n'
+        '##FORMAT=<ID=FGP,Number=3,Type=Float,Description="Fetal Posterior genotype probability of 0/0, 0/1, and 1/1">\n',
+        '##FORMAT=<ID=FDS,Number=1,Type=Float,Description="Fetal Diploid dosage">\n'
     )
     header2 <- paste("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", paste(sampleNames, collapse = "\t", sep="\t"), sep="\t")
     cat(header, header2, "\n", sep="", file = output_vcf_header_file)

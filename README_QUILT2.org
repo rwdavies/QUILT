@@ -13,6 +13,9 @@ This is the detailed guideline of QUILT2. Also, check out the nifty [[https://gi
 - [[#perform-nipt-imputation][Perform NIPT imputation]]
   - [[#output-of-nipt-imputation][Output of NIPT imputation]]
   - [[#ligate-the-results-1][Ligate the results]]
+- [[#nipt-gwas][NIPT GWAS]]
+  - [[#gemma-bimbam-format][GEMMA BIMBAM format]]
+  - [[#plink2-format][PLINK2 format]]
 - [[#evaluation-and-visualization][Evaluation and visualization]]
 
 * Split the genome into chunks
@@ -151,8 +154,8 @@ First of all, the VCF header gives explanation on the FORMAT fields.
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Phased genotypes in order of maternal transmitted, maternal untransmitted, and fetal transmitted">
 ##FORMAT=<ID=MGP,Number=3,Type=Float,Description="Maternal Posterior genotype probability of 0/0, 0/1, and 1/1">
 ##FORMAT=<ID=MDS,Number=1,Type=Float,Description="Maternal Diploid dosage">
-##FORMAT=<ID=FGP,Number=3,Type=Float,Description="Maternal Posterior genotype probability of 0/0, 0/1, and 1/1">
-##FORMAT=<ID=FDS,Number=1,Type=Float,Description="Maternal Diploid dosage">
+##FORMAT=<ID=FGP,Number=3,Type=Float,Description="Fetal Posterior genotype probability of 0/0, 0/1, and 1/1">
+##FORMAT=<ID=FDS,Number=1,Type=Float,Description="Fetal Diploid dosage">
 #+end_src
 
 The per-sample genotype information includes the following entries:
@@ -186,6 +189,62 @@ want to have proper ligated phased genotypes across the chunks for both
 mother and fetus, we need to create two separate VCF for mother and fetus
 with phased genotypes in each chunk. Then we can perform ligation normally
 as for the diploid output above.
+
+* NIPT GWAS
+
+QUILT2 outputs both maternal and fetal dosage in a single VCF, which may be
+not the standard that one used for GWAS. Here is a simple guide on how to
+perform GWAS on NIPT imputation results.
+
+** GEMMA BIMBAM format
+
+- extract maternal genotype dosages
+#+begin_src shell
+bcftools query -f '%CHROM:%POS, %REF, %ALT[, %MDS]\n' $niptvcf \
+         | gzip -c > mat.bimbam.gz
+#+end_src
+
+- extract fetal genotype dosages
+#+begin_src shell
+bcftools query -f '%CHROM:%POS, %REF, %ALT[, %FDS]\n' $niptvcf \
+         | gzip -c > fet.bimbam.gz
+#+end_src
+
+- perform lmm model
+#+begin_src shell
+gemma -lmm 3 \
+      -notsnp \  ## not SNP filtering
+      -g $genfile \  ## mat.bimbam.gz or fet.bibam.gz
+      -p $phenofile \  ## phenotype file 
+      -c $covfile \   ## covariance file
+      -k $grmfile \   ## GRM file generated via gemma -gk 1
+      -outdir $outdir \  ## output dir 
+      -n $i   ## which column in the phenotype file to be analysed
+      -o output$i  ## output prefix  
+#+end_src
+
+** PLINK2 format
+
+- extract maternal genotype dosages
+#+begin_src shell
+plink2 --vcf $niptvcf dosage=MDS --make-pgen --out mat.plink2
+#+end_src
+
+- extract fetal genotype dosages
+#+begin_src shell
+plink2 --vcf $niptvcf dosage=FDS --make-pgen --out fet.plink2
+#+end_src
+
+- perform glm model
+#+begin_src shell
+plink2 --pfile fet.plink2 \  ## fetal or maternal dosages in pgen format
+       --pheno $phenofile \  ## phenotype file
+       --pheno-name $pheno \  ## which phenotype to be analysed
+       --covar $covfile \    ## covariance file
+       --covar-name age sex PC1-PC10 \  ## which covariants used
+       --glm hide-covar \   ## glm model and disable output covar
+       --out $output 
+#+end_src
 
 * Evaluation and visualization
 
