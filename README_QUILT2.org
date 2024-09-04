@@ -194,7 +194,7 @@ with phased genotypes in each chunk using the [[https://github.com/Zilong-Li/vcf
 vcf_nipt -i  quilt2_output/quilt2.nipt.chr20.chunk0.vcf.gz -o chunk0
 #+end_src
 
-Then we can perform ligation normally as above for the diploid genomes (see [[*Ligate diploid genome]]).
+Then we can perform ligation normally as above for [[#ligate-diploid-genome][the diploid genome]].
 
 * NIPT GWAS
 
