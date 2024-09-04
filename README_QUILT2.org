@@ -9,10 +9,10 @@ This is the detailed guideline of QUILT2. Also, check out the nifty [[https://gi
 - [[#perform-diploid-imputation][Perform diploid imputation]]
   - [[#important-parameters-that-influence-run-time-and-accuracy][Important parameters that influence run time and accuracy]]
   - [[#output-of-diploid-imputation][Output of diploid imputation]]
-  - [[#ligate-the-results][Ligate the results]]
+  - [[#ligate-diploid-genome][Ligate diploid genome]]
 - [[#perform-nipt-imputation][Perform NIPT imputation]]
   - [[#output-of-nipt-imputation][Output of NIPT imputation]]
-  - [[#ligate-the-results-1][Ligate the results]]
+  - [[#ligate-nipt-results][Ligate NIPT results]]
 - [[#nipt-gwas][NIPT GWAS]]
   - [[#gemma-bimbam-format][GEMMA BIMBAM format]]
   - [[#plink2-format][PLINK2 format]]
@@ -106,7 +106,7 @@ These parameters are most likely to influence run time and accuracy
 - DS (*Diploid dosage)* Posterior expectation of the diploid genotype i.e. the expected number of copies of the alternate allele
 - HD (*Haploid dosages)* Per-haplotype posterior probability of an alternate allele
 
-** Ligate the results
+** Ligate diploid genome
 
 If one runs QUILT2 with chunks determined above by =quilt_chunk_map=, which
 will create overlapping region for successive chunks, then the ligation of
@@ -166,7 +166,7 @@ The per-sample genotype information includes the following entries:
 - FGP (*Fetal genotype posteriors*). Fetal posterior probabilities of the three genotypes given the data and fetal fraction.
 - FDS (*Fetal genotype dosage*). Maternal posterior expectation of the diploid genotype i.e. the expected number of copies of the alternate allele
   
-** Ligate the results
+** Ligate NIPT results
 
 Here we have two genomes that forms four haplotypes, while the QUILT2-nipt
 only outputs 3 haplotypes in =GT=. If one does not care about the phased
@@ -184,11 +184,17 @@ bcftools concat \
     --output quilt2.nipt.chr20.concat.vcf.gz
 #+end_src
 
-Note the above will result in meaningless phased GT across chunks. If we
+*Note*: the above will result in meaningless phased GT across chunks. If we
 want to have proper ligated phased genotypes across the chunks for both
 mother and fetus, we need to create two separate VCF for mother and fetus
-with phased genotypes in each chunk. Then we can perform ligation normally
-as for the diploid output above.
+with phased genotypes in each chunk using the [[https://github.com/Zilong-Li/vcfpp/blob/main/tools/vcf_nipt.cpp][vcf_nipt]] utility.
+
+#+begin_src shell
+## outputs two VCFs: chunk0.mat.vcf.gz and chunk0.fet.vcf.gz
+vcf_nipt -i  quilt2_output/quilt2.nipt.chr20.chunk0.vcf.gz -o chunk0
+#+end_src
+
+Then we can perform ligation normally as above for the diploid genomes (see [[*Ligate diploid genome]]).
 
 * NIPT GWAS
 
@@ -216,7 +222,7 @@ gemma -lmm 3 \
       -notsnp \  ## not SNP filtering
       -g $genfile \  ## mat.bimbam.gz or fet.bibam.gz
       -p $phenofile \  ## phenotype file 
-      -c $covfile \   ## covariance file
+      -c $covfile \   ## covariant file
       -k $grmfile \   ## GRM file generated via gemma -gk 1
       -outdir $outdir \  ## output dir 
       -n $i   ## which column in the phenotype file to be analysed
@@ -240,7 +246,7 @@ plink2 --vcf $niptvcf dosage=FDS --make-pgen --out fet.plink2
 plink2 --pfile fet.plink2 \  ## fetal or maternal dosages in pgen format
        --pheno $phenofile \  ## phenotype file
        --pheno-name $pheno \  ## which phenotype to be analysed
-       --covar $covfile \    ## covariance file
+       --covar $covfile \    ## covariant file
        --covar-name age sex PC1-PC10 \  ## which covariants used
        --glm hide-covar \   ## glm model and disable output covar
        --out $output 
