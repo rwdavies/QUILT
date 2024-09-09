@@ -308,7 +308,8 @@ get_and_impute_one_sample <- function(
     grid_has_read <- rep(FALSE, nGrids)
     grid_has_read[wif0 + 1] <- TRUE
     
-    final_read_labels_prob <- as.list(1:2) ## 1: read label; 2: probability
+    final_read_labels_prob <- as.list(1:3) ## 1: read name; 2: probability; 3:best hap
+    if(output_read_label_prob) final_read_labels_prob[[1]] <- sampleReadsInfo[, "qname"]
 
     nReads <- length(sampleReads)
     super_out_hap_dosages <- as.list(1:nGibbsSamples)
@@ -1192,7 +1193,7 @@ get_and_impute_one_sample <- function(
                 read_labels <- out_best_labels$read_labels
             }
             if (output_read_label_prob) {
-                final_read_labels_prob[[1]] <- read_labels
+                final_read_labels_prob[[3]] <- read_labels
             }
         }
 
