@@ -1,3 +1,5 @@
+## -*- ess-indent-offset: 4; -*-
+
 #' @title QUILT
 #' @param outputdir What output directory to use
 #' @param chr What chromosome to run. Should match BAM headers
@@ -37,6 +39,7 @@
 #' @param verbose whether to be more verbose when running
 #' @param shuffle_bin_radius Parameter that controls how to detect ancestral haplotypes that are shuffled during EM for possible re-setting. If set (not NULL), then recombination rate is calculated around pairs of SNPs in window of twice this value, and those that exceed what should be the maximum (defined by nGen and maxRate) are checked for whether they are shuffled
 #' @param iSizeUpperLimit Do not use reads with an insert size of more than this value
+#' @param output_read_label_prob Whether to output read labels after the final Gibbs samplings (i.e. whether reads were assigned to arbitrary labelled haplotype 1 or 2 and the probability)
 #' @param record_read_label_usage Whether to store what read labels were used during the Gibbs samplings (i.e. whether reads were assigned to arbitrary labelled haplotype 1 or 2)
 #' @param record_interim_dosages Whether to record interim dosages or not
 #' @param use_bx_tag Whether to try and use BX tag in same to indicate that reads come from the same underlying molecule
@@ -128,6 +131,7 @@ QUILT <- function(
     verbose = TRUE,
     shuffle_bin_radius = 5000,
     iSizeUpperLimit = 1e6,
+    output_read_label_prob = FALSE,
     record_read_label_usage = FALSE,
     record_interim_dosages = FALSE,
     use_bx_tag = TRUE,
@@ -880,6 +884,7 @@ QUILT <- function(
                 have_truth_haplotypes = have_truth_haplotypes,
                 have_truth_genotypes = have_truth_genotypes,
                 bqFilter = bqFilter,
+                output_read_label_prob = output_read_label_prob,
                 record_read_label_usage = record_read_label_usage,
                 sampleNames = sampleNames,
                 smooth_cm = smooth_cm,
@@ -1012,11 +1017,23 @@ QUILT <- function(
         method = method
     )
 
+    if(output_read_label_prob) {
+        final_set_of_results <- as.list(1:N)
+        c <- 1
+        for(i in 1:length(complete_set_of_results)) {
+            x <- complete_set_of_results[[i]]
+            for(j in 1:length(x[["results_across_samples"]])) {
+                final_set_of_results[[c]] <- x[["results_across_samples"]][[j]]
+                c <- c + 1
+            }
+        }
+
+    }
 
     ##
     ## build a singular set of results
     ##
-    if (!is.null(RData_objects_to_save)) {
+    if (!is.null(RData_objects_to_save) | output_read_label_prob) {
 
         print_message("Begin saving extra RData objects to disk")
 
@@ -1030,6 +1047,9 @@ QUILT <- function(
             }
         }
 
+        final_read_labels_prob <- lapply(final_set_of_results, "[[", "final_read_labels_prob")
+        save(final_read_labels_prob, file = output_RData_filename)
+        
         ## these are properly in the VCF
         ## still could be exported
         ## imputed_dosages <- array(NA, c(nrow(pos), length(final_set_of_results)))
@@ -1037,19 +1057,20 @@ QUILT <- function(
         ##     imputed_dosages[, i] <- final_set_of_results[[i]]$dosage
         ## }
 
-        for(object in RData_objects_to_save) {
-            if (!exists(object)) {
-                stop(paste0("You have asked to save object:", object, " as part of RData_objects_to_save but this is not a valid option"))
+        if (!is.null(RData_objects_to_save)) {
+            for(object in RData_objects_to_save) {
+                if (!exists(object)) {
+                    stop(paste0("You have asked to save object:", object, " as part of RData_objects_to_save but this is not a valid option"))
+                }
             }
-        }
-        save_text <- paste0(
-            "save(",
-            paste0(RData_objects_to_save, collapse = ", "),
-            ", file = output_RData_filename)"
-        )
-        eval(parse(text = save_text))
+            save_text <- paste0(
+                "save(",
+                paste0(RData_objects_to_save, collapse = ", "),
+                ", file = output_RData_filename)"
+            )
+            eval(parse(text = save_text))
+        } 
         print_message("Done saving extra RData objects to disk")
-
     }
 
     print_message("Done QUILT")

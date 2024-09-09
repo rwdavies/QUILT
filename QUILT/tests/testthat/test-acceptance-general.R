@@ -53,6 +53,7 @@ test_that("QUILT can impute a few samples in a standard way, using a small panel
     regionStart <- 11
     regionEnd <- 40
     buffer <- 5
+    genetic_map_file <- ""
 
     for(genetic_map_file in c("", refpack$reference_genetic_map_file)) {
         
@@ -79,6 +80,7 @@ test_that("QUILT can impute a few samples in a standard way, using a small panel
             regionEnd = regionEnd,
             buffer = buffer,
             bamlist = data_package$bamlist,
+            output_read_label_prob = TRUE,
             posfile = data_package$posfile
         )
         

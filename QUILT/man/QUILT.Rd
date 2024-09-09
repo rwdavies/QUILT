@@ -42,6 +42,7 @@ QUILT(
   verbose = TRUE,
   shuffle_bin_radius = 5000,
   iSizeUpperLimit = 1e+06,
+  output_read_label_prob = FALSE,
   record_read_label_usage = FALSE,
   record_interim_dosages = FALSE,
   use_bx_tag = TRUE,
@@ -167,6 +168,8 @@ QUILT(
 \item{shuffle_bin_radius}{Parameter that controls how to detect ancestral haplotypes that are shuffled during EM for possible re-setting. If set (not NULL), then recombination rate is calculated around pairs of SNPs in window of twice this value, and those that exceed what should be the maximum (defined by nGen and maxRate) are checked for whether they are shuffled}
 
 \item{iSizeUpperLimit}{Do not use reads with an insert size of more than this value}
+
+\item{output_read_label_prob}{Whether to output read labels after the final Gibbs samplings (i.e. whether reads were assigned to arbitrary labelled haplotype 1 or 2 and the probability)}
 
 \item{record_read_label_usage}{Whether to store what read labels were used during the Gibbs samplings (i.e. whether reads were assigned to arbitrary labelled haplotype 1 or 2)}
 

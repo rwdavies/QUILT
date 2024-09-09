@@ -1,12 +1,13 @@
 Package: QUILT
 Type: Package
 Title: QUILT
-Version: 2.0.0
-Date: 2024-07-05
-Author: Robert William Davies
-Maintainer: Robert William Davies <robertwilliamdavies@gmail.com>
-Description: QUILT performs imputation of individuals sequenced to low coverage
-    in a read aware fashion with a large reference panel.
+Version: 2.0.1
+Date: 2024-09-09
+Authors@R: c(
+    person("Robert", "Davies", , "robertwilliamdavies@gmail.com", role = c("aut", "cre")),
+    person("Zilong", "Li", , "zilong.dk@gmail.com", role = c("aut"))
+           )
+Description: QUILT2 is an R and C++ program for fast genotype calling from sequencing reads using a large reference panel. QUILT2 is accurate and versatile, able to handle imputation from short read, long read, ancient DNA and cell-free DNA from NIPT.
 Installation: To install, first install dependencies, then run the
         install.packages command, pointing to the downloaded tarball
         (QUILT.tar.gz)
@@ -14,8 +15,7 @@ Getting started: Please see github README.
 Depends: R (>= 3.6.0), Rcpp (<= 1.0.12), STITCH (>= 1.7.0), mspbwt (>= 0.1.0), data.table
 Remotes: github::rwdavies/STITCH/STITCH,github::rwdavies/mspbwt/mspbwt
 Imports: Rcpp
-LinkingTo: Rcpp, RcppArmadillo,RcppEigen
-Packaged: 2020-07-24 12:00:00 UTC; rdavies
+LinkingTo: Rcpp, RcppArmadillo, RcppEigen
 RoxygenNote: 7.3.2
 License: GPL | file LICENSE
 SystemRequirements: C++11
