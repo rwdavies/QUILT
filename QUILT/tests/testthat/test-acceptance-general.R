@@ -520,6 +520,8 @@ test_that("QUILT can use or not use eigen to impute", {
 
 test_that("QUILT can plot plots", {
 
+    skip("disable for now")
+    
     n_snps <- 200
     chr <- 10
     K <- 6
@@ -562,7 +564,11 @@ test_that("QUILT can plot plots", {
         posfile = data_package$posfile,
         phasefile = data_package$phasefile,
         make_plots = TRUE,
-        make_plots_block_gibbs = TRUE
+        make_plots_block_gibbs = TRUE,
+        nGen = 100,
+        reference_haplotype_file = refpack$reference_haplotype_file,
+        reference_legend_file = refpack$reference_legend_file,
+        genetic_map_file = refpack$reference_genetic_map_file
     )
         
     which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)

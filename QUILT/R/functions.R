@@ -1467,7 +1467,6 @@ get_and_impute_one_sample <- function(
 
     if (hla_run) {
         ## print_message("More HLA SIMON code")
-        to_return[["gamma1"]] <- gamma1        
         to_return[["gamma1"]] <- gamma1
         to_return[["gamma2"]] <- gamma2
         to_return[["gamma_total"]] <- gamma_total
