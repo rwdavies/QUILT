@@ -110,9 +110,13 @@ plot_single_gamma_dosage <- function(
     r2s <- NULL
     for(i_which in 1:n) {
         par(mar = c(0, 0, 3, 0))
+        ##print(names(fbsoL))
+        ##print(lapply(fbsoL, dim))
         if (i_which == 1) { gammaK_t <- fbsoL$gammaMT_t }
         if (i_which == 2) { gammaK_t <- fbsoL$gammaMU_t }
         if (i_which == 3) { gammaK_t <- fbsoL$gammaP_t }
+        ##print(gammaK_t[1:4, 1:4])
+        ##print(sum(gammaK_t))
         ## } else if (method == "triploid-nipt") {
         ##     if (i_which == 1) { gammaK_t <- fbsoL$list_of_gammas[[1]]$gammaKMT_t }
         ##     if (i_which == 2) { gammaK_t <- fbsoL$list_of_gammas[[1]]$gammaKMU_t }

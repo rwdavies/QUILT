@@ -2107,7 +2107,7 @@ plot_attempt_to_reblock_snps <- function(
             y[y > ylim[2]] <- ylim[2]
         } else {
             ylim <- c(0, 1)
-            y <- rep(0.5, length(x))
+            y <- rep(0.5, length(x) - 1)
         }
         par(mar = c(0, 0, 3, 0))
         main <- c("Location of shuffles to check (block)", "Location of shuffles to check (shard)")[i_block_type]

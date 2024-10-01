@@ -208,8 +208,12 @@ QUILT_HLA <- function(
         seed = quilt_seed,
         hla_run = TRUE,
         verbose = FALSE,
-        downsampleToCov = downsampleToCov
+        downsampleToCov = downsampleToCov,
+        make_plots = TRUE,
+        make_plots_block_gibbs = TRUE
     )
+    message("REMOVE ME LATER")
+    system(paste0("rsync -av ", file.path(tempdir(), "plots"), " ~/"))
     load(outfile1)
     unlink(outfile1)
     ## will return final_set_of_results
@@ -250,7 +254,7 @@ QUILT_HLA <- function(
 
     ## save everything to a giant RData file
     save(
-        all_results,
+        all_results, final_set_of_results,
         file = final_output_RData_file
     )
 

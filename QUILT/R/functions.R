@@ -1246,13 +1246,16 @@ get_and_impute_one_sample <- function(
             } else {
                 iGrid <- grid[which.min(abs(L - gamma_physically_closest_to))] + 1
             }
+            ##gamma1_full <- gamma1
+            ##gamma2_full <- gamma2
             gamma1 <- gamma1[, iGrid]
             gamma2 <- gamma2[, iGrid]
             if (!phasing_it) {
                 gamma_total <- gamma_total + gamma1 + gamma2
             }
             if (i_gibbs_sample <= nGibbsSamples) {
-                list_of_gammas[[i_gibbs_sample]] <- list(gamma1, gamma2)
+                ## message("remove extra full matrices later on")
+                list_of_gammas[[i_gibbs_sample]] <- list(gamma1, gamma2) ## , gamma1_full, gamma2_full)
             }
         }
 
@@ -1464,6 +1467,7 @@ get_and_impute_one_sample <- function(
 
     if (hla_run) {
         ## print_message("More HLA SIMON code")
+        to_return[["gamma1"]] <- gamma1        
         to_return[["gamma1"]] <- gamma1
         to_return[["gamma2"]] <- gamma2
         to_return[["gamma_total"]] <- gamma_total
@@ -2387,6 +2391,7 @@ impute_one_sample <- function(
 
 
     ## file <- paste0("/well/davies/users/dcc832/werAwerBwerC.", i_it, ".", nSNPs, ".RData")
+    ## file <- "~/temp.wer.123.RData"
     ## print(paste0("saving to ", file))
     ## save(
     ## eMatDH_special_matrix_helper,
@@ -2487,11 +2492,11 @@ impute_one_sample <- function(
     ## disable_read_category_usage,
     ## compress = FALSE,
     ## file = file)
-    ## ## stop("WER")
-    ## ## print("SAVING")
-    ## ## if (exit_after) {
-    ## ## stop("WER")
-    ## ## }
+    ## stop("WER")
+    ## print("SAVING")
+    ## if (exit_after) {
+    ## stop("WER")
+    ## }
 
     ##
     K <- length(which_haps_to_use)
@@ -2529,12 +2534,20 @@ impute_one_sample <- function(
     } else {
         do_shard_block_gibbs <- FALSE
     }
+
+    ## we need this if we want plots
+    return_gamma <- as.logical(return_gamma | make_plots)
+
+    ## disable this as we need to store it
+    if (return_gamma) {
+        calculate_gamma_on_the_fly <- FALSE
+    }
     
     param_list <- list(
         return_alpha = FALSE,
         return_extra = return_extra,
         return_genProbs = return_genProbs,
-        return_gamma = as.logical(return_gamma | make_plots),
+        return_gamma = return_gamma,
         return_hapProbs = as.logical(return_hapProbs | make_plots),
         return_p_store = return_p_store,
         return_p1 = return_p1,
@@ -2575,6 +2588,7 @@ impute_one_sample <- function(
         skip_read_iteration <- rep(TRUE, n_gibbs_full_its)
         skip_read_iteration[small_ref_panel_equally_likely_reads_update_iterations] <- FALSE
     }
+    
     while(!done_imputing) {
 
         out <- rcpp_forwardBackwardGibbsNIPT(
@@ -2686,6 +2700,7 @@ impute_one_sample <- function(
     out$dosage <- dosage
     ##
     if (make_plots) {
+
         plot_single_gamma_dosage(
             sampleReads = sampleReads,
             fbsoL = out,

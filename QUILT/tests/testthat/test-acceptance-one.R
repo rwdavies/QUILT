@@ -88,7 +88,6 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
             RData_objects_to_save = "final_set_of_results",
             addOptimalHapsToVCF = FALSE,
             make_plots = FALSE,
-            make_plots_block_gibbs = FALSE,
             use_eigen = TRUE
         )
 

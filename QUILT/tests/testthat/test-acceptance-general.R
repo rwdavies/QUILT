@@ -513,3 +513,61 @@ test_that("QUILT can use or not use eigen to impute", {
 })
 
 
+
+
+
+
+
+test_that("QUILT can plot plots", {
+
+    n_snps <- 200
+    chr <- 10
+    K <- 6
+    set.seed(919)
+    phasemaster <- array(sample(c(0, 1), n_snps * K, replace = TRUE), c(n_snps, K))
+    reads_span_n_snps <- 3
+    n_samples <- 3
+    ## want about 4X here
+    n_reads <- round(4 * n_snps / reads_span_n_snps)
+    data_package <- STITCH::make_acceptance_test_data_package(
+                                reads_span_n_snps = reads_span_n_snps,
+                                n_samples = n_samples,
+                                n_snps = n_snps,
+                                n_reads = n_reads,
+                                seed = 2,
+                                chr = chr,
+                                K = K,
+                                phasemaster = phasemaster
+                            )
+    refpack <- STITCH::make_reference_package(
+                           n_snps = n_snps,
+                           n_samples_per_pop = 50,
+                           reference_populations = c("CEU", "GBR"),
+                           chr = chr,
+                           phasemaster = phasemaster
+                       )
+
+    outputdir <- STITCH::make_unique_tempdir()
+    regionStart <- 11
+    regionEnd <- 180
+    buffer <- 5
+
+    QUILT(
+        outputdir = outputdir,
+        chr = data_package$chr,
+        regionStart = regionStart,
+        regionEnd = regionEnd,
+        buffer = buffer,
+        bamlist = data_package$bamlist,
+        posfile = data_package$posfile,
+        phasefile = data_package$phasefile,
+        make_plots = TRUE,
+        make_plots_block_gibbs = TRUE
+    )
+        
+    which_snps <- (regionStart <= data_package$L) & (data_package$L <= regionEnd)
+
+    ## if it doesn't crash I'm happy!
+    expect_equal(1, 1)
+
+})
