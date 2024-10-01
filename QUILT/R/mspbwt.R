@@ -383,14 +383,27 @@ select_new_haps_mspbwt_v3 <- function(
         return(new_haps)
     } else if (length(unique_haps) <= Knew)  {
         ##
-        ## so in this faster version
-        ## oversample all we could possibly want. then take the new ones, plus some needed new ones
+        ## here take the identified haps
+        ## then among those not chosen, take enough to proceed
         ##
-        new_haps <- unique(c(
+        new_haps <- c(
             unique_haps,
-            sample(Kfull, length(unique_haps) + Knew, replace = FALSE)
-        ))[1:Knew]
+            sample(
+                setdiff(1:Kfull, unique_haps),   ## haps not yet used
+                Knew - length(unique_haps) ,  ## number we want
+                replace = FALSE
+            )
+        )
         return(new_haps)
+        ## ##
+        ## ## so in this faster version
+        ## ## oversample all we could possibly want. then take the new ones, plus some needed new ones
+        ## ##
+        ## new_haps <- unique(c(
+        ##     unique_haps,
+        ##     sample(Kfull, length(unique_haps) + Knew, replace = FALSE)
+        ## ))[1:Knew]
+        ## return(new_haps)
     } else {
         ##
         ## heuristically, prioritize based on length and new-ness
