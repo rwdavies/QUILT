@@ -225,6 +225,12 @@ option_list <- list(
         default = 1e6
     ), 
     make_option(
+        "--output_read_label_prob",
+        type = "logical",
+        help = "Whether to output read labels after the final Gibbs samplings (i.e. whether reads were assigned to arbitrary labelled haplotype 1 or 2 and the probability) [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
         "--record_read_label_usage",
         type = "logical",
         help = "Whether to store what read labels were used during the Gibbs samplings (i.e. whether reads were assigned to arbitrary labelled haplotype 1 or 2) [default FALSE] ",
@@ -560,6 +566,7 @@ QUILT(
     verbose = opt$verbose,
     shuffle_bin_radius = opt$shuffle_bin_radius,
     iSizeUpperLimit = opt$iSizeUpperLimit,
+    output_read_label_prob = opt$output_read_label_prob,
     record_read_label_usage = opt$record_read_label_usage,
     record_interim_dosages = opt$record_interim_dosages,
     use_bx_tag = opt$use_bx_tag,

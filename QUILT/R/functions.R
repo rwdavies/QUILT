@@ -1,3 +1,5 @@
+## -*- ess-indent-offset: 4; -*-
+
 get_and_impute_one_sample <- function(
     rhb_t,
     outputdir,
@@ -54,6 +56,7 @@ get_and_impute_one_sample <- function(
     have_truth_haplotypes,
     have_truth_genotypes, 
     bqFilter,
+    output_read_label_prob,
     record_read_label_usage,
     sampleNames,
     smooth_cm,
@@ -304,6 +307,9 @@ get_and_impute_one_sample <- function(
     wif0 <- as.integer(sapply(sampleReads, function(x) x[[2]]))
     grid_has_read <- rep(FALSE, nGrids)
     grid_has_read[wif0 + 1] <- TRUE
+    
+    final_read_labels_prob <- as.list(1:3) ## 1: read name; 2: probability; 3:best hap
+    if(output_read_label_prob) final_read_labels_prob[[1]] <- sampleReadsInfo[, "qname"]
 
     nReads <- length(sampleReads)
     super_out_hap_dosages <- as.list(1:nGibbsSamples)
@@ -1131,7 +1137,7 @@ get_and_impute_one_sample <- function(
         if (!phasing_it) {
             ## for phasing bit
             read_label_matrix_all[, i_gibbs_sample] <- read_labels
-            read_label_matrix_conf[, i_gibbs_sample] <- assess_ability_of_reads_to_be_confident(
+            assess_reads_out <- assess_ability_of_reads_to_be_confident(
                 hap1 = hap1,
                 hap2 = hap2,
                 hap3 = hap3,
@@ -1141,11 +1147,15 @@ get_and_impute_one_sample <- function(
                 minmp = 0.95,
                 method = method
             )
+            read_label_matrix_conf[, i_gibbs_sample] <- assess_reads_out[[1]] ## index
             if (record_read_label_usage) {
                 super_out_read_labels[[i_gibbs_sample]] <- read_label_matrix
             }
             if (record_interim_dosages) {
                 super_out_dosage_matrix[[i_gibbs_sample]] <- dosage_matrix
+            }
+            if(output_read_label_prob) {
+                final_read_labels_prob[[2]] <- assess_reads_out[[2]] ## confident prob
             }
         }
 
@@ -1181,6 +1191,9 @@ get_and_impute_one_sample <- function(
                     can_hap = can_hap
                 )
                 read_labels <- out_best_labels$read_labels
+            }
+            if (output_read_label_prob) {
+                final_read_labels_prob[[3]] <- read_labels
             }
         }
 
@@ -1452,7 +1465,8 @@ get_and_impute_one_sample <- function(
         per_sample_vcf_col = per_sample_vcf_col,
         super_out_hap_dosages = super_out_hap_dosages,
         super_out_read_labels = super_out_read_labels,
-        super_out_dosage_matrix = super_out_dosage_matrix
+        super_out_dosage_matrix = super_out_dosage_matrix,
+        final_read_labels_prob = final_read_labels_prob
     )
 
     ## phasing_read_labels = phasing_read_labels,
@@ -1615,13 +1629,13 @@ assess_ability_of_reads_to_be_confident <- function(
         p1 <- p[1, ]
         p2 <- p[2, ]
         ## maxmimum
-        mp <- p1
-        mp[p2 > p1] <- p2[p2 > p1]
+        ## mp <- p1
+        ## mp[p2 > p1] <- p2[p2 > p1]
         ## ratio
-        rp <- p1 / (p1 + p2)
-        rp[is.na(rp)] <- 0.5 ## if BOTH 0 i.e. suuuper unlikely 
-        rp[rp < 0.5] <- 1 - rp[rp < 0.5]
-        conf <- (rp > minrp)  ## & (mp >
+        mp <- p1 / (p1 + p2)
+        mp[is.na(mp)] <- 0.5 ## if BOTH 0 i.e. suuuper unlikely 
+        mp[mp < 0.5] <- 1 - mp[mp < 0.5]
+        conf <- (mp > minrp) 
     } else {
         d <- colSums(p)
         p1 <- p[1, ] / d
@@ -1633,9 +1647,9 @@ assess_ability_of_reads_to_be_confident <- function(
         mp[p3 > mp] <- p3[p3 > mp]
         ## look for largest ratio
         mp[is.na(mp)] <- 1/3
-        conf <- (mp > minrp)  ## & (mp >
+        conf <- (mp > minrp) 
     }
-    return(conf)
+    return(list(conf, mp))
 }
 
 
