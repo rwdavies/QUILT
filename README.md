@@ -6,7 +6,7 @@ QUILT2: genotype calling from low coverage reads
 ![version](https://anaconda.org/bioconda/r-quilt/badges/version.svg)
 <!-- badges: end -->
 
-**__Current Version: 2.0.0__**. Release date: July 06, 2024
+**__Current Version: 2.0.1__**. Release date: Nov 05, 2024
 
 We are excited to release QUILT2, a major upgrade over QUILT (QUILT1). For details of past changes to QUILT2 and QUILT1, please see the [CHANGELOG](CHANGELOG.md).
 

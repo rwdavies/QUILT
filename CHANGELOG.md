@@ -1,3 +1,5 @@
+* v2.0.1
+    * new option `--output_read_label_prob`
 * v2.0.0
 	* Major version update
 	* Includes msPBWT method of haplotype selection
