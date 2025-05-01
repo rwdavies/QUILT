@@ -127,6 +127,7 @@ get_and_impute_one_sample <- function(
     
     if (impute_rare_common) {
 
+        ## TODO: useSoftClippedBases = TRUE,
         loadBamAndConvert(
             iBam = iSample,
             L = pos_all[, 2],

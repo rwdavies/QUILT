@@ -311,7 +311,7 @@ select_new_haps_mspbwt_v3 <- function(
                 
                 ## I think this is right
                 colnames(mtm) <- c("start0", "index0", "len1")
-                mtm <- cbind(mtm[, "index0"], mtm[, "start0"] + 1, mtm[, "start0"] + mtm[, "len1"], mtm[, "len1"])
+                mtm <- as.matrix(cbind(mtm[, "index0"], mtm[, "start0"] + 1, mtm[, "start0"] + mtm[, "len1"], mtm[, "len1"]))
                 colnames(mtm) <- c("index0", "start1", "end1", "len1")
                 
             } else {
@@ -342,8 +342,11 @@ select_new_haps_mspbwt_v3 <- function(
             ## change to 1-based
             mtm[, "index0"] <- mtm[, "index0"] + 1
             colnames(mtm)[colnames(mtm) == "index0"] <- "index1"
+          if(nrow(mtm) == 0) return(NULL)
+          if(nrow(mtm)>1) {
             ## order so the same index and start comes first, with longest first
             mtm <- mtm[order(mtm[, 1], -mtm[, "end1"], -mtm[, "start1"]), ]            
+
             x <- c(FALSE, diff(mtm[, "index1"]) == 0 & diff(mtm[, "start1"]) == 0)
             ## y <- !duplicated(paste0(mtm[, "index1"], "-", mtm[, "start1"]))
 
@@ -351,12 +354,11 @@ select_new_haps_mspbwt_v3 <- function(
             ##save(mtm, x, file = "~/temp.RData")
             mtm <- mtm[!x, ]
             ##print("out-A")
-            
-            ## 
+          }
             key <- nGrids * mtm[, "start1"] + mtm[, "end1"]
             length <- mtm[, "len1"]
             mtm <- cbind(mtm, key, n = iIndex) ## , length)
-            mtm
+            return(mtm)
         })
         mtm <- mtms[[1]]
         if (length(mtms) > 1) {
