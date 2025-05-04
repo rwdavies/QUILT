@@ -26,8 +26,8 @@ check:
 	Rscript -e 'devtools::check("QUILT")'
 
 check2: build
-	# Rscript -e 'rcmdcheck::rcmdcheck("$(PKGNAME)_$(PKGVERS).tar.gz", args="--as-cran")'
-	R CMD check $(PKGNAME)_$(PKGVERS).tar.gz
+	Rscript -e 'rcmdcheck::rcmdcheck("$(PKGNAME)_$(PKGVERS).tar.gz", args="--as-cran")'
+	#R CMD check $(PKGNAME)_$(PKGVERS).tar.gz
 
 clean:
 	$(RM) -r $(PKGNAME).Rcheck/

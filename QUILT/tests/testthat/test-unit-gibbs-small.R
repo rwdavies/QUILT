@@ -651,10 +651,9 @@ test_that("profile using HRC data", {
             library("testthat")
             expect_equal(f1(), f2())
 
-            library("microbenchmark")
             ## can be slower (on tall data, HRC sized)
             ## so can be faster (on wide data)
-            print(microbenchmark(f1(), f2(), times = 2))
+            print(microbenchmark::microbenchmark(f1(), f2(), times = 2))
             ## so def slower. hmm
 
         }
@@ -781,10 +780,9 @@ class(hapMatcher) <- "integer"
     expect_equal(f1(), f2(), tol = 1e-5)
 
 
-    library("microbenchmark")
     ## can be slower (on tall data, HRC sized)
     ## so can be faster (on wide data)
-    print(microbenchmark(f1(), f2(), times = 2))
+    print(microbenchmark::microbenchmark(f1(), f2(), times = 2))
     ## so DEF slower, much. hmm
 
 
