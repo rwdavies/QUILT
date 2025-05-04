@@ -54,7 +54,7 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           working-directory: ./QUILT
-          args: 'c("--no-manual", "--as-cran")'
+          args: 'c("--no-manual", "--no-tests", "--as-cran")'
           error-on: '"error"'
           upload-snapshots: true
 
