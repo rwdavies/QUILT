@@ -3,7 +3,7 @@
 set -e
 script_dir=`dirname "$0"`
 cd "${script_dir}"/../
-./scripts/install-r-dependencies.R
+# ./scripts/install-r-dependencies.R
 
 export PATH=${PATH}:`pwd`/
 
@@ -45,7 +45,7 @@ then
     cd samtools-${samv}
     ./configure
     make all
-    make install || true
+    make install
     cd ../../
     ## add soft link
     dir=`pwd`
@@ -63,7 +63,7 @@ then
     tar -xvf bcftools-${bcftoolsv}.tar
     cd bcftools-${bcftoolsv}
     make all
-    make install || true
+    make install
     cd ../../
     ## add soft link
     dir=`pwd`
@@ -83,7 +83,7 @@ then
     cd htslib-${htslibv}
     ./configure
     make all
-    make install || true
+    make install
     cd ../../
     ## add soft link
     dir=`pwd`

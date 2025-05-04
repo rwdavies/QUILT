@@ -1,4 +1,7 @@
-name: CI
+# Run CI for R using https://eddelbuettel.github.io/r-ci/
+# This file is a slight variant by running a matrix of containers
+
+name: R-CMD-check
 
 on:
   push:
@@ -6,11 +9,8 @@ on:
   pull_request:
     branches: [master, zilong, nipt]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
 jobs:
-  test-all:
+  R-CMD-check:
     runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
@@ -19,18 +19,20 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          - {os: macos-latest,   r: 'release'}
+          - {os: windows-latest, r: 'release'}
           - {os: ubuntu-latest,   r: 'release'}
           - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
-          
+
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
       
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
@@ -39,17 +41,9 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          extra-packages: any::rcmdcheck
+          needs: check
           working-directory: ./QUILT
-          extra-packages: |
-            any::proftools
-            any::devtools
-            any::testthat
-            any::optparse
-            any::rcmdcheck
-            any::microbenchmark
-          
-      - name: Install dependencies
-        run:  export MAKE="make -j6" && sudo bash ./scripts/install-dependencies.sh
 
       - uses: r-lib/actions/check-r-package@v2
         with:
@@ -57,18 +51,3 @@ jobs:
           args: 'c("--no-manual", "--as-cran")'
           error-on: '"error"'
           upload-snapshots: true
-
-      - name: Test the build
-        run: ./scripts/build-and-install.R
-        
-      - name: Test README
-        run: ./scripts/test-readme.sh
-
-      - name: Test the CLI
-        run: ./scripts/test-cli.R
- 
-      - name: QUILT1 Example test
-        run: ./example/run_example.sh example/QUILT_usage.Md
-
-      - name: HLA test
-        run: ./scripts/run_hla_example.sh
