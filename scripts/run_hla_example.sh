@@ -12,6 +12,7 @@ then
 fi
 tar -xvf QUILT_HLA_example_bams_2021_12_28.tar
 
+mkdir -p quilt_output
 HLA_GENE="A"
 ./QUILT_HLA.R \
 --outputdir=quilt_output \
