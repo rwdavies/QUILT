@@ -22,4 +22,3 @@ SystemRequirements: C++17
 NeedsCompilation: yes
 Suggests: testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Config/testthat/parallel: true
