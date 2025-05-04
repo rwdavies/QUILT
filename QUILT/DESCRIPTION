@@ -12,12 +12,12 @@ Installation: To install, first install dependencies, then run the
         install.packages command, pointing to the downloaded tarball
         (QUILT.tar.gz)
 Getting started: Please see github README.
-Depends: R (>= 3.6.0), Rcpp (>= 1.0.14), STITCH (>= 1.8.0), mspbwt (>= 0.1.0), data.table
+Depends: R (>= 4.0.0), Rcpp (>= 1.0.14), STITCH (>= 1.8.0), mspbwt (>= 0.1.0), data.table
 Remotes: github::rwdavies/STITCH/STITCH,github::rwdavies/mspbwt/mspbwt
 Imports: Rcpp
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen
 RoxygenNote: 7.3.2
 License: GPL | file LICENSE
-SystemRequirements: C++11
+SystemRequirements: C++17
 NeedsCompilation: yes
 Suggests: testthat

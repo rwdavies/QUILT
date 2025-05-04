@@ -46,7 +46,6 @@ jobs:
             any::testthat
             any::optparse
             any::rcmdcheck
-            any::microbenchmark
           
       - name: Install dependencies
         run:  export MAKE="make -j6" && sudo bash ./scripts/install-dependencies.sh
@@ -54,7 +53,7 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           working-directory: ./QUILT
-          args: 'c("--no-manual", "--no-tests", "--as-cran")'
+          args: 'c("--no-manual", "--as-cran")'
           error-on: '"error"'
           upload-snapshots: true
 
