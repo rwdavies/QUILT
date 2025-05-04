@@ -82,7 +82,7 @@ test_that("QUILT can impute a few samples with NIPT, w/wo IRC, w/wo regular vs m
   regionStart <- 11
   regionEnd <- n_snps - 10
   buffer <- 5
-  nCores <- 4
+  nCores <- 1
   rare_af_threshold <- 0.01
 
   for(nipt in c(TRUE, FALSE)) {

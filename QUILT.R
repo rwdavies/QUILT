@@ -165,6 +165,12 @@ option_list <- list(
         default = as.integer(17)
     ), 
     make_option(
+        "--useSoftClippedBases",
+        type = "logical",
+        help = "Whether to use (TRUE) or not use (FALSE) bases in soft clipped portions of reads [default FALSE] ",
+        default = FALSE
+    ), 
+    make_option(
         "--panel_size",
         type = "integer",
         help = "Integer number of reference haplotypes to use, set to NA to use all of them [default NA] ",
@@ -556,6 +562,7 @@ QUILT(
     save_prepared_reference = opt$save_prepared_reference,
     tempdir = opt$tempdir,
     bqFilter = opt$bqFilter,
+    useSoftClippedBases = opt$useSoftClippedBases,
     panel_size = opt$panel_size,
     posfile = opt$posfile,
     genfile = opt$genfile,

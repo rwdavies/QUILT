@@ -32,6 +32,7 @@ QUILT(
   save_prepared_reference = FALSE,
   tempdir = NA,
   bqFilter = as.integer(17),
+  useSoftClippedBases = FALSE,
   panel_size = NA,
   posfile = "",
   genfile = "",
@@ -148,6 +149,8 @@ QUILT(
 \item{tempdir}{What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/}
 
 \item{bqFilter}{Minimum BQ for a SNP in a read. Also, the algorithm uses bq<=mq, so if mapping quality is less than this, the read isnt used}
+
+\item{useSoftClippedBases}{Whether to use (TRUE) or not use (FALSE) bases in soft clipped portions of reads}
 
 \item{panel_size}{Integer number of reference haplotypes to use, set to NA to use all of them}
 

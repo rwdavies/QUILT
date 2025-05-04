@@ -56,6 +56,7 @@ get_and_impute_one_sample <- function(
     have_truth_haplotypes,
     have_truth_genotypes, 
     bqFilter,
+    useSoftClippedBases,
     output_read_label_prob,
     record_read_label_usage,
     sampleNames,
@@ -127,7 +128,6 @@ get_and_impute_one_sample <- function(
     
     if (impute_rare_common) {
 
-        ## TODO: useSoftClippedBases = TRUE,
         loadBamAndConvert(
             iBam = iSample,
             L = pos_all[, 2],
@@ -136,6 +136,7 @@ get_and_impute_one_sample <- function(
             bam_files = bam_files,
             iSizeUpperLimit = iSizeUpperLimit,
             bqFilter = bqFilter,
+            useSoftClippedBases = useSoftClippedBases,
             chr = chr,
             N = length(sampleNames),
             downsampleToCov = downsampleToCov,
@@ -245,6 +246,7 @@ get_and_impute_one_sample <- function(
         cram_files = cram_files,
         iSizeUpperLimit = iSizeUpperLimit,
         bqFilter = bqFilter,
+        useSoftClippedBases = useSoftClippedBases,
         chr = chr,
         N = length(sampleNames),
         downsampleToCov = downsampleToCov,

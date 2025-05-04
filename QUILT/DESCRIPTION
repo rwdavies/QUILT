@@ -15,9 +15,11 @@ Getting started: Please see github README.
 Depends: R (>= 4.0.0), Rcpp (>= 1.0.14), STITCH (>= 1.8.0), mspbwt (>= 0.1.0), data.table
 Remotes: github::rwdavies/STITCH/STITCH,github::rwdavies/mspbwt/mspbwt
 Imports: Rcpp
-LinkingTo: Rcpp, RcppArmadillo, RcppEigen
+LinkingTo: Rcpp, RcppArmadillo, RcppEigen (>= 0.3.4.0.0)
 RoxygenNote: 7.3.2
 License: GPL | file LICENSE
 SystemRequirements: C++17
 NeedsCompilation: yes
-Suggests: testthat
+Suggests: testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Config/testthat/parallel: true

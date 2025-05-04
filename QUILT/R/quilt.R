@@ -28,6 +28,7 @@
 #' @param save_prepared_reference If preparing reference as part of running QUILT, whether to save the prepared reference output file. Note that if the reference was already made using QUILT_prepare_reference, this is ignored
 #' @param tempdir What directory to use as temporary directory. If set to NA, use default R tempdir. If possible, use ramdisk, like /dev/shm/
 #' @param bqFilter Minimum BQ for a SNP in a read. Also, the algorithm uses bq<=mq, so if mapping quality is less than this, the read isnt used
+#' @param useSoftClippedBases Whether to use (TRUE) or not use (FALSE) bases in soft clipped portions of reads
 #' @param panel_size Integer number of reference haplotypes to use, set to NA to use all of them
 #'
 #' @param posfile Optional, only needed when using genfile or phasefile. File with positions of where to impute, lining up one-to-one with genfile. File is tab seperated with no header, one row per SNP, with col 1 = chromosome, col 2 = physical position (sorted from smallest to largest), col 3 = reference base, col 4 = alternate base. Bases are capitalized. Example first row: 1<tab>1000<tab>A<tab>G<tab>
@@ -121,6 +122,7 @@ QUILT <- function(
     save_prepared_reference = FALSE,
     tempdir = NA,
     bqFilter = as.integer(17),
+    useSoftClippedBases = FALSE,
     panel_size = NA,
     posfile = "",
     genfile = "",
@@ -884,6 +886,7 @@ QUILT <- function(
                 have_truth_haplotypes = have_truth_haplotypes,
                 have_truth_genotypes = have_truth_genotypes,
                 bqFilter = bqFilter,
+                useSoftClippedBases = useSoftClippedBases,
                 output_read_label_prob = output_read_label_prob,
                 record_read_label_usage = record_read_label_usage,
                 sampleNames = sampleNames,

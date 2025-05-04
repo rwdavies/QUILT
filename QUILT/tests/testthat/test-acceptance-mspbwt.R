@@ -71,7 +71,7 @@ test_that("QUILT can impute a few samples in a standard way using either normal,
   i_method <- 1
   i_approach <- 1
   impute_rare_common <- FALSE
-  nCores <- 4
+  nCores <- 1
   rare_af_threshold <- 0.01
 
   for(impute_rare_common in c(TRUE, FALSE)) {
