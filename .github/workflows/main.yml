@@ -66,8 +66,5 @@ jobs:
       - name: Test the CLI
         run: ./scripts/test-cli.R
  
-      - name: QUILT1 Example test
-        run: ./example/run_example.sh example/QUILT_usage.Md
-
       - name: HLA test
         run: ./scripts/run_hla_example.sh

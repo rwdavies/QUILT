@@ -12,7 +12,7 @@ SCRIPT_TEMP_FILE="${2:-NA}"
 lines_temp_file=$(mktemp)
 grep -n "\`\`\`" ${MARKDOWN_FILE} > ${lines_temp_file}
 
-n=`wc -l ${lines_temp_file} | cut -f1 --delimiter=" "`
+n=`wc -l ${lines_temp_file} | cut -f1 -d " "`
 n=`echo $((${n} / 2))`
 
 if [ "${SCRIPT_TEMP_FILE}" == "NA" ]
@@ -26,8 +26,8 @@ for i in $(seq 1 ${n})
 do
     a1=`echo $((2*${i} - 1))`
     a2=`echo $((2*${i} - 0))`
-    b1=`head -n ${a1} ${lines_temp_file}| tail -n 1 | cut -f1 --delimiter=":"`
-    b2=`head -n ${a2} ${lines_temp_file}| tail -n 1 | cut -f1 --delimiter=":"`    
+    b1=`head -n ${a1} ${lines_temp_file}| tail -n 1 | cut -f1 -d ":"`
+    b2=`head -n ${a2} ${lines_temp_file}| tail -n 1 | cut -f1 -d ":"`    
     awk '{if((NR > '${b1}') && (NR < '${b2}')) {print $0}}' ${MARKDOWN_FILE} >> ${script_temp_file}
 done
 

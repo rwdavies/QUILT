@@ -8,7 +8,7 @@ Here we first walk through downloading some data, preparing the reference packag
 ## Downloading example data
 Here we download some example data to use. Note that the code below is just a fancy way of ensuring it should download on either mac or linux, otherwise throw an error.
 ```
-path=https://www.stats.ox.ac.uk/~rdavies/QUILT_example_2021_01_15B.tgz
+path="https://zenodo.org/records/12786681/files/QUILT2_example_2024.tar.xz"
 file=`basename ${path}`
 if [ ! -f ${file} ]
 then
