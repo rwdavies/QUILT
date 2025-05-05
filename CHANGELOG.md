@@ -1,3 +1,7 @@
+* v2.0.2
+    * support all platforms including windows
+    * fix issue #54
+    * new option `--useSoftClippedBases`
 * v2.0.1
     * new option `--output_read_label_prob`
 * v2.0.0

@@ -2,6 +2,7 @@ QUILT2: genotype calling from low coverage reads
 =====
 <!-- badges: start -->
 ![Build Status](https://github.com/rwdavies/QUILT/workflows/CI/badge.svg)
+![R-CMD-check](https://github.com/rwdavies/QUILT/actions/workflows/check-release.yaml/badge.svg)
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/r-quilt/README.html)
 ![version](https://anaconda.org/bioconda/r-quilt/badges/version.svg)
 <!-- badges: end -->
