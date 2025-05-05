@@ -33,13 +33,13 @@ First, download some prepared reference panel data. This reference panel package
 This example uses a reference panel data package with some of the reference samples excluded(e.g. NA12878). For normal use, use a panel without samples removed. See [Reference packages](#paragraph-reference-packages) for more details.
 
 ```
-wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_demonstration_3.43_2021_12_26.tar.gz ## or curl -O
+wget https://zenodo.org/records/14891167/files/QUILT_HLA_reference_package_demonstration_3.43_2021_12_26.tar.gz # or curl -O
 tar -xvfz QUILT_HLA_reference_package_demonstration_3.43_2021_12_26.tar.gz
 ```
 
 Download some example bams
 ```
-wget http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_example_bams_2021_12_28.tar
+wget https://zenodo.org/records/14891167/files/QUILT_HLA_example_bams_2021_12_28.tar
 tar -xvf QUILT_HLA_example_bams_2021_12_28.tar
 ```
 
@@ -47,6 +47,7 @@ HLA imputation for a particular region (here A) can be done as follows
 ```
 HLA_GENE="A"
 REF_DIR="quilt_hla_reference_panel_files_2021_12_26_demonstration_3.43"
+mkdir -p quilt_output
 ./QUILT_HLA.R \
 --outputdir=quilt_output \
 --bamlist=bamlist.txt \
@@ -111,12 +112,12 @@ Reference packages built
 
 Max N=5132 haplotyes built using QUILT 0.1.5, IPD-IGMT version 3.39, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129). 
 ```
-http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_2021_04_09.tar.gz
+https://zenodo.org/records/14891167/files/QUILT_HLA_reference_package_2021_04_09.tar.gz
 ```
 
 Max N=5132 haplotyes built using QUILT 1.0.3, IPD-IGMT version 3.43, 1000 Genomes Project haplotypes (20201028), and 1000 Genomes Project HLA types (20181129). 
 ```
-http://www.stats.ox.ac.uk/~rdavies/QUILT_HLA_reference_package_full_3.43_2021_12_28.tar.gz
+https://zenodo.org/records/14891167/files/QUILT_HLA_reference_package_full_3.43_2021_12_28.tar.gz
 ```
 
 

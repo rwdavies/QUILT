@@ -6,9 +6,9 @@ QUILT2: genotype calling from low coverage reads
 ![version](https://anaconda.org/bioconda/r-quilt/badges/version.svg)
 <!-- badges: end -->
 
-**__Current Version: 2.0.1__**. Release date: Nov 05, 2024
+**__Current Version: 2.0.2__**. Release date: May 05, 2025
 
-We are excited to release QUILT2, a major upgrade over QUILT (QUILT1). For details of past changes to QUILT2 and QUILT1, please see the [CHANGELOG](CHANGELOG.md).
+We are excited to release QUILT2 (version > 2.0.0), a major upgrade over QUILT1 (version < 1.0.5). **Note that both QUILT1 and QUILT2 exist in the package QUILT with version above 2.0.0, but the CLI differs, where the QUILT.R script enables QUILT1 algorithm in default while QUILT2.R enables QUILT2 algorithm.**. For details of past changes to QUILT2 and QUILT1, please see the [CHANGELOG](CHANGELOG.md).
 
 QUILT2 is an R and C++ program for fast genotype imputation from low-coverage sequence using a large reference panel. QUILT2 is accurate and versatile, able to handle imputation from ***short read, long read, ancient DNA and cell-free DNA from NIPT***.
 
@@ -33,20 +33,17 @@ QUILT2 is a fast and memory-efficient method for imputation from low coverage se
 
 ## Installation <a name="paragraph-installation"></a>
 
-QUILT2 is available on bioconda which can be installed by 
+QUILT2 is available across all platforms, which can be simply installed by
+
+```R
+## install.package("pak")
+pak::pkg_install("rwdavies/QUILT/QUILT")
+```
+
+Also, QUILT2 is available on bioconda which can be installed by 
 
 ```
 conda create -c conda-forge -c defaults -c bioconda -n quilt2 'r-quilt>=2.0.0'
-```
-
-Also, QUILT2 is available to download and install through this GitHub repository, which depends on [STITCH>=1.7.0](https://github.com/rwdavies/STITCH) and [mspbwt>=0.1.0](https://github.com/rwdavies/mspbwt).
-
-```
-git clone --recursive https://github.com/rwdavies/QUILT.git
-cd QUILT
-bash ./scripts/install-dependencies.sh ## skip this if STITCH>=1.7.0 and mspbwt>=0.1.0 installed
-wget https://github.com/rwdavies/QUILT/releases/download/2.0.0/QUILT_2.0.0.tar.gz ## or curl -OL
-R CMD INSTALL QUILT_2.0.0.tar.gz
 ```
 
 ## Quick start run <a name="paragraph-quickstartrun"></a>
