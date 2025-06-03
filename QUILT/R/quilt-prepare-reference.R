@@ -235,6 +235,8 @@ QUILT_prepare_reference <- function(
 
         ref_alleleCount <- out[["ref_alleleCount"]]
         rhb_t <- out[["rhb_t"]]
+        ## check if its empty
+        if(nrow(out[["pos"]]) == 0) stop("There are no variants in the region you are imputing. Try to make it larger!" )        
         pos <- cbind(chr, out[["pos"]]) ## make normal shape
 
 

@@ -21,7 +21,7 @@ QUILT_HLA(
   n_seek_iterations = 3,
   quilt_seed = NA,
   chr = "chr6",
-  quilt_buffer = 5e+05,
+  quilt_buffer = 500000,
   quilt_bqFilter = 10,
   summary_best_alleles_threshold = 0.99,
   downsampleToCov = 30
