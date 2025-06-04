@@ -16,7 +16,7 @@ Depends: R (>= 4.0.0)
 Remotes:
     rwdavies/STITCH/STITCH,
     rwdavies/mspbwt/mspbwt
-Imports: Rcpp, STITCH (>= 1.8.2), mspbwt (>= 0.1.0)
+Imports: Rcpp, STITCH (>= 1.8.2), mspbwt (>= 0.1.0), data.table
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen (>= 0.3.4.0.0)
 RoxygenNote: 7.3.2
 License: GPL | file LICENSE

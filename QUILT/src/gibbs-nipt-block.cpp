@@ -225,7 +225,7 @@ void rcpp_sample_H_using_H_class(
     Rcpp::IntegerVector i_temp(1);
     for(int iRead = 0; iRead < H.length(); iRead++) {
         int hc = H_class[iRead];
-        if (hc == 0 | hc == 7) {
+        if (hc == 0 || hc == 7) {
             i_temp = Rcpp::sample(one_through_three, 1, false, probs07);
         } else if (hc == 1) {
             i_temp(0) = 1;
@@ -1153,12 +1153,12 @@ void Rcpp_gibbs_block_forward_one(
     int Hl, Hori, Hc;
     const double one_over_K = 1 / double(eMatRead_t.n_rows);
     arma::colvec el, eMatRead_t_col;
-    if ((block_approach == 2) | (block_approach == 4)) {
+    if ((block_approach == 2) || (block_approach == 4)) {
         // so here, just work directly on eMatGridLocal
         if (approach2_iRead(0) <= (nReads - 1)) {        
             wif_read = wif0(approach2_iRead(0));
         }
-        while (approach2_iRead(0) <= (nReads - 1) & wif_read < iGrid) {
+        while (approach2_iRead(0) <= (nReads - 1) && wif_read < iGrid) {
             approach2_iRead(0) += 1;
             if (approach2_iRead(0) < (nReads - 1)) {
                 wif_read = wif0(approach2_iRead(0));
@@ -1166,7 +1166,7 @@ void Rcpp_gibbs_block_forward_one(
         }
     }
     if (block_approach == 2) {
-        while (approach2_iRead(0) <= (nReads - 1) & wif_read == iGrid) {
+        while (approach2_iRead(0) <= (nReads - 1) && wif_read == iGrid) {
             el = eMatRead_t.col(approach2_iRead(0));
             Hl = H(approach2_iRead(0)) - 1;
             if (read_is_uninformative(approach2_iRead(0))) {
@@ -1182,7 +1182,7 @@ void Rcpp_gibbs_block_forward_one(
         if (approach2_iRead(0) <= (nReads - 1)) {
             wif_read = wif0(approach2_iRead(0));
         }
-        while ((approach2_iRead(0) <= (nReads - 1)) & (wif_read == iGrid)) {
+        while ((approach2_iRead(0) <= (nReads - 1)) && (wif_read == iGrid)) {
             Hori = int(H(approach2_iRead(0)) - 1);
             Hc = H_class(approach2_iRead(0)); // this is its own base, 0 through 7, invariant
             eMatRead_t_col = eMatRead_t.col(approach2_iRead(0));
@@ -1195,7 +1195,7 @@ void Rcpp_gibbs_block_forward_one(
                     if (chance_prob < rlcM(0, ir, Hc - 1)) {
                         Hl = 0;
                     } else if ( \
-                        (rlcM(0, ir, Hc - 1) < chance_prob) &
+                        (rlcM(0, ir, Hc - 1) < chance_prob) &&
                         (chance_prob < (rlcM(0, ir, Hc - 1) + rlcM(1, ir, Hc - 1))) \
                     ) {
                         Hl = 1;
