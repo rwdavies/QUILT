@@ -1,6 +1,7 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 WORKDIR /docker_build/
+
 ENV MAKE="make -j4"
 
 # Install required packages
@@ -8,7 +9,7 @@ RUN apt-get update
 RUN apt-get install -y build-essential libbz2-dev libcurl4-openssl-dev libssl-dev zlib1g-dev liblzma-dev libdeflate-dev libncurses5-dev curl autoconf git
 
 ## install bcftools/samtools/bgzip/tabix
-ARG htsversion=1.18
+ARG htsversion=1.21
 RUN curl -L https://github.com/samtools/htslib/releases/download/${htsversion}/htslib-${htsversion}.tar.bz2 | tar xj && \
     (cd htslib-${htsversion} && ./configure --enable-plugins --with-plugin-path='$(libexecdir)/htslib:/usr/libexec/htslib' && make install) && \
     ldconfig && \
@@ -23,7 +24,12 @@ RUN apt-get install -y r-base r-cran-devtools
 
 ######## install QUILT2
 
-RUN git clone https://github.com/rwdavies/QUILT.git
-RUN cd QUILT && bash ./scripts/install-dependencies.sh && Rscript ./scripts/build-and-install.R && mv *.R /bin 
+###RUN git clone https://github.com/rwdavies/QUILT.git
+### clone to the local and run the following
+COPY *.R  QUILT/
+COPY ./QUILT  QUILT/QUILT/
+COPY ./scripts QUILT/scripts/
+
+RUN cd QUILT && Rscript ./scripts/install-r-dependencies.R && Rscript ./scripts/build-and-install.R && mv *.R /bin 
 
 WORKDIR /

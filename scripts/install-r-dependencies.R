@@ -2,6 +2,7 @@
 
 ### latest Rcpp 1.0.13 is not working
 install.packages("https://cran.r-project.org/src/contrib/Rcpp_1.0.14.tar.gz", repos=NULL, type="source")
+install.packages("https://cran.r-project.org/src/contrib/RcppEigen_0.3.4.0.0.tar.gz", repos=NULL, type="source")
 
 required_packages <- c("proftools", "RcppArmadillo", "optparse", "devtools", "testthat", "roxygen2", "data.table", "RcppEigen", "microbenchmark")
 for(package in required_packages) {
@@ -25,14 +26,13 @@ if (!suppressPackageStartupMessages(require("rrbgen")))
     }
 
 if (!suppressPackageStartupMessages(require("STITCH"))) {
-    check <- as.logical(Sys.getenv("DEV_STITCH")) == TRUE
     if (is.na(check)) {
         check <- FALSE
     }
     if (check) {
         install_github("rwdavies/STITCH", subdir = "STITCH", upgrade = "never")
     } else {
-        install.packages("https://github.com/rwdavies/STITCH/releases/download/1.7.3/STITCH_1.7.3.tar.gz", repos=NULL)
+        install.packages("https://github.com/rwdavies/STITCH/releases/download/1.8.2/STITCH_1.8.2.tar.gz", repos=NULL)
     }
 }
 
