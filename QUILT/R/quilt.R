@@ -1020,19 +1020,6 @@ QUILT <- function(
         method = method
     )
 
-    if(output_read_label_prob) {
-        final_set_of_results <- as.list(1:N)
-        c <- 1
-        for(i in 1:length(complete_set_of_results)) {
-            x <- complete_set_of_results[[i]]
-            for(j in 1:length(x[["results_across_samples"]])) {
-                final_set_of_results[[c]] <- x[["results_across_samples"]][[j]]
-                c <- c + 1
-            }
-        }
-
-    }
-
     ##
     ## build a singular set of results
     ##
@@ -1051,6 +1038,7 @@ QUILT <- function(
         }
 
         final_read_labels_prob <- lapply(final_set_of_results, "[[", "final_read_labels_prob")
+        names(final_read_labels_prob) <- sampleNames
         save(final_read_labels_prob, file = output_RData_filename)
         
         ## these are properly in the VCF
