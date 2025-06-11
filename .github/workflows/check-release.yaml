@@ -21,8 +21,6 @@ jobs:
         config:
           - {os: macos-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
-          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -38,6 +36,7 @@ jobs:
           use-public-rspm: true
 
       - name: Clean up temp files
+        if: runner.os != 'Windows'
         run: rm -rf /var/folders/* || true
 
       - uses: r-lib/actions/setup-r-dependencies@v2

@@ -37,26 +37,15 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
-      - name: Install dependencies
+      - name: Build and Install
         run: |
           export MAKE="make -j6"
           sudo apt-get update -y
-          sudo apt-get -qy install build-essential zlib1g zlib1g-dev libbz2-dev libdeflate-dev curl libcurl4-openssl-dev lzma-dev liblzma-dev
+          sudo apt-get install -qy build-essential libbz2-dev libcurl4-openssl-dev libssl-dev zlib1g-dev liblzma-dev libdeflate-dev libncurses5-dev curl autoconf lzma-dev 
+          sudo apt-get install -qy r-cran-devtools
           sudo bash ./scripts/install-dependencies.sh
-
-      - name: Clean up temp files
-        run: rm -rf /var/folders/* || true
-
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          working-directory: ./QUILT
-          extra-packages: |
-            any::proftools
-            any::devtools
-            any::testthat
-            any::optparse
-            any::rcmdcheck
-          cache-version: 2
+          sudo Rscript ./scripts/install-r-dependencies.R
+          sudo Rscript ./scripts/build-and-install.R
 
       - uses: r-lib/actions/check-r-package@v2
         with:
