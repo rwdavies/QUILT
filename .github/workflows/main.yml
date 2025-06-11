@@ -40,10 +40,12 @@ jobs:
       - name: Install dependencies
         run: |
           export MAKE="make -j6"
-          sudo apt-get update
+          sudo apt-get update -y
           sudo apt-get -qy install build-essential zlib1g zlib1g-dev libbz2-dev libdeflate-dev curl libcurl4-openssl-dev lzma-dev liblzma-dev
           sudo bash ./scripts/install-dependencies.sh
-          sudo ./scripts/install-r-dependencies.R
+
+      - name: Clean up temp files
+        run: rm -rf /var/folders/* || true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:

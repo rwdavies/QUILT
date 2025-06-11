@@ -37,11 +37,8 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
-      - name: Install dependencies
-        if: runner.os != 'Windows'
-        run: |
-          sudo bash ./scripts/install-dependencies.sh
-          sudo ./scripts/install-r-dependencies.R
+      - name: Clean up temp files
+        run: rm -rf /var/folders/* || true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
