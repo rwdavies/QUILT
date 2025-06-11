@@ -37,11 +37,17 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
+      - name: Install dependencies
+        run: |
+          export MAKE="make -j6"
+          sudo bash ./scripts/install-dependencies.sh
+          sudo ./scripts/install-r-dependencies.R
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
-          cache: false
+          cache-version: 2
           working-directory: ./QUILT
 
       - uses: r-lib/actions/check-r-package@v2
