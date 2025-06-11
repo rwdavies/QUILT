@@ -30,6 +30,7 @@ get_and_impute_one_sample <- function(
     small_eHapsCurrent_tc,
     bam_files,
     cram_files,
+    reference,
     L,
     pos,
     chr,
@@ -134,6 +135,8 @@ get_and_impute_one_sample <- function(
             pos = pos_all,
             nSNPs = nrow(pos_all),
             bam_files = bam_files,
+            cram_files = cram_files,
+            reference = reference,
             iSizeUpperLimit = iSizeUpperLimit,
             bqFilter = bqFilter,
             useSoftClippedBases = useSoftClippedBases,
@@ -152,10 +155,10 @@ get_and_impute_one_sample <- function(
             bxTagUpperLimit = bxTagUpperLimit,
             default_sample_no_read_behaviour = "return_null"
         )
-
         load(file_sampleReads(tempdir, iSample, regionName))
         load(file_sampleReadsInfo(tempdir, iSample, regionName))
         removeTmpSamplesFile(tempdir, iSample, regionName, save_sampleReadsInfo = TRUE)
+
         allSNP_sampleReads <- sampleReads
         allSNP_sampleReadsInfo <- sampleReadsInfo
         rm(sampleReads, sampleReadsInfo)
@@ -244,6 +247,7 @@ get_and_impute_one_sample <- function(
         nSNPs = nSNPs,
         bam_files = bam_files,
         cram_files = cram_files,
+        reference = reference,
         iSizeUpperLimit = iSizeUpperLimit,
         bqFilter = bqFilter,
         useSoftClippedBases = useSoftClippedBases,

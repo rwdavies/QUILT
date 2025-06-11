@@ -164,6 +164,4 @@ for(quilt_cli in c("QUILT.R", "QUILT_prepare_reference.R")) {
   system(paste0("chmod +x ", quilt2_cli))
 }
 
-##
-## todo, add more CLI tests
-##
+#TODO: add more CLI tests

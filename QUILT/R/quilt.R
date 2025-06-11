@@ -860,6 +860,7 @@ QUILT <- function(
                 small_eHapsCurrent_tc = small_eHapsCurrent_tc,
                 bam_files = bam_files,
                 cram_files = cram_files,
+                reference = reference,
                 L = L,
                 pos = pos,
                 chr = chr,
