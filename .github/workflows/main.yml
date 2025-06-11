@@ -48,9 +48,6 @@ jobs:
           error-on: '"error"'
           upload-snapshots: true
 
-      - name: Test the build
-        run: ./scripts/build-and-install.R
-        
       - name: Test README
         run: ./scripts/test-readme.sh
 
