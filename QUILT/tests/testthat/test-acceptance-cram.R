@@ -63,12 +63,12 @@ test_that("QUILT can impute a few samples in a standard way, using a large panel
     
     for(ref_location in c("original", "moved")) {
 
-        ref <- file.path(tempdir(), basename(data_package$ref))
-
+        ## ref <- file.path(tempdir(), basename(data_package$ref))
+        ref <- data_package$ref
         if (ref_location == "moved") {
 
             new_ref <- gsub(".fa", ".moved.fa", ref)
-            file.copy(from = ref, to = new <- ref)
+            file.copy(from = ref, to = new_ref)
             unlink(ref)
             ref <- new_ref
 
