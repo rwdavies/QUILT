@@ -38,8 +38,8 @@ jobs:
           use-public-rspm: true
 
       - name: Install dependencies
+        if: runner.os != 'Windows'
         run: |
-          export MAKE="make -j6"
           sudo bash ./scripts/install-dependencies.sh
           sudo ./scripts/install-r-dependencies.R
 

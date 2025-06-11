@@ -40,6 +40,8 @@ jobs:
       - name: Install dependencies
         run: |
           export MAKE="make -j6"
+          sudo apt-get update
+          sudo apt-get -qy install build-essential zlib1g zlib1g-dev libbz2-dev libdeflate-dev curl libcurl4-openssl-dev lzma-dev liblzma-dev
           sudo bash ./scripts/install-dependencies.sh
           sudo ./scripts/install-r-dependencies.R
 
