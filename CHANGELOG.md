@@ -1,3 +1,6 @@
+* v2.0.3
+    * fix issue #52. QUILT2 can work with CRAM
+    * improve bound checks related to issue #56 and throw proper messages
 * v2.0.2
     * support all platforms including windows
     * fix issue #54

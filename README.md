@@ -7,7 +7,7 @@ QUILT2: genotype calling from low coverage reads
 ![version](https://anaconda.org/bioconda/r-quilt/badges/version.svg)
 <!-- badges: end -->
 
-**__Current Version: 2.0.2__**. Release date: May 05, 2025
+**__Current Version: 2.0.3__**. Release date: June 12, 2025
 
 We are excited to release QUILT2 (version > 2.0.0), a major upgrade over QUILT1 (version < 1.0.5). **Note that both QUILT1 and QUILT2 exist in the package QUILT with version above 2.0.0, but the CLI differs, where the QUILT.R script enables QUILT1 algorithm in default while QUILT2.R enables QUILT2 algorithm.**. For details of past changes to QUILT2 and QUILT1, please see the [CHANGELOG](CHANGELOG.md).
 
@@ -44,7 +44,7 @@ pak::pkg_install("rwdavies/QUILT/QUILT")
 Also, QUILT2 is available on bioconda which can be installed by 
 
 ```
-conda create -c conda-forge -c defaults -c bioconda -n quilt2 'r-quilt>=2.0.0'
+conda create -c conda-forge -c defaults -c bioconda -n quilt2 'r-quilt>=2.0.2'
 ```
 
 ## Quick start run <a name="paragraph-quickstartrun"></a>
