@@ -1,8 +1,8 @@
 Package: QUILT
 Type: Package
 Title: QUILT
-Version: 2.0.3
-Date: 2025-06-11
+Version: 2.0.4
+Date: 2025-06-22
 Authors@R: c(
     person("Robert", "Davies", , "robertwilliamdavies@gmail.com", role = c("aut", "cre")),
     person("Zilong", "Li", , "zilong.dk@gmail.com", role = c("aut"))
@@ -12,7 +12,7 @@ Installation: To install, first install dependencies, then run the
         install.packages command, pointing to the downloaded tarball
         (QUILT.tar.gz)
 Getting started: Please see github README.
-Depends: R (>= 4.0.0), STITCH (>= 1.8.1), mspbwt (>= 0.1.0), data.table
+Depends: R (>= 4.0.0), STITCH (>= 1.8.2), mspbwt (>= 0.1.0), data.table
 Remotes:
     rwdavies/STITCH/STITCH,
     rwdavies/mspbwt/mspbwt
