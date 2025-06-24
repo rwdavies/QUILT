@@ -31,7 +31,7 @@ if (!suppressPackageStartupMessages(require("STITCH"))) {
     if (check) {
         install_github("rwdavies/STITCH", subdir = "STITCH", upgrade = "never")
     } else {
-        install.packages("https://github.com/rwdavies/STITCH/releases/download/1.8.2/STITCH_1.8.2.tar.gz", repos=NULL)
+        install.packages("https://github.com/rwdavies/STITCH/releases/download/1.8.4/STITCH_1.8.4.tar.gz", repos=NULL)
     }
 }
 
