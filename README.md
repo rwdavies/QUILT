@@ -34,14 +34,22 @@ QUILT2 is a fast and memory-efficient method for imputation from low coverage se
 
 ## Installation <a name="paragraph-installation"></a>
 
-QUILT2 is available across all platforms, which can be simply installed by
+QUILT as a R library is available across all platforms, which can be simply installed by
 
 ```R
 ## install.package("pak")
 pak::pkg_install("rwdavies/QUILT/QUILT")
 ```
 
-Also, QUILT2 is available on bioconda which can be installed by 
+However, to use QUILT2 in command line, you need to obtain the CLI dependencies by 
+
+```
+git clone https://github.com/rwdavies/QUILT.git
+cd QUILT
+Rscript ./scripts/install-r-dependencies.R
+```
+
+Additionally, QUILT2 is available on bioconda which can be installed by 
 
 ```
 conda create -c conda-forge -c defaults -c bioconda -n quilt2 'r-quilt>=2.0.2'
