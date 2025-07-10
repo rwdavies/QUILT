@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 ### latest Rcpp 1.0.13 is not working
-install.packages("https://cran.r-project.org/src/contrib/Rcpp_1.0.14.tar.gz", repos=NULL, type="source")
+## install.packages("https://cran.r-project.org/src/contrib/Rcpp_1.0.14.tar.gz", repos=NULL, type="source")
 
 required_packages <- c("proftools", "RcppArmadillo", "optparse", "devtools", "testthat", "roxygen2", "data.table", "RcppEigen", "microbenchmark")
 for(package in required_packages) {
