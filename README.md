@@ -38,6 +38,7 @@ First, QUILT as a R library is available across all platforms, which can be simp
 
 ```R
 install.packages("remotes")
+remotes::install_github("rwdavies/STITCH/STITCH")
 remotes::install_github("rwdavies/mspbwt/mspbwt")
 remotes::install_github("rwdavies/QUILT/QUILT")
 ## pak::pkg_install("rwdavies/QUILT/QUILT") ## if you use pak
@@ -48,7 +49,7 @@ Second, to use QUILT2 in command line, you need to obtain the CLI dependencies b
 ```
 git clone https://github.com/rwdavies/QUILT.git
 cd QUILT
-Rscript ./scripts/install-cli.R ## warnings can be ignored
+Rscript ./scripts/install-cli.R
 ```
 
 Then you can put the CLI Rscripts, e.g. QUILT2.R, in the directoy that is in your $PATH.
