@@ -9,7 +9,7 @@ QUILT2: genotype calling from low coverage reads
 
 **__Current Version: 2.0.4__**. Release date: June 12, 2025
 
-We are excited to release QUILT2 (version > 2.0.0), a major upgrade over QUILT1 (version < 1.0.5). **Note that both QUILT1 and QUILT2 exist in the package QUILT with version above 2.0.0, but the CLI differs, where the QUILT.R script enables QUILT1 algorithm in default while QUILT2.R enables QUILT2 algorithm.**. For details of past changes to QUILT2 and QUILT1, please see the [CHANGELOG](CHANGELOG.md).
+We are excited to release QUILT2 (version > 2.0.0), a major upgrade over QUILT1 (version < 1.0.5). **Note that with the package version >2.0.0, both QUILT1 and QUILT2 exist in this R package. However, the CLI differs, where the QUILT.R script enables QUILT1 algorithm in default while QUILT2.R enables QUILT2 algorithm.**. For details of past changes to QUILT2 and QUILT1, please see the [CHANGELOG](CHANGELOG.md).
 
 QUILT2 is an R and C++ program for fast genotype imputation from low-coverage sequence using a large reference panel. QUILT2 is accurate and versatile, able to handle imputation from ***short read, long read, ancient DNA and cell-free DNA from NIPT***.
 
@@ -61,7 +61,7 @@ Then you can put the CLI Rscripts, e.g. QUILT2.R, in the directoy that is in you
 Alternatively, QUILT2 is available on bioconda which can be installed by 
 
 ```
-conda create -c conda-forge -c defaults -c bioconda -n quilt2 'r-quilt>=2.0.2'
+conda create -c conda-forge -c defaults -c bioconda -n quilt2 'r-quilt>=2.0.3'
 ```
 
 ## Quick start run <a name="paragraph-quickstartrun"></a>
@@ -112,7 +112,7 @@ QUILT2, QUILT and QUILT_HLA, and the code in this repo is available under a GPL3
 
 ## Citation <a name="paragraph-citation"></a>
 
-- For QUILT2, please cite Li Z., Albrechtsen A., Davies R. W. Rapid and accurate genotype imputation from low coverage short read, long read, and cell free DNA sequence. bioRxiv. [https://doi.org/10.1101/2024.07.18.604149](https://doi.org/10.1101/2024.07.18.604149)
+- For QUILT2, please cite: Li Z., Albrechtsen A., Davies R. W. Rapid and accurate genotype imputation from low coverage short read, long read, and cell free DNA sequence. *Nature Communications in press*. [https://doi.org/10.1101/2024.07.18.604149](https://doi.org/10.1101/2024.07.18.604149)
 - For QUILT1, please cite: Davies, R. W., Kucka M., Su D., Shi S., Flanagan M., Cunniff C. M., Chan Y. F. , Myers S. Rapid genotype imputation from sequence with reference panels. *Nat. Genet.* 53, 1104–1111 (2021)
 
 ## Testing <a name="paragraph-testing"></a>
