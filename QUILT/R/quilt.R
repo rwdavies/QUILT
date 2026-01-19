@@ -333,6 +333,8 @@ QUILT <- function(
         ##     reference_haplotype_file != "" && reference_legend_file != ""
         ## )
         ## ) {
+        print_message(paste0(prepared_reference_filename, " not exist"))
+        
         if (!save_prepared_reference) {
             prepared_reference_filename <- tempfile(fileext = ".RData")
         }
