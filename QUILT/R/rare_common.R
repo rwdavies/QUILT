@@ -66,7 +66,8 @@ get_initial_read_labels <- function(
     hap2,
     hap3 = NULL,
     maxDifferenceBetweenReads,
-    ff = NULL
+    ff = NULL,
+    sample_is_triploid = FALSE
 ) {
     nReads <- length(allSNP_sampleReads)
     nhap <- 2
@@ -99,6 +100,8 @@ get_initial_read_labels <- function(
     )
     if (nhap == 2) {
         H <- as.integer(runif(nReads) < (eMatRead_t[1, ] / colSums(eMatRead_t))) + 1
+    } else if (sample_is_triploid) {
+        H <- as.integer(apply(eMatRead_t, 2, function(x) sample(1:3, 1, prob = x)))
     } else {
         out <- get_read_groupings_given_fetal_fraction_and_cov(readProbs_t = eMatRead_t, phase = NULL, iiSample = NA, ff = ff)
         H <- sample_H_for_NIPT_given_groupings(groupings = out$groupings, counts = out$counts, ff = ff)
@@ -203,7 +206,7 @@ impute_final_gibbs_with_rare_common <- function(
     rare_per_hap_info <- special_rare_common_objects[["rare_per_hap_info"]]
     nSNPs <- nrow(pos_all)
 
-    if (method == "nipt") { 
+    if (method %in% c("nipt", "triploid")) {
         H <- get_initial_read_labels(
             pos_all = pos_all,
             allSNP_sampleReads = allSNP_sampleReads,
@@ -212,7 +215,8 @@ impute_final_gibbs_with_rare_common <- function(
             hap2 = hap2,
             hap3 = hap3,
             maxDifferenceBetweenReads = maxDifferenceBetweenReads,
-            ff = ff
+            ff = ff,
+            sample_is_triploid = method == "triploid"
         )
     } else {
         H <- get_initial_read_labels(
@@ -373,7 +377,7 @@ impute_final_gibbs_with_rare_common <- function(
         regionEnd = regionEnd,
         buffer = buffer,
         use_small_eHapsCurrent_tc = FALSE, ## set this to FALSE now
-        use_sample_is_diploid = TRUE,
+        use_sample_is_diploid = method == "diploid",
         i_it = i_it,
         i_gibbs_sample = i_gibbs_sample,
         shard_check_every_pair = shard_check_every_pair,
@@ -396,7 +400,7 @@ impute_final_gibbs_with_rare_common <- function(
     hap1 <- hapProbs_t[1, ]
     hap2 <- hapProbs_t[2, ]
     hap3 <- NULL
-    if (method == "nipt") {
+    if (method %in% c("nipt", "triploid")) {
         hap3 <- hapProbs_t[3, ]
     }
 

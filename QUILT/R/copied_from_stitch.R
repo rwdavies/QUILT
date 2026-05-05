@@ -88,7 +88,7 @@ validate_phase_header <- function(phasefile) {
 
 validate_phase_col <- function(col, i_samp, method = "diploid") {
     x <- sapply(col, length)
-    n <- c( diploid = 2, nipt = 3)[method]
+    n <- c(diploid = 2, nipt = 3, triploid = 3)[method]
     if (sum(x != n) > 0) {
         m <- which.max(x)
         stop(paste0(
@@ -107,7 +107,7 @@ get_and_validate_phase <- function(
     }
     phaseX <- read.table(phasefile, header = TRUE, stringsAsFactors = FALSE)
     validate_phase_header(phasefile)
-    n <- c( diploid = 2, nipt = 3)[method]    
+    n <- c(diploid = 2, nipt = 3, triploid = 3)[method]
     phase <- array(0, c(nrow(phaseX), ncol(phaseX), n))
     for(i_samp in 1:ncol(phase)) {
         col <- strsplit(phaseX[, i_samp], "|", fixed = TRUE)

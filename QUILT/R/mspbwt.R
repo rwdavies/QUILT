@@ -442,7 +442,7 @@ select_new_haps_mspbwt_v3 <- function(
         ## pad out one of them
         x <- results[[1]]
         y <- results[[2]]
-        if (method == "nipt") {
+        if (method %in% c("nipt", "triploid")) {
             z <- results[[3]]
         } else {
             z <- NULL
@@ -450,7 +450,7 @@ select_new_haps_mspbwt_v3 <- function(
         a <- max(c(length(x), length(y), length(z)))
         x <- c(x, rep(NA, a - length(x)))
         y <- c(y, rep(NA, a - length(y)))
-        if (method == "nipt") {
+        if (method %in% c("nipt", "triploid")) {
             z <- c(z, rep(NA, a - length(z)))
         }
         if (method == "diploid") {

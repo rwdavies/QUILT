@@ -621,6 +621,16 @@ Rcpp::NumericMatrix rcpp_determine_label_probabilities(
     }
     return(prob_matrix);
 }
+
+Rcpp::NumericVector rcpp_make_three_hap_prior_probs(
+    const double ff,
+    const bool sample_is_triploid
+) {
+    if (sample_is_triploid) {
+        return Rcpp::NumericVector::create(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0);
+    }
+    return Rcpp::NumericVector::create(0.5, (1 - ff) / 2, ff / 2);
+}
     
 
 
@@ -1514,7 +1524,14 @@ Rcpp::NumericVector calculate_likelihoods_values(
     to_out(4) = dH; // p_H_given_L
     to_out(5) = to_out(3) + to_out(4); // p_O_H_given_L_up_to_C (by Bayes theorem, as P(H|O) (what we want) propto P(O|H)P(H)
     Rcpp::NumericVector rc = calculate_rc(H); // read counts
-    to_out(6) = rcpp_calc_prob_of_set_of_reads(ff, rc); // p_set_H_given_L (why is this not the same as above)
+    int n = rc(0) + rc(1) + rc(2);
+    double d_set_H = std::lgamma(1.0 * (n + 1.0));
+    for(int i = 0; i < 3; i++) {
+        if (prior_probs(i) > 0) {
+            d_set_H += rc(i) * std::log(prior_probs(i)) - std::lgamma(1.0 * (rc(i) + 1.0));
+        }
+    }
+    to_out(6) = d_set_H;
     return(to_out);
 }
 
@@ -1960,15 +1977,18 @@ void rcpp_gibbs_nipt_iterate(
 
 Rcpp::IntegerVector random_gibbs_nipt_read_labels(
     const int nReads,
-    const double ff
+    const double ff,
+    const bool sample_is_triploid = false
 ) {
     Rcpp::NumericVector x = Rcpp::runif(nReads);
     Rcpp::IntegerVector H(nReads);
+    Rcpp::NumericVector prior_probs = rcpp_make_three_hap_prior_probs(ff, sample_is_triploid);
+    Rcpp::NumericVector prior_cumsum = Rcpp::cumsum(prior_probs);
     int iRead;
     for(iRead = 0; iRead < nReads; iRead++) {
-        if (x(iRead) < 0.5) {
+        if (x(iRead) < prior_cumsum(0)) {
             H(iRead) = 1;
-        } else if ((0.5 <= x(iRead)) & (x(iRead) < (0.5 + ff / 2))) {
+        } else if (x(iRead) < prior_cumsum(1)) {
             H(iRead) = 2;
         } else {
             H(iRead) = 3;
@@ -2520,6 +2540,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     const bool use_smooth_cm_in_block_gibbs = as<bool>(param_list["use_smooth_cm_in_block_gibbs"]);
     const bool use_small_eHapsCurrent_tc = as<bool>(param_list["use_small_eHapsCurrent_tc"]);
     const bool sample_is_diploid = as<bool>(param_list["sample_is_diploid"]);        
+    const bool sample_is_triploid = param_list.containsElementNamed("sample_is_triploid") ? as<bool>(param_list["sample_is_triploid"]) : false;
     const bool update_in_place = as<bool>(param_list["update_in_place"]);
     const bool do_shard_block_gibbs = as<bool>(param_list["do_shard_block_gibbs"]);
     const bool shard_check_every_pair = as<bool>(param_list["shard_check_every_pair"]);
@@ -2560,7 +2581,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
     Rcpp::LogicalVector skip_read(1);
     skip_read.fill(false);
     //
-    const Rcpp::NumericVector prior_probs = NumericVector::create(0.5, (1 - ff) * 0.5, ff * 0.5);
+    const Rcpp::NumericVector prior_probs = rcpp_make_three_hap_prior_probs(ff, sample_is_triploid);
     //
     Rcpp::List to_return;
     Rcpp::List gibbs_block_output_list;
@@ -2859,7 +2880,7 @@ Rcpp::List rcpp_forwardBackwardGibbsNIPT(
                 list_of_starting_read_labels = as<Rcpp::List>(double_list_of_starting_read_labels(s));
                 H = Rcpp::clone(as<Rcpp::IntegerVector>(list_of_starting_read_labels(i_outer)));
             } else {
-                H = random_gibbs_nipt_read_labels(nReads, ff);
+                H = random_gibbs_nipt_read_labels(nReads, ff, sample_is_triploid);
             }
             //
             if (run_fb_subset) {

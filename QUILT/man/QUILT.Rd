@@ -100,7 +100,7 @@ QUILT(
 
 \item{chr}{What chromosome to run. Should match BAM headers}
 
-\item{method}{What method to run (diploid or nipt)}
+\item{method}{What method to run (diploid, nipt, or triploid)}
 
 \item{regionStart}{When running imputation, where to start from. The 1-based position x is kept if regionStart <= x <= regionEnd}
 

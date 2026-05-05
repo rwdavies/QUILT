@@ -3,7 +3,7 @@
 #' @title QUILT
 #' @param outputdir What output directory to use
 #' @param chr What chromosome to run. Should match BAM headers
-#' @param method What method to run (diploid or nipt)
+#' @param method What method to run (diploid, nipt, or triploid)
 #' @param regionStart When running imputation, where to start from. The 1-based position x is kept if regionStart <= x <= regionEnd
 #' @param regionEnd When running imputation, where to stop
 #' @param buffer Buffer of region to perform imputation over. So imputation is run form regionStart-buffer to regionEnd+buffer, and reported for regionStart to regionEnd, including the bases of regionStart and regionEnd
@@ -193,8 +193,11 @@ QUILT <- function(
     )
     print_message(paste0("Running ", command_line))
 
+    if (!(method %in% c("diploid", "nipt", "triploid"))) {
+        stop("method must be one of 'diploid', 'nipt', or 'triploid'")
+    }
     ## not sure about naming but use it for now
-    use_sample_is_diploid <- ifelse(method=="nipt", FALSE, TRUE)
+    use_sample_is_diploid <- ifelse(method == "diploid", TRUE, FALSE)
     if (use_sample_is_diploid) {
         sample_is_diploid <- TRUE
     }else {
@@ -734,7 +737,7 @@ QUILT <- function(
         alphaHat_t2 <- array(0, c(Ksubset, nGrids))
         betaHat_t2 <- array(0, c(Ksubset, nGrids))
         eMatGrid_t2 <- array(0, c(Ksubset, nGrids))
-        if (method == "nipt") {
+        if (method %in% c("nipt", "triploid")) {
           alphaHat_t3 <- array(0, c(Ksubset, nGrids))
           betaHat_t3 <- array(0, c(Ksubset, nGrids))
           eMatGrid_t3 <- array(0, c(Ksubset, nGrids))
@@ -956,7 +959,7 @@ QUILT <- function(
                 ## for summarization
                 infoCount[, 1] <- infoCount[, 1, drop = FALSE] + out[["eij"]]
                 infoCount[, 2] <- infoCount[, 2, drop = FALSE] + (out[["fij"]] - out[["eij"]]**2)
-                afCount <- afCount + (out[["eij"]]) / 2
+                afCount <- afCount + (out[["eij"]]) / c(diploid = 2, nipt = 2, triploid = 3)[method]
                 hweCount[out[["max_gen"]]] <- hweCount[out[["max_gen"]]] + 1 ## hmmmmm not ideal
                 alleleCount <- alleleCount + out[["per_sample_alleleCount"]]
                 ## drop now - not useful anymore

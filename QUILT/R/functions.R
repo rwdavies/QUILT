@@ -227,11 +227,14 @@ get_and_impute_one_sample <- function(
         if (method == "diploid") {
             dosage_all <- numeric(nSNPs_all)
             gp_t_all <- array(0, c(3, nSNPs_all))
-        } else {
+        } else if (method == "nipt") {
             mat_dosage_all <- numeric(nSNPs_all)
             fet_dosage_all <- numeric(nSNPs_all)            
             mat_gp_t_all <- array(0, c(3, nSNPs_all))
             fet_gp_t_all <- array(0, c(3, nSNPs_all))            
+        } else {
+            dosage_all <- numeric(nSNPs_all)
+            gp_t_all <- array(0, c(4, nSNPs_all))
         }
 
 
@@ -276,7 +279,11 @@ get_and_impute_one_sample <- function(
         ## dummy up output here?
         ## note - useful, see writers.R,
         ## FORMAT <- "GT:GP:DS:HD" ## genotypes, posteriors, dosages, haploid-dosages
-        per_sample_vcf_col <- "./.:.,.,.:.:.,."
+        if (method == "triploid") {
+            per_sample_vcf_col <- "././.:.,.,.,.:.:.,.,."
+        } else {
+            per_sample_vcf_col <- "./.:.,.,.:.:.,."
+        }
         if (addOptimalHapsToVCF & have_truth_haplotypes) {
             FORMAT <- "GT:GP:DS:HD:OHD" ## (phased) genotypes, genotype posteriors, dosages, haploid-dosages, optimal haploid-dosages
             per_sample_vcf_col <- paste0(per_sample_vcf_col, ":.,.")
@@ -299,11 +306,13 @@ get_and_impute_one_sample <- function(
 
     i_gibbs_sample <- 1
 
-    if (method == "nipt") {
+    if (method %in% c("nipt", "triploid")) {
         mat_dosage <- numeric(nSNPs)
         fet_dosage <- numeric(nSNPs)
         mat_gp_t <- array(0, c(3, nSNPs))
-        fet_gp_t <- array(0, c(3, nSNPs))        
+        fet_gp_t <- array(0, c(3, nSNPs))
+        triploid_dosage <- numeric(nSNPs)
+        triploid_gp_t <- array(0, c(4, nSNPs))
     } else {
         dosage <- numeric(nSNPs)        
         gp_t <- array(0, c(3, nSNPs))
@@ -515,7 +524,7 @@ get_and_impute_one_sample <- function(
 
                 hap1 <- truth_all[["dosage1"]]
                 hap2 <- truth_all[["dosage2"]]
-                if (method == "nipt") {
+                if (method %in% c("nipt", "triploid")) {
                     hap3 <- truth_all[["dosage3"]]
                 } else {
                     hap3 <- NULL
@@ -583,7 +592,7 @@ get_and_impute_one_sample <- function(
                         if (method == "diploid") {
                             H <- sample(c(1, 2), length(sampleReads), replace = TRUE)
                         } else {
-                            H <- sample(c(1, 2, 3), prob = c(0.5, 0.5 - ff / 2, ff / 2),length(sampleReads), replace = TRUE)
+                            H <- sample(c(1, 2, 3), prob = get_three_haplotype_prior_probs(ff, method == "triploid"), length(sampleReads), replace = TRUE)
                         }
                         return(H)
                     })
@@ -762,7 +771,7 @@ get_and_impute_one_sample <- function(
                 Kfull <- nrow(hapMatcher)
                 hap1 <- gibbs_iterate$hapProbs_t[1, ]
                 hap2 <- gibbs_iterate$hapProbs_t[2, ]
-                if (method == "nipt") {
+                if (method %in% c("nipt", "triploid")) {
                     hap3 <- gibbs_iterate$hapProbs_t[3, ]
                 }
                 
@@ -832,13 +841,13 @@ get_and_impute_one_sample <- function(
                     )
                     hap1 <- impute_all[["dosage1"]]
                     hap2 <- impute_all[["dosage2"]]
-                    if (method == "nipt") {
+                    if (method %in% c("nipt", "triploid")) {
                         hap3 <- impute_all[["dosage3"]]
                     }
                 } else {
                     hap1 <- gibbs_iterate$hapProbs_t[1, ]
                     hap2 <- gibbs_iterate$hapProbs_t[2, ]
-                    if (method == "nipt") {
+                    if (method %in% c("nipt", "triploid")) {
                         hap3 <- gibbs_iterate$hapProbs_t[3, ]
                     }
                 }
@@ -951,7 +960,7 @@ get_and_impute_one_sample <- function(
                 which_haps_to_use <- c(previously_selected_haplotypes, impute_all$new_haps)
                 hap1 <- impute_all[["dosage1"]]
                 hap2 <- impute_all[["dosage2"]]
-                if (method == "nipt") {
+                if (method %in% c("nipt", "triploid")) {
                     hap3 <- impute_all[["dosage3"]]
                 }
                 which_haps_to_use_quilt1 <- which_haps_to_use
@@ -1005,7 +1014,7 @@ get_and_impute_one_sample <- function(
                         rbind((1 - hap1) * (1 - hap2), (1 - hap1) * hap2 + hap1 * (1 - hap2), hap1 * hap2)
                     nDosage <- nDosage + 1
 
-                } else {
+                } else if (method == "nipt") {
                     
                     mat_dosage <- mat_dosage + hap1 + hap2
                     fet_dosage <- fet_dosage + hap1 + hap3
@@ -1013,6 +1022,12 @@ get_and_impute_one_sample <- function(
                         rbind((1 - hap1) * (1 - hap2), (1 - hap1) * hap2 + hap1 * (1 - hap2), hap1 * hap2)
                     fet_gp_t <- fet_gp_t + 
                         rbind((1 - hap1) * (1 - hap3), (1 - hap1) * hap3 + hap1 * (1 - hap3), hap1 * hap3)
+                    nDosage <- nDosage + 1
+
+                } else {
+
+                    triploid_dosage <- triploid_dosage + hap1 + hap2 + hap3
+                    triploid_gp_t <- triploid_gp_t + triploid_genotype_probs_from_hap_probs(rbind(hap1, hap2, hap3))
                     nDosage <- nDosage + 1
 
                 }
@@ -1093,7 +1108,7 @@ get_and_impute_one_sample <- function(
 
             hap1_all <- out_rare_common[["hap1"]]
             hap2_all <- out_rare_common[["hap2"]]
-            if (method == "nipt") {
+            if (method %in% c("nipt", "triploid")) {
                 hap3_all <- out_rare_common[["hap3"]]
             }
 
@@ -1109,7 +1124,7 @@ get_and_impute_one_sample <- function(
                     )
                     nDosage_all <- nDosage_all + 1
 
-                } else {
+                } else if (method == "nipt") {
 
                     mat_dosage_all <- mat_dosage_all + hap1_all + hap2_all
                     fet_dosage_all <- fet_dosage_all + hap1_all + hap3_all ## was typo, second was hap2_all
@@ -1117,6 +1132,12 @@ get_and_impute_one_sample <- function(
                         rbind((1 - hap1_all) * (1 - hap2_all), (1 - hap1_all) * hap2_all + hap1_all * (1 - hap2_all), hap1_all * hap2_all)
                     fet_gp_t_all <- fet_gp_t_all + 
                         rbind((1 - hap1_all) * (1 - hap3_all), (1 - hap1_all) * hap3_all + hap1_all * (1 - hap3_all), hap1_all * hap3_all)
+                    nDosage_all <- nDosage_all + 1
+
+                } else {
+
+                    dosage_all <- dosage_all + hap1_all + hap2_all + hap3_all
+                    gp_t_all <- gp_t_all + triploid_genotype_probs_from_hap_probs(rbind(hap1_all, hap2_all, hap3_all))
                     nDosage_all <- nDosage_all + 1
 
                 }
@@ -1215,7 +1236,7 @@ get_and_impute_one_sample <- function(
                     ## 
                     phasing_haps <- cbind(hap1, hap2)
                     phasing_dosage <- hap1 + hap2
-                } else {
+                } else if (method == "nipt") {
                     ## phasing_haps <- cbind(hap1, hap2, hap3)
                     out <- recast_nipt_haps(
                         hap1 = hap1,
@@ -1229,6 +1250,9 @@ get_and_impute_one_sample <- function(
                         out[["hap2"]],
                         out[["hap3"]]
                     )
+                } else {
+                    phasing_haps <- cbind(hap1, hap2, hap3)
+                    phasing_dosage <- hap1 + hap2 + hap3
                 }
             } else {
                 if (method == "diploid") {                
@@ -1238,7 +1262,7 @@ get_and_impute_one_sample <- function(
                     hap1_all <- out$hd1
                     hap2_all <- out$hd2
                     phasing_haps_all <- cbind(hap1_all, hap2_all)
-                } else {
+                } else if (method == "nipt") {
                     out <- recast_nipt_haps(
                         hap1 = hap1_all,
                         hap2 = hap2_all,
@@ -1254,6 +1278,8 @@ get_and_impute_one_sample <- function(
                         out[["hap2"]],
                         out[["hap3"]]
                     )
+                } else {
+                    phasing_haps_all <- cbind(hap1_all, hap2_all, hap3_all)
                 }
             }
         }
@@ -1309,7 +1335,7 @@ get_and_impute_one_sample <- function(
             dosage <- dosage / nDosage
             gp_t <- gp_t / nDosage
         }
-    } else {
+    } else if (method == "nipt") {
         if (impute_rare_common) {
             mat_dosage <- mat_dosage_all / nDosage_all
             fet_dosage <- fet_dosage_all / nDosage_all
@@ -1322,6 +1348,17 @@ get_and_impute_one_sample <- function(
             mat_gp_t <- mat_gp_t / nDosage
             fet_gp_t <- fet_gp_t / nDosage
         }
+    } else {
+        if (impute_rare_common) {
+            triploid_dosage <- dosage_all / nDosage_all
+            triploid_gp_t <- gp_t_all / nDosage_all
+        } else {
+            triploid_dosage <- triploid_dosage / nDosage
+            triploid_gp_t <- triploid_gp_t / nDosage
+        }
+        dosage <- triploid_dosage
+        mat_dosage <- triploid_dosage
+        fet_dosage <- triploid_dosage
     }
     if (impute_rare_common) {
         phasing_haps <- phasing_haps_all    
@@ -1339,7 +1376,7 @@ get_and_impute_one_sample <- function(
     ##
     hap1 <- phasing_haps[, 1]
     hap2 <- phasing_haps[, 2]
-    if (method == "nipt") {
+    if (method %in% c("nipt", "triploid")) {
         hap3 <- phasing_haps[, 3]
     }
     calculate_pse_and_r2_master(
@@ -1409,11 +1446,15 @@ get_and_impute_one_sample <- function(
         eij <- round(gp_t[2, ] + 2 * gp_t[3, ], 3) ## prevent weird rounding issues
         fij <- round(gp_t[2, ] + 4 * gp_t[3, ], 3) ##
         max_gen <- get_max_gen_rapid(gp_t)
-    } else {
+    } else if (method == "nipt") {
         ## argh, just do mat for now
         eij <- round(mat_gp_t[2, ] + 2 * mat_gp_t[3, ], 3) ## prevent weird rounding issues
         fij <- round(mat_gp_t[2, ] + 4 * mat_gp_t[3, ], 3) ##
         max_gen <- get_max_gen_rapid(mat_gp_t)
+    } else {
+        eij <- round(triploid_gp_t[2, ] + 2 * triploid_gp_t[3, ] + 3 * triploid_gp_t[4, ], 3)
+        fij <- round(triploid_gp_t[2, ] + 4 * triploid_gp_t[3, ] + 9 * triploid_gp_t[4, ], 3)
+        max_gen <- get_max_gen_rapid(rbind(triploid_gp_t[1, ], triploid_gp_t[2, ], triploid_gp_t[3, ] + triploid_gp_t[4, ]))
     }
     if (method == "diploid") {
         if (addOptimalHapsToVCF & have_truth_haplotypes) {
@@ -1440,7 +1481,7 @@ get_and_impute_one_sample <- function(
                     substring(per_sample_vcf_col, first = 4, last = 100L)
                 )
         }
-    } else {
+    } else if (method == "nipt") {
 
         ## do the slower in R version for now
         FORMAT <- "GT:MGP:MDS:FGP:FDS"
@@ -1458,6 +1499,21 @@ get_and_impute_one_sample <- function(
             round(fet_gp_t[2, ], 3), ",",
             round(fet_gp_t[3, ], 3), ":",
             round(fet_dosage, 3)
+        )
+    } else {
+
+        per_sample_vcf_col <- paste0(
+            round(phasing_haps[, 1]), "|",
+            round(phasing_haps[, 2]), "|",
+            round(phasing_haps[, 3]), ":",
+            round(triploid_gp_t[1, ], 3), ",",
+            round(triploid_gp_t[2, ], 3), ",",
+            round(triploid_gp_t[3, ], 3), ",",
+            round(triploid_gp_t[4, ], 3), ":",
+            round(triploid_dosage, 3), ":",
+            round(phasing_haps[, 1], 3), ",",
+            round(phasing_haps[, 2], 3), ",",
+            round(phasing_haps[, 3], 3)
         )
         
     }
@@ -1977,7 +2033,7 @@ impute_using_everything <- function(
     ##
     dosage <- numeric(nSNPs)
     nGrids <- ncol(rhb_t)
-    n <- c(diploid = 2, nipt = 3)[method]
+    n <- c(diploid = 2, nipt = 3, triploid = 3)[method]
     
     if (use_hapMatcherR) {
         K <- nrow(hapMatcherR)
@@ -2536,7 +2592,8 @@ impute_one_sample <- function(
         return_advanced_gibbs_block_output <- TRUE
     }
     ##
-    if (use_sample_is_diploid && ff == 0) {
+    sample_is_triploid <- method == "triploid"
+    if (use_sample_is_diploid && ff == 0 && !sample_is_triploid) {
         sample_is_diploid <- TRUE
     }else {
         sample_is_diploid <- FALSE
@@ -2549,10 +2606,13 @@ impute_one_sample <- function(
         pass_in_eMatRead_t <- TRUE
     }
 
-    if (ff == 0) {
+    if (ff == 0 && !sample_is_triploid) {
         do_shard_block_gibbs <- TRUE
     } else {
         do_shard_block_gibbs <- FALSE
+    }
+    if (sample_is_triploid) {
+        perform_block_gibbs <- FALSE
     }
 
     ## we need this if we want plots
@@ -2582,6 +2642,7 @@ impute_one_sample <- function(
         use_smooth_cm_in_block_gibbs = use_smooth_cm_in_block_gibbs,
         use_small_eHapsCurrent_tc = use_small_eHapsCurrent_tc,
         sample_is_diploid = sample_is_diploid,
+        sample_is_triploid = sample_is_triploid,
         update_in_place = FALSE,
         do_shard_block_gibbs = do_shard_block_gibbs,
         shard_check_every_pair = shard_check_every_pair,
@@ -2715,8 +2776,14 @@ impute_one_sample <- function(
     }
     ##
     genProbs_t <- out$genProbsM_t
-    hapProbs_t <- out$happrobs_t
-    dosage <- genProbs_t[2, ] + 2 * genProbs_t[3, ]
+    hapProbs_t <- out$hapProbs_t
+    if (method == "triploid") {
+        genProbs_t <- triploid_genotype_probs_from_hap_probs(hapProbs_t)
+        dosage <- genProbs_t[2, ] + 2 * genProbs_t[3, ] + 3 * genProbs_t[4, ]
+        out$genProbsTriploid_t <- genProbs_t
+    } else {
+        dosage <- genProbs_t[2, ] + 2 * genProbs_t[3, ]
+    }
     out$dosage <- dosage
     ##
     if (make_plots) {
@@ -2985,7 +3052,7 @@ calculate_eMatRead_t_vs_haplotypes <- function(
     method = "diploid"
 ) {
     nReads <- length(sampleReads)
-    K <- c(diploid = 2, nipt = 3)[method]
+    K <- c(diploid = 2, nipt = 3, triploid = 3)[method]
     eMatRead_t <- array(1, c(K, nReads))
     s <- 0
     ## expand whole thing - yuck - fix this later!
@@ -2993,7 +3060,7 @@ calculate_eMatRead_t_vs_haplotypes <- function(
     ehc <- array(0, c(K, nSNPs, 1))    
     ehc[1, , 1] <- hap1
     ehc[2, , 1] <- hap2
-    if (method == "nipt") {
+    if (method %in% c("nipt", "triploid")) {
         ehc[3, , 1] <- hap3        
     }
     ## shouldn't be necessary
@@ -3343,4 +3410,3 @@ quilt_chunk_map <- function(chr, genetic_map_file, min.bp = 3e6, min.cm = 4, ex.
   return(dat)
   ## write.table(dat, "chunk.txt", row.names=F, col.names = F, quote = F, sep = "\t")
 }
-

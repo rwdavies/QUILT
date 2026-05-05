@@ -62,7 +62,8 @@ forwardBackwardGibbsNIPT <- function(
     shuffle_bin_radius = NULL,
     block_gibbs_iterations = NULL,
     return_gibbs_block_output = NULL,
-    force_reset_read_category_zero = TRUE
+    force_reset_read_category_zero = TRUE,
+    sample_is_triploid = FALSE
 ) {
     if (!is.na(seed)) {
         set.seed(seed)
@@ -97,7 +98,7 @@ forwardBackwardGibbsNIPT <- function(
     }
     ##
     ## for re-weighting genProbs
-    prior_probs <- c(0.5, (1 - ff) / 2, ff / 2)
+    prior_probs <- get_three_haplotype_prior_probs(ff, sample_is_triploid)
     p <- prior_probs
     if (record_read_set) {
         ## read label classifier
@@ -195,7 +196,7 @@ forwardBackwardGibbsNIPT <- function(
         if (use_starting_read_labels) {
             H <- double_list_of_starting_read_labels[[s]][[i_outer]]
         } else {
-            H <- random_gibbs_nipt_read_labels(nReads, ff)
+            H <- random_gibbs_nipt_read_labels(nReads, ff, sample_is_triploid)
         }
         ## 
         ## initialize - yuck - should be its own function in R, but meh
@@ -249,7 +250,7 @@ forwardBackwardGibbsNIPT <- function(
         ## 
         ## iterate, and possibly save!
         ## 
-        prior_probs <- c(0.5, (1 - ff) / 2, ff / 2)
+        prior_probs <- get_three_haplotype_prior_probs(ff, sample_is_triploid)
         ##
         if (n_gibbs_full_its > 0) {
             iteration_run_list <- 1:n_gibbs_full_its
@@ -486,16 +487,37 @@ save_various_gammas <- function(
 
 
 
-random_gibbs_nipt_read_labels <- function(nReads, ff) {
+get_three_haplotype_prior_probs <- function(ff, sample_is_triploid = FALSE) {
+    if (sample_is_triploid) {
+        return(rep(1 / 3, 3))
+    }
+    c(0.5, (1 - ff) / 2, ff / 2)
+}
+
+triploid_genotype_probs_from_hap_probs <- function(hap_probs_t) {
+    h1 <- hap_probs_t[1, ]
+    h2 <- hap_probs_t[2, ]
+    h3 <- hap_probs_t[3, ]
+    rbind(
+        (1 - h1) * (1 - h2) * (1 - h3),
+        h1 * (1 - h2) * (1 - h3) + (1 - h1) * h2 * (1 - h3) + (1 - h1) * (1 - h2) * h3,
+        h1 * h2 * (1 - h3) + h1 * (1 - h2) * h3 + (1 - h1) * h2 * h3,
+        h1 * h2 * h3
+    )
+}
+
+random_gibbs_nipt_read_labels <- function(nReads, ff, sample_is_triploid = FALSE) {
     x <- runif(nReads)
     H <- array(0L, nReads)
+    p <- get_three_haplotype_prior_probs(ff, sample_is_triploid)
+    p_cumsum <- cumsum(p)
     ## mt = 0            -> 0.5
     ## mu = 0.5          -> 0.5 + ff / 2
     ## p  = 0.5 + ff / 2 -> 1
     for(iRead in 1:nReads) {
-        if (x[iRead] < 0.5) {
+        if (x[iRead] < p_cumsum[1]) {
             H[iRead] = 1
-        } else if ((0.5 <= x[iRead]) & (x[iRead] < (0.5 + ff / 2))) {
+        } else if (x[iRead] < p_cumsum[2]) {
             H[iRead] = 2
         } else {
             H[iRead] = 3
@@ -2147,4 +2169,3 @@ evaluate_read_probabilities <- function(
     }
     return(list(pA1 = pA1, pA2 = pA2))
 }
-

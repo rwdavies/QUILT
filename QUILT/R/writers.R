@@ -25,8 +25,13 @@ make_and_write_output_file <- function(
             addOptimalHapsToVCF = addOptimalHapsToVCF,
             output_gt_phased_genotypes = output_gt_phased_genotypes
         )
-    } else {
+    } else if (method == "nipt") {
         make_and_write_quilt_nipt_header(
+            output_vcf_header_file = output_unbgzipped,
+            sampleNames = sampleNames
+        )
+    } else {
+        make_and_write_quilt_triploid_header(
             output_vcf_header_file = output_unbgzipped,
             sampleNames = sampleNames
         )
@@ -47,8 +52,9 @@ make_and_write_output_file <- function(
     }
     ## finalize
     alleleCount <- cbind(alleleCount, alleleCount[, 1] / alleleCount[, 2])
-    thetaHat <- infoCount[, 1] / 2 / N
-    denom <- 2 * N * thetaHat * (1-thetaHat)
+    output_ploidy <- c(diploid = 2, nipt = 2, triploid = 3)[method]
+    thetaHat <- infoCount[, 1] / output_ploidy / N
+    denom <- output_ploidy * N * thetaHat * (1-thetaHat)
     info <- 1 - infoCount[, 2] / denom
     ## block out those where thetaHat is really close to 0 or 1
     ## when very rare
@@ -62,6 +68,8 @@ make_and_write_output_file <- function(
     ##
     if (method == "nipt") {
         FORMAT <- "GT:MGP:MDS:FGP:FDS"        
+    }  else if (method == "triploid") {
+        FORMAT <- "GT:GP:DS:HD"
     }  else {
         if (addOptimalHapsToVCF) {
             FORMAT <- "GT:GP:DS:HD:OHD" ## genotypes, posteriors, dosages, haploid-dosages, optimal haploid-dosages
@@ -272,6 +280,32 @@ make_and_write_quilt_nipt_header <- function(
         '##FORMAT=<ID=MDS,Number=1,Type=Float,Description="Maternal Diploid dosage">\n',
         '##FORMAT=<ID=FGP,Number=3,Type=Float,Description="Fetal Posterior genotype probability of 0/0, 0/1, and 1/1">\n',
         '##FORMAT=<ID=FDS,Number=1,Type=Float,Description="Fetal Diploid dosage">\n'
+    )
+    header2 <- paste("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", paste(sampleNames, collapse = "\t", sep="\t"), sep="\t")
+    cat(header, header2, "\n", sep="", file = output_vcf_header_file)
+    return(NULL)
+}
+
+make_and_write_quilt_triploid_header <- function(
+    output_vcf_header_file,
+    sampleNames
+) {
+    annot_header <- paste0(
+        '##INFO=<ID=INFO_SCORE,Number=.,Type=Float,Description="Info score from triploid genotype posteriors">\n',
+        '##INFO=<ID=EAF,Number=.,Type=Float,Description="Estimated allele frequency">\n',
+        '##INFO=<ID=HWE,Number=.,Type=Float,Description="Hardy-Weinberg p-value from projected dosages">\n',
+        '##INFO=<ID=ERC,Number=.,Type=Float,Description="Estimated number of copies of the reference allele from the pileup">\n',
+        '##INFO=<ID=EAC,Number=.,Type=Float,Description="Estimated number of copies of the alternate allele from the pileup">\n',
+        '##INFO=<ID=PAF,Number=.,Type=Float,Description="Estimated allele frequency using the pileup of reference and alternate alleles">\n'
+    )
+    gt_annot <- '##FORMAT=<ID=GT,Number=1,Type=String,Description="Phased triploid genotypes">\n'
+    header <- paste0(
+        '##fileformat=VCFv4.0\n',
+        annot_header,
+        gt_annot,
+        '##FORMAT=<ID=GP,Number=4,Type=Float,Description="Triploid posterior genotype probability of alternate allele dosage 0, 1, 2, and 3">\n',
+        '##FORMAT=<ID=DS,Number=1,Type=Float,Description="Triploid alternate allele dosage">\n',
+        '##FORMAT=<ID=HD,Number=3,Type=Float,Description="Haploid dosages for the three triploid copies">\n'
     )
     header2 <- paste("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", paste(sampleNames, collapse = "\t", sep="\t"), sep="\t")
     cat(header, header2, "\n", sep="", file = output_vcf_header_file)

@@ -95,7 +95,7 @@ plot_single_gamma_dosage <- function(
     Ls <- smooth_vector(L, smoothV)
     ##Ls <- smooth_vector(L_grid, smoothV)
     scale_dosage <- 0.5
-    n <- c(diploid = 2, nipt = 3)[method]
+    n <- c(diploid = 2, nipt = 3, triploid = 3)[method]
     stopifnot(!is.na(n))
     ##
     nCols <- length(colStore)
@@ -132,7 +132,7 @@ plot_single_gamma_dosage <- function(
         }
         xlim <- range(L_grid)
         ylim <- c(0, 1 + scale_dosage + scale_dosage)
-        if (method == "nipt") {
+        if (method %in% c("nipt", "triploid")) {
             ylim[2] <- ylim[2] + scale_dosage
         }
         nGrids <- ncol(gammaK_t)
@@ -179,7 +179,7 @@ plot_single_gamma_dosage <- function(
         dosage <- fbsoL[["hapProbs_t"]][i_which, ]
         ## dosage2 <- fbsoL[["hapProbs_t"]][
         if (have_truth_haplotypes) {
-            if (method == "nipt") {
+            if (method %in% c("nipt", "triploid")) {
                 truth3 <- haps[, 3]
                 r2s <- c(r2s, plot_1_dosage_vs_truth(dosage = dosage, truth = truth3, ancAlleleFreq = ancAlleleFreqAll, inRegion2 = inRegion2, smoothV = smoothV, Ls = Ls, ybottom = 1, scale = scale_dosage, col = "red", label = "Rolling accuracy versus truth haplotype 3"))
                 offset <- scale_dosage
@@ -230,7 +230,7 @@ plot_single_gamma_dosage <- function(
     }
     ##
     if (have_truth_haplotypes) {
-        if (method == "nipt") {
+        if (method %in% c("nipt", "triploid")) {
             label <- "Orange = truth hap 1, Green = truth hap 2, Purple = truth hap 3"
         } else {
             label <- "Orange = truth hap 1, Green = truth hap 2"
@@ -266,7 +266,7 @@ plot_single_gamma_dosage <- function(
     ##
     ##
     if (have_truth_haplotypes | have_truth_genotypes) {
-        if (method == "nipt") {
+        if (method %in% c("nipt", "triploid")) {
             if (have_truth_haplotypes) {
                 truthH_m <- rowSums(haps[, 1:2])
                 truthH_g <- rowSums(haps[, c(1, 3)])
@@ -778,7 +778,7 @@ plot_shard_block_output <- function(
     ## width <- min(max(20, (L_grid[length(L_grid)] - L_grid[1]) / 1e6 * 36), 200)
     height <- 20
     png(outname, height = height, width = 25, res = 200, units = "in")
-    mfrow <- c(diploid = 11, nipt = 15)[method]
+    mfrow <- c(diploid = 11, nipt = 15, triploid = 15)[method]
     par(mfrow = c(mfrow, 1))
     par(oma = c(0, 0, 5, 0))
     grid_distances <- diff(L_grid)
@@ -906,7 +906,7 @@ plot_shard_block_output <- function(
         if (have_truth_haplotypes) {
             truth <- truth_labels
             truth[uncertain_truth_labels] <- 0
-            if (method == "nipt") {
+            if (method %in% c("nipt", "triploid")) {
                 label <- "Orange = truth hap 1, Blue = truth hap 2, Green = truth hap 3"
             } else {
                 label <- "Orange = truth hap 1, Green = truth hap 2"
@@ -917,7 +917,7 @@ plot_shard_block_output <- function(
                 pos = 4, cex = 1.25, xpd = NA
             )
         }
-        if (method == "nipt") {
+        if (method %in% c("nipt", "triploid")) {
             y <- 0.1 + (2 - (read_labels - 1)) / 3 + runif(length(read_labels)) / 4
         } else {
             y <- 0.1 + (read_labels - 1) / 3 + runif(length(read_labels)) / 4
@@ -943,7 +943,7 @@ plot_shard_block_output <- function(
         ##
         ## for now, plot gammas before
         ##
-        n <- c(diploid = 2, nipt = 3)[method]
+        n <- c(diploid = 2, nipt = 3, triploid = 3)[method]
         for(i_which in 1:n) {
             par(mar = c(0, 0, 3, 0))
             scale_dosage <- 0
@@ -954,7 +954,7 @@ plot_shard_block_output <- function(
             if (i_which == 3) { gammaK_t <- gamma3_t;   main <- paste0("Hap 3 - ", what_we_are_plotting)}
             ##
             K <- nrow(gammaK_t)
-            ylim <- c(0, 1 + c(diploid = 2, nipt = 3)[method] * scale_dosage)
+            ylim <- c(0, 1 + c(diploid = 2, nipt = 3, triploid = 3)[method] * scale_dosage)
             nGrids <- ncol(gammaK_t)
             backwards <- nGrids:1
             ##
