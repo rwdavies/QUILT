@@ -19,13 +19,14 @@ Please use this README for general information about QUILT2. For more informatio
 1. [Introduction](#paragraph-introduction)
 2. [Installation](#paragraph-installation)
 3. [Quick start run](#paragraph-quickstartrun)
-4. [READMEs and tutorials](#paragraph-readme-tutorial)
-5. [NIPT](#paragraph-nipt)
-6. [License](#paragraph-license)
-7. [Citation](#paragraph-citation)
-8. [Testing](#paragraph-testing)
-9. [Bug reports](#paragraph-bugreports)
-10. [Contacts](#paragraph-contacts)
+4. [Imputation with the pre-built HGDP+1KG panel](#paragraph-hgdp1kg)
+5. [READMEs and tutorials](#paragraph-readme-tutorial)
+6. [NIPT](#paragraph-nipt)
+7. [License](#paragraph-license)
+8. [Citation](#paragraph-citation)
+9. [Testing](#paragraph-testing)
+10. [Bug reports](#paragraph-bugreports)
+11. [Contacts](#paragraph-contacts)
 
 
 ## Introduction <a name="paragraph-introduction"></a>
@@ -92,6 +93,29 @@ outdir=quilt2_output && rm -rf $outdir
 --reference_vcf_file=package/ALL.chr20_GRCh38.genotypes.20170504.chr20.2000001.4000000.noNA12878.vcf.gz \
 --save_prepared_reference=TRUE
 ```
+
+## Imputation with the pre-built HGDP+1KG panel <a name="paragraph-hgdp1kg"></a>
+
+We provide the HGDP+1KG reference panel (gnomAD v3.1.2 `phased_haplotypes_v2`, 4,091 samples, GRCh38, biallelic SNPs on chr1-22) already prepared for QUILT2, so you only need your BAM files to get an imputed VCF.
+
+```
+## 1. download the panel index, the runner and the chromosomes you need (here chr20, 2 GB;
+##    1.4-6.7 GB per chromosome, see https://popgen.dk/zilong/datahub/hgdp1kg_quilt2_snps/)
+url=https://popgen.dk/zilong/datahub/hgdp1kg_quilt2_snps
+mkdir -p hgdp1kg_quilt2_snps && cd hgdp1kg_quilt2_snps
+wget $url/chunks.tsv $url/QUILT2_run.sh $url/md5sums.txt && chmod +x QUILT2_run.sh
+wget -r -np -nH --cut-dirs=3 -R "index.html*" $url/chr20/
+cd ..
+
+## 2. one BAM per line; BAMs must be aligned to GRCh38 with "chr" contig names and indexed
+ls /path/to/*.bam > bamlist.txt
+
+## 3. impute chr20 running 8 chunks in parallel
+hgdp1kg_quilt2_snps/QUILT2_run.sh -p hgdp1kg_quilt2_snps -b bamlist.txt -o results -c chr20 -t 8
+## => results/quilt2.chr20.vcf.gz
+```
+
+Leave out `-c` to impute every chromosome in the panel (after downloading all of them). See the [tutorial](README_QUILT2.org#impute-with-the-pre-built-hgdp1kg-panel) for details, and for how to build such a panel from your own reference VCFs.
 
 ## READMEs and tutorials <a name="paragraph-readme-tutorial"></a>
 
