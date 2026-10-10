@@ -15,6 +15,14 @@ file_quilt_output_RData <- function(outputdir, regionName) {
 }
 
 
+file_quilt_per_sample_vcf_col <- function(tempdir, iSample, regionName) {
+    output_file <- file.path(
+        tempdir, paste0("quilt_vcf_col.", regionName, ".", iSample, ".txt.gz")
+    )
+    return(output_file)
+}
+
+
 file_quilt_hla_panelfile <- function(outputdir, hlaregion) {
     quilt_panelfile <- file.path(
         outputdir,

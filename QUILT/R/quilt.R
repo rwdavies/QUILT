@@ -684,6 +684,14 @@ QUILT <- function(
     }
 
 
+    ## which SNPs are written to the output VCF
+    if (impute_rare_common) {
+        inRegion2_output <- special_rare_common_objects[["inRegion2"]]
+    } else {
+        inRegion2_output <- inRegion2
+    }
+
+
     ##
     ## mclapply the runs!
     ##
@@ -966,6 +974,15 @@ QUILT <- function(
                 out[["max_gen"]] <- NULL
             }
 
+            ## write this sample's VCF column to disk now rather than
+            ## holding it in memory until all samples are imputed
+            write_per_sample_vcf_col(
+                per_sample_vcf_col = out[["per_sample_vcf_col"]],
+                file = file_quilt_per_sample_vcf_col(tempdir, iSample, regionName),
+                inRegion2 = inRegion2_output
+            )
+            out[["per_sample_vcf_col"]] <- NULL
+
             results_across_samples[[iSample - sampleRange[1] + 1]] <- out
 
             rm(out)
@@ -1017,7 +1034,8 @@ QUILT <- function(
         nCores = nCores,
         complete_set_of_results = complete_set_of_results,
         inRegion2 = inRegion2,
-        sampleRanges = sampleRanges,
+        tempdir = tempdir,
+        regionName = regionName,
         addOptimalHapsToVCF = addOptimalHapsToVCF,
         output_gt_phased_genotypes = output_gt_phased_genotypes,
         method = method

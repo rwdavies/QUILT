@@ -7,7 +7,8 @@ make_and_write_output_file <- function(
     nCores,
     complete_set_of_results,
     inRegion2,
-    sampleRanges,
+    tempdir,
+    regionName,
     addOptimalHapsToVCF,
     output_gt_phased_genotypes,
     method
@@ -77,44 +78,31 @@ make_and_write_output_file <- function(
         "EAC=", round(alleleCount[, 2] - alleleCount[, 1], 5), ";",
         "PAF=", round(alleleCount[, 3], 5)
     )
-    vcf_matrix_to_out <- data.frame(matrix(
-        data = NA,
-        nrow = nSNPs,
-        ncol = N + 9
-    ))
-    vcf_matrix_to_out[, 1] <- pos[, 1]
-    vcf_matrix_to_out[, 2] <- pos[, 2]
-    vcf_matrix_to_out[, 3] <- "."
-    vcf_matrix_to_out[, 4] <- pos[, 3]
-    vcf_matrix_to_out[, 5] <- pos[, 4]
-    vcf_matrix_to_out[, 6] <- "."
-    vcf_matrix_to_out[, 7] <- "PASS"
-    vcf_matrix_to_out[, 8] <- INFO
-    vcf_matrix_to_out[, 9] <- FORMAT
-
-    ## should work
-    for(i_core in 1:length(sampleRanges)) {
-        sampleRange <- sampleRanges[[i_core]]
-        sampleRange <- sampleRange[1]:sampleRange[2]
-        for(ii in 1:length(sampleRange)) {
-            iSample <- sampleRange[ii]
-            vcf_matrix_to_out[, iSample + 9] <- complete_set_of_results[[i_core]][["results_across_samples"]][[ii]][["per_sample_vcf_col"]]
-        }
-    }
-
-    ## ugh - inefficient
-    vcf_matrix_to_out <- vcf_matrix_to_out[inRegion2, , drop = FALSE]
-    
-    data.table::fwrite(
-        vcf_matrix_to_out,
-        file = output_unbgzipped,
-        row.names = FALSE,
-        col.names = FALSE,
-        sep = "\t",
-        quote = FALSE,
-        append = TRUE,
-        nThread = nCores
+    ## only keep the annotation of SNPs in the output region
+    ## the per-sample columns were written to disk (already subset to inRegion2)
+    ## by each sample after imputation, so here they are pasted together in
+    ## blocks of SNPs, rather than holding all N x nSNPs strings in memory
+    annot <- list(
+        pos[inRegion2, 1],
+        format(pos[inRegion2, 2], scientific = FALSE, trim = TRUE),
+        ".",
+        pos[inRegion2, 3],
+        pos[inRegion2, 4],
+        ".",
+        "PASS",
+        INFO[inRegion2],
+        FORMAT
     )
+    per_sample_files <- file_quilt_per_sample_vcf_col(tempdir, 1:N, regionName)
+    paste_vcf_col_files(
+        files = per_sample_files,
+        output_file = output_unbgzipped,
+        nLines = sum(inRegion2),
+        annot = annot,
+        append = TRUE,
+        tempdir = tempdir
+    )
+    unlink(per_sample_files)
 
     print_message("bgzip output file")
     if (length(grep("~", output_unbgzipped)) > 0) {
@@ -130,6 +118,94 @@ make_and_write_output_file <- function(
 
     return(NULL)
 
+}
+
+
+
+## write one sample's column of the VCF (only SNPs in inRegion2) to disk
+write_per_sample_vcf_col <- function(per_sample_vcf_col, file, inRegion2) {
+    if (length(per_sample_vcf_col) == 1) {
+        ## e.g. sample not imputed, all missing
+        per_sample_vcf_col <- rep(per_sample_vcf_col, sum(inRegion2))
+    } else {
+        if (length(per_sample_vcf_col) != length(inRegion2)) {
+            stop(paste0("Per-sample VCF column has ", length(per_sample_vcf_col), " entries but there are ", length(inRegion2), " SNPs"))
+        }
+        per_sample_vcf_col <- per_sample_vcf_col[inRegion2]
+    }
+    con <- gzfile(file, open = "w", compression = 1)
+    on.exit(close(con))
+    writeLines(per_sample_vcf_col, con)
+    return(NULL)
+}
+
+
+
+## paste files of per-sample VCF columns together line by line (tab separated),
+## optionally preceded by the annotation columns in annot (list of vectors of
+## length nLines or 1), reading block_size lines at a time to keep memory low.
+## R can only have ~125 connections open, so if there are more than max_open
+## files, they are first pasted together in groups into intermediate files
+paste_vcf_col_files <- function(
+    files,
+    output_file,
+    nLines,
+    annot = NULL,
+    append = FALSE,
+    tempdir = dirname(output_file),
+    block_size = 10000,
+    max_open = 64
+) {
+    if (length(files) > max_open) {
+        groups <- split(files, ceiling(seq_along(files) / max_open))
+        group_files <- tempfile(pattern = paste0("quilt_vcf_cols.", seq_along(groups), "."), tmpdir = tempdir, fileext = ".txt.gz")
+        for(i in seq_along(groups)) {
+            paste_vcf_col_files(
+                files = groups[[i]],
+                output_file = group_files[i],
+                nLines = nLines,
+                tempdir = tempdir,
+                block_size = block_size,
+                max_open = max_open
+            )
+        }
+        paste_vcf_col_files(
+            files = group_files,
+            output_file = output_file,
+            nLines = nLines,
+            annot = annot,
+            append = append,
+            tempdir = tempdir,
+            block_size = block_size,
+            max_open = max_open
+        )
+        unlink(group_files)
+        return(NULL)
+    }
+    in_cons <- lapply(files, gzfile, open = "r")
+    on.exit(for(con in in_cons) close(con))
+    if (grepl(".gz$", output_file)) {
+        out_con <- gzfile(output_file, open = ifelse(append, "a", "w"), compression = 1)
+    } else {
+        out_con <- file(output_file, open = ifelse(append, "a", "w"))
+    }
+    on.exit(close(out_con), add = TRUE)
+    block_starts <- if (nLines > 0) seq(1, nLines, by = block_size) else integer(0)
+    for(block_start in block_starts) {
+        w <- block_start:min(block_start + block_size - 1, nLines)
+        cols <- lapply(in_cons, function(con) {
+            x <- readLines(con, n = length(w))
+            if (length(x) != length(w)) {
+                stop("Unexpected end of per-sample VCF column file when writing output")
+            }
+            x
+        })
+        if (!is.null(annot)) {
+            cols <- c(lapply(annot, function(x) if (length(x) == 1) x else x[w]), cols)
+        }
+        writeLines(do.call(paste, c(cols, sep = "\t")), out_con)
+    }
+    return(NULL)
 }
 
 
