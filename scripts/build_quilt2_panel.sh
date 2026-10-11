@@ -188,6 +188,6 @@ buffer=$buffer nGen=$nGen ${EXTRA_ARGS:+extra QUILT2_prepare_reference.R args: $
 Impute (BAMs aligned to the same genome build and contig names as the panel):
   ./QUILT2_run.sh -p . -b bamlist.txt -o results -c chr20 -t 8
 
-See https://github.com/rwdavies/QUILT/blob/master/README_QUILT2.org
+See https://github.com/rwdavies/QUILT/blob/master/README_QUILT2.md
 EOF
 log "panel ready in $outdir"

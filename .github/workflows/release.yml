@@ -1,0 +1,84 @@
+# Publish a GitHub release with the R package source tarball (QUILT_<version>.tar.gz)
+# whenever a version tag is pushed, e.g.
+#   git tag 2.0.5 && git push origin 2.0.5
+# The tag (with or without a leading "v") must match Version in QUILT/DESCRIPTION.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches package version
+        id: version
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="$(sed -n 's/^Version: *//p' QUILT/DESCRIPTION)"
+          if [ "${tag#v}" != "${version}" ]; then
+            echo "::error::Tag ${tag} does not match Version ${version} in QUILT/DESCRIPTION"
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: ./QUILT
+          cache-version: 2
+
+      - name: Build package tarball
+        run: |
+          R CMD build --no-manual --no-build-vignettes QUILT
+          ls -l QUILT_${{ steps.version.outputs.version }}.tar.gz
+
+      - name: Check tarball installs and loads
+        run: |
+          R CMD INSTALL QUILT_${{ steps.version.outputs.version }}.tar.gz
+          Rscript -e 'library(QUILT); stopifnot(as.character(packageVersion("QUILT")) == "${{ steps.version.outputs.version }}")'
+
+      - name: Make release notes from CHANGELOG.md
+        run: |
+          # take the "* v<version>" section of CHANGELOG.md, if there is one
+          awk -v v="* v${{ steps.version.outputs.version }}" '
+            index($0, v) == 1 && length($0) == length(v) { found = 1; next }
+            found && /^\* v/ { exit }
+            found { print }
+          ' CHANGELOG.md > release_notes.md
+          cat release_notes.md
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tarball="QUILT_${{ steps.version.outputs.version }}.tar.gz"
+          if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
+            # release already exists (e.g. re-run), just update the tarball
+            gh release upload "${GITHUB_REF_NAME}" "${tarball}" --clobber
+          elif [ -s release_notes.md ]; then
+            gh release create "${GITHUB_REF_NAME}" "${tarball}" \
+              --title "QUILT ${{ steps.version.outputs.version }}" \
+              --notes-file release_notes.md
+          else
+            gh release create "${GITHUB_REF_NAME}" "${tarball}" \
+              --title "QUILT ${{ steps.version.outputs.version }}" \
+              --generate-notes
+          fi

@@ -115,11 +115,11 @@ hgdp1kg_quilt2_snps/QUILT2_run.sh -p hgdp1kg_quilt2_snps -b bamlist.txt -o resul
 ## => results/quilt2.chr20.vcf.gz
 ```
 
-Leave out `-c` to impute every chromosome in the panel (after downloading all of them). See the [tutorial](README_QUILT2.org#impute-with-the-pre-built-hgdp1kg-panel) for details, and for how to build such a panel from your own reference VCFs.
+Leave out `-c` to impute every chromosome in the panel (after downloading all of them). See the [tutorial](README_QUILT2.md#impute-with-the-pre-built-hgdp1kg-panel) for details, and for how to build such a panel from your own reference VCFs.
 
 ## READMEs and tutorials <a name="paragraph-readme-tutorial"></a>
 
-- **[QUILT2 README](README.md)**. Please see the **[QUILT2 Tutorial](README_QUILT2.org)** for a guide and example code for running QUILT2 efficiently. 
+- **[QUILT2 README](README.md)**. Please see the **[QUILT2 Tutorial](README_QUILT2.md)** for a guide and example code for running QUILT2 efficiently. 
 - **[QUILT1 README](README_QUILT1.md)**. For tutorials, please see **[Examples](README_QUILT1.md#paragraph-examples)** section of the QUILT1 README.
 - **[QUILT-HLA README](README_QUILT-HLA.md)**. For tutorials, please see **[Example making and running a reference panel](QUILT/example/QUILT_hla_reference_panel_construction.Md)**.
 
@@ -128,7 +128,7 @@ Note that in the future, the QUILT1 and QUILT-HLA READMEs will not be further up
 
 ## NIPT <a name="paragraph-nipt"></a>
 
-QUILT2 can impute using cfDNA NIPT. To impute using cfDNA NIPT, you need to set `method=nipt` and specify a path to `fflist`, which is a textfile, with one entry per line, with a one to one correspondence to `bamlist`, with the fetal fraction of that sample  (i.e. the first row of fflist is the fetal fraction for the first entry of bamlist, the second row is for the second entry of bamlist, etc.). For more details, including output details, please see [here](README_QUILT2.org#perform-nipt-imputation). 
+QUILT2 can impute using cfDNA NIPT. To impute using cfDNA NIPT, you need to set `method=nipt` and specify a path to `fflist`, which is a textfile, with one entry per line, with a one to one correspondence to `bamlist`, with the fetal fraction of that sample  (i.e. the first row of fflist is the fetal fraction for the first entry of bamlist, the second row is for the second entry of bamlist, etc.). For more details, including output details, please see [here](README_QUILT2.md#perform-nipt-imputation). 
 
 ## License <a name="paragraph-license"></a>
 

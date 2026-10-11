@@ -1,8 +1,8 @@
 Package: QUILT
 Type: Package
 Title: QUILT
-Version: 2.0.4
-Date: 2025-06-22
+Version: 2.0.5
+Date: 2026-10-11
 Authors@R: c(
     person("Robert", "Davies", , "robertwilliamdavies@gmail.com", role = c("aut", "cre")),
     person("Zilong", "Li", , "zilong.dk@gmail.com", role = c("aut"))
