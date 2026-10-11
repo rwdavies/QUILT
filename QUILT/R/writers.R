@@ -143,9 +143,11 @@ write_per_sample_vcf_col <- function(per_sample_vcf_col, file, inRegion2) {
 
 ## paste files of per-sample VCF columns together line by line (tab separated),
 ## optionally preceded by the annotation columns in annot (list of vectors of
-## length nLines or 1), reading block_size lines at a time to keep memory low.
-## R can only have ~125 connections open, so if there are more than max_open
-## files, they are first pasted together in groups into intermediate files
+## length nLines or 1). Lines are streamed through in C++ without creating R
+## strings, to keep memory low and to be fast. If there are more files than
+## can be open at once (by default up to 2000, or the system limit on open
+## files if lower), they are first pasted together in groups into
+## intermediate files
 paste_vcf_col_files <- function(
     files,
     output_file,
@@ -153,58 +155,49 @@ paste_vcf_col_files <- function(
     annot = NULL,
     append = FALSE,
     tempdir = dirname(output_file),
-    block_size = 10000,
-    max_open = 64
+    max_open = NULL
 ) {
+    if (nLines == 0) {
+        if (!append) {
+            file.create(output_file)
+        }
+        return(NULL)
+    }
+    if (!is.null(annot)) {
+        annot_file <- tempfile(pattern = "quilt_vcf_annot.", tmpdir = tempdir, fileext = ".txt")
+        on.exit(unlink(annot_file))
+        writeLines(do.call(paste, c(annot, sep = "\t")), annot_file)
+        files <- c(annot_file, files)
+    }
+    if (is.null(max_open)) {
+        ## leave some room for other open files
+        max_open <- max(
+            Rcpp_get_max_open_files(min(length(files), 2000) + 100) - 100,
+            10
+        )
+    }
     if (length(files) > max_open) {
         groups <- split(files, ceiling(seq_along(files) / max_open))
         group_files <- tempfile(pattern = paste0("quilt_vcf_cols.", seq_along(groups), "."), tmpdir = tempdir, fileext = ".txt.gz")
+        on.exit(unlink(group_files), add = TRUE)
         for(i in seq_along(groups)) {
-            paste_vcf_col_files(
+            Rcpp_paste_line_files(
                 files = groups[[i]],
                 output_file = group_files[i],
                 nLines = nLines,
-                tempdir = tempdir,
-                block_size = block_size,
-                max_open = max_open
+                append = FALSE,
+                gz_output = TRUE
             )
         }
-        paste_vcf_col_files(
-            files = group_files,
-            output_file = output_file,
-            nLines = nLines,
-            annot = annot,
-            append = append,
-            tempdir = tempdir,
-            block_size = block_size,
-            max_open = max_open
-        )
-        unlink(group_files)
-        return(NULL)
+        files <- group_files
     }
-    in_cons <- lapply(files, gzfile, open = "r")
-    on.exit(for(con in in_cons) close(con))
-    if (grepl(".gz$", output_file)) {
-        out_con <- gzfile(output_file, open = ifelse(append, "a", "w"), compression = 1)
-    } else {
-        out_con <- file(output_file, open = ifelse(append, "a", "w"))
-    }
-    on.exit(close(out_con), add = TRUE)
-    block_starts <- if (nLines > 0) seq(1, nLines, by = block_size) else integer(0)
-    for(block_start in block_starts) {
-        w <- block_start:min(block_start + block_size - 1, nLines)
-        cols <- lapply(in_cons, function(con) {
-            x <- readLines(con, n = length(w))
-            if (length(x) != length(w)) {
-                stop("Unexpected end of per-sample VCF column file when writing output")
-            }
-            x
-        })
-        if (!is.null(annot)) {
-            cols <- c(lapply(annot, function(x) if (length(x) == 1) x else x[w]), cols)
-        }
-        writeLines(do.call(paste, c(cols, sep = "\t")), out_con)
-    }
+    Rcpp_paste_line_files(
+        files = files,
+        output_file = output_file,
+        nLines = nLines,
+        append = append,
+        gz_output = grepl(".gz$", output_file)
+    )
     return(NULL)
 }
 

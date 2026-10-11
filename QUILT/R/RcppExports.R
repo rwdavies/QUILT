@@ -251,6 +251,14 @@ rcpp_calculate_genProbs_and_hapProbs_final_rare_common <- function(alphaHat_t1, 
     invisible(.Call('_QUILT_rcpp_calculate_genProbs_and_hapProbs_final_rare_common', PACKAGE = 'QUILT', alphaHat_t1, alphaHat_t2, alphaHat_t3, betaHat_t1, betaHat_t2, betaHat_t3, c1, c2, c3, genProbsM_t, genProbsF_t, hapProbs_t, gammaMT_t, gammaMU_t, gammaP_t, hapMatcherR, distinctHapsB, distinctHapsIE, eMatDH_special_matrix_helper, eMatDH_special_matrix, which_haps_to_use, ref_error, rhb_t, use_eMatDH_special_symbols, rare_per_hap_info, common_snp_index, snp_is_common, rare_per_snp_info, sample_is_diploid))
 }
 
+Rcpp_paste_line_files <- function(files, output_file, nLines, append, gz_output) {
+    invisible(.Call('_QUILT_Rcpp_paste_line_files', PACKAGE = 'QUILT', files, output_file, nLines, append, gz_output))
+}
+
+Rcpp_get_max_open_files <- function(wanted) {
+    .Call('_QUILT_Rcpp_get_max_open_files', PACKAGE = 'QUILT', wanted)
+}
+
 #' @export
 Rcpp_quilt_test_doubler <- function(a) {
     .Call('_QUILT_Rcpp_quilt_test_doubler', PACKAGE = 'QUILT', a)

@@ -1212,6 +1212,31 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// Rcpp_paste_line_files
+void Rcpp_paste_line_files(const std::vector<std::string>& files, const std::string& output_file, const int nLines, const bool append, const bool gz_output);
+RcppExport SEXP _QUILT_Rcpp_paste_line_files(SEXP filesSEXP, SEXP output_fileSEXP, SEXP nLinesSEXP, SEXP appendSEXP, SEXP gz_outputSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type files(filesSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type output_file(output_fileSEXP);
+    Rcpp::traits::input_parameter< const int >::type nLines(nLinesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type append(appendSEXP);
+    Rcpp::traits::input_parameter< const bool >::type gz_output(gz_outputSEXP);
+    Rcpp_paste_line_files(files, output_file, nLines, append, gz_output);
+    return R_NilValue;
+END_RCPP
+}
+// Rcpp_get_max_open_files
+int Rcpp_get_max_open_files(const int wanted);
+RcppExport SEXP _QUILT_Rcpp_get_max_open_files(SEXP wantedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const int >::type wanted(wantedSEXP);
+    rcpp_result_gen = Rcpp::wrap(Rcpp_get_max_open_files(wanted));
+    return rcpp_result_gen;
+END_RCPP
+}
 // Rcpp_quilt_test_doubler
 double Rcpp_quilt_test_doubler(double a);
 RcppExport SEXP _QUILT_Rcpp_quilt_test_doubler(SEXP aSEXP) {
@@ -1751,6 +1776,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_QUILT_Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects", (DL_FUNC) &_QUILT_Rcpp_make_eMatRead_t_for_final_rare_common_gibbs_using_objects, 16},
     {"_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects", (DL_FUNC) &_QUILT_rcpp_calculate_gibbs_small_genProbs_and_hapProbs_using_binary_objects, 28},
     {"_QUILT_rcpp_calculate_genProbs_and_hapProbs_final_rare_common", (DL_FUNC) &_QUILT_rcpp_calculate_genProbs_and_hapProbs_final_rare_common, 29},
+    {"_QUILT_Rcpp_paste_line_files", (DL_FUNC) &_QUILT_Rcpp_paste_line_files, 5},
+    {"_QUILT_Rcpp_get_max_open_files", (DL_FUNC) &_QUILT_Rcpp_get_max_open_files, 1},
     {"_QUILT_Rcpp_quilt_test_doubler", (DL_FUNC) &_QUILT_Rcpp_quilt_test_doubler, 1},
     {"_QUILT_Rcpp_raw_test", (DL_FUNC) &_QUILT_Rcpp_raw_test, 2},
     {"_QUILT_Rcpp_raw_test_int", (DL_FUNC) &_QUILT_Rcpp_raw_test_int, 2},
