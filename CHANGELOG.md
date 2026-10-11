@@ -1,3 +1,7 @@
+* v2.0.5
+    * reduce RAM when outputting many samples in VCF
+* v2.0.4
+    * patch for bioconda
 * v2.0.3
     * fix issue #52. QUILT2 can work with CRAM
     * improve bound checks related to issue #56 and throw proper messages
