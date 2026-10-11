@@ -40,6 +40,12 @@ jobs:
           r-version: '4.5'  # R 4.6 defaults to C++20, which breaks STITCH's bundled SeqLib
           use-public-rspm: true
 
+      # rrbgen asks for C++11, but current RcppArmadillo needs >= C++14
+      - name: Compile C++11 packages as C++17
+        run: |
+          mkdir -p ~/.R
+          echo 'CXX11STD = -std=gnu++17' >> ~/.R/Makevars
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           working-directory: ./QUILT
